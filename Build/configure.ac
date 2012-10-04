@@ -14,7 +14,22 @@ AC_LANG([C])
 ##########################################################################
 # Debug compilation support
 ##########################################################################
+AC_MSG_CHECKING([whether to build with debug information])
+AC_ARG_ENABLE([debug],
+    [AS_HELP_STRING([--enable-debug],
+    [enable debug data generation (def=no)])],
+    [debugit="$enableval"],
+    [debugit=no])
+AC_MSG_RESULT([$debugit])
 
+if test x"$debugit" = x"yes"; then
+    AC_DEFINE([DEBUG],[],[Debug Mode])
+    CFLAGS="$CFLAGS -g -Wall -Werror -Wno-uninitialized -O0"
+else
+    AC_DEFINE([NDEBUG],[],[No-debug Mode])
+    CFLAGS="$CFLAGS -O3"
+fi
+AM_CONDITIONAL([DEBUG_MODE], [test "$debugit" = "yes"])
 
 ##########################################################################
 # Define includes directories
@@ -40,6 +55,19 @@ AC_CHECK_HEADERS([libSAL/print.h libSAL/thread.h],,
 AC_PROG_CC
 AC_PROG_LIBTOOL
 
+AC_CHECK_PROGS([DOXYGEN], [doxygen])
+m4_include(doxygen.ac)
+DX_HTML_FEATURE(ON)
+DX_CHM_FEATURE(OFF)
+DX_CHI_FEATURE(OFF)
+DX_MAN_FEATURE(OFF)
+DX_RTF_FEATURE(OFF)
+DX_XML_FEATURE(OFF)
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
+DX_INIT_DOXYGEN([libNetWork], [doxygen.cfg], [../Doc])
+AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
+
 # Checks for header files.
 AC_HEADER_STDC
 
@@ -61,6 +89,8 @@ AC_OUTPUT
 echo "
   ($PACKAGE_NAME) version $PACKAGE_VERSION
   Prefix.........: $prefix
+  Debug Build....: $debugit
   C Compiler.....: $CC $CFLAGS
   Linker.........: $LD $LDFLAGS $LIBS
+  Doxygen........: ${DOXYGEN:-NONE}
 "

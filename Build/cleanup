@@ -21,11 +21,13 @@ rm -f \
 
 # Generated directories.
 rm -rf \
+	doxygen-doc \
     autom4te.cache \
+    *DSYM* \
     config \
     m4 \
     libNetWork_dbg.la \
-    libNetWork.la*
+    libNetWork.la
 
 find .. -name '.deps' -exec rm -rf {} \;
 find .. -name '.dirstamp' -exec rm -rf {} \;

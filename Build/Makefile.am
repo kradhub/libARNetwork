@@ -11,10 +11,17 @@ SOURCE_FILES 	= 	$(HEADER_FILES)		\
 					../Sources/LibNetWork.c	
 					
 # The library names to build (note we are building static and shared libs)
-lib_LTLIBRARIES 	= libNetWork.la
+if DEBUG_MODE
+lib_LTLIBRARIES 		= libNetWork_dbg.la
+libNetWork_dbg_ladir 		= $(includedir)/libNetWork
+libNetWork_dbg_la_HEADERS 	= $(HEADER_FILES)
+libNetWork_dbg_la_SOURCES 	= $(SOURCE_FILES)
+else
+lib_LTLIBRARIES 		= libNetWork.la
 libNetWork_ladir 		= $(includedir)/libNetWork
 libNetWork_la_HEADERS 	= $(HEADER_FILES)
 libNetWork_la_SOURCES 	= $(SOURCE_FILES)
+endif
 
 #!! check_PROGRAMS = ../TestBench/test1 ../TestBench/test2
 #!! ___TestBench_test1_SOURCES 	= ../TestBench/test1.c
@@ -27,7 +34,13 @@ libNetWork_la_SOURCES 	= $(SOURCE_FILES)
 #!! ___TestBench_test2_LDADD 	= libNetWork.la
 #!! endif
 
-CLEAN_FILES			= libNetWork.la
+CLEAN_FILES = libNetWork.la libNetWork_dbg.la
 
 EXTRA_DIST = bootstrap
 
+# Ensure the distribution of the doxygen configuration file
+# Doxygen support
+if HAVE_DOXYGEN
+include doxygen.am
+EXTRA_DIST += doxygen.ac doxygen.am $(DX_CONFIG)
+endif
