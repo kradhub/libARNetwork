@@ -21,10 +21,19 @@ AC_LANG([C])
 ##########################################################################
 CFLAGS="$CFLAGS -I../Includes"
 
+if test x"$INCLUDEDIR" != x""; then
+    CFLAGS="$CFLAGS -I$INCLUDEDIR"
+fi
+
+CPPFLAGS="$CFLAGS"
 ##########################################################################
 # Check headers
 ##########################################################################
 
+# Checks for libSAL.h
+AC_CHECK_HEADERS([libSAL/print.h libSAL/thread.h],,
+	AC_MSG_ERROR(The libSAL header is required in order to build the library ! 
+- Use INCLUDEDIR for indicate a specific include path.))
 
 ##########################################################################
 # Checks for programs.

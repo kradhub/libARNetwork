@@ -6,16 +6,13 @@
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _LIB_NET_WORK_H_
-#define _LIB_NET_WORK_H_
-
 //include :
 
 #include <stdio.h> //!!sup 
 #include <stdlib.h> //!!sup 
-//#include <LibSAL.h>
-#include "../Includes/LibNetWork.h"
-
+#include <libSAL/print.h>
+#include <libNetWork/LibNetWork.h>
+//#include "../Includes/LibNetWork.h"
 
 /**
  *	@brief buffer of the acknowledged commandes
@@ -44,7 +41,6 @@ void bufCmdAckInit()
 	
 	globalBufCmdAckNbData = 0;
 	globalBufCmdAck = malloc( sizeof(AR_CMD_ACK) * BUFFER_CMD_SIZE );
-
 }
 
 /**
@@ -56,7 +52,7 @@ int sendCmdWithAck(AR_CMD_ACK* cmd)
 	int error = 1; //!!
 	AR_CMD_ACK* buffPointor = NULL;
 	
-	printf("sendCmdWithAck \n");
+	sal_print(PRINT_WARNING,"sendCmdWithAck \n");//!! sup
 
 	if( globalBufCmdAckNbData < BUFFER_CMD_SIZE)
 	{
@@ -85,7 +81,7 @@ void bufferPush()
 		buffPointor = globalBufCmdAck + (buffIndexOutput % BUFFER_CMD_SIZE);
 		++buffIndexOutput;
 		--globalBufCmdAckNbData;
-		printf("data : %d \n", buffPointor->CMDType); //!! sup
+		sal_print(PRINT_WARNING,"data : %d \n", buffPointor->CMDType); //!! sup
 	}
 }
 
@@ -98,5 +94,3 @@ void sendCmd(AR_CMD_ACK* cmd)
 {
 	
 }
-
-#endif // _LIB_NET_WORK_H_

@@ -6,6 +6,8 @@
  *  @author maxime.maitre@parrot.com
 **/
 
+#ifndef _LIB_NET_WORK_H_
+#define _LIB_NET_WORK_H_
 
 // static :
 #define BUFFER_CMD_SIZE 7
@@ -74,3 +76,7 @@ Thread Send
 startThreadSend() :
 stopThreadSend() :
 */
+
+
+#endif // _LIB_NET_WORK_H_
+

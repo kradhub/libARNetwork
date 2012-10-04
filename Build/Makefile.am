@@ -4,7 +4,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
 # The list of header files that belong to the library (to be installed later)
-HEADER_FILES	=	../Includes/LibNetWork.h 	
+HEADER_FILES	=	../Includes/libNetWork/LibNetWork.h 	
 
 # The sources to add to the library and to add to the source distribution
 SOURCE_FILES 	= 	$(HEADER_FILES)		\
