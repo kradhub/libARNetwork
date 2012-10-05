@@ -1,6 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT([libNetwork], [1.0], [ardrone@ardrone.org])
+AC_INIT([libNetWork], [1.0], [ardrone@ardrone.org])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(m4)
@@ -46,7 +46,7 @@ CPPFLAGS="$CFLAGS"
 ##########################################################################
 
 # Checks for libSAL.h
-AC_CHECK_HEADERS([libSAL/print.h libSAL/thread.h],,
+AC_CHECK_HEADERS([libSAL/print.h libSAL/thread.h libSAL/mutex.h],,
 	AC_MSG_ERROR(The libSAL header is required in order to build the library ! 
 - Use INCLUDEDIR for indicate a specific include path.))
 

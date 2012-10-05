@@ -8,23 +8,11 @@
 
 //include :
 
-#include <stdio.h> //!!sup 
-#include <stdlib.h> //!!sup 
+#include <stdlib.h>
 #include <libSAL/print.h>
+#include <libSAL/mutex.h>
 #include <libNetWork/LibNetWork.h>
-//#include "../Includes/LibNetWork.h"
-
-/**
- *	@brief buffer of the acknowledged commandes
-**/
-AR_CMD_ACK* globalBufCmdAck;
-/**
- *	@brief nomber of the date in the buffer of the acknowledged commandes
-**/
-int globalBufCmdAckNbData;
-
-
-
+#include <libNetWork/commun.h>//!! modif
 
 /*****************************************
  * 
@@ -32,65 +20,108 @@ int globalBufCmdAckNbData;
  *
 ******************************************/
 
-/**
- *  @brief init the buffer of acknowledge commande
-*/
-void bufCmdAckInit()
+
+void buffCmdAckInit(netWork_buffSend_t* pBuffsend)
 {
-	printf("bufCmdAckInit \n");
+	sal_print(PRINT_WARNING,"bufCmdAckInit \n");//!! sup
 	
-	globalBufCmdAckNbData = 0;
-	globalBufCmdAck = malloc( sizeof(AR_CMD_ACK) * BUFFER_CMD_SIZE );
+	pBuffsend->buffCmdAckNbData = 0;
+	pBuffsend->buffIndexInput = 0;
+	pBuffsend->buffIndexOutput = 0;
+    sal_mutex_init( &(pBuffsend->mutex) );
+	pBuffsend->buffCmdAck = malloc( sizeof(AR_CMD_ACK) * BUFFER_CMD_SIZE );
 }
 
-/**
- *	@brief 
-**/
-int sendCmdWithAck(AR_CMD_ACK* cmd)
+void buffCmdAckDelete(netWork_buffSend_t* pBuffsend)
 {
-	static int buffIndexInput = 0;
+	sal_print(PRINT_WARNING,"bufCmdAckDelete \n");//!! sup
+	
+	pBuffsend->buffCmdAckNbData = 0;
+	pBuffsend->buffIndexOutput = 0;
+	sal_mutex_destroy(&(pBuffsend->mutex));
+	free(pBuffsend->buffCmdAck);
+}
+
+int addAckCmd(netWork_buffSend_t* pBuffsend, AR_CMD_ACK* cmd)
+{
 	int error = 1; //!!
 	AR_CMD_ACK* buffPointor = NULL;
 	
-	sal_print(PRINT_WARNING,"sendCmdWithAck \n");//!! sup
-
-	if( globalBufCmdAckNbData < BUFFER_CMD_SIZE)
+	sal_print(PRINT_WARNING,"addAckCmd ");//!! sup
+	
+	sal_mutex_lock(&(pBuffsend->mutex));
+	
+	if( pBuffsend->buffCmdAckNbData < BUFFER_CMD_SIZE)
 	{
-		buffPointor = globalBufCmdAck + (buffIndexInput % BUFFER_CMD_SIZE);
-		++buffIndexInput;
-		++globalBufCmdAckNbData;
+		buffPointor = pBuffsend->buffCmdAck + (pBuffsend->buffIndexInput % BUFFER_CMD_SIZE);
+		++(pBuffsend->buffIndexInput);
+		++(pBuffsend->buffCmdAckNbData);
 		
 		buffPointor->CMDType = cmd->CMDType;
 		
+		sal_print(PRINT_WARNING," cmd :%d",cmd->CMDType);//!! sup
+		
 		error = 0; //!!
 	}
+	
+	sal_mutex_unlock(&(pBuffsend->mutex));
+	
+	sal_print(PRINT_WARNING,"\n");//!! sup
 
 	return error;
 }
 
-/**
- *  @brief puch a commande acknowledged
-*/
-void bufferPush()
+void sendAckCmd(netWork_buffSend_t* pBuffsend)
 {
-	static int buffIndexOutput = 0;
 	AR_CMD_ACK* buffPointor = NULL;
 	
-	if( globalBufCmdAckNbData > 0)
+	sal_mutex_lock(&(pBuffsend->mutex));
+	
+	if( pBuffsend->buffCmdAckNbData > 0)
 	{
-		buffPointor = globalBufCmdAck + (buffIndexOutput % BUFFER_CMD_SIZE);
-		++buffIndexOutput;
-		--globalBufCmdAckNbData;
-		sal_print(PRINT_WARNING,"data : %d \n", buffPointor->CMDType); //!! sup
+		buffPointor = pBuffsend->buffCmdAck + (pBuffsend->buffIndexOutput % BUFFER_CMD_SIZE);
+		++(pBuffsend->buffIndexOutput);
+		--(pBuffsend->buffCmdAckNbData);
+		sal_print(PRINT_WARNING,"send data : %d \n", buffPointor->CMDType); //!! sup
 	}
+	
+	sal_mutex_unlock(&(pBuffsend->mutex));
 }
 
-
-
-/**
- *  @brief send piloting command
-*/
-void sendCmd(AR_CMD_ACK* cmd)
+void buffPilotCmdInit(netWork_buffPilotCmd_t* buffPilotCmd)
 {
+	sal_print(PRINT_WARNING,"buffPilotCmdInit \n"); //!! sup
 	
+	buffPilotCmd->pilotCmd.x=0;//!!
+	buffPilotCmd->pilotCmd.y=0;//!!
+	buffPilotCmd->pilotCmd.z=0;//!!
+    buffPilotCmd->isUpDated = 0;
+    sal_mutex_init( &(buffPilotCmd->mutex) );
+}
+
+void updatePilotingCmd(netWork_buffPilotCmd_t* buffPilotCmd, AR_PILOT_CMD* cmd)
+{
+	sal_print(PRINT_WARNING,"updatePilotingCmd"); //!! sup
+	
+	sal_mutex_lock( &(buffPilotCmd->mutex) );
+	
+	buffPilotCmd->pilotCmd.x = cmd->x;//!!
+	buffPilotCmd->pilotCmd.y = cmd->y;//!!
+	buffPilotCmd->pilotCmd.z = cmd->z;//!!
+	
+	sal_print(PRINT_WARNING," ok x:%d, y:%d z:%d ",buffPilotCmd->pilotCmd.x,
+		buffPilotCmd->pilotCmd.y, buffPilotCmd->pilotCmd.z); //!! sup
+	
+	buffPilotCmd->isUpDated = 1;
+	sal_mutex_unlock( &(buffPilotCmd->mutex) );
+	
+	sal_print(PRINT_WARNING," \n "); //!! sup
+}
+
+void sendPilotingCmd(netWork_buffPilotCmd_t* buffPilotCmd)
+{
+	if(buffPilotCmd->isUpDated)
+	{
+		sal_print(PRINT_WARNING,"send \n"); //!! sup
+	}
 }

@@ -38,29 +38,92 @@ enum eCMD_ACK
 typedef struct AR_CMD_ACK AR_CMD_ACK;
 struct AR_CMD_ACK
 {
-    eCMD_ACK CMDType;
-    int int_val;
+    eCMD_ACK CMDType;//!!
+    int int_val;//!!
 };
 
 /**
- *  @brief init the buffer of acknowledge commande
-*/
-void bufCmdAckInit();
+ *  @brief structure
+**/
+typedef struct netWork_buffSend_t netWork_buffSend_t;
+struct netWork_buffSend_t
+{
+    AR_CMD_ACK* buffCmdAck;
+    int buffCmdAckNbData;
+    int buffIndexInput;
+    int buffIndexOutput;
+    sal_mutex_t mutex;
+    //buffCmdSize;
+	//buffCmdSquareSize;
+};
 
 /**
- *  @brief send acknowledge command
-*/
-int sendCmdWithAck(AR_CMD_ACK* cmd);
+ *  @brief piloting command
+**/
+typedef struct AR_PILOT_CMD AR_PILOT_CMD;
+struct AR_PILOT_CMD
+{
+    int x;//!!
+    int y;//!!
+    int z;//!!
+};
 
 /**
- *  @brief send piloting command
-*/
-void sendCmd(AR_CMD_ACK* cmd);
+ *  @brief structure
+**/
+typedef struct netWork_buffPilotCmd_t netWork_buffPilotCmd_t;
+struct netWork_buffPilotCmd_t
+{
+    AR_PILOT_CMD pilotCmd;
+    int isUpDated;
+    sal_mutex_t mutex;
+};
 
 /**
- *  @brief puch a commande acknowledged
-*/
-void bufferPush();
+ *  @brief Init the buffer of acknowledged command
+ *	@pre	call bufCmdAckDelete
+**/
+void buffCmdAckInit(netWork_buffSend_t* pBuffsend);
+
+/**
+ *  @brief Delete the buffer of acknowledged command
+ *	@see	buffCmdAckInit
+**/
+void buffCmdAckDelete(netWork_buffSend_t* pBuffsend);
+
+/**
+ *  @brief Add acknowledged command in the sending buffer
+**/
+int addAckCmd(netWork_buffSend_t* pBuffsend, AR_CMD_ACK* cmd);
+
+
+/**
+ *  @brief send the oldest acknowledged command
+**/
+void sendAckCmd(netWork_buffSend_t* pBuffsend);
+
+
+/**
+ *  @brief Init the buffer of acknowledged command
+ *	@pre	call bufCmdAckDelete
+**/
+void buffCmdAckInit();
+
+
+/**
+ *  @brief Init the buffer of piloting command
+**/
+void buffPilotCmdInit(netWork_buffPilotCmd_t* buffPilotCmd);
+
+/**
+ *  @brief update the piloting command
+**/
+void updatePilotingCmd(netWork_buffPilotCmd_t* buffPilotCmd, AR_PILOT_CMD* cmd);
+
+/**
+ *  @brief send the piloting command
+**/
+void sendPilotingCmd(netWork_buffPilotCmd_t* buffPilotCmd);
 
 /*
 getNavData( struct*  ) : send the NavData respecting the protocol TBD 

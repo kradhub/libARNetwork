@@ -12,15 +12,15 @@ SOURCE_FILES 	= 	$(HEADER_FILES)		\
 					
 # The library names to build (note we are building static and shared libs)
 if DEBUG_MODE
-lib_LTLIBRARIES 		= libNetWork_dbg.la
-libNetWork_dbg_ladir 		= $(includedir)/libNetWork
-libNetWork_dbg_la_HEADERS 	= $(HEADER_FILES)
-libNetWork_dbg_la_SOURCES 	= $(SOURCE_FILES)
+lib_LTLIBRARIES 		= libnetWork_dbg.la
+libnetWork_dbg_ladir 		= $(includedir)/libNetWork
+libnetWork_dbg_la_HEADERS 	= $(HEADER_FILES)
+libnetWork_dbg_la_SOURCES 	= $(SOURCE_FILES)
 else
-lib_LTLIBRARIES 		= libNetWork.la
-libNetWork_ladir 		= $(includedir)/libNetWork
-libNetWork_la_HEADERS 	= $(HEADER_FILES)
-libNetWork_la_SOURCES 	= $(SOURCE_FILES)
+lib_LTLIBRARIES 		= libnetWork.la
+libnetWork_ladir 		= $(includedir)/libNetWork
+libnetWork_la_HEADERS 	= $(HEADER_FILES)
+libnetWork_la_SOURCES 	= $(SOURCE_FILES)
 endif
 
 #!! check_PROGRAMS = ../TestBench/test1 ../TestBench/test2
