@@ -46,7 +46,8 @@ CPPFLAGS="$CFLAGS"
 ##########################################################################
 
 # Checks for libSAL.h
-AC_CHECK_HEADERS([libSAL/print.h libSAL/thread.h libSAL/mutex.h],,
+AC_CHECK_HEADERS([libSAL/print.h libSAL/thread.h libSAL/mutex.h \
+libSAL/socket.h libSAL/time.h],,
 	AC_MSG_ERROR(The libSAL header is required in order to build the library ! 
 - Use INCLUDEDIR for indicate a specific include path.))
 
