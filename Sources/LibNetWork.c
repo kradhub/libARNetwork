@@ -21,25 +21,47 @@
 ******************************************/
 
 
-void buffCmdAckInit(netWork_buffSend_t* pBuffsend)
+netWork_buffSend_t* newBuffCmdAck()
 {
-	sal_print(PRINT_WARNING,"bufCmdAckInit \n");//!! sup
+	sal_print(PRINT_WARNING,"newBuffCmdAck \n");//!! sup
 	
-	pBuffsend->buffCmdAckNbData = 0;
-	pBuffsend->buffIndexInput = 0;
-	pBuffsend->buffIndexOutput = 0;
-    sal_mutex_init( &(pBuffsend->mutex) );
-	pBuffsend->buffCmdAck = malloc( sizeof(AR_CMD_ACK) * BUFFER_CMD_SIZE );
+	netWork_buffSend_t* pBuffsend =  malloc( sizeof(netWork_buffSend_t));
+	
+	if(pBuffsend)
+	{
+		pBuffsend->buffCmdAckNbData = 0;
+		pBuffsend->buffIndexInput = 0;
+		pBuffsend->buffIndexOutput = 0;
+		sal_mutex_init( &(pBuffsend->mutex) );
+		pBuffsend->buffCmdAck = malloc( sizeof(AR_CMD_ACK) * BUFFER_CMD_SIZE );
+		
+		if( pBuffsend->buffCmdAck == NULL)
+		{
+			free(pBuffsend);
+		}
+	}
+	
+	return pBuffsend;
 }
 
-void buffCmdAckDelete(netWork_buffSend_t* pBuffsend)
+void deleteBuffCmdAck(netWork_buffSend_t** ppBuffsend)
 {
-	sal_print(PRINT_WARNING,"bufCmdAckDelete \n");//!! sup
+	netWork_buffSend_t* pBuffsend = NULL;
 	
-	pBuffsend->buffCmdAckNbData = 0;
-	pBuffsend->buffIndexOutput = 0;
-	sal_mutex_destroy(&(pBuffsend->mutex));
-	free(pBuffsend->buffCmdAck);
+	if(ppBuffsend)
+	{
+		pBuffsend = *ppBuffsend;
+		
+		sal_print(PRINT_WARNING,"deleteBuffCmdAck \n");//!! sup
+	
+		pBuffsend->buffCmdAckNbData = 0;
+		pBuffsend->buffIndexOutput = 0;
+		sal_mutex_destroy(&(pBuffsend->mutex));
+		free(pBuffsend->buffCmdAck);
+	
+		free(pBuffsend);
+		*ppBuffsend = NULL;
+	}
 }
 
 int addAckCmd(netWork_buffSend_t* pBuffsend, AR_CMD_ACK* cmd)
@@ -88,15 +110,28 @@ void sendAckCmd(netWork_buffSend_t* pBuffsend)
 	sal_mutex_unlock(&(pBuffsend->mutex));
 }
 
-void buffPilotCmdInit(netWork_buffPilotCmd_t* buffPilotCmd)
+netWork_buffPilotCmd_t* newBuffPilotCmd()
 {
+	netWork_buffPilotCmd_t* buffPilotCmd = malloc( sizeof(netWork_buffPilotCmd_t));
 	sal_print(PRINT_WARNING,"buffPilotCmdInit \n"); //!! sup
 	
-	buffPilotCmd->pilotCmd.x=0;//!!
-	buffPilotCmd->pilotCmd.y=0;//!!
-	buffPilotCmd->pilotCmd.z=0;//!!
-    buffPilotCmd->isUpDated = 0;
-    sal_mutex_init( &(buffPilotCmd->mutex) );
+	if(buffPilotCmd)
+	{
+	
+		buffPilotCmd->pilotCmd.x=0;//!!
+		buffPilotCmd->pilotCmd.y=0;//!!
+		buffPilotCmd->pilotCmd.z=0;//!!
+		buffPilotCmd->isUpDated = 0;
+		sal_mutex_init( &(buffPilotCmd->mutex) );
+    }
+    
+    return buffPilotCmd;
+}
+
+void deleteBuffPilotCmd(netWork_buffPilotCmd_t** ppBuffPilotCmd)
+{	
+	free(*ppBuffPilotCmd);
+	*ppBuffPilotCmd = NULL;
 }
 
 void updatePilotingCmd(netWork_buffPilotCmd_t* buffPilotCmd, AR_PILOT_CMD* cmd)
@@ -120,8 +155,22 @@ void updatePilotingCmd(netWork_buffPilotCmd_t* buffPilotCmd, AR_PILOT_CMD* cmd)
 
 void sendPilotingCmd(netWork_buffPilotCmd_t* buffPilotCmd)
 {
+	sal_print(PRINT_WARNING,"sendPilotingCmd isUpDated:%d" ,buffPilotCmd->isUpDated ); //!! sup
+	
 	if(buffPilotCmd->isUpDated)
 	{
-		sal_print(PRINT_WARNING,"send \n"); //!! sup
+		sal_print(PRINT_WARNING,"send  x:%d, y:%d z:%d ",buffPilotCmd->pilotCmd.x,
+		buffPilotCmd->pilotCmd.y, buffPilotCmd->pilotCmd.z); //!! sup
+		
+		buffPilotCmd->isUpDated = 0;
 	}
+	
+	sal_print(PRINT_WARNING," \n "); //!! sup
+}
+
+
+void* runSendingThread(void* data)
+{
+
+	return NULL;
 }

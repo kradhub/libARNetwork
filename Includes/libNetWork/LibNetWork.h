@@ -33,7 +33,7 @@ enum eCMD_ACK
 //Structures :
 
 /**
- *  @brief structure send for the acknowledge command
+ *  @brief Acknowledged command
 **/
 typedef struct AR_CMD_ACK AR_CMD_ACK;
 struct AR_CMD_ACK
@@ -43,7 +43,7 @@ struct AR_CMD_ACK
 };
 
 /**
- *  @brief structure
+ *  @brief used for buffering the acknowledge commands 
 **/
 typedef struct netWork_buffSend_t netWork_buffSend_t;
 struct netWork_buffSend_t
@@ -69,7 +69,7 @@ struct AR_PILOT_CMD
 };
 
 /**
- *  @brief structure
+ *  @brief used for buffering the piloting commands 
 **/
 typedef struct netWork_buffPilotCmd_t netWork_buffPilotCmd_t;
 struct netWork_buffPilotCmd_t
@@ -80,22 +80,23 @@ struct netWork_buffPilotCmd_t
 };
 
 /**
- *  @brief Init the buffer of acknowledged command
- *	@pre	call bufCmdAckDelete
+ *  @brief Create a buffer of acknowledged commands
+ *	@post Call deleteBuffCmdAck()
+ * 	@return Pointer on the new buffer of acknowledged commands
 **/
-void buffCmdAckInit(netWork_buffSend_t* pBuffsend);
+netWork_buffSend_t* newBuffCmdAck(); 
 
 /**
  *  @brief Delete the buffer of acknowledged command
- *	@see	buffCmdAckInit
+ * 	@param pBuffsend address of the pointer on the buffer of acknowledged command
+ *	@see newBuffCmdAck()
 **/
-void buffCmdAckDelete(netWork_buffSend_t* pBuffsend);
+void deleteBuffCmdAck(netWork_buffSend_t** pBuffsend);
 
 /**
  *  @brief Add acknowledged command in the sending buffer
 **/
 int addAckCmd(netWork_buffSend_t* pBuffsend, AR_CMD_ACK* cmd);
-
 
 /**
  *  @brief send the oldest acknowledged command
@@ -104,16 +105,18 @@ void sendAckCmd(netWork_buffSend_t* pBuffsend);
 
 
 /**
- *  @brief Init the buffer of acknowledged command
- *	@pre	call bufCmdAckDelete
+ *  @brief Create a buffer of piloting command
+ *	@post Call deleteBuffPilotCmd
+ * 	@return Pointer on the new buffer of piloting commands
 **/
-void buffCmdAckInit();
-
+netWork_buffPilotCmd_t* newBuffPilotCmd();
 
 /**
- *  @brief Init the buffer of piloting command
+ *  @brief Delete the buffer of piloting command
+ * 	@param ppBuffPilotCmd address of the pointer on the buffer of piloting commands
+ * 	@see newBuffPilotCmd()
 **/
-void buffPilotCmdInit(netWork_buffPilotCmd_t* buffPilotCmd);
+void deleteBuffPilotCmd(netWork_buffPilotCmd_t** ppBuffPilotCmd);
 
 /**
  *  @brief update the piloting command
@@ -124,6 +127,13 @@ void updatePilotingCmd(netWork_buffPilotCmd_t* buffPilotCmd, AR_PILOT_CMD* cmd);
  *  @brief send the piloting command
 **/
 void sendPilotingCmd(netWork_buffPilotCmd_t* buffPilotCmd);
+
+
+/**
+ *  @brief manage the communication between the drone and the application
+ * 	Must be called by a specific thread 
+**/
+void* runSendingThread(void* data);
 
 /*
 getNavData( struct*  ) : send the NavData respecting the protocol TBD 
