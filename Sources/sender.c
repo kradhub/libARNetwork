@@ -47,7 +47,7 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 						int seqNum);
 
 
-#define SENDER_SLEEP_TIME_MS 1
+#define SENDER_SLEEP_TIME_MS 500000//1000
 #define INPUT_PARAM_NUM 5
 
 /*****************************************
@@ -82,8 +82,9 @@ netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBu
 		if(pSender->pptab_inputBuffer)
 		{
 			va_start( ap, vaListSize );
-			for(iiInputBuff = inputBufferNum ; iiInputBuff != 0 ; --iiInputBuff) // pass it  !!!! ////
+			for(iiInputBuff = 0 ; iiInputBuff < inputBufferNum ; ++iiInputBuff) // pass it  !!!! ////
 			{
+				sal_print(PRINT_WARNING," iiInputBuff:%d \n",iiInputBuff);
 				//get parameters //!!!!!!!!!!!!!!!!!!!!!!
 				paramNewInputBuff.id = va_arg(ap, int);
 				paramNewInputBuff.needAck = va_arg(ap, int);
@@ -92,7 +93,12 @@ netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBu
 				paramNewInputBuff.buffCellSize = va_arg(ap, unsigned int);
 				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			
-				pSender->pptab_inputBuffer[iiInputBuff - 1] = newInOutBuffer(&paramNewInputBuff);
+				pSender->pptab_inputBuffer[iiInputBuff] = newInOutBuffer(&paramNewInputBuff);
+				
+				if(pSender->pptab_inputBuffer[iiInputBuff] == NULL)
+				{
+					error = 1;
+				}
 			}
 			va_end(ap);
 		}
@@ -138,9 +144,9 @@ void deleteSender(netWork_Sender_t** ppSender)
 			
 			if(pSender->pptab_inputBuffer)
 			{
-				for(iiInputBuff = pSender->inputBufferNum ; iiInputBuff != 0 ; --iiInputBuff) // pass it  !!!! ////
+				for(iiInputBuff = 0 ; iiInputBuff < pSender->inputBufferNum ; ++iiInputBuff) // pass it  !!!! ////
 				{
-					deleteInOutBuffer( &(pSender->pptab_inputBuffer[iiInputBuff - 1]) );
+					deleteInOutBuffer( &(pSender->pptab_inputBuffer[ iiInputBuff ]) );
 				}
 				free(pSender->pptab_inputBuffer);
 			}
@@ -163,14 +169,15 @@ void* runSendingThread(void* data)
 	netWork_inOutBuffer_t* pInputTemp;
 	
 	while( pSender->isAlive )
-	{
-		sal_print(PRINT_WARNING," send \n");
-		
+	{		
 		usleep(pSender->sleepTime);
 		
 		for(indexInput = 0 ; indexInput < pSender->inputBufferNum ; ++indexInput  )
 		{
+			sal_print(PRINT_WARNING," Buff ID :%d \n",pSender->pptab_inputBuffer[indexInput]->id);
 			pInputTemp = pSender->pptab_inputBuffer[indexInput];
+			
+			sal_print(PRINT_WARNING," A empty: %d \n", ringBuffIsEmpty(pInputTemp->pBuffer));
 			
 			if(	!ringBuffIsEmpty(pInputTemp->pBuffer) &&
 				!pInputTemp->isWaitAck && 					// !!! mutex ???? 
@@ -179,15 +186,21 @@ void* runSendingThread(void* data)
 				
 				/// voir pour simplifier ????
 				
-				if(	! senderAddToBuffer(pSender, pInputTemp, seq) )
+				
+				if(	!senderAddToBuffer(pSender, pInputTemp, seq) )
 				{
+					sal_print(PRINT_WARNING," B \n");
+					
 					if(pInputTemp->needAck)
 					{
+						sal_print(PRINT_WARNING," C NEED ACK \n");
+						
 						pInputTemp->isWaitAck = 1;
 						pInputTemp->seqWaitAck = seq;
 					}
 					else
 					{
+						sal_print(PRINT_WARNING," D \n");
 						ringBuffPopFront(pInputTemp->pBuffer, NULL);
 					}
 					
@@ -227,9 +240,13 @@ void senderSend(netWork_Sender_t* pSender)
 int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pinputBuff,
 						int seqNum)
 {
+	sal_print(PRINT_WARNING," senderAddToBuffer \n");
+	
 	int error = 1;
 	if( bufferGetFreeCellNb(pSender->pSendingBuffer) >= pinputBuff->pBuffer->buffCellSize )
 	{	
+		sal_print(PRINT_WARNING," bufferGetFreeCellNb(pSender->pSendingBuffer) :%d | pinputBuff->pBuffer->buffCellSize : %d \n" ,
+									bufferGetFreeCellNb(pSender->pSendingBuffer),  pinputBuff->pBuffer->buffCellSize);
 		error = ringBuffFront(pinputBuff->pBuffer, pSender->pSendingBuffer);
 		
 		if(!error)
@@ -243,11 +260,15 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 
 void senderTransmitAck(netWork_Sender_t* pSender, int id, int seqNum)
 {
+	sal_print(PRINT_WARNING," senderTransmitAck \n");
 	netWork_inOutBuffer_t* pInputBuff = inOutBufferWithId( pSender->pptab_inputBuffer,
 															pSender->inputBufferNum, id );
 	if(pInputBuff != NULL)
 	{
+		sal_print(PRINT_WARNING," E \n");
 		inOutBufferTransmitAck(pInputBuff, seqNum);
+		sal_print(PRINT_WARNING," F \n");
 		ringBuffPopFront(pInputBuff->pBuffer, NULL);// !! pass in inOutBufferTransmitAck ???
+		sal_print(PRINT_WARNING," G \n");
 	}
 }

@@ -23,7 +23,7 @@
 netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pParam )
 {
 	netWork_inOutBuffer_t* pInOutBuff = malloc( sizeof(netWork_inOutBuffer_t));
-	sal_print(PRINT_WARNING,"newNetWork \n"); //!! sup
+	sal_print(PRINT_WARNING,"newInOutBuffer \n"); //!! sup
 	
 	if(pInOutBuff)
 	{
@@ -34,6 +34,11 @@ netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pPara
 		pInOutBuff->seqWaitAck = 0;
 		pInOutBuff->waitTimeCount = pParam->sendingWaitTime;
 		pInOutBuff->pBuffer = newRingBuffer(pParam->buffSize, pParam->buffCellSize);
+		
+		sal_print(PRINT_WARNING,"id :%d needAck :%d sendingWaitTime :%d waitTimeCount :%d pBuffer :%d  \n",pInOutBuff->id = pParam->id, pInOutBuff->needAck,
+																											pInOutBuff->sendingWaitTime,
+																											pInOutBuff->waitTimeCount, 
+																											pInOutBuff->pBuffer ); //!! sup
 		
 		if(pInOutBuff->pBuffer == NULL)
 		{

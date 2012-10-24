@@ -82,26 +82,34 @@ int ringBuffPushBack(netWork_ringBuffer_t* pRingBuff, const void* pNewData)
 	int error = 1; //!!
 	void* buffPointor = NULL;
 	
-	sal_print(PRINT_WARNING,"ringBuffPushBack ");//!! sup
-	
 	sal_mutex_lock(&(pRingBuff->mutex));
 	
-	if( ringBuffGetFreeCellNb(pRingBuff) /*pRingBuff->buffFreeCellNb*/)
-	{
-		buffPointor = pRingBuff->dataBuffer + (pRingBuff->buffIndexInput % pRingBuff->buffSize);
-		(pRingBuff->buffIndexInput) += pRingBuff->buffCellSize;
-		//--(pRingBuff->buffFreeCellNb);
+	//sal_print(PRINT_WARNING,"sal_mutex_lock ,");//!! sup
+	
+	//sal_print(PRINT_WARNING,"ringBuffGetFreeCellNb(pRingBuff) :%d ",ringBuffGetFreeCellNb(pRingBuff) );//!! sup
+	
+	if( pRingBuff->overwriting || ringBuffGetFreeCellNb(pRingBuff))
+	{	
+		buffPointor = pRingBuff->dataBuffer + 
+					( pRingBuff->buffIndexInput % (pRingBuff->buffSize * pRingBuff->buffCellSize) );
 		
 		memcpy(buffPointor, pNewData, pRingBuff->buffCellSize);
 		
-		sal_print(PRINT_WARNING," ok " );//!! sup
+		pRingBuff->buffIndexInput += pRingBuff->buffCellSize;
+		//++pRingBuff->buffIndexInput;
+		
+		if( !ringBuffGetFreeCellNb(pRingBuff) && pRingBuff->overwriting )
+		{
+			sal_print(PRINT_WARNING," overwriting  " );//!! sup
+			(pRingBuff->buffIndexOutput) += pRingBuff->buffCellSize;
+		}
 		
 		error = 0; //!!
 	}
 	
 	sal_mutex_unlock(&(pRingBuff->mutex));
 	
-	sal_print(PRINT_WARNING,"\n");//!! sup
+	//sal_print(PRINT_WARNING,"\n");//!! sup
 
 	return error;
 }
@@ -111,19 +119,20 @@ int ringBuffPopFront(netWork_ringBuffer_t* pRingBuff, void* pPopData)
 	void* buffPointor = NULL;
 	int error = 0;
 	
+	sal_print(PRINT_WARNING,"ringBuffPopFront  \n"); //!! sup
 	sal_mutex_lock(&(pRingBuff->mutex));
 	
-	if( pRingBuff->overwriting || ringBuffGetFreeCellNb(pRingBuff) )
+	if( !ringBuffIsEmpty(pRingBuff) )
 	{
-		if(pPopData)
+		if(pPopData != NULL)
 		{
 			buffPointor = 	pRingBuff->dataBuffer + 
-							(pRingBuff->buffIndexOutput % pRingBuff->buffSize);
+					(pRingBuff->buffIndexOutput % (pRingBuff->buffSize * pRingBuff->buffCellSize) );
+					
+			memcpy(pPopData, buffPointor, pRingBuff->buffCellSize);
 		}
 		
-		(pRingBuff->buffIndexOutput) -= pRingBuff->buffCellSize;
-		
-		sal_print(PRINT_WARNING,"send data  \n"); //!! sup
+		(pRingBuff->buffIndexOutput) += pRingBuff->buffCellSize;
 	}
 	else
 	{
@@ -138,12 +147,14 @@ int ringBuffPopFront(netWork_ringBuffer_t* pRingBuff, void* pPopData)
 
 unsigned int ringBuffGetFreeCellNb(const netWork_ringBuffer_t* pRingBuff)
 {
-	return pRingBuff->buffIndexOutput - pRingBuff->buffIndexInput ;
+	//sal_print(PRINT_WARNING," ringBuffGetFreeCellNb \n");//!! sup
+	return pRingBuff->buffSize - ( 
+			(pRingBuff->buffIndexInput - pRingBuff->buffIndexOutput) / pRingBuff->buffCellSize );
 }
 
 int ringBuffIsEmpty(const netWork_ringBuffer_t* pRingBuff)
 {
-	return ( pRingBuff->buffSize == ringBuffGetFreeCellNb(pRingBuff) );
+	return pRingBuff->buffIndexInput == pRingBuff->buffIndexOutput;
 }
 
 /*
@@ -155,16 +166,28 @@ int ringBuffIsFull(const netWork_ringBuffer_t* pRingBuff)
 
 int ringBuffFront(netWork_ringBuffer_t* pRingBuff, void* pFrontData)
 {
-	void* buffPointor = pRingBuff->dataBuffer + (pRingBuff->buffIndexOutput % pRingBuff->buffSize);
+	sal_print(PRINT_WARNING," ringBuffFront \n"); //!! sup
 	
-	sal_mutex_lock(&(pRingBuff->mutex));
+	int error = 1;
+	void* buffPointor = pRingBuff->dataBuffer + 
+					(pRingBuff->buffIndexOutput % ( pRingBuff->buffSize * pRingBuff->buffCellSize) );
 	
-	memcpy(pFrontData, buffPointor, pRingBuff->buffCellSize);
+	if(! ringBuffIsEmpty(pRingBuff) )
+	{
+		sal_mutex_lock(&(pRingBuff->mutex));
 	
-	sal_mutex_unlock(&(pRingBuff->mutex));
+		memcpy(pFrontData, buffPointor, pRingBuff->buffCellSize);
+	
+		sal_mutex_unlock(&(pRingBuff->mutex));
+		
+		error = 0;
+	}
+	
+	return error;
 }
 
 void ringBuffClean(netWork_ringBuffer_t* pRingBuff)
 {
+	sal_print(PRINT_WARNING," ringBuffClean \n"); //!! sup
 	pRingBuff->buffIndexInput = pRingBuff->buffIndexOutput;
 }

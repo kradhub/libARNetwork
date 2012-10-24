@@ -11,14 +11,6 @@
 #include <libNetWork/inOutBuffer.h>
 #include <libNetWork/singleBuffer.h>
 
-
-#define CMD_AT_BUFFER_SIZE 256
-#define CMD_AT_CELL_SIZE 10
-
-#define PILOTT_CMD_CELL_SIZE 10
-
-#define SLEEP_TIME_MS 200
-
 // static :
 
 
