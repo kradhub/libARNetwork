@@ -8,13 +8,47 @@
 //include :
 
 #include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+
 #include <libSAL/print.h>
-#include <libSAL/mutex.h>
+#include <libSAL/mutex.h>//voir ?
 #include <libSAL/socket.h>
-#include <libNetWork/circularBuffer.h>
-#include <libNetWork/singleBuffer.h> //rename
-#include <libNetWork/sender.h>
+#include <libNetWork/inOutBuffer.h>
+#include <libNetWork/singleBuffer.h>
 #include <libNetWork/common.h>// !! modif
+#include <libNetWork/sender.h>
+
+/*****************************************
+ * 
+ * 			private header:
+ *
+******************************************/
+/**
+ *  @brief send the data
+ * 	@param pSender the pointer on the Sender
+ *	@pre only call by runSendingThread()
+ * 	@see runSendingThread()
+**/
+void senderSend(netWork_Sender_t* pSender);
+
+/**
+ *  @brief add data to the sender buffer
+ * 	@param pSender the pointer on the Sender
+ *	@param pData the pointer on the data
+ * 
+ * 
+ * 
+ * 
+ *	@pre the thread calling runSendingThread() must be created
+ * 	@see runSendingThread()
+**/
+int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pinputBuff,
+						int seqNum);
+
+
+#define SENDER_SLEEP_TIME_MS 1
+#define INPUT_PARAM_NUM 5
 
 /*****************************************
  * 
@@ -23,19 +57,67 @@
 ******************************************/
 
 
-netWork_Sender_t* newSender()
+netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBufferNum, ...)
 {
 	sal_print(PRINT_WARNING,"newSender \n");//!! sup
 	
+	va_list ap;
+	int vaListSize = inputBufferNum * INPUT_PARAM_NUM;
+	
 	netWork_Sender_t* pSender =  malloc( sizeof(netWork_Sender_t));
+	
+	int iiInputBuff = 0;
+	netWork_paramNewInOutBuffer_t paramNewInputBuff;
+	int error=0;
 	
 	if(pSender)
 	{
-		// !! alloc the buffer //???
-		pSender->pNavCmdBuff = NULL;
-		pSender->pPiliotCmsBuff = NULL;
+		pSender->isAlive = 1;
+		pSender->sleepTime = SENDER_SLEEP_TIME_MS;
 
-		// !!! sal_mutex_init( &(pSender->mutex) ); //??
+		pSender->inputBufferNum = inputBufferNum;
+
+		pSender->pptab_inputBuffer = malloc(sizeof(netWork_inOutBuffer_t) * inputBufferNum );
+		
+		if(pSender->pptab_inputBuffer)
+		{
+			va_start( ap, vaListSize );
+			for(iiInputBuff = inputBufferNum ; iiInputBuff != 0 ; --iiInputBuff) // pass it  !!!! ////
+			{
+				//get parameters //!!!!!!!!!!!!!!!!!!!!!!
+				paramNewInputBuff.id = va_arg(ap, int);
+				paramNewInputBuff.needAck = va_arg(ap, int);
+				paramNewInputBuff.sendingWaitTime = va_arg(ap, int);
+				paramNewInputBuff.buffSize = va_arg(ap, unsigned int);
+				paramNewInputBuff.buffCellSize = va_arg(ap, unsigned int);
+				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			
+				pSender->pptab_inputBuffer[iiInputBuff - 1] = newInOutBuffer(&paramNewInputBuff);
+			}
+			va_end(ap);
+		}
+		else
+		{
+			error = 1;
+		}
+		
+		if(!error)
+		{
+			//pSender->sendingBufferSize = sendingBufferSize;
+			//pSender->pSendingBuffer = malloc( pSender->sendingBufferSize );
+			pSender->pSendingBuffer = newBuffer(sendingBufferSize, 1);
+			
+			if(pSender->pSendingBuffer == NULL)
+			{
+				error = 1;
+			}
+		}
+		
+		if(error)
+		{
+			deleteSender(&pSender);
+		}
+		
 	}
 	
 	return pSender;
@@ -43,33 +125,129 @@ netWork_Sender_t* newSender()
 
 void deleteSender(netWork_Sender_t** ppSender)
 {
+	netWork_Sender_t* pSender = NULL;
+	int iiInputBuff = 0;
 	
+	if(ppSender)
+	{
+		pSender = *ppSender;
+		
+		if(pSender)
+		{
+			sal_print(PRINT_WARNING,"deleteSender \n");//!! sup
+			
+			if(pSender->pptab_inputBuffer)
+			{
+				for(iiInputBuff = pSender->inputBufferNum ; iiInputBuff != 0 ; --iiInputBuff) // pass it  !!!! ////
+				{
+					deleteInOutBuffer( &(pSender->pptab_inputBuffer[iiInputBuff - 1]) );
+				}
+				free(pSender->pptab_inputBuffer);
+			}
+			
+			//free(pSender->pSendingBuffer);
+			deleteBuffer( &(pSender->pSendingBuffer) );
+		
+			free(pSender);
+		}
+		*ppSender = NULL;
+	}
 }
 
 void* runSendingThread(void* data)
 {
-	netWork_Sender_t* pSend = data;
+	netWork_Sender_t* pSender = data;
+	int seq = 0;
+	int indexInput = 0;
 	
-	while( pSend->isAlive  )
+	netWork_inOutBuffer_t* pInputTemp;
+	
+	while( pSender->isAlive )
 	{
 		sal_print(PRINT_WARNING," send \n");
 		
-		// !!! see the strat 
-		// !!! temp:
+		usleep(pSender->sleepTime);
 		
-		if(pSend->pNavCmdBuff)
+		for(indexInput = 0 ; indexInput < pSender->inputBufferNum ; ++indexInput  )
 		{
-			sendAckCmd(pSend->pNavCmdBuff);
+			pInputTemp = pSender->pptab_inputBuffer[indexInput];
+			
+			if(	!ringBuffIsEmpty(pInputTemp->pBuffer) &&
+				!pInputTemp->isWaitAck && 					// !!! mutex ???? 
+				!pInputTemp->waitTimeCount)
+			{
+				
+				/// voir pour simplifier ????
+				
+				if(	! senderAddToBuffer(pSender, pInputTemp, seq) )
+				{
+					if(pInputTemp->needAck)
+					{
+						pInputTemp->isWaitAck = 1;
+						pInputTemp->seqWaitAck = seq;
+					}
+					else
+					{
+						ringBuffPopFront(pInputTemp->pBuffer, NULL);
+					}
+					
+					++seq;
+				}
+			}
+			else if(pInputTemp->waitTimeCount)
+			{
+				--(pInputTemp->waitTimeCount);
+			}
 		}
 		
-		if(pSend->pPiliotCmsBuff)
-		{
-			sendAckCmd(pSend->pPiliotCmsBuff);
-		}
+		senderSend(pSender);
 		
-		usleep(pSend->sleepTime);
 	}
         
     return NULL;
 }
 
+/*
+void startSender(netWork_Sender_t* pSender)
+{
+	pSender->isAlive = 1;
+}
+*/
+
+void stopSender(netWork_Sender_t* pSender)
+{
+	pSender->isAlive = 0;
+}
+
+void senderSend(netWork_Sender_t* pSender)
+{
+	
+}
+
+int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pinputBuff,
+						int seqNum)
+{
+	int error = 1;
+	if( bufferGetFreeCellNb(pSender->pSendingBuffer) >= pinputBuff->pBuffer->buffCellSize )
+	{	
+		error = ringBuffFront(pinputBuff->pBuffer, pSender->pSendingBuffer);
+		
+		if(!error)
+		{
+			pSender->pSendingBuffer->pFront += pinputBuff->pBuffer->buffCellSize;
+		}
+	}
+	
+	return error;
+}
+
+void senderTransmitAck(netWork_Sender_t* pSender, int id, int seqNum)
+{
+	netWork_inOutBuffer_t* pInputBuff = inOutBufferWithId( pSender->pptab_inputBuffer,
+															pSender->inputBufferNum, id );
+	if(pInputBuff != NULL)
+	{
+		inOutBufferTransmitAck(pInputBuff, seqNum);
+		ringBuffPopFront(pInputBuff->pBuffer, NULL);// !! pass in inOutBufferTransmitAck ???
+	}
+}

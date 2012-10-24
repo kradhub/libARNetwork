@@ -8,11 +8,11 @@
 //include :
 
 #include <stdlib.h>
+#include <inttypes.h>
+
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
-#include <libSAL/socket.h>
 #include <libNetWork/singleBuffer.h>
-#include <libNetWork/common.h>//!! modif
 
 /*****************************************
  * 
@@ -20,60 +20,88 @@
  *
 ******************************************/
 
-netWork_buffPilotCmd_t* newBuffPilotCmd()
+netWork_buffer_t* newBuffer(unsigned int buffSize, unsigned int buffCellSize)
 {
-	netWork_buffPilotCmd_t* buffPilotCmd = malloc( sizeof(netWork_buffPilotCmd_t));
-	sal_print(PRINT_WARNING,"buffPilotCmdInit \n"); //!! sup
+	netWork_buffer_t* pBuffer= malloc( sizeof(netWork_buffer_t));
+	sal_print(PRINT_WARNING,"newBuffer \n"); //!! sup
 	
-	if(buffPilotCmd)
+	if(pBuffer)
 	{
-	
-		buffPilotCmd->pilotCmd.x = 0;//!!
-		buffPilotCmd->pilotCmd.y = 0;//!!
-		buffPilotCmd->pilotCmd.z = 0;//!!
-		buffPilotCmd->isUpDated = 0;
-		sal_mutex_init( &(buffPilotCmd->mutex) );
+		sal_mutex_init( &(pBuffer->mutex) );
+		pBuffer->buffCellSize = buffCellSize;
+		pBuffer->buffSize = buffSize;
+		pBuffer->pBack = malloc( buffCellSize * buffSize );
+		pBuffer->pEnd = pBuffer->pBack + ( buffCellSize * buffSize );
+		pBuffer->pFront = pBuffer->pBack;
+		
+		if( pBuffer->pBack == NULL)
+		{
+			free(pBuffer);
+			pBuffer = NULL;
+		}
     }
     
-    return buffPilotCmd;
+    return pBuffer;
 }
 
-void deleteBuffPilotCmd(netWork_buffPilotCmd_t** ppBuffPilotCmd)
+void deleteBuffer(netWork_buffer_t** ppBuffer)
 {	
-	free(*ppBuffPilotCmd);
-	*ppBuffPilotCmd = NULL;
-}
-
-void updatePilotingCmd(netWork_buffPilotCmd_t* buffPilotCmd, AR_PILOT_CMD* cmd)
-{
-	sal_print(PRINT_WARNING,"updatePilotingCmd"); //!! sup
+	netWork_buffer_t* pBuffer = NULL;
 	
-	sal_mutex_lock( &(buffPilotCmd->mutex) );
-	
-	buffPilotCmd->pilotCmd.x = cmd->x;//!!
-	buffPilotCmd->pilotCmd.y = cmd->y;//!!
-	buffPilotCmd->pilotCmd.z = cmd->z;//!!
-	
-	sal_print(PRINT_WARNING," ok x:%d, y:%d z:%d ",buffPilotCmd->pilotCmd.x,
-		buffPilotCmd->pilotCmd.y, buffPilotCmd->pilotCmd.z); //!! sup
-	
-	buffPilotCmd->isUpDated = 1;
-	sal_mutex_unlock( &(buffPilotCmd->mutex) );
-	
-	sal_print(PRINT_WARNING," \n "); //!! sup
-}
-
-void sendPilotingCmd(netWork_buffPilotCmd_t* buffPilotCmd)
-{
-	sal_print(PRINT_WARNING,"sendPilotingCmd isUpDated:%d" ,buffPilotCmd->isUpDated ); //!! sup
-	
-	if(buffPilotCmd->isUpDated)
+	if(ppBuffer)
 	{
-		sal_print(PRINT_WARNING,"send  x:%d, y:%d z:%d ",buffPilotCmd->pilotCmd.x,
-		buffPilotCmd->pilotCmd.y, buffPilotCmd->pilotCmd.z); //!! sup
+		pBuffer = *ppBuffer;
 		
-		buffPilotCmd->isUpDated = 0;
+		if(pBuffer)
+		{
+			sal_print(PRINT_WARNING,"deleteBuffer \n");//!! sup
+
+			sal_mutex_destroy(&(pBuffer->mutex));
+			free(pBuffer->pBack);
+		
+			free(pBuffer);
+		}
+		*ppBuffer = NULL;
+	}
+}
+
+int bufferPushFront(netWork_buffer_t* pBuffer, void* pData)
+{
+	int error = 1; //!!
+	
+	sal_print(PRINT_WARNING,"bufferPuchFront ");//!! sup
+	
+	sal_mutex_lock(&(pBuffer->mutex));
+	
+	if( !bufferIsEmpty(pBuffer) )
+	{	
+		memcpy(pBuffer->pFront, pData, pBuffer->buffCellSize);
+		
+		pBuffer->pFront += pBuffer->buffCellSize;
+		
+		sal_print(PRINT_WARNING," ok " );//!! sup
+		
+		error = 0; //!!
 	}
 	
-	sal_print(PRINT_WARNING," \n "); //!! sup
+	sal_mutex_unlock(&(pBuffer->mutex));
+	
+	sal_print(PRINT_WARNING,"\n");//!! sup
+
+	return error;
+}
+
+unsigned int bufferGetFreeCellNb(const netWork_buffer_t* pBuffer)
+{
+	return (pBuffer->pEnd - pBuffer->pFront) / pBuffer->buffCellSize;
+}
+
+int bufferIsEmpty(netWork_buffer_t* pBuffer)
+{
+	return pBuffer->pBack == pBuffer->pFront;
+}
+
+void bufferClean(netWork_buffer_t* pBuffer)
+{
+	pBuffer->pFront = pBuffer->pBack;
 }

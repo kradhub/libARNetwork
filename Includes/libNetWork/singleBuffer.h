@@ -5,8 +5,8 @@
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _SINGLE_BUFFER_H_
-#define _SINGLE_BUFFER_H_
+#ifndef _BUFFER_H_
+#define _BUFFER_H_
 
 // static :
 
@@ -16,67 +16,47 @@
 //Structures :
 
 /**
- *  @brief piloting command
+ *  @brief used for buffering 
 **/
-typedef struct AR_PILOT_CMD AR_PILOT_CMD;
-struct AR_PILOT_CMD
+typedef struct netWork_buffer_t
 {
-    int x;//!!
-    int y;//!!
-    int z;//!!
-};
-
-/**
- *  @brief used for buffering the piloting commands 
-**/
-typedef struct netWork_buffPilotCmd_t netWork_buffPilotCmd_t;
-struct netWork_buffPilotCmd_t
-{
-    AR_PILOT_CMD pilotCmd;
-    int isUpDated;
-    sal_mutex_t mutex;
-};
+    void* 	pBack;
+	void* 	pFront;//private
+	void* 	pEnd;//private
+	unsigned int buffSize;
+    unsigned int buffCellSize;
+	sal_mutex_t mutex;
+	//int 		sendingBufferSize;
+}netWork_buffer_t;
 
 
 /**
- *  @brief Create a buffer of piloting command
+ *  @brief Create a buffer
  *	@post Call deleteBuffPilotCmd
  * 	@return Pointer on the new buffer of piloting commands
 **/
-netWork_buffPilotCmd_t* newBuffPilotCmd();
+netWork_buffer_t* newBuffer(unsigned int buffSize, unsigned int buffCellSize);
 
 /**
  *  @brief Delete the buffer of piloting command
  * 	@param ppBuffPilotCmd address of the pointer on the buffer of piloting commands
  * 	@see newBuffPilotCmd()
 **/
-void deleteBuffPilotCmd(netWork_buffPilotCmd_t** ppBuffPilotCmd);
+void deleteBuffer(netWork_buffer_t** ppBuffer);
+
+int bufferPushFront(netWork_buffer_t* pBuffer, void* pData);
 
 /**
- *  @brief update the piloting command
+ *  @brief return the number of free cell of the buffer
+ * 	@param pRingBuff pointer on the ring buffer
+ * 	@return number of free cell of the buffer 
 **/
-void updatePilotingCmd(netWork_buffPilotCmd_t* buffPilotCmd, AR_PILOT_CMD* cmd);
+/*inline*/ unsigned int bufferGetFreeCellNb(const netWork_buffer_t* pBuffer);
 
-/**
- *  @brief send the piloting command
-**/
-void sendPilotingCmd(netWork_buffPilotCmd_t* buffPilotCmd);
+int bufferIsEmpty(netWork_buffer_t* pBuffer);
 
-/*
-getNavData( struct*  ) : send the NavData respecting the protocol TBD 
-addressFrame*  getLastFrame() : (circular buffer freeze the last buffer sent to the application )
-sendCmdWithAck() :
-sendCmd() : (push the cmd in a fifo … a thread send the fifo to the ar.drone)
-
-Thread Recv
-startThreadRecv() :
-stopThreadRecv() :
-
-Thread Send
-startThreadSend() :
-stopThreadSend() :
-*/
+void bufferClean(netWork_buffer_t* pBuffer);
 
 
-#endif // _SINGLE_BUFFER_H_
+#endif // _BUFFER_H_
 
