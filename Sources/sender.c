@@ -46,9 +46,9 @@ void senderSend(netWork_Sender_t* pSender);
 int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pinputBuff,
 						int seqNum);
 
-
-#define SENDER_SLEEP_TIME_MS 500000//1000
-#define INPUT_PARAM_NUM 5
+#define MICRO_SECONDE 1000
+#define SENDER_SLEEP_TIME_MS 25//1
+#define INPUT_PARAM_NUM 7
 
 /*****************************************
  * 
@@ -73,7 +73,7 @@ netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBu
 	if(pSender)
 	{
 		pSender->isAlive = 1;
-		pSender->sleepTime = SENDER_SLEEP_TIME_MS;
+		pSender->sleepTime = MICRO_SECONDE * SENDER_SLEEP_TIME_MS;
 
 		pSender->inputBufferNum = inputBufferNum;
 
@@ -89,6 +89,9 @@ netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBu
 				paramNewInputBuff.id = va_arg(ap, int);
 				paramNewInputBuff.needAck = va_arg(ap, int);
 				paramNewInputBuff.sendingWaitTime = va_arg(ap, int);
+				paramNewInputBuff.ackTimeoutMs = va_arg(ap, int);
+				paramNewInputBuff.nbOfRetry = va_arg(ap, int);
+				
 				paramNewInputBuff.buffSize = va_arg(ap, unsigned int);
 				paramNewInputBuff.buffCellSize = va_arg(ap, unsigned int);
 				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -165,56 +168,72 @@ void* runSendingThread(void* data)
 	netWork_Sender_t* pSender = data;
 	int seq = 0;
 	int indexInput = 0;
+	int callBackReturn = 0;
 	
 	netWork_inOutBuffer_t* pInputTemp;
 	
 	while( pSender->isAlive )
 	{		
+		sal_print(PRINT_WARNING," senderTic \n");
 		usleep(pSender->sleepTime);
 		
 		for(indexInput = 0 ; indexInput < pSender->inputBufferNum ; ++indexInput  )
 		{
-			sal_print(PRINT_WARNING," Buff ID :%d \n",pSender->pptab_inputBuffer[indexInput]->id);
 			pInputTemp = pSender->pptab_inputBuffer[indexInput];
+			sal_print( PRINT_WARNING," Buff ID :%d \n",pInputTemp->id );
 			
-			sal_print(PRINT_WARNING," A empty: %d \n", ringBuffIsEmpty(pInputTemp->pBuffer));
-			
-			if(	!ringBuffIsEmpty(pInputTemp->pBuffer) &&
-				!pInputTemp->isWaitAck && 					// !!! mutex ???? 
-				!pInputTemp->waitTimeCount)
+			if(pInputTemp->waitTimeCount > 0)
 			{
-				
-				/// voir pour simplifier ????
-				
-				
-				if(	!senderAddToBuffer(pSender, pInputTemp, seq) )
+				--(pInputTemp->waitTimeCount);
+			}
+			
+
+			if(pInputTemp->isWaitAck) //mutex ?
+			{
+				sal_print(PRINT_WARNING,"  - WaitAck \n");
+				--(pInputTemp->ackWaitTimeCount);
+				if(pInputTemp->ackWaitTimeCount == 0)
 				{
-					sal_print(PRINT_WARNING," B \n");
+					--(pInputTemp->retryCount);
+					if(pInputTemp->retryCount == 0)
+					{
+						//callBackReturn = pInputTemp->timeoutCallback();
+						if(callBackReturn)
+						{
+							pInputTemp->retryCount = pInputTemp->nbOfRetry;
+						}
+					}
 					
+					if(pInputTemp->retryCount != 0)
+					{
+						senderAddToBuffer(pSender, pInputTemp, pInputTemp->seqWaitAck);
+						pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
+					}
+				}
+			}
+			else if( !ringBuffIsEmpty(pInputTemp->pBuffer) && !pInputTemp->waitTimeCount)
+			{
+				sal_print(PRINT_WARNING,"  - not Empty and wait count = 0 \n");
+				if( !senderAddToBuffer(pSender, pInputTemp, seq) )
+				{
+					pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
 					if(pInputTemp->needAck)
 					{
-						sal_print(PRINT_WARNING," C NEED ACK \n");
-						
 						pInputTemp->isWaitAck = 1;
 						pInputTemp->seqWaitAck = seq;
+						pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
+						pInputTemp->retryCount = pInputTemp->nbOfRetry;
 					}
 					else
 					{
-						sal_print(PRINT_WARNING," D \n");
 						ringBuffPopFront(pInputTemp->pBuffer, NULL);
 					}
 					
 					++seq;
 				}
 			}
-			else if(pInputTemp->waitTimeCount)
-			{
-				--(pInputTemp->waitTimeCount);
-			}
 		}
-		
 		senderSend(pSender);
-		
 	}
         
     return NULL;
@@ -234,7 +253,28 @@ void stopSender(netWork_Sender_t* pSender)
 
 void senderSend(netWork_Sender_t* pSender)
 {
+	// !!! temp
 	
+	FILE* pFichier = NULL;
+	int ii = 0;
+	
+	if( !bufferIsEmpty(pSender->pSendingBuffer) )
+	{
+
+		pFichier = fopen("wifi.txt", "r+");
+		if (pFichier != NULL)
+		{
+			//for(ii=0; ii<)
+			//fputc(int caractere, pFichier);
+			
+			fclose(pFichier);
+		}
+		else
+		{
+			// On affiche un message d'erreur si on veut
+			sal_print(PRINT_WARNING," no wifi.txt\n");
+		}
+	}
 }
 
 int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pinputBuff,
@@ -245,9 +285,11 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 	int error = 1;
 	if( bufferGetFreeCellNb(pSender->pSendingBuffer) >= pinputBuff->pBuffer->buffCellSize )
 	{	
-		sal_print(PRINT_WARNING," bufferGetFreeCellNb(pSender->pSendingBuffer) :%d | pinputBuff->pBuffer->buffCellSize : %d \n" ,
-									bufferGetFreeCellNb(pSender->pSendingBuffer),  pinputBuff->pBuffer->buffCellSize);
-		error = ringBuffFront(pinputBuff->pBuffer, pSender->pSendingBuffer);
+		sal_print(PRINT_WARNING," bufferGetFreeCellNb(pSender->pSendingBuffer) :%d \
+| pinputBuff->pBuffer->buffCellSize : %d \n" , bufferGetFreeCellNb(pSender->pSendingBuffer), 
+												pinputBuff->pBuffer->buffCellSize);
+									
+		error = ringBuffFront(pinputBuff->pBuffer, pSender->pSendingBuffer->pFront);
 		
 		if(!error)
 		{
@@ -258,7 +300,7 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 	return error;
 }
 
-void senderTransmitAck(netWork_Sender_t* pSender, int id, int seqNum)
+void senderAckReceived(netWork_Sender_t* pSender, int id, int seqNum)
 {
 	sal_print(PRINT_WARNING," senderTransmitAck \n");
 	netWork_inOutBuffer_t* pInputBuff = inOutBufferWithId( pSender->pptab_inputBuffer,
@@ -266,9 +308,9 @@ void senderTransmitAck(netWork_Sender_t* pSender, int id, int seqNum)
 	if(pInputBuff != NULL)
 	{
 		sal_print(PRINT_WARNING," E \n");
-		inOutBufferTransmitAck(pInputBuff, seqNum);
+		inOutBufferAckReceived(pInputBuff, seqNum);
 		sal_print(PRINT_WARNING," F \n");
-		ringBuffPopFront(pInputBuff->pBuffer, NULL);// !! pass in inOutBufferTransmitAck ???
+		ringBuffPopFront(pInputBuff->pBuffer, NULL);// !! pass in inOutBufferAckReceived ???
 		sal_print(PRINT_WARNING," G \n");
 	}
 }

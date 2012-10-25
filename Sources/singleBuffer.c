@@ -58,7 +58,7 @@ void deleteBuffer(netWork_buffer_t** ppBuffer)
 
 			sal_mutex_destroy(&(pBuffer->mutex));
 			free(pBuffer->pBack);
-		
+			
 			free(pBuffer);
 		}
 		*ppBuffer = NULL;

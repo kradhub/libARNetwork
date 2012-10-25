@@ -77,7 +77,7 @@ void stopReceiver(netWork_Receiver_t* pReceiver);
 /**
  *  @brief return a acknowledged by the sender
  * 	@param pReceiver the pointer on the Receiver
- * 	@param id identifier of the outputBuffer to acknowledged
+ * 	@param id identifier of the command to acknowledged
  * 	@param seq sequence of the command to acknowledged
  *	@see newReceiver()
 **/

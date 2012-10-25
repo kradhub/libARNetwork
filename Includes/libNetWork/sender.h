@@ -78,12 +78,12 @@ void* runSendingThread(void* data);
 void stopSender(netWork_Sender_t* pSender);
 
 /**
- *  @brief stop the sending
+ *  @brief received
  * 	@param pSender the pointer on the Sender
- * 	@param id identifier of the inOutBuffer searched
+ * 	@param id identifier of the command CMD_TYPE_ACK received
  *	@param seqNum sequence number of the acknowledge
 **/
-void senderTransmitAck(netWork_Sender_t* pSender, int id, int seqNum);
+void senderAckReceived(netWork_Sender_t* pSender, int id, int seqNum);
 
 
 

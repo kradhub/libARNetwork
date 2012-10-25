@@ -63,8 +63,9 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 		pReceiver->isAlive = 1;
 		pReceiver->sleepTime = SLEEP_TIME_MS;
 		
+		pReceiver->pSender = NULL; // !!! 
+		
 		pReceiver->outputBufferNum = outputBufferNum;
-
 		pReceiver->pptab_outputBuffer = malloc(sizeof(netWork_inOutBuffer_t) * outputBufferNum );
 		
 		if(pReceiver->pptab_outputBuffer)
@@ -153,35 +154,53 @@ void* runReceivingThread(void* data)
 	
 	while( pReceiver->isAlive )
 	{
-		usleep(pReceiver->sleepTime);
+		
 		
 		sal_print(PRINT_WARNING," send \n");
 		
-		read(pReceiver->pRecvBuffer); // voir !!!!!!!!!!!!!!!!!!!
+		usleep(pReceiver->sleepTime); // !!! temp read bloquant
+		//read(pReceiver->pRecvBuffer); // voir !!!!!!!!!!!!!!!!!!!
 		
 		if(pReceiver->pRecvBuffer != NULL)
 		{
 			while( getCmd(pReceiver, recvCmd.pTabUint8) )
 			{
-				if(recvCmd.pCmd->type == CMD_TYPE_ACK)
+				switch (recvCmd.pCmd->type)
 				{
-					senderTransmitAck(pReceiver->pSender,recvCmd.pCmd->id,recvCmd.pCmd->seq);
-				}
-				else
-				{
-					pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
-														pReceiver->outputBufferNum,
-														recvCmd.pCmd->id);
-					if(pOutBufferTemp != NULL)
-					{
-						pushError = 0;
-						pushError = ringBuffPushBack(pOutBufferTemp->pBuffer, recvCmd.pCmd->data);
-						
-						if(pOutBufferTemp->needAck && !pushError)
+					case CMD_TYPE_ACK:
+						senderAckReceived(pReceiver->pSender,recvCmd.pCmd->id,recvCmd.pCmd->seq);
+					break;
+					
+					case CMD_TYPE_DATA:
+					
+						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
+															pReceiver->outputBufferNum,
+															recvCmd.pCmd->id);
+						if(pOutBufferTemp != NULL)
 						{
-							returnASK(pReceiver, recvCmd.pCmd->id, recvCmd.pCmd->seq);
-						}
-					}							
+							ringBuffPushBack(pOutBufferTemp->pBuffer, recvCmd.pCmd->data);
+						}							
+					break;
+					
+					case CMD_TYPE_DATA_WITH_ACK:
+					
+						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
+															pReceiver->outputBufferNum,
+															recvCmd.pCmd->id);
+						if(pOutBufferTemp != NULL)
+						{
+							pushError = ringBuffPushBack(pOutBufferTemp->pBuffer,recvCmd.pCmd->data);
+							
+							if( !pushError)
+							{
+								returnASK(pReceiver, recvCmd.pCmd->id, recvCmd.pCmd->seq);
+							}
+						}							
+					break;
+					
+					default:
+					
+					break;
 				}
 			}
 		}

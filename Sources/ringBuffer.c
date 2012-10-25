@@ -66,7 +66,7 @@ void deleteRingBuffer(netWork_ringBuffer_t** ppRingBuff)
 		
 		if(pRingBuff)
 		{
-			sal_print(PRINT_WARNING,"deleteBuffCmdAck \n");//!! sup
+			sal_print(PRINT_WARNING,"deleteRingBuffer \n");//!! sup
 
 			sal_mutex_destroy(&(pRingBuff->mutex));
 			free(pRingBuff->dataBuffer);

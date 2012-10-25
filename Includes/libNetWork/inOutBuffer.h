@@ -25,6 +25,9 @@ typedef struct netWork_paramNewInOutBuffer_t
     int id;
     int needAck;
     int sendingWaitTime;
+    int ackTimeoutMs;
+    int nbOfRetry;
+    
     unsigned int buffSize;
     unsigned int buffCellSize;
 
@@ -36,12 +39,19 @@ typedef struct netWork_paramNewInOutBuffer_t
 typedef struct netWork_inOutBuffer_t  
 {
     int id;
+    netWork_ringBuffer_t* pBuffer;
     int needAck;
     int sendingWaitTime;
+    int ackTimeoutMs;
+    int nbOfRetry;
+    //	timeoutCallback(netWork_inOutBuffer_t* this)
+    
     int isWaitAck;
     int seqWaitAck;
     int waitTimeCount; // must be positive
-    netWork_ringBuffer_t* pBuffer;
+    int ackWaitTimeCount;
+    int retryCount;
+    
 
 }netWork_inOutBuffer_t;
 
@@ -61,11 +71,11 @@ netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pPara
 void deleteInOutBuffer(netWork_inOutBuffer_t** ppInOutBuff);
 
 /**
- *  @brief transmit a acknowledge to a inOutBuffer in waiting about a acknowledge
+ *  @brief received a acknowledge to a inOutBuffer in waiting about a acknowledge
  * 	@param pInOutBuff pointer on the input or output buffer
  * 	@param seqNum sequence number of the acknowledge
 **/
-void inOutBufferTransmitAck(netWork_inOutBuffer_t* pInOutBuff, int seqNum);
+void inOutBufferAckReceived(netWork_inOutBuffer_t* pInOutBuff, int seqNum);
 
 /**
  *  @brief search a buffer with id in a table

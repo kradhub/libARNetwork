@@ -28,17 +28,22 @@ netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pPara
 	if(pInOutBuff)
 	{
 		pInOutBuff->id = pParam->id;
+		pInOutBuff->pBuffer = newRingBuffer(pParam->buffSize, pParam->buffCellSize);
 		pInOutBuff->needAck = pParam->needAck;
 		pInOutBuff->sendingWaitTime = pParam->sendingWaitTime;
+		pInOutBuff->ackTimeoutMs =
+		pInOutBuff->nbOfRetry;
+		//	timeoutCallback(netWork_inOutBuffer_t* this)
+		
 		pInOutBuff->isWaitAck = 0;
 		pInOutBuff->seqWaitAck = 0;
 		pInOutBuff->waitTimeCount = pParam->sendingWaitTime;
-		pInOutBuff->pBuffer = newRingBuffer(pParam->buffSize, pParam->buffCellSize);
+		pInOutBuff->ackWaitTimeCount;
+		pInOutBuff->retryCount;
+		
 		
 		sal_print(PRINT_WARNING,"id :%d needAck :%d sendingWaitTime :%d waitTimeCount :%d pBuffer :%d  \n",pInOutBuff->id = pParam->id, pInOutBuff->needAck,
-																											pInOutBuff->sendingWaitTime,
-																											pInOutBuff->waitTimeCount, 
-																											pInOutBuff->pBuffer ); //!! sup
+																											pInOutBuff->sendingWaitTime, pInOutBuff->pBuffer ); //!! sup
 		
 		if(pInOutBuff->pBuffer == NULL)
 		{
@@ -59,7 +64,7 @@ void deleteInOutBuffer(netWork_inOutBuffer_t** ppInOutBuff)
 		
 		if(pInOutBuff)
 		{
-			sal_print(PRINT_WARNING,"deleteBuffCmdAck \n");//!! sup
+			sal_print(PRINT_WARNING,"deleteInOutBuffer \n");//!! sup
 
 			free(pInOutBuff->pBuffer);
 		
@@ -70,13 +75,14 @@ void deleteInOutBuffer(netWork_inOutBuffer_t** ppInOutBuff)
 
 }
 
-void inOutBufferTransmitAck(netWork_inOutBuffer_t* pInOutBuff, int seqNum)
+void inOutBufferAckReceived(netWork_inOutBuffer_t* pInOutBuff, int seqNum)
 {
 	// !!! mutex ?
 	
 	if(pInOutBuff->isWaitAck && pInOutBuff->seqWaitAck == seqNum)
 	{
 		pInOutBuff->isWaitAck = 0;
+		ringBuffPopFront( pInOutBuff->pBuffer, NULL );
 	}
 	// !!! mutex ?
 }
