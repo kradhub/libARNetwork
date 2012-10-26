@@ -9,6 +9,7 @@
 #define _IN_OUT_BUFFER_H_
 
 #include <libNetWork/ringBuffer.h>
+#include <libNetWork/common.h>//!! modif
 
 // static :
 
@@ -23,7 +24,7 @@
 typedef struct netWork_paramNewInOutBuffer_t  
 {
     int id;
-    int needAck;
+    eAR_CMD_TYPE dataType;//int needAck;
     int sendingWaitTime;
     int ackTimeoutMs;
     int nbOfRetry;
@@ -40,7 +41,7 @@ typedef struct netWork_inOutBuffer_t
 {
     int id;
     netWork_ringBuffer_t* pBuffer;
-    int needAck;
+    eAR_CMD_TYPE dataType;//int needAck;
     int sendingWaitTime;
     int ackTimeoutMs;
     int nbOfRetry;

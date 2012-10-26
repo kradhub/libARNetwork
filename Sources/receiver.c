@@ -11,11 +11,13 @@
 #include <stdarg.h>
 #include <inttypes.h>
 
+#include <stdio.h>// !!!! sup
+
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
 #include <libSAL/socket.h>
-#include <libNetWork/inOutBuffer.h>
 #include <libNetWork/common.h>// !! modif
+#include <libNetWork/inOutBuffer.h>
 #include <libNetWork/sender.h>
 #include <libNetWork/receiver.h>
 
@@ -35,6 +37,7 @@
 int getCmd(netWork_Receiver_t* pReceiver, uint8_t* pCmd);
 
 #define OUTPUT_PARAM_NUM 4
+#define SECOND 1000000
 
 /*****************************************
  * 
@@ -58,15 +61,16 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 	int error = 0;
 	
 	if(pReceiver)
-	{	
-		
+	{
 		pReceiver->isAlive = 1;
-		pReceiver->sleepTime = SLEEP_TIME_MS;
+		pReceiver->sleepTime = SECOND;
 		
 		pReceiver->pSender = NULL; // !!! 
 		
 		pReceiver->outputBufferNum = outputBufferNum;
 		pReceiver->pptab_outputBuffer = malloc(sizeof(netWork_inOutBuffer_t) * outputBufferNum );
+		
+		pReceiver->readDataSize = 0;
 		
 		if(pReceiver->pptab_outputBuffer)
 		{
@@ -75,10 +79,13 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 			{
 				//get parameters //!!!!!!!!!!!!!!!!!!!!!!
 				paramNewOutputBuff.id = va_arg(ap, int);
-				paramNewOutputBuff.needAck = va_arg(ap, int);
+				paramNewOutputBuff.dataType = va_arg(ap, int); //paramNewOutputBuff.needAck = va_arg(ap, int);
 				paramNewOutputBuff.buffSize = va_arg(ap, unsigned int);
 				paramNewOutputBuff.buffCellSize = va_arg(ap, unsigned int);
+				
 				paramNewOutputBuff.sendingWaitTime = 0; //not used
+				paramNewOutputBuff.ackTimeoutMs = 1;//not used
+				paramNewOutputBuff.nbOfRetry = 1;//not used
 				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			
 				pReceiver->pptab_outputBuffer[iiOutputBuff -1] = newInOutBuffer(&paramNewOutputBuff);
@@ -154,15 +161,12 @@ void* runReceivingThread(void* data)
 	
 	while( pReceiver->isAlive )
 	{
+		usleep(pReceiver->sleepTime);//sup ?
+		ReceiverRead( pReceiver->pRecvBuffer, &(pReceiver->readDataSize) );
 		
-		
-		sal_print(PRINT_WARNING," send \n");
-		
-		usleep(pReceiver->sleepTime); // !!! temp read bloquant
-		//read(pReceiver->pRecvBuffer); // voir !!!!!!!!!!!!!!!!!!!
-		
-		if(pReceiver->pRecvBuffer != NULL)
+		if( pReceiver->readDataSize > 0 /*pReceiver->pRecvBuffer != NULL*/)
 		{
+			sal_print(PRINT_WARNING,"--- read  Receiver ---\n");
 			while( getCmd(pReceiver, recvCmd.pTabUint8) )
 			{
 				switch (recvCmd.pCmd->type)
@@ -227,5 +231,28 @@ void returnASK(netWork_Receiver_t* pReceiver, int id, int seq)
 	if(pBufferASK != NULL)
 	{
 		ringBuffPushBack(pBufferASK->pBuffer, &seq);
+	}
+}
+
+void ReceiverRead(netWork_Receiver_t* pReceiver, int* readDataSize)
+{
+	FILE* pFichier = NULL; //sup
+	*readDataSize = 0;
+	
+	pFichier = fopen("wifiCopy.txt", "rb+");
+	
+	if (pFichier != NULL)
+	{
+		
+		*readDataSize = fread( pReceiver->pRecvBuffer, 1,pReceiver->recvBufferSize,pFichier );
+		
+		sal_print(PRINT_WARNING," readDataSize : %d\n", *readDataSize);
+		
+		fclose(pFichier);
+	}
+	else
+	{
+		// On affiche un message d'erreur si on veut
+		sal_print(PRINT_WARNING," no wifiCopy.txt\n");
 	}
 }

@@ -42,6 +42,9 @@ typedef struct netWork_Receiver_t
 	// !! sal_mutex_t mutex; //???
 	int isAlive;
 	int sleepTime;
+	
+	int readDataSize;
+	
 }netWork_Receiver_t;
 
 
@@ -83,6 +86,9 @@ void stopReceiver(netWork_Receiver_t* pReceiver);
 **/
 void returnASK(netWork_Receiver_t* pReceiver, int id, int seq);
 
+
+
+void ReceiverRead(netWork_Receiver_t* pReceiver, int* readDataSize);
 
 #endif // _RECEIVER_H_
 

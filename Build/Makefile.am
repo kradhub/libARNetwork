@@ -9,7 +9,8 @@ HEADER_FILES	=	../Includes/libNetWork/singleBuffer.h \
 					../Includes/libNetWork/inOutBuffer.h\
 					../Includes/libNetWork/sender.h \
 					../Includes/libNetWork/receiver.h \
-					../Includes/libNetWork/netWork.h
+					../Includes/libNetWork/netWork.h \
+					../Includes/libNetWork/common.h
 
 # The sources to add to the library and to add to the source distribution
 SOURCE_FILES 	= 	$(HEADER_FILES)		\

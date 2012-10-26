@@ -11,12 +11,14 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include <stdio.h>// !!!! sup
+
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>//voir ?
 #include <libSAL/socket.h>
+#include <libNetWork/common.h>// !! modif
 #include <libNetWork/inOutBuffer.h>
 #include <libNetWork/singleBuffer.h>
-#include <libNetWork/common.h>// !! modif
 #include <libNetWork/sender.h>
 
 /*****************************************
@@ -46,9 +48,10 @@ void senderSend(netWork_Sender_t* pSender);
 int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pinputBuff,
 						int seqNum);
 
-#define MICRO_SECONDE 1000
+#define MICRO_SECOND 1000
 #define SENDER_SLEEP_TIME_MS 25//1
 #define INPUT_PARAM_NUM 7
+#define HEAD_SIZE 16
 
 /*****************************************
  * 
@@ -73,7 +76,7 @@ netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBu
 	if(pSender)
 	{
 		pSender->isAlive = 1;
-		pSender->sleepTime = MICRO_SECONDE * SENDER_SLEEP_TIME_MS;
+		pSender->sleepTime = MICRO_SECOND * SENDER_SLEEP_TIME_MS;
 
 		pSender->inputBufferNum = inputBufferNum;
 
@@ -87,7 +90,7 @@ netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBu
 				sal_print(PRINT_WARNING," iiInputBuff:%d \n",iiInputBuff);
 				//get parameters //!!!!!!!!!!!!!!!!!!!!!!
 				paramNewInputBuff.id = va_arg(ap, int);
-				paramNewInputBuff.needAck = va_arg(ap, int);
+				paramNewInputBuff.dataType = va_arg(ap, int); //paramNewInputBuff.needAck = va_arg(ap, int);
 				paramNewInputBuff.sendingWaitTime = va_arg(ap, int);
 				paramNewInputBuff.ackTimeoutMs = va_arg(ap, int);
 				paramNewInputBuff.nbOfRetry = va_arg(ap, int);
@@ -216,17 +219,29 @@ void* runSendingThread(void* data)
 				sal_print(PRINT_WARNING,"  - not Empty and wait count = 0 \n");
 				if( !senderAddToBuffer(pSender, pInputTemp, seq) )
 				{
+					sal_print(PRINT_WARNING,"  copy ok \n");
 					pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
-					if(pInputTemp->needAck)
+					
+					switch(pInputTemp->dataType)
 					{
-						pInputTemp->isWaitAck = 1;
-						pInputTemp->seqWaitAck = seq;
-						pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
-						pInputTemp->retryCount = pInputTemp->nbOfRetry;
-					}
-					else
-					{
-						ringBuffPopFront(pInputTemp->pBuffer, NULL);
+						case CMD_TYPE_DATA_WITH_ACK:
+							pInputTemp->isWaitAck = 1;
+							pInputTemp->seqWaitAck = seq;
+							pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
+							pInputTemp->retryCount = pInputTemp->nbOfRetry;	
+						break;
+						
+						case CMD_TYPE_DATA:
+							ringBuffPopFront(pInputTemp->pBuffer, NULL);
+						break;
+						
+						case CMD_TYPE_ACK:
+							ringBuffPopFront(pInputTemp->pBuffer, NULL);
+						break;
+						
+						default:
+
+						break;
 					}
 					
 					++seq;
@@ -255,24 +270,32 @@ void senderSend(netWork_Sender_t* pSender)
 {
 	// !!! temp
 	
-	FILE* pFichier = NULL;
-	int ii = 0;
+	sal_print(PRINT_WARNING," senderSend \n");
+	
+	int nbCharCopy = 0;
+	
+	FILE* pFichier = NULL; //sup
 	
 	if( !bufferIsEmpty(pSender->pSendingBuffer) )
 	{
-
-		pFichier = fopen("wifi.txt", "r+");
+	
+		pFichier = fopen("wifi.txt", "rb+");
 		if (pFichier != NULL)
 		{
-			//for(ii=0; ii<)
-			//fputc(int caractere, pFichier);
+			fseek(pFichier, 0, SEEK_END);
+			
+			nbCharCopy = pSender->pSendingBuffer->pFront - pSender->pSendingBuffer->pBack;
+
+			fwrite(pSender->pSendingBuffer->pBack,nbCharCopy,1,pFichier);
+			
+			pSender->pSendingBuffer->pFront = pSender->pSendingBuffer->pBack;
 			
 			fclose(pFichier);
 		}
 		else
 		{
 			// On affiche un message d'erreur si on veut
-			sal_print(PRINT_WARNING," no wifi.txt\n");
+			sal_print(PRINT_WARNING," no wifi.txt \n");
 		}
 	}
 }
@@ -282,14 +305,34 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 {
 	sal_print(PRINT_WARNING," senderAddToBuffer \n");
 	
+	char* tabC = 0;//sup
+	
 	int error = 1;
-	if( bufferGetFreeCellNb(pSender->pSendingBuffer) >= pinputBuff->pBuffer->buffCellSize )
+	int sizeNeed = HEAD_SIZE + pinputBuff->pBuffer->buffCellSize;
+	
+	if( bufferGetFreeCellNb(pSender->pSendingBuffer) >= sizeNeed )
 	{	
-		sal_print(PRINT_WARNING," bufferGetFreeCellNb(pSender->pSendingBuffer) :%d \
-| pinputBuff->pBuffer->buffCellSize : %d \n" , bufferGetFreeCellNb(pSender->pSendingBuffer), 
-												pinputBuff->pBuffer->buffCellSize);
-									
+		//add type 
+		memcpy( pSender->pSendingBuffer->pFront, &(pinputBuff->dataType), sizeof(int));
+		pSender->pSendingBuffer->pFront +=  sizeof(int) ;
+		
+		//add id 
+		memcpy( pSender->pSendingBuffer->pFront, &(pinputBuff->id), sizeof(int));
+		pSender->pSendingBuffer->pFront +=  sizeof(int) ;
+		
+		//add seq 
+		memcpy( pSender->pSendingBuffer->pFront, &(seqNum), sizeof(int));
+		pSender->pSendingBuffer->pFront +=  sizeof(int) ;
+		
+		//add size 
+		memcpy( pSender->pSendingBuffer->pFront, &(sizeNeed), sizeof(int));
+		pSender->pSendingBuffer->pFront +=  sizeof(int) ;
+		
+		//add data						
 		error = ringBuffFront(pinputBuff->pBuffer, pSender->pSendingBuffer->pFront);
+		
+		tabC = pSender->pSendingBuffer->pFront;
+		sal_print(PRINT_WARNING,"last char %c \n",*tabC);
 		
 		if(!error)
 		{

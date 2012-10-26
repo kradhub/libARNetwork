@@ -11,9 +11,9 @@
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
 #include <libSAL/socket.h>
+#include <libNetWork/common.h>//!! modif
 #include <libNetWork/sender.h>
 #include <libNetWork/receiver.h>
-#include <libNetWork/common.h>//!! modif
 #include <libNetWork/netWork.h>
 
 /*****************************************
