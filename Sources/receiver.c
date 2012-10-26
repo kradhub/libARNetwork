@@ -37,7 +37,7 @@
 int getCmd(netWork_Receiver_t* pReceiver, uint8_t* pCmd);
 
 #define OUTPUT_PARAM_NUM 4
-#define SECOND 1000000
+#define MICRO_SECOND 1000
 
 /*****************************************
  * 
@@ -63,7 +63,7 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 	if(pReceiver)
 	{
 		pReceiver->isAlive = 1;
-		pReceiver->sleepTime = SECOND;
+		pReceiver->sleepTime = 25 * MICRO_SECOND;
 		
 		pReceiver->pSender = NULL; // !!! 
 		
@@ -102,6 +102,9 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 			pReceiver->recvBufferSize = recvBufferSize;
 			pReceiver->pRecvBuffer = malloc( recvBufferSize ); //voir si c bon !!!!!!!!!
 			
+			
+			sal_print(PRINT_WARNING," new pReceiver->pRecvBuffer : %d \n", pReceiver->pRecvBuffer);//!! sup
+			
 			if(pReceiver->pRecvBuffer == NULL)
 			{
 				error = 1;
@@ -129,7 +132,7 @@ void deleteReceiver(netWork_Receiver_t** ppReceiver)
 		
 		if(pReceiver)
 		{
-			sal_print(PRINT_WARNING,"deleteReceiver \n");//!! sup
+			sal_print(PRINT_WARNING,"---------------------------------------deleteReceiver \n");//!! sup
 
 			if(pReceiver->pptab_outputBuffer)
 			{
@@ -162,7 +165,7 @@ void* runReceivingThread(void* data)
 	while( pReceiver->isAlive )
 	{
 		usleep(pReceiver->sleepTime);//sup ?
-		ReceiverRead( pReceiver->pRecvBuffer, &(pReceiver->readDataSize) );
+		receiverRead( pReceiver->pRecvBuffer, &(pReceiver->readDataSize) );
 		
 		if( pReceiver->readDataSize > 0 /*pReceiver->pRecvBuffer != NULL*/)
 		{
@@ -234,7 +237,7 @@ void returnASK(netWork_Receiver_t* pReceiver, int id, int seq)
 	}
 }
 
-void ReceiverRead(netWork_Receiver_t* pReceiver, int* readDataSize)
+void receiverRead(netWork_Receiver_t* pReceiver, int* readDataSize)
 {
 	FILE* pFichier = NULL; //sup
 	*readDataSize = 0;
@@ -243,10 +246,10 @@ void ReceiverRead(netWork_Receiver_t* pReceiver, int* readDataSize)
 	
 	if (pFichier != NULL)
 	{
+		sal_print(PRINT_WARNING," pReceiver->pRecvBuffer : %d \n", pReceiver->pRecvBuffer);
+		*readDataSize = fread( pReceiver->pRecvBuffer, 1,1/*pReceiver->recvBufferSize*/,pFichier );
 		
-		*readDataSize = fread( pReceiver->pRecvBuffer, 1,pReceiver->recvBufferSize,pFichier );
-		
-		sal_print(PRINT_WARNING," readDataSize : %d\n", *readDataSize);
+		sal_print(PRINT_WARNING," readDataSize : %d \n", *readDataSize);
 		
 		fclose(pFichier);
 	}

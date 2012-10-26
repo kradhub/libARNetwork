@@ -5,8 +5,8 @@
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _NET WORK_H_
-#define _NET WORK_H_
+#ifndef _NET_WORK_H_
+#define _NET_WORK_H_
 
 // static :
 
@@ -39,5 +39,5 @@ netWork_t* newNetWork();
 **/
 void deleteNetWork(netWork_t** ppNetWork);
 
-#endif // _NET WORK_H_
+#endif // _NET_WORK_H_
 

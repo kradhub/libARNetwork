@@ -42,7 +42,7 @@ netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pPara
 		pInOutBuff->retryCount;
 		
 		
-		sal_print(PRINT_WARNING,"id :%d needAck :%d sendingWaitTime :%d waitTimeCount :%d pBuffer :%d  \n",pInOutBuff->id = pParam->id, pInOutBuff->dataType,
+		sal_print(PRINT_WARNING,"id :%d dataType :%d sendingWaitTime :%d waitTimeCount :%d pBuffer :%d  \n",pInOutBuff->id = pParam->id, pInOutBuff->dataType,
 																											pInOutBuff->sendingWaitTime, pInOutBuff->pBuffer ); //!! sup
 		
 		if(pInOutBuff->pBuffer == NULL)

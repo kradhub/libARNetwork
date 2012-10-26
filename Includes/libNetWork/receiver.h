@@ -31,7 +31,7 @@
 **/
 typedef struct netWork_Receiver_t
 {
-	char* pRecvBuffer;
+	void* pRecvBuffer;
 	int recvBufferSize;
 	
 	netWork_Sender_t* pSender;
@@ -88,7 +88,7 @@ void returnASK(netWork_Receiver_t* pReceiver, int id, int seq);
 
 
 
-void ReceiverRead(netWork_Receiver_t* pReceiver, int* readDataSize);
+void receiverRead(netWork_Receiver_t* pReceiver, int* readDataSize);
 
 #endif // _RECEIVER_H_
 
