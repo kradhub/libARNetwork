@@ -51,7 +51,7 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 	sal_print(PRINT_WARNING,"newReceiver \n");//!! sup
 	
 	va_list ap;
-	int vaListSize = outputBufferNum * OUTPUT_PARAM_NUM;
+	//int vaListSize = outputBufferNum * OUTPUT_PARAM_NUM;
 	
 	netWork_Receiver_t* pReceiver =  malloc( sizeof(netWork_Receiver_t));
 	
@@ -74,7 +74,7 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 		
 		if(pReceiver->pptab_outputBuffer)
 		{
-			va_start(ap, vaListSize );
+			va_start(ap, outputBufferNum );
 			for(iiOutputBuff = outputBufferNum ; iiOutputBuff != 0 ; --iiOutputBuff) // pass it  !!!! ////
 			{
 				//get parameters //!!!!!!!!!!!!!!!!!!!!!!

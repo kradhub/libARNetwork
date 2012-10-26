@@ -65,7 +65,7 @@ netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBu
 	sal_print(PRINT_WARNING,"newSender \n");//!! sup
 	
 	va_list ap;
-	int vaListSize = inputBufferNum * INPUT_PARAM_NUM;
+	//int vaListSize = inputBufferNum * INPUT_PARAM_NUM;
 	
 	netWork_Sender_t* pSender =  malloc( sizeof(netWork_Sender_t));
 	
@@ -84,7 +84,7 @@ netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBu
 		
 		if(pSender->pptab_inputBuffer)
 		{
-			va_start( ap, vaListSize );
+			va_start( ap, inputBufferNum );
 			for(iiInputBuff = 0 ; iiInputBuff < inputBufferNum ; ++iiInputBuff) // pass it  !!!! ////
 			{
 				sal_print(PRINT_WARNING," iiInputBuff:%d \n",iiInputBuff);
