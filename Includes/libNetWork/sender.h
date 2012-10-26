@@ -36,6 +36,8 @@ struct netWork_Sender_t
 	// !! sal_mutex_t mutex; //??? !!!!
 	int isAlive;
 	int sleepTime;
+	
+	int fd;//fifopipe temp
 };
 
 

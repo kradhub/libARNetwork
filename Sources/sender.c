@@ -12,6 +12,9 @@
 #include <string.h>
 
 #include <stdio.h>// !!!! sup
+#include <sys/stat.h> //!!!sup
+#include <sys/types.h> // !! sup
+#include <fcntl.h> //!!!
 
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>//voir ?
@@ -175,10 +178,12 @@ void* runSendingThread(void* data)
 	
 	netWork_inOutBuffer_t* pInputTemp;
 	
+	pSender->fd = open("wifi", O_WRONLY);
+	
 	while( pSender->isAlive )
 	{		
 		sal_print(PRINT_WARNING," senderTic \n");
-		usleep(pSender->sleepTime);
+		//usleep(pSender->sleepTime);
 		
 		for(indexInput = 0 ; indexInput < pSender->inputBufferNum ; ++indexInput  )
 		{
@@ -250,6 +255,8 @@ void* runSendingThread(void* data)
 		}
 		senderSend(pSender);
 	}
+	
+	close(pSender->fd);
         
     return NULL;
 }
@@ -274,29 +281,16 @@ void senderSend(netWork_Sender_t* pSender)
 	
 	int nbCharCopy = 0;
 	
-	FILE* pFichier = NULL; //sup
-	
 	if( !bufferIsEmpty(pSender->pSendingBuffer) )
 	{
-	
-		pFichier = fopen("wifi.txt", "rb+");
-		if (pFichier != NULL)
-		{
-			fseek(pFichier, 0, SEEK_END);
+		
 			
-			nbCharCopy = pSender->pSendingBuffer->pFront - pSender->pSendingBuffer->pBack;
-
-			fwrite(pSender->pSendingBuffer->pBack,nbCharCopy,1,pFichier);
+		nbCharCopy = pSender->pSendingBuffer->pFront - pSender->pSendingBuffer->pBack;
 			
-			pSender->pSendingBuffer->pFront = pSender->pSendingBuffer->pBack;
+		write(pSender->fd, pSender->pSendingBuffer->pBack, nbCharCopy);
 			
-			fclose(pFichier);
-		}
-		else
-		{
-			// On affiche un message d'erreur si on veut
-			sal_print(PRINT_WARNING," no wifi.txt \n");
-		}
+		pSender->pSendingBuffer->pFront = pSender->pSendingBuffer->pBack;
+		
 	}
 }
 

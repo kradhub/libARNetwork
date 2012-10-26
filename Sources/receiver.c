@@ -12,6 +12,9 @@
 #include <inttypes.h>
 
 #include <stdio.h>// !!!! sup
+#include <sys/stat.h> //!!!sup
+#include <sys/types.h> // !! sup
+#include <fcntl.h> //!!!
 
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
@@ -124,6 +127,8 @@ void deleteReceiver(netWork_Receiver_t** ppReceiver)
 {
 	netWork_Receiver_t* pReceiver = NULL;
 	
+	sal_print(PRINT_WARNING," deleteReceiver \n");//!! sup
+	
 	int iiOutputBuff = 0;
 	
 	if(ppReceiver)
@@ -132,7 +137,6 @@ void deleteReceiver(netWork_Receiver_t** ppReceiver)
 		
 		if(pReceiver)
 		{
-			sal_print(PRINT_WARNING,"---------------------------------------deleteReceiver \n");//!! sup
 
 			if(pReceiver->pptab_outputBuffer)
 			{
@@ -162,10 +166,17 @@ void* runReceivingThread(void* data)
 	
 	recvCmd.pTabUint8 = NULL;
 	
+	int fd;
+	fd = open("wifi", O_RDONLY);
+	
 	while( pReceiver->isAlive )
 	{
-		usleep(pReceiver->sleepTime);//sup ?
-		receiverRead( pReceiver->pRecvBuffer, &(pReceiver->readDataSize) );
+		//usleep(pReceiver->sleepTime);//sup ?
+		
+		//receiverRead( pReceiver, &(pReceiver->readDataSize) );
+		pReceiver->readDataSize = read(fd, pReceiver->pRecvBuffer, pReceiver->recvBufferSize);
+		
+		sal_print(PRINT_WARNING,"-waaaaaaaaaaaaaaaaaaaaa-\n");
 		
 		if( pReceiver->readDataSize > 0 /*pReceiver->pRecvBuffer != NULL*/)
 		{
@@ -212,7 +223,9 @@ void* runReceivingThread(void* data)
 			}
 		}
 	}
-        
+     
+    close(fd);
+       
     return NULL;
 }
 
@@ -239,19 +252,20 @@ void returnASK(netWork_Receiver_t* pReceiver, int id, int seq)
 
 void receiverRead(netWork_Receiver_t* pReceiver, int* readDataSize)
 {
-	FILE* pFichier = NULL; //sup
+	int fd;
 	*readDataSize = 0;
 	
-	pFichier = fopen("wifiCopy.txt", "rb+");
+	fd = open("wifi", O_RDONLY);
 	
-	if (pFichier != NULL)
+	if (fd != 0)
 	{
-		sal_print(PRINT_WARNING," pReceiver->pRecvBuffer : %d \n", pReceiver->pRecvBuffer);
-		*readDataSize = fread( pReceiver->pRecvBuffer, 1,1/*pReceiver->recvBufferSize*/,pFichier );
+		//*readDataSize = fread( pReceiver->pRecvBuffer, 1,pReceiver->recvBufferSize,pFichier );
+		*readDataSize = read(fd, pReceiver->pRecvBuffer, pReceiver->recvBufferSize);
+		
 		
 		sal_print(PRINT_WARNING," readDataSize : %d \n", *readDataSize);
 		
-		fclose(pFichier);
+		close(fd);
 	}
 	else
 	{
