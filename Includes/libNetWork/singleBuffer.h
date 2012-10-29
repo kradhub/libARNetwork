@@ -20,9 +20,10 @@
 **/
 typedef struct netWork_buffer_t
 {
-    void* 	pBack;
+    void* 	pStart;
 	void* 	pFront;//private
 	void* 	pEnd;//private
+	//void* 	pCursor;//private
 	unsigned int buffSize;
     unsigned int buffCellSize;
 	sal_mutex_t mutex;
@@ -44,7 +45,7 @@ netWork_buffer_t* newBuffer(unsigned int buffSize, unsigned int buffCellSize);
 **/
 void deleteBuffer(netWork_buffer_t** ppBuffer);
 
-int bufferPushFront(netWork_buffer_t* pBuffer, void* pData);
+//int bufferPushFront(netWork_buffer_t* pBuffer, void* pData);
 
 /**
  *  @brief return the number of free cell of the buffer
@@ -56,6 +57,8 @@ int bufferPushFront(netWork_buffer_t* pBuffer, void* pData);
 int bufferIsEmpty(netWork_buffer_t* pBuffer);
 
 void bufferClean(netWork_buffer_t* pBuffer);
+
+void bufferPrint(netWork_buffer_t* pBuffer);
 
 
 #endif // _BUFFER_H_

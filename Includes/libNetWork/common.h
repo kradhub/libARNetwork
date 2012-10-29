@@ -40,6 +40,19 @@ typedef enum eAR_CMD_TYPE
 
 
 /**
+ *  @brief sending mode
+**/
+typedef enum eAR_CMD_INDEX
+{
+	AR_CMD_INDEX_TYPE = 0, /**< ... */
+	AR_CMD_INDEX_ID = 4, /**< ... */
+	AR_CMD_INDEX_SEQ = 8, /**< ... */
+	AR_CMD_INDEX_SIZE = 12, /**< ... */
+	AR_CMD_INDEX_DATA = 16, /**< ... */
+	AR_CMD_HEADER_SIZE = 16 /**< ... */
+}eAR_CMD_INDEX;
+
+/**
  *  @brief  command
 **/
 //typedef struct AR_CMD_HEADER
@@ -59,7 +72,7 @@ typedef struct AR_CMD
     int id;
     int seq;
     int size;
-    void* data;  // !!! ???
+    //void* data;  // !!! ???
 }AR_CMD;
 
 /**

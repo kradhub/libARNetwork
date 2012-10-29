@@ -26,13 +26,18 @@
 
 
 //Structures :
+
 /**
  *  @brief properties of the receiver
 **/
 typedef struct netWork_Receiver_t
 {
-	void* pRecvBuffer;
-	int recvBufferSize;
+	
+	/*void* pRecvBuffer;
+	int recvBufferSize;*/
+	
+	
+	netWork_buffer_t* pRecvBuffer;
 	
 	netWork_Sender_t* pSender;
 	
@@ -43,7 +48,8 @@ typedef struct netWork_Receiver_t
 	int isAlive;
 	int sleepTime;
 	
-	int readDataSize;
+	//int readDataSize;
+	int fd;//fifopipe temp
 	
 }netWork_Receiver_t;
 
@@ -53,7 +59,7 @@ typedef struct netWork_Receiver_t
  *	@post Call deleteReceiver()
  * 	@return Pointer on the new receiver
 **/
-netWork_Receiver_t* newReceiver(unsigned int secvBufferSize, unsigned int outputBufferNum, ...);
+netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int outputBufferNum, ...);
 
 /**
  *  @brief Delete the Receiver
@@ -88,7 +94,7 @@ void returnASK(netWork_Receiver_t* pReceiver, int id, int seq);
 
 
 
-void receiverRead(netWork_Receiver_t* pReceiver, int* readDataSize);
+int receiverRead(netWork_Receiver_t* pReceiver);
 
 #endif // _RECEIVER_H_
 

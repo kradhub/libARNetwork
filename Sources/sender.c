@@ -54,7 +54,6 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 #define MICRO_SECOND 1000
 #define SENDER_SLEEP_TIME_MS 25//1
 #define INPUT_PARAM_NUM 7
-#define HEAD_SIZE 16
 
 /*****************************************
  * 
@@ -183,7 +182,7 @@ void* runSendingThread(void* data)
 	while( pSender->isAlive )
 	{		
 		sal_print(PRINT_WARNING," senderTic \n");
-		//usleep(pSender->sleepTime);
+		usleep(pSender->sleepTime);
 		
 		for(indexInput = 0 ; indexInput < pSender->inputBufferNum ; ++indexInput  )
 		{
@@ -285,11 +284,13 @@ void senderSend(netWork_Sender_t* pSender)
 	{
 		
 			
-		nbCharCopy = pSender->pSendingBuffer->pFront - pSender->pSendingBuffer->pBack;
+		nbCharCopy = pSender->pSendingBuffer->pFront - pSender->pSendingBuffer->pStart;
+		
+		sal_print(PRINT_WARNING," nbCharCopy :%d \n",nbCharCopy);
 			
-		write(pSender->fd, pSender->pSendingBuffer->pBack, nbCharCopy);
+		write(pSender->fd, pSender->pSendingBuffer->pStart, nbCharCopy);
 			
-		pSender->pSendingBuffer->pFront = pSender->pSendingBuffer->pBack;
+		pSender->pSendingBuffer->pFront = pSender->pSendingBuffer->pStart;
 		
 	}
 }
@@ -299,10 +300,10 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 {
 	sal_print(PRINT_WARNING," senderAddToBuffer \n");
 	
-	char* tabC = 0;//sup
+	//char* tabC = 0;//sup
 	
 	int error = 1;
-	int sizeNeed = HEAD_SIZE + pinputBuff->pBuffer->buffCellSize;
+	int sizeNeed = AR_CMD_HEADER_SIZE + pinputBuff->pBuffer->buffCellSize;
 	
 	if( bufferGetFreeCellNb(pSender->pSendingBuffer) >= sizeNeed )
 	{	
@@ -324,14 +325,20 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 		
 		//add data						
 		error = ringBuffFront(pinputBuff->pBuffer, pSender->pSendingBuffer->pFront);
-		
-		tabC = pSender->pSendingBuffer->pFront;
-		sal_print(PRINT_WARNING,"last char %c \n",*tabC);
+		//pSender->pSendingBuffer->pFront +=  pinputBuff->pBuffer->buffCellSize ;
 		
 		if(!error)
 		{
 			pSender->pSendingBuffer->pFront += pinputBuff->pBuffer->buffCellSize;
 		}
+		else
+		{
+			pSender->pSendingBuffer->pFront -= AR_CMD_HEADER_SIZE;
+		}
+		
+		sal_print(PRINT_WARNING," AddToBuffer : \n");
+		bufferPrint(pSender->pSendingBuffer);
+
 	}
 	
 	return error;

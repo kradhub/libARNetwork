@@ -23,19 +23,20 @@
 
 netWork_buffer_t* newBuffer(unsigned int buffSize, unsigned int buffCellSize)
 {
-	netWork_buffer_t* pBuffer= malloc( sizeof(netWork_buffer_t));
+	netWork_buffer_t* pBuffer = malloc( sizeof(netWork_buffer_t));
 	sal_print(PRINT_WARNING,"newBuffer \n"); //!! sup
 	
 	if(pBuffer)
 	{
 		sal_mutex_init( &(pBuffer->mutex) );
-		pBuffer->buffCellSize = buffCellSize;
 		pBuffer->buffSize = buffSize;
-		pBuffer->pBack = malloc( buffCellSize * buffSize );
-		pBuffer->pEnd = pBuffer->pBack + ( buffCellSize * buffSize );
-		pBuffer->pFront = pBuffer->pBack;
+		pBuffer->buffCellSize = buffCellSize;
+		pBuffer->pStart = malloc( buffCellSize * buffSize );
+		pBuffer->pEnd = pBuffer->pStart + ( buffCellSize * buffSize );
+		pBuffer->pFront = pBuffer->pStart;
+		//pBuffer->pCursor = pBuffer->pStart;
 		
-		if( pBuffer->pBack == NULL)
+		if( pBuffer->pStart == NULL)
 		{
 			free(pBuffer);
 			pBuffer = NULL;
@@ -58,7 +59,7 @@ void deleteBuffer(netWork_buffer_t** ppBuffer)
 			sal_print(PRINT_WARNING,"deleteBuffer \n");//!! sup
 
 			sal_mutex_destroy(&(pBuffer->mutex));
-			free(pBuffer->pBack);
+			free(pBuffer->pStart);
 			
 			free(pBuffer);
 		}
@@ -66,6 +67,7 @@ void deleteBuffer(netWork_buffer_t** ppBuffer)
 	}
 }
 
+/*
 int bufferPushFront(netWork_buffer_t* pBuffer, void* pData)
 {
 	int error = 1; //!!
@@ -91,6 +93,7 @@ int bufferPushFront(netWork_buffer_t* pBuffer, void* pData)
 
 	return error;
 }
+*/
 
 unsigned int bufferGetFreeCellNb(const netWork_buffer_t* pBuffer)
 {
@@ -99,10 +102,42 @@ unsigned int bufferGetFreeCellNb(const netWork_buffer_t* pBuffer)
 
 int bufferIsEmpty(netWork_buffer_t* pBuffer)
 {
-	return pBuffer->pBack == pBuffer->pFront;
+	return pBuffer->pStart == pBuffer->pFront;
 }
 
 void bufferClean(netWork_buffer_t* pBuffer)
 {
-	pBuffer->pFront = pBuffer->pBack;
+	pBuffer->pFront = pBuffer->pStart;
+	//pBuffer->pCursor = pBuffer->pStart;
+}
+
+void bufferPrint(netWork_buffer_t* pBuffer)
+{
+	void* it = pBuffer->pStart;
+	
+	int  ii = 0;
+	
+	sal_print(PRINT_WARNING," pointer dataBuffer :%d \n",pBuffer->pStart);
+	sal_print(PRINT_WARNING," buffSize :%d \n",pBuffer->buffSize);
+	sal_print(PRINT_WARNING," buffCellSize :%d \n",pBuffer->buffCellSize);
+	
+	sal_print(PRINT_WARNING," data : \n");
+
+	
+	for( ; it < pBuffer->pFront ; ++it /*it += pBuffer->buffCellSize*/)
+	{
+		
+		
+		sal_print(PRINT_WARNING," - 0x : %x \n",*( (char*) it ) );
+		
+		/*
+		sal_print(PRINT_WARNING,"	- 0x:");
+		for( ii = (pBuffer->buffCellSize -1)  ; ii >= 0 ; --ii)
+		{
+			sal_print(PRINT_WARNING,"%x",*( (char*) (it + ii) ) );
+		}
+		sal_print(PRINT_WARNING,"\n");
+		*/
+	}
+	
 }

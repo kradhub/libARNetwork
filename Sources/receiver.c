@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <inttypes.h>
+#include <string.h>
 
 #include <stdio.h>// !!!! sup
 #include <sys/stat.h> //!!!sup
@@ -32,12 +33,15 @@
 /**
  *  @brief get a command in the receiving buffer
  * 	@param pBuffsend the pointer on the receiver
- * 	@param pCmd the pointer on the command
+ * 	@param pCmd adress of the pointer on the command
  * 	@return error 1 if buffer is empty
  *	@pre only call by runSendingThread()
  * 	@see runSendingThread()
 **/
-int getCmd(netWork_Receiver_t* pReceiver, uint8_t* pCmd);
+int getCmd(netWork_Receiver_t* pReceiver, uint8_t** ppCmd);
+
+
+int initRecvBuffer(netWork_Receiver_t* pReceiver);
 
 #define OUTPUT_PARAM_NUM 4
 #define MICRO_SECOND 1000
@@ -73,8 +77,6 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 		pReceiver->outputBufferNum = outputBufferNum;
 		pReceiver->pptab_outputBuffer = malloc(sizeof(netWork_inOutBuffer_t) * outputBufferNum );
 		
-		pReceiver->readDataSize = 0;
-		
 		if(pReceiver->pptab_outputBuffer)
 		{
 			va_start(ap, outputBufferNum );
@@ -102,12 +104,8 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 		
 		if(!error)
 		{
-			pReceiver->recvBufferSize = recvBufferSize;
-			pReceiver->pRecvBuffer = malloc( recvBufferSize ); //voir si c bon !!!!!!!!!
-			
-			
-			sal_print(PRINT_WARNING," new pReceiver->pRecvBuffer : %d \n", pReceiver->pRecvBuffer);//!! sup
-			
+			//pReceiver->recvBufferSize = recvBufferSize;
+			pReceiver->pRecvBuffer = newBuffer(recvBufferSize,1);	//malloc( recvBufferSize ); //voir si c bon !!!!!!!!!
 			if(pReceiver->pRecvBuffer == NULL)
 			{
 				error = 1;
@@ -119,7 +117,7 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 			deleteReceiver(&pReceiver);
 		}
 	}
-		
+	
 	return pReceiver;
 }
 
@@ -147,7 +145,7 @@ void deleteReceiver(netWork_Receiver_t** ppReceiver)
 				free(pReceiver->pptab_outputBuffer);
 			}
 			
-			free(pReceiver->pRecvBuffer);
+			deleteBuffer( &(pReceiver->pRecvBuffer) ); //free(pReceiver->pRecvBuffer);
 	
 			free(pReceiver);
 		}
@@ -166,48 +164,62 @@ void* runReceivingThread(void* data)
 	
 	recvCmd.pTabUint8 = NULL;
 	
-	int fd;
-	fd = open("wifi", O_RDONLY);
+	pReceiver->fd = open("wifi", O_RDONLY);
 	
 	while( pReceiver->isAlive )
 	{
 		//usleep(pReceiver->sleepTime);//sup ?
 		
 		//receiverRead( pReceiver, &(pReceiver->readDataSize) );
-		pReceiver->readDataSize = read(fd, pReceiver->pRecvBuffer, pReceiver->recvBufferSize);
+		//pReceiver->readDataSize = read(fd, pReceiver->pRecvBuffer, pReceiver->pRecvBuffer->buffSize);
 		
-		sal_print(PRINT_WARNING,"-waaaaaaaaaaaaaaaaaaaaa-\n");
-		
-		if( pReceiver->readDataSize > 0 /*pReceiver->pRecvBuffer != NULL*/)
+		if( receiverRead( pReceiver ) > 0 /*pReceiver->readDataSize > 0*/)
 		{
 			sal_print(PRINT_WARNING,"--- read  Receiver ---\n");
-			while( getCmd(pReceiver, recvCmd.pTabUint8) )
+
+			bufferPrint(pReceiver->pRecvBuffer);
+			
+			while( !getCmd( pReceiver, &(recvCmd.pTabUint8) ) )
 			{
+				sal_print(PRINT_WARNING," totoooooooooooooooo recvCmd.pTabUint8 %d \n", recvCmd.pTabUint8);
+				sal_print(PRINT_WARNING," +++++++ ++ +recvCmd.pTabUint8[AR_CMD_INDEX_TYPE] type : %d \n",(int) recvCmd.pTabUint8[AR_CMD_INDEX_TYPE]);
+				sal_print(PRINT_WARNING," +++++++ ++ +cmd type : %d \n",recvCmd.pCmd->type);
+				
 				switch (recvCmd.pCmd->type)
 				{
 					case CMD_TYPE_ACK:
+						sal_print(PRINT_WARNING," CMD_TYPE_ACK \n");
 						senderAckReceived(pReceiver->pSender,recvCmd.pCmd->id,recvCmd.pCmd->seq);
 					break;
 					
 					case CMD_TYPE_DATA:
 					
+						sal_print(PRINT_WARNING," CMD_TYPE_DATA \n");
+						
 						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->outputBufferNum,
 															recvCmd.pCmd->id);
 						if(pOutBufferTemp != NULL)
 						{
-							ringBuffPushBack(pOutBufferTemp->pBuffer, recvCmd.pCmd->data);
+							//sup pushError
+							pushError=ringBuffPushBack(	pOutBufferTemp->pBuffer,
+												( recvCmd.pTabUint8 + AR_CMD_INDEX_DATA ) );
+												
+							sal_print(PRINT_WARNING," pushError :%d \n",pushError);
 						}							
 					break;
 					
 					case CMD_TYPE_DATA_WITH_ACK:
 					
+						sal_print(PRINT_WARNING," CMD_TYPE_DATA_WITH_ACK \n");
+					
 						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->outputBufferNum,
 															recvCmd.pCmd->id);
 						if(pOutBufferTemp != NULL)
 						{
-							pushError = ringBuffPushBack(pOutBufferTemp->pBuffer,recvCmd.pCmd->data);
+							pushError = ringBuffPushBack(	pOutBufferTemp->pBuffer,
+															&(recvCmd.pTabUint8[AR_CMD_INDEX_DATA]));
 							
 							if( !pushError)
 							{
@@ -217,14 +229,14 @@ void* runReceivingThread(void* data)
 					break;
 					
 					default:
-					
+						sal_print(PRINT_WARNING," default \n");
 					break;
 				}
 			}
 		}
 	}
      
-    close(fd);
+    close(pReceiver->fd);
        
     return NULL;
 }
@@ -234,9 +246,49 @@ void stopReceiver(netWork_Receiver_t* pReceiver)
 	pReceiver->isAlive = 0;
 }
 
-int getCmd(netWork_Receiver_t* pReceiver, uint8_t* pCmd)
+int getCmd(netWork_Receiver_t* pReceiver, uint8_t** ppCmd)
 {
-	//!!!!!
+	sal_print(PRINT_WARNING," getCmd \n");
+	int error = 1;
+
+	int cmdSize = 0 ;
+
+	if(*ppCmd == NULL)
+	{
+		sal_print(PRINT_WARNING," = NULL \n");
+		*ppCmd = pReceiver->pRecvBuffer->pStart;
+	}
+	else
+	{
+		sal_print(PRINT_WARNING," NEXT \n");
+		//point the next command
+		(*ppCmd) +=  (int) ( (*ppCmd)[AR_CMD_INDEX_SIZE] ) ;
+	}
+	
+	//check if the buffer stores enough data
+	if(*ppCmd <= pReceiver->pRecvBuffer->pFront - AR_CMD_HEADER_SIZE)
+	{
+		sal_print(PRINT_WARNING," head size ok \n");
+		
+		cmdSize = *( (int*) (*ppCmd + AR_CMD_INDEX_SIZE) ) ;
+		
+		if(*ppCmd <= pReceiver->pRecvBuffer->pFront - cmdSize)
+		{
+			sal_print(PRINT_WARNING," total size ok :%d  \n", cmdSize);
+			sal_print(PRINT_WARNING," pCmd: %d \n", *ppCmd);
+			sal_print(PRINT_WARNING,"pReceiver->pRecvBuffer->pFront : %d \n",pReceiver->pRecvBuffer->pFront);
+
+			error = 0;
+		}
+	}
+	
+	if( error != 0)
+	{
+		sal_print(PRINT_WARNING," lastttttttttttttttttt cmd \n");
+		*ppCmd = NULL;
+	}
+	
+	return error;
 }
 
 void returnASK(netWork_Receiver_t* pReceiver, int id, int seq)
@@ -250,26 +302,12 @@ void returnASK(netWork_Receiver_t* pReceiver, int id, int seq)
 	}
 }
 
-void receiverRead(netWork_Receiver_t* pReceiver, int* readDataSize)
+int receiverRead(netWork_Receiver_t* pReceiver)
 {
-	int fd;
-	*readDataSize = 0;
+	int readDataSize = read(pReceiver->fd, pReceiver->pRecvBuffer->pStart, pReceiver->pRecvBuffer->buffSize );
 	
-	fd = open("wifi", O_RDONLY);
+	//pReceiver->pRecvBuffer->pCursor =  pReceiver->pRecvBuffer->pStart;
+	pReceiver->pRecvBuffer->pFront =  pReceiver->pRecvBuffer->pStart + readDataSize;
 	
-	if (fd != 0)
-	{
-		//*readDataSize = fread( pReceiver->pRecvBuffer, 1,pReceiver->recvBufferSize,pFichier );
-		*readDataSize = read(fd, pReceiver->pRecvBuffer, pReceiver->recvBufferSize);
-		
-		
-		sal_print(PRINT_WARNING," readDataSize : %d \n", *readDataSize);
-		
-		close(fd);
-	}
-	else
-	{
-		// On affiche un message d'erreur si on veut
-		sal_print(PRINT_WARNING," no wifiCopy.txt\n");
-	}
+	return readDataSize;
 }
