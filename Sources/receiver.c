@@ -80,11 +80,11 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 		if(pReceiver->pptab_outputBuffer)
 		{
 			va_start(ap, outputBufferNum );
-			for(iiOutputBuff = outputBufferNum ; iiOutputBuff != 0 ; --iiOutputBuff) // pass it  !!!! ////
+			for(iiOutputBuff = 0 ; iiOutputBuff < outputBufferNum; ++iiOutputBuff) // pass it  !!!! ////
 			{
 				//get parameters //!!!!!!!!!!!!!!!!!!!!!!
 				paramNewOutputBuff.id = va_arg(ap, int);
-				paramNewOutputBuff.dataType = va_arg(ap, int); //paramNewOutputBuff.needAck = va_arg(ap, int);
+				paramNewOutputBuff.dataType = va_arg(ap, int);
 				paramNewOutputBuff.buffSize = va_arg(ap, unsigned int);
 				paramNewOutputBuff.buffCellSize = va_arg(ap, unsigned int);
 				
@@ -93,7 +93,7 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 				paramNewOutputBuff.nbOfRetry = 1;//not used
 				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			
-				pReceiver->pptab_outputBuffer[iiOutputBuff -1] = newInOutBuffer(&paramNewOutputBuff);
+				pReceiver->pptab_outputBuffer[iiOutputBuff] = newInOutBuffer(&paramNewOutputBuff);
 			}
 			va_end(ap);
 		}
@@ -181,8 +181,6 @@ void* runReceivingThread(void* data)
 			
 			while( !getCmd( pReceiver, &(recvCmd.pTabUint8) ) )
 			{
-				sal_print(PRINT_WARNING," totoooooooooooooooo recvCmd.pTabUint8 %d \n", recvCmd.pTabUint8);
-				sal_print(PRINT_WARNING," +++++++ ++ +recvCmd.pTabUint8[AR_CMD_INDEX_TYPE] type : %d \n",(int) recvCmd.pTabUint8[AR_CMD_INDEX_TYPE]);
 				sal_print(PRINT_WARNING," +++++++ ++ +cmd type : %d \n",recvCmd.pCmd->type);
 				
 				switch (recvCmd.pCmd->type)
@@ -202,10 +200,11 @@ void* runReceivingThread(void* data)
 						if(pOutBufferTemp != NULL)
 						{
 							//sup pushError
-							pushError=ringBuffPushBack(	pOutBufferTemp->pBuffer,
+							pushError = ringBuffPushBack(	pOutBufferTemp->pBuffer,
 												( recvCmd.pTabUint8 + AR_CMD_INDEX_DATA ) );
 												
 							sal_print(PRINT_WARNING," pushError :%d \n",pushError);
+							ringPrint(pOutBufferTemp->pBuffer);
 						}							
 					break;
 					
@@ -255,36 +254,27 @@ int getCmd(netWork_Receiver_t* pReceiver, uint8_t** ppCmd)
 
 	if(*ppCmd == NULL)
 	{
-		sal_print(PRINT_WARNING," = NULL \n");
 		*ppCmd = pReceiver->pRecvBuffer->pStart;
 	}
 	else
 	{
-		sal_print(PRINT_WARNING," NEXT \n");
 		//point the next command
 		(*ppCmd) +=  (int) ( (*ppCmd)[AR_CMD_INDEX_SIZE] ) ;
 	}
 	
 	//check if the buffer stores enough data
 	if(*ppCmd <= pReceiver->pRecvBuffer->pFront - AR_CMD_HEADER_SIZE)
-	{
-		sal_print(PRINT_WARNING," head size ok \n");
-		
+	{	
 		cmdSize = *( (int*) (*ppCmd + AR_CMD_INDEX_SIZE) ) ;
 		
-		if(*ppCmd <= pReceiver->pRecvBuffer->pFront - cmdSize)
 		{
-			sal_print(PRINT_WARNING," total size ok :%d  \n", cmdSize);
-			sal_print(PRINT_WARNING," pCmd: %d \n", *ppCmd);
-			sal_print(PRINT_WARNING,"pReceiver->pRecvBuffer->pFront : %d \n",pReceiver->pRecvBuffer->pFront);
-
+		if(*ppCmd <= pReceiver->pRecvBuffer->pFront - cmdSize)
 			error = 0;
 		}
 	}
 	
 	if( error != 0)
 	{
-		sal_print(PRINT_WARNING," lastttttttttttttttttt cmd \n");
 		*ppCmd = NULL;
 	}
 	

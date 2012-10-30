@@ -210,15 +210,7 @@ void ringPrint(netWork_ringBuffer_t* pRingBuff)
 	
 	for( ; it < itEnd ; ++it)
 	{
-		sal_print(PRINT_WARNING,"	- ");
-		
-		for( ii = 0 ; ii < pRingBuff->buffCellSize ; ++ii)
-		{
-			sal_print(PRINT_WARNING,"%x",*((char*)it));
-			++it;
-		}
-		
-		sal_print(PRINT_WARNING,"\n");
+		sal_print(PRINT_WARNING,"	- %x \n",*((char*)it));
 	}
 	
 }
