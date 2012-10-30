@@ -72,7 +72,7 @@ netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBu
 	netWork_Sender_t* pSender =  malloc( sizeof(netWork_Sender_t));
 	
 	int iiInputBuff = 0;
-	netWork_paramNewInOutBuffer_t paramNewInputBuff;
+	//netWork_paramNewInOutBuffer_t paramNewInputBuff;
 	int error=0;
 	
 	if(pSender)
@@ -82,14 +82,17 @@ netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBu
 
 		pSender->inputBufferNum = inputBufferNum;
 
-		pSender->pptab_inputBuffer = malloc(sizeof(netWork_inOutBuffer_t) * inputBufferNum );
+		pSender->pptab_inputBuffer = malloc(sizeof(netWork_inOutBuffer_t*) * inputBufferNum );
 		
 		if(pSender->pptab_inputBuffer)
 		{
 			va_start( ap, inputBufferNum );
 			for(iiInputBuff = 0 ; iiInputBuff < inputBufferNum ; ++iiInputBuff) // pass it  !!!! ////
 			{
+				pSender->pptab_inputBuffer[iiInputBuff] = va_arg(ap, netWork_inOutBuffer_t*);
+				/*
 				sal_print(PRINT_WARNING," iiInputBuff:%d \n",iiInputBuff);
+				
 				//get parameters //!!!!!!!!!!!!!!!!!!!!!!
 				paramNewInputBuff.id = va_arg(ap, int);
 				paramNewInputBuff.dataType = va_arg(ap, int); //paramNewInputBuff.needAck = va_arg(ap, int);
@@ -107,6 +110,9 @@ netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBu
 				{
 					error = 1;
 				}
+				*/
+				
+				sal_print(PRINT_WARNING,"pSender->pptab_inputBuffer[%d] :%p \n",iiInputBuff, pSender->pptab_inputBuffer[iiInputBuff]);//!! sup
 			}
 			va_end(ap);
 		}
@@ -152,10 +158,12 @@ void deleteSender(netWork_Sender_t** ppSender)
 			
 			if(pSender->pptab_inputBuffer)
 			{
+				/*
 				for(iiInputBuff = 0 ; iiInputBuff < pSender->inputBufferNum ; ++iiInputBuff) // pass it  !!!! ////
 				{
 					deleteInOutBuffer( &(pSender->pptab_inputBuffer[ iiInputBuff ]) );
 				}
+				*/
 				free(pSender->pptab_inputBuffer);
 			}
 			
@@ -170,6 +178,8 @@ void deleteSender(netWork_Sender_t** ppSender)
 
 void* runSendingThread(void* data)
 {
+	sal_print(PRINT_WARNING,"- runSendingThread -\n");
+	
 	netWork_Sender_t* pSender = data;
 	int seq = 0;
 	int indexInput = 0;

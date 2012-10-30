@@ -64,7 +64,7 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 	
 	int outputNum = 2 ; // !!!!!sup calc with param
 	int iiOutputBuff = 0;
-	netWork_paramNewInOutBuffer_t paramNewOutputBuff;
+	//netWork_paramNewInOutBuffer_t paramNewOutputBuff;
 	int error = 0;
 	
 	if(pReceiver)
@@ -75,13 +75,17 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 		pReceiver->pSender = NULL; // !!! 
 		
 		pReceiver->outputBufferNum = outputBufferNum;
-		pReceiver->pptab_outputBuffer = malloc(sizeof(netWork_inOutBuffer_t) * outputBufferNum );
+		pReceiver->pptab_outputBuffer = malloc( sizeof(netWork_inOutBuffer_t*) * outputBufferNum );
 		
 		if(pReceiver->pptab_outputBuffer)
 		{
 			va_start(ap, outputBufferNum );
 			for(iiOutputBuff = 0 ; iiOutputBuff < outputBufferNum; ++iiOutputBuff) // pass it  !!!! ////
 			{
+				pReceiver->pptab_outputBuffer[iiOutputBuff] = va_arg(ap, netWork_inOutBuffer_t*);
+				
+				sal_print(PRINT_WARNING,"pReceiver->pptab_outputBuffer[%d] :%p \n",iiOutputBuff, pReceiver->pptab_outputBuffer[iiOutputBuff]);//!! sup
+				/*
 				//get parameters //!!!!!!!!!!!!!!!!!!!!!!
 				paramNewOutputBuff.id = va_arg(ap, int);
 				paramNewOutputBuff.dataType = va_arg(ap, int);
@@ -92,8 +96,14 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 				paramNewOutputBuff.ackTimeoutMs = 1;//not used
 				paramNewOutputBuff.nbOfRetry = 1;//not used
 				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			
-				pReceiver->pptab_outputBuffer[iiOutputBuff] = newInOutBuffer(&paramNewOutputBuff);
+				
+				//pReceiver->pptab_outputBuffer[iiOutputBuff] = newInOutBuffer(&paramNewOutputBuff);
+				
+				if( pReceiver->pptab_outputBuffer[iiOutputBuff] == NULL )
+				{
+					error = 1;
+				}
+				*/
 			}
 			va_end(ap);
 		}
@@ -135,15 +145,18 @@ void deleteReceiver(netWork_Receiver_t** ppReceiver)
 		
 		if(pReceiver)
 		{
-
+			
 			if(pReceiver->pptab_outputBuffer)
 			{
+				/*
 				for(iiOutputBuff = pReceiver->outputBufferNum; iiOutputBuff != 0; --iiOutputBuff) // pass it  !!!! ////
 				{
 					deleteInOutBuffer( &(pReceiver->pptab_outputBuffer[iiOutputBuff - 1]) );
 				}
+				*/
 				free(pReceiver->pptab_outputBuffer);
 			}
+			
 			
 			deleteBuffer( &(pReceiver->pRecvBuffer) ); //free(pReceiver->pRecvBuffer);
 	
@@ -155,6 +168,8 @@ void deleteReceiver(netWork_Receiver_t** ppReceiver)
 
 void* runReceivingThread(void* data)
 {
+	sal_print(PRINT_WARNING,"- runReceivingThread -\n");
+	
 	netWork_Receiver_t* pReceiver = data;
 	
 	UNION_CMD recvCmd;
@@ -162,12 +177,18 @@ void* runReceivingThread(void* data)
 	
 	int pushError = 0;
 	
+	sal_print(PRINT_WARNING," a \n");
+	
 	recvCmd.pTabUint8 = NULL;
+	sal_print(PRINT_WARNING," b \n");
 	
 	pReceiver->fd = open("wifi", O_RDONLY);
 	
+	sal_print(PRINT_WARNING," c \n");
+	
 	while( pReceiver->isAlive )
 	{
+		sal_print(PRINT_WARNING,"- read  tic  -\n");
 		//usleep(pReceiver->sleepTime);//sup ?
 		
 		//receiverRead( pReceiver, &(pReceiver->readDataSize) );
@@ -194,11 +215,17 @@ void* runReceivingThread(void* data)
 					
 						sal_print(PRINT_WARNING," CMD_TYPE_DATA \n");
 						
+						sal_print(PRINT_WARNING," recvCmd.pCmd->id :%d \n",recvCmd.pCmd->id);
+						
 						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->outputBufferNum,
 															recvCmd.pCmd->id);
+															
+						sal_print(PRINT_WARNING," pOutBufferTemp %p \n",pOutBufferTemp);
+						
 						if(pOutBufferTemp != NULL)
 						{
+							sal_print(PRINT_WARNING," pOutBufferTemp ok \n");
 							//sup pushError
 							pushError = ringBuffPushBack(	pOutBufferTemp->pBuffer,
 												( recvCmd.pTabUint8 + AR_CMD_INDEX_DATA ) );
@@ -263,12 +290,12 @@ int getCmd(netWork_Receiver_t* pReceiver, uint8_t** ppCmd)
 	}
 	
 	//check if the buffer stores enough data
-	if(*ppCmd <= pReceiver->pRecvBuffer->pFront - AR_CMD_HEADER_SIZE)
+	if(*ppCmd <= (uint8_t*) pReceiver->pRecvBuffer->pFront - AR_CMD_HEADER_SIZE)
 	{	
 		cmdSize = *( (int*) (*ppCmd + AR_CMD_INDEX_SIZE) ) ;
 		
 		{
-		if(*ppCmd <= pReceiver->pRecvBuffer->pFront - cmdSize)
+		if(*ppCmd <= (uint8_t*) pReceiver->pRecvBuffer->pFront - cmdSize)
 			error = 0;
 		}
 	}

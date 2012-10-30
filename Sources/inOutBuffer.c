@@ -29,21 +29,22 @@ netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pPara
 	{
 		pInOutBuff->id = pParam->id;
 		pInOutBuff->pBuffer = newRingBuffer(pParam->buffSize, pParam->buffCellSize);
-		pInOutBuff->dataType = pParam->dataType; //pInOutBuff->needAck = pParam->needAck;
+		pInOutBuff->dataType = pParam->dataType;
 		pInOutBuff->sendingWaitTime = pParam->sendingWaitTime;
-		pInOutBuff->ackTimeoutMs =
-		pInOutBuff->nbOfRetry;
+		pInOutBuff->ackTimeoutMs = pParam->ackTimeoutMs;
+		pInOutBuff->nbOfRetry = pParam->nbOfRetry;
 		//	timeoutCallback(netWork_inOutBuffer_t* this)
 		
 		pInOutBuff->isWaitAck = 0;
 		pInOutBuff->seqWaitAck = 0;
 		pInOutBuff->waitTimeCount = pParam->sendingWaitTime;
-		pInOutBuff->ackWaitTimeCount;
-		pInOutBuff->retryCount;
+		pInOutBuff->ackWaitTimeCount = pParam->ackTimeoutMs;
+		pInOutBuff->retryCount = 0;
 		
 		
-		sal_print(PRINT_WARNING,"id :%d dataType :%d sendingWaitTime :%d waitTimeCount :%d pBuffer :%d  \n",pInOutBuff->id = pParam->id, pInOutBuff->dataType,
-																											pInOutBuff->sendingWaitTime, pInOutBuff->pBuffer ); //!! sup
+		sal_print(PRINT_WARNING,"id :%d dataType :%d sendingWaitTime :%d pBuffer :%p  \n",
+								pInOutBuff->id, pInOutBuff->dataType,
+								pInOutBuff->sendingWaitTime, pInOutBuff->pBuffer ); //!! sup
 		
 		if(pInOutBuff->pBuffer == NULL)
 		{
@@ -91,13 +92,14 @@ netWork_inOutBuffer_t* inOutBufferWithId(	netWork_inOutBuffer_t** pptabInOutBuff
 												int tabSize, int id)
 {
 	netWork_inOutBuffer_t** it = pptabInOutBuff ;
-	netWork_inOutBuffer_t** itEnd = pptabInOutBuff + (tabSize * sizeof(netWork_inOutBuffer_t*));
+	netWork_inOutBuffer_t** itEnd = pptabInOutBuff + (tabSize);
 	netWork_inOutBuffer_t* pInOutBuffSearched = NULL;
 	
 	int find = 0;
 	
-	for(it = pptabInOutBuff ; ( it != itEnd ) && !find ; ++it)
+	for(it = pptabInOutBuff ; ( it != itEnd ) && !find ; ++it )
 	{
+		sal_print(PRINT_WARNING,"*it: %p  id: %d \n",(*it),(*it)->id);//!! sup
 		if( (*it)->id == id)
 		{
 			pInOutBuffSearched = *it;
