@@ -8,8 +8,9 @@
 //include :
 
 #include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
+
+//#include <stdarg.h>
+//#include <string.h>
 
 #include <stdio.h>// !!!! sup
 #include <sys/stat.h> //!!!sup
@@ -62,7 +63,9 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 ******************************************/
 
 
-netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBufferNum, ...)
+//netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBufferNum, ...)
+netWork_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int inputBufferNum,
+								netWork_inOutBuffer_t** ppTab_input)
 {
 	sal_print(PRINT_WARNING,"newSender \n");//!! sup
 	
@@ -82,35 +85,15 @@ netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBu
 
 		pSender->inputBufferNum = inputBufferNum;
 
-		pSender->pptab_inputBuffer = malloc(sizeof(netWork_inOutBuffer_t*) * inputBufferNum );
+		pSender->pptab_inputBuffer = ppTab_input;//malloc(sizeof(netWork_inOutBuffer_t*) * inputBufferNum );
 		
+		/*
 		if(pSender->pptab_inputBuffer)
 		{
 			va_start( ap, inputBufferNum );
 			for(iiInputBuff = 0 ; iiInputBuff < inputBufferNum ; ++iiInputBuff) // pass it  !!!! ////
 			{
 				pSender->pptab_inputBuffer[iiInputBuff] = va_arg(ap, netWork_inOutBuffer_t*);
-				/*
-				sal_print(PRINT_WARNING," iiInputBuff:%d \n",iiInputBuff);
-				
-				//get parameters //!!!!!!!!!!!!!!!!!!!!!!
-				paramNewInputBuff.id = va_arg(ap, int);
-				paramNewInputBuff.dataType = va_arg(ap, int); //paramNewInputBuff.needAck = va_arg(ap, int);
-				paramNewInputBuff.sendingWaitTime = va_arg(ap, int);
-				paramNewInputBuff.ackTimeoutMs = va_arg(ap, int);
-				paramNewInputBuff.nbOfRetry = va_arg(ap, int);
-				
-				paramNewInputBuff.buffSize = va_arg(ap, unsigned int);
-				paramNewInputBuff.buffCellSize = va_arg(ap, unsigned int);
-				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			
-				pSender->pptab_inputBuffer[iiInputBuff] = newInOutBuffer(&paramNewInputBuff);
-				
-				if(pSender->pptab_inputBuffer[iiInputBuff] == NULL)
-				{
-					error = 1;
-				}
-				*/
 				
 				sal_print(PRINT_WARNING,"pSender->pptab_inputBuffer[%d] :%p \n",iiInputBuff, pSender->pptab_inputBuffer[iiInputBuff]);//!! sup
 			}
@@ -120,6 +103,7 @@ netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBu
 		{
 			error = 1;
 		}
+		*/
 		
 		if(!error)
 		{
@@ -156,16 +140,18 @@ void deleteSender(netWork_Sender_t** ppSender)
 		{
 			sal_print(PRINT_WARNING,"deleteSender \n");//!! sup
 			
+			/*
 			if(pSender->pptab_inputBuffer)
 			{
-				/*
+				
 				for(iiInputBuff = 0 ; iiInputBuff < pSender->inputBufferNum ; ++iiInputBuff) // pass it  !!!! ////
 				{
 					deleteInOutBuffer( &(pSender->pptab_inputBuffer[ iiInputBuff ]) );
 				}
-				*/
+				
 				free(pSender->pptab_inputBuffer);
 			}
+			*/
 			
 			//free(pSender->pSendingBuffer);
 			deleteBuffer( &(pSender->pSendingBuffer) );

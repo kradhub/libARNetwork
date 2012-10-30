@@ -8,8 +8,9 @@
 //include :
 
 #include <stdlib.h>
-#include <stdarg.h>
-#include <inttypes.h>
+
+//#include <stdarg.h>
+//#include <inttypes.h>
 #include <string.h>
 
 #include <stdio.h>// !!!! sup
@@ -53,7 +54,9 @@ int initRecvBuffer(netWork_Receiver_t* pReceiver);
 ******************************************/
 
 
-netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int outputBufferNum, ...)
+//netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int outputBufferNum, ...)
+netWork_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int outputBufferNum,
+									netWork_inOutBuffer_t** pptab_output)
 {
 	sal_print(PRINT_WARNING,"newReceiver \n");//!! sup
 	
@@ -75,8 +78,9 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 		pReceiver->pSender = NULL; // !!! 
 		
 		pReceiver->outputBufferNum = outputBufferNum;
-		pReceiver->pptab_outputBuffer = malloc( sizeof(netWork_inOutBuffer_t*) * outputBufferNum );
+		pReceiver->pptab_outputBuffer = pptab_output;//malloc( sizeof(netWork_inOutBuffer_t*) * outputBufferNum );
 		
+		/*
 		if(pReceiver->pptab_outputBuffer)
 		{
 			va_start(ap, outputBufferNum );
@@ -85,25 +89,6 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 				pReceiver->pptab_outputBuffer[iiOutputBuff] = va_arg(ap, netWork_inOutBuffer_t*);
 				
 				sal_print(PRINT_WARNING,"pReceiver->pptab_outputBuffer[%d] :%p \n",iiOutputBuff, pReceiver->pptab_outputBuffer[iiOutputBuff]);//!! sup
-				/*
-				//get parameters //!!!!!!!!!!!!!!!!!!!!!!
-				paramNewOutputBuff.id = va_arg(ap, int);
-				paramNewOutputBuff.dataType = va_arg(ap, int);
-				paramNewOutputBuff.buffSize = va_arg(ap, unsigned int);
-				paramNewOutputBuff.buffCellSize = va_arg(ap, unsigned int);
-				
-				paramNewOutputBuff.sendingWaitTime = 0; //not used
-				paramNewOutputBuff.ackTimeoutMs = 1;//not used
-				paramNewOutputBuff.nbOfRetry = 1;//not used
-				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-				
-				//pReceiver->pptab_outputBuffer[iiOutputBuff] = newInOutBuffer(&paramNewOutputBuff);
-				
-				if( pReceiver->pptab_outputBuffer[iiOutputBuff] == NULL )
-				{
-					error = 1;
-				}
-				*/
 			}
 			va_end(ap);
 		}
@@ -111,6 +96,7 @@ netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int output
 		{
 			error = 1;
 		}
+		*/
 		
 		if(!error)
 		{
@@ -145,18 +131,18 @@ void deleteReceiver(netWork_Receiver_t** ppReceiver)
 		
 		if(pReceiver)
 		{
-			
+			/*
 			if(pReceiver->pptab_outputBuffer)
 			{
-				/*
+				
 				for(iiOutputBuff = pReceiver->outputBufferNum; iiOutputBuff != 0; --iiOutputBuff) // pass it  !!!! ////
 				{
 					deleteInOutBuffer( &(pReceiver->pptab_outputBuffer[iiOutputBuff - 1]) );
 				}
-				*/
+				
 				free(pReceiver->pptab_outputBuffer);
 			}
-			
+			*/
 			
 			deleteBuffer( &(pReceiver->pRecvBuffer) ); //free(pReceiver->pRecvBuffer);
 	

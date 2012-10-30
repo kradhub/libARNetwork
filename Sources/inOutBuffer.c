@@ -99,7 +99,6 @@ netWork_inOutBuffer_t* inOutBufferWithId(	netWork_inOutBuffer_t** pptabInOutBuff
 	
 	for(it = pptabInOutBuff ; ( it != itEnd ) && !find ; ++it )
 	{
-		sal_print(PRINT_WARNING,"*it: %p  id: %d \n",(*it),(*it)->id);//!! sup
 		if( (*it)->id == id)
 		{
 			pInOutBuffSearched = *it;

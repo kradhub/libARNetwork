@@ -46,7 +46,9 @@ struct netWork_Sender_t
  *	@post Call deleteSender()
  * 	@return Pointer on the new sender
 **/
-netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBufferNum, ...);
+//netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBufferNum, ...);
+netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBufferNum,
+								netWork_inOutBuffer_t** ppTab_input);
 
 /**
  *  @brief Delete the sender
