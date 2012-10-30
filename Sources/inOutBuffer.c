@@ -28,7 +28,8 @@ netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pPara
 	if(pInOutBuff)
 	{
 		pInOutBuff->id = pParam->id;
-		pInOutBuff->pBuffer = newRingBuffer(pParam->buffSize, pParam->buffCellSize);
+		pInOutBuff->pBuffer = newRingBufferWithOverwriting(	pParam->buffSize, pParam->buffCellSize,
+															pParam->overwriting);
 		pInOutBuff->dataType = pParam->dataType;
 		pInOutBuff->sendingWaitTime = pParam->sendingWaitTime;
 		pInOutBuff->ackTimeoutMs = pParam->ackTimeoutMs;

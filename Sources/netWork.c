@@ -44,9 +44,11 @@ netWork_t* newNetWork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
     paramNewACK.dataType = CMD_TYPE_ACK;
     paramNewACK.buffSize = 1;
 	paramNewACK.buffCellSize = sizeof(int);
+	paramNewACK.overwriting = 0;
     paramNewACK.sendingWaitTime = 0; //not used
     paramNewACK.ackTimeoutMs = 0; //not used
     paramNewACK.nbOfRetry = 0 ; //not used
+    
     
 	if(pNetWork == NULL)
 	{

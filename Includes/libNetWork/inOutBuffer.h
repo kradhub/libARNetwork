@@ -31,6 +31,7 @@ typedef struct netWork_paramNewInOutBuffer_t
     
     unsigned int buffSize;
     unsigned int buffCellSize;
+    int overwriting;
 
 }netWork_paramNewInOutBuffer_t;
 
