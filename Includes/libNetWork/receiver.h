@@ -32,11 +32,6 @@
 **/
 typedef struct netWork_Receiver_t
 {
-	
-	/*void* pRecvBuffer;
-	int recvBufferSize;*/
-	
-	
 	netWork_buffer_t* pRecvBuffer;
 	
 	netWork_Sender_t* pSender;
@@ -48,8 +43,8 @@ typedef struct netWork_Receiver_t
 	int isAlive;
 	int sleepTime;
 	
-	//int readDataSize;
-	int fd;//fifopipe temp
+	//int fd;//fifopipe temp
+	int socket;
 	
 }netWork_Receiver_t;
 
@@ -97,6 +92,11 @@ void returnASK(netWork_Receiver_t* pReceiver, int id, int seq);
 
 
 int receiverRead(netWork_Receiver_t* pReceiver);
+
+int idOutputToIdAck( int id);
+int idAckToIdInput( int id);
+
+int receiverBind(netWork_Receiver_t* pReceiver, unsigned short port);
 
 #endif // _RECEIVER_H_
 

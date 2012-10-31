@@ -80,9 +80,10 @@ void deleteInOutBuffer(netWork_inOutBuffer_t** ppInOutBuff)
 void inOutBufferAckReceived(netWork_inOutBuffer_t* pInOutBuff, int seqNum)
 {
 	// !!! mutex ?
-	
+	sal_print(PRINT_WARNING,"oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo \n");//!! sup
 	if(pInOutBuff->isWaitAck && pInOutBuff->seqWaitAck == seqNum)
 	{
+		sal_print(PRINT_WARNING,"whaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \n");//!! sup
 		pInOutBuff->isWaitAck = 0;
 		ringBuffPopFront( pInOutBuff->pBuffer, NULL );
 	}

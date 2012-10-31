@@ -84,7 +84,7 @@ int ringBuffPopFront(netWork_ringBuffer_t* pRingBuff, void* pPopData);
  * 	@param pRingBuff pointer on the ring buffer
  * 	@return number of free cell of the buffer 
 **/
-/*inline*/ unsigned int ringBuffGetFreeCellNb(const netWork_ringBuffer_t* pRingBuff);
+/*inline*/ int ringBuffGetFreeCellNb(const netWork_ringBuffer_t* pRingBuff);
 /*
 {
 	return pRingBuff->buffIndexOutput - pRingBuff->buffIndexInput ;
@@ -121,7 +121,7 @@ int ringBuffPopFront(netWork_ringBuffer_t* pRingBuff, void* pPopData);
  * 	@param pFrontData pointer on the data popped
  * 	@return error equal 1 if the buffer is empty 
 **/
-int ringBuffFront(const netWork_ringBuffer_t* pRingBuff, void* pFrontData);
+int ringBuffFront( netWork_ringBuffer_t* pRingBuff, void* pFrontData);
 
 /**
  *  @brief clean the buffer
@@ -133,7 +133,7 @@ void ringBuffClean(netWork_ringBuffer_t* pRingBuff);
  *  @brief print the contents of the buffer
  * 	@param pRingBuff pointer on the ring buffer
 **/
-void ringPrint(netWork_ringBuffer_t* pRingBuff);
+void ringBuffPrint(netWork_ringBuffer_t* pRingBuff);
 
 #endif // _RING_BUFFER_H_
 

@@ -37,7 +37,8 @@ struct netWork_Sender_t
 	int isAlive;
 	int sleepTime;
 	
-	int fd;//fifopipe temp
+	//int fd;//fifopipe temp
+	int socket;
 };
 
 
@@ -89,7 +90,7 @@ void stopSender(netWork_Sender_t* pSender);
 **/
 void senderAckReceived(netWork_Sender_t* pSender, int id, int seqNum);
 
-
+int senderConnection(netWork_Sender_t* pSender, int port);
 
 #endif // _SENDER_H_
 

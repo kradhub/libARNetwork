@@ -11,6 +11,7 @@
 
 #include <stdarg.h>
 #include <inttypes.h>
+#include <unistd.h>
 
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
@@ -19,6 +20,9 @@
 #include <libNetWork/sender.h>
 #include <libNetWork/receiver.h>
 #include <libNetWork/netWork.h>
+
+typedef struct sockaddr_in SOCKADDR_IN;
+typedef struct sockaddr SOCKADDR;
 
 /*****************************************
  * 
@@ -72,9 +76,12 @@ netWork_t* newNetWork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 				paramNewInOutput = va_arg(ap, netWork_paramNewInOutBuffer_t);
 				pNetWork->ppTabOutput[ii] = newInOutBuffer(&paramNewInOutput);
 				
-				paramNewACK.id = -paramNewInOutput.id;
+				paramNewACK.id = idOutputToIdAck(paramNewInOutput.id); 
+				
+				sal_print(PRINT_WARNING,"paramNewACK.id :%d \n", paramNewACK.id ); //!! sup
+				
 				indexAckOutput = numberOfOutput + ii;
-				pNetWork->ppTabOutput[ indexAckOutput ] = newInOutBuffer(&paramNewInOutput);
+				pNetWork->ppTabOutput[ indexAckOutput ] = newInOutBuffer(&paramNewACK);
 				
 				pNetWork->ppTabInput[numberOfInput + ii] = pNetWork->ppTabOutput[ indexAckOutput ];
 			}
@@ -94,11 +101,15 @@ netWork_t* newNetWork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 	va_end(ap);
 	
 	if( !error )
-	{	
+	{		
 		pNetWork->pSender = newSender(sendBuffSize, pNetWork->numOfInput, pNetWork->ppTabInput);
 		pNetWork->pReceiver = newReceiver(recvBuffSize, pNetWork->numOfOutput, pNetWork->ppTabOutput);
 		
-		if( pNetWork->ppTabOutput == NULL || pNetWork->ppTabInput == NULL)
+		if( pNetWork->ppTabOutput && pNetWork->ppTabInput )
+		{
+			pNetWork->pReceiver->pSender = pNetWork->pSender;
+		}
+		else
 		{
 			error = 1;
 		}

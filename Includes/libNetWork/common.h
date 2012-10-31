@@ -66,7 +66,7 @@ typedef enum eAR_CMD_INDEX
 /**
  *  @brief 
 **/
-typedef struct AR_CMD 
+typedef struct AR_CMD // pass uint32_t
 {
 	eAR_CMD_TYPE type;
     int id;

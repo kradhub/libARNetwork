@@ -8,8 +8,8 @@
 //include :
 
 #include <stdlib.h>
-#include <inttypes.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
@@ -113,7 +113,12 @@ void bufferClean(netWork_buffer_t* pBuffer)
 
 void bufferPrint(netWork_buffer_t* pBuffer)
 {
+	//void* it = pBuffer->pStart;
+	
+
 	void* it = pBuffer->pStart;
+	
+	void* itEnd = pBuffer->pFront;
 	
 	int  ii = 0;
 	
@@ -123,21 +128,23 @@ void bufferPrint(netWork_buffer_t* pBuffer)
 	
 	sal_print(PRINT_WARNING," data : \n");
 
-	
-	for( ; it < pBuffer->pFront ; ++it /*it += pBuffer->buffCellSize*/)
+
+	while( it < itEnd )
 	{
-		
-		
-		sal_print(PRINT_WARNING," - 0x : %x \n",*( (char*) it ) );
-		
-		/*
-		sal_print(PRINT_WARNING,"	- 0x:");
-		for( ii = (pBuffer->buffCellSize -1)  ; ii >= 0 ; --ii)
+		sal_print(PRINT_WARNING,"	- 0x: ");
+		for(ii = 0 ; ii < pBuffer->buffCellSize ; ++ii)
 		{
-			sal_print(PRINT_WARNING,"%x",*( (char*) (it + ii) ) );
+			sal_print(PRINT_WARNING,"%2x | ",*((uint8_t*)it));
+			++it;
 		}
 		sal_print(PRINT_WARNING,"\n");
-		*/
 	}
+
+	/*
+	for( ; it < pBuffer->pFront ; ++it )
+	{
+		sal_print(PRINT_WARNING," - 0x : %x \n",*( (char*) it ) );
+	}
+	*/
 	
 }

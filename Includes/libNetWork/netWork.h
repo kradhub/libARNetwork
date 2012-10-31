@@ -24,7 +24,6 @@ typedef struct netWork_t
     netWork_Receiver_t* pReceiver;
     netWork_inOutBuffer_t** ppTabInput;
     netWork_inOutBuffer_t** ppTabOutput;
-    //netWork_inOutBuffer_t* ppTabACK;
     int numOfInput;
     int numOfOutput;
     

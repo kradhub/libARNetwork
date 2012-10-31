@@ -10,12 +10,19 @@
 #include <stdlib.h>
 
 //#include <stdarg.h>
-//#include <string.h>
+#include <string.h>
 
+/*
+#include <sys/types.h>
+#include <unistd.h> 
+*/
+
+/*
 #include <stdio.h>// !!!! sup
 #include <sys/stat.h> //!!!sup
 #include <sys/types.h> // !! sup
 #include <fcntl.h> //!!!
+*/
 
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>//voir ?
@@ -24,6 +31,9 @@
 #include <libNetWork/inOutBuffer.h>
 #include <libNetWork/singleBuffer.h>
 #include <libNetWork/sender.h>
+
+typedef struct sockaddr_in SOCKADDR_IN;
+typedef struct sockaddr SOCKADDR;
 
 /*****************************************
  * 
@@ -68,9 +78,6 @@ netWork_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int inputB
 								netWork_inOutBuffer_t** ppTab_input)
 {
 	sal_print(PRINT_WARNING,"newSender \n");//!! sup
-	
-	va_list ap;
-	//int vaListSize = inputBufferNum * INPUT_PARAM_NUM;
 	
 	netWork_Sender_t* pSender =  malloc( sizeof(netWork_Sender_t));
 	
@@ -164,8 +171,6 @@ void deleteSender(netWork_Sender_t** ppSender)
 
 void* runSendingThread(void* data)
 {
-	sal_print(PRINT_WARNING,"- runSendingThread -\n");
-	
 	netWork_Sender_t* pSender = data;
 	int seq = 0;
 	int indexInput = 0;
@@ -173,17 +178,15 @@ void* runSendingThread(void* data)
 	
 	netWork_inOutBuffer_t* pInputTemp;
 	
-	pSender->fd = open("wifi", O_WRONLY);
-	
 	while( pSender->isAlive )
 	{		
-		sal_print(PRINT_WARNING," senderTic \n");
+		//sal_print(PRINT_WARNING," senderTic \n");
 		usleep(pSender->sleepTime);
 		
 		for(indexInput = 0 ; indexInput < pSender->inputBufferNum ; ++indexInput  )
 		{
 			pInputTemp = pSender->pptab_inputBuffer[indexInput];
-			sal_print( PRINT_WARNING," Buff ID :%d \n",pInputTemp->id );
+			//sal_print( PRINT_WARNING," Buff ID :%d \n",pInputTemp->id );
 			
 			if(pInputTemp->waitTimeCount > 0)
 			{
@@ -219,7 +222,6 @@ void* runSendingThread(void* data)
 				sal_print(PRINT_WARNING,"  - not Empty and wait count = 0 \n");
 				if( !senderAddToBuffer(pSender, pInputTemp, seq) )
 				{
-					sal_print(PRINT_WARNING,"  copy ok \n");
 					pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
 					
 					switch(pInputTemp->dataType)
@@ -250,8 +252,8 @@ void* runSendingThread(void* data)
 		}
 		senderSend(pSender);
 	}
-	
-	close(pSender->fd);
+
+	sal_close(pSender->socket);
         
     return NULL;
 }
@@ -284,7 +286,8 @@ void senderSend(netWork_Sender_t* pSender)
 		
 		sal_print(PRINT_WARNING," nbCharCopy :%d \n",nbCharCopy);
 			
-		write(pSender->fd, pSender->pSendingBuffer->pStart, nbCharCopy);
+		//write(pSender->fd, pSender->pSendingBuffer->pStart, nbCharCopy);
+		sal_send(pSender->socket, pSender->pSendingBuffer->pStart, nbCharCopy, 0);
 			
 		pSender->pSendingBuffer->pFront = pSender->pSendingBuffer->pStart;
 		
@@ -295,8 +298,6 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 						int seqNum)
 {
 	sal_print(PRINT_WARNING," senderAddToBuffer \n");
-	
-	//char* tabC = 0;//sup
 	
 	int error = 1;
 	int sizeNeed = AR_CMD_HEADER_SIZE + pinputBuff->pBuffer->buffCellSize;
@@ -321,7 +322,6 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 		
 		//add data						
 		error = ringBuffFront(pinputBuff->pBuffer, pSender->pSendingBuffer->pFront);
-		//pSender->pSendingBuffer->pFront +=  pinputBuff->pBuffer->buffCellSize ;
 		
 		if(!error)
 		{
@@ -342,15 +342,23 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 
 void senderAckReceived(netWork_Sender_t* pSender, int id, int seqNum)
 {
-	sal_print(PRINT_WARNING," senderTransmitAck \n");
 	netWork_inOutBuffer_t* pInputBuff = inOutBufferWithId( pSender->pptab_inputBuffer,
 															pSender->inputBufferNum, id );
 	if(pInputBuff != NULL)
 	{
-		sal_print(PRINT_WARNING," E \n");
 		inOutBufferAckReceived(pInputBuff, seqNum);
-		sal_print(PRINT_WARNING," F \n");
-		ringBuffPopFront(pInputBuff->pBuffer, NULL);// !! pass in inOutBufferAckReceived ???
-		sal_print(PRINT_WARNING," G \n");
+		//ringBuffPopFront(pInputBuff->pBuffer, NULL);// !! pass in inOutBufferAckReceived ???
 	}
+}
+
+int senderConnection(netWork_Sender_t* pSender, int port)
+{
+	SOCKADDR_IN sendSin;
+	sendSin.sin_addr.s_addr = inet_addr("127.0.0.1"); // htonl(INADDR_ANY);  
+	sendSin.sin_family = AF_INET /*AF_UNIX*/;
+	sendSin.sin_port = htons(port);
+	
+	pSender->socket = sal_socket(  AF_INET /*AF_UNIX*/, SOCK_DGRAM /*SOCK_STREAM*/, 0);
+
+	return sal_connect(pSender->socket, (SOCKADDR*)&sendSin, sizeof(sendSin));
 }
