@@ -61,8 +61,8 @@ void senderSend(netWork_Sender_t* pSender);
 **/
 int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pinputBuff,
 						int seqNum);
-
-#define MICRO_SECOND 1000
+						
+#define MILLISECOND 1000
 #define SENDER_SLEEP_TIME_MS 25//1
 #define INPUT_PARAM_NUM 7
 
@@ -86,7 +86,7 @@ netWork_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int inputB
 	if(pSender)
 	{
 		pSender->isAlive = 1;
-		pSender->sleepTime = MICRO_SECOND * SENDER_SLEEP_TIME_MS;
+		pSender->sleepTime = MILLISECOND * SENDER_SLEEP_TIME_MS;
 
 		pSender->inputBufferNum = inputBufferNum;
 
@@ -150,21 +150,24 @@ void* runSendingThread(void* data)
 		for(indexInput = 0 ; indexInput < pSender->inputBufferNum ; ++indexInput  )
 		{
 			pInputTemp = pSender->pptab_inputBuffer[indexInput];
-			//sal_print( PRINT_WARNING," Buff ID :%d \n",pInputTemp->id );
+			/*
+			sal_print( PRINT_WARNING," Buff ID :%d \n",pInputTemp->id );
+			sal_print( PRINT_WARNING," pInputTemp->waitTimeCount :%d \n",pInputTemp->waitTimeCount );
+			sal_print( PRINT_WARNING," empty? :%d",ringBuffIsEmpty(pInputTemp->pBuffer));
+			*/
 			
 			if(pInputTemp->waitTimeCount > 0)
 			{
 				--(pInputTemp->waitTimeCount);
 			}
-			
 
 			if( inOutBuffeIsWaitAck(pInputTemp)  /*pInputTemp->isWaitAck*/) //mutex ?
 			{
 				
-				sal_print(PRINT_WARNING,"  - WaitAck ackWaitTimeCount: %d \n",pInputTemp->ackWaitTimeCount);
+				/*sal_print(PRINT_WARNING,"  - WaitAck ackWaitTimeCount: %d pInputTemp->retryCount :%d \n",
+											pInputTemp->ackWaitTimeCount , pInputTemp->retryCount); */
 				if(pInputTemp->ackWaitTimeCount == 0)
 				{
-					--(pInputTemp->retryCount);
 					if(pInputTemp->retryCount == 0)
 					{
 						//callBackReturn = pInputTemp->timeoutCallback();
@@ -173,21 +176,29 @@ void* runSendingThread(void* data)
 							pInputTemp->retryCount = pInputTemp->nbOfRetry;
 						}
 					}
-					
-					if(pInputTemp->retryCount != 0)
+					else
 					{
 						senderAddToBuffer(pSender, pInputTemp, pInputTemp->seqWaitAck);
 						pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
 					}
+					
+					if(pInputTemp->retryCount > 0 )
+					{
+						--(pInputTemp->retryCount);
+					}
 				}
-				--(pInputTemp->ackWaitTimeCount);
+				
+				if(pInputTemp->ackWaitTimeCount > 0 )
+				{
+					--(pInputTemp->ackWaitTimeCount);
+				}
 			}
 			else if( !ringBuffIsEmpty(pInputTemp->pBuffer) && !pInputTemp->waitTimeCount)
 			{
 				sal_print(PRINT_WARNING,"  - not Empty and wait count = 0 \n");
 				if( !senderAddToBuffer(pSender, pInputTemp, seq) )
 				{
-					pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
+					pInputTemp->waitTimeCount = pInputTemp->sendingWaitTime;
 					
 					switch(pInputTemp->dataType)
 					{
@@ -204,6 +215,10 @@ void* runSendingThread(void* data)
 						
 						case CMD_TYPE_ACK:
 							ringBuffPopFront(pInputTemp->pBuffer, NULL);
+						break;
+						
+						case CMD_TYPE_KEEP_ALIVE:
+						
 						break;
 						
 						default:

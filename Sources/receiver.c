@@ -257,11 +257,13 @@ int receiverRead(netWork_Receiver_t* pReceiver)
 	return readDataSize;
 }
 
+//inline !!!!
 int idOutputToIdAck( int id)
 {
 	return id + 1000; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
+//inline !!!!
 int idAckToIdInput( int id)
 {
 	return id - 1000; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

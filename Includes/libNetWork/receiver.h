@@ -91,7 +91,9 @@ void returnASK(netWork_Receiver_t* pReceiver, int id, int seq);
 
 int receiverRead(netWork_Receiver_t* pReceiver);
 
+//inline !!!!
 int idOutputToIdAck( int id);
+//inline !!!!
 int idAckToIdInput( int id);
 
 int receiverBind(netWork_Receiver_t* pReceiver, unsigned short port);
