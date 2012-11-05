@@ -42,6 +42,8 @@ netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pPara
 		pInOutBuff->ackWaitTimeCount = pParam->ackTimeoutMs;
 		pInOutBuff->retryCount = 0;
 		
+		sal_mutex_init( &(pInOutBuff->mutex) );
+		
 		
 		sal_print(PRINT_WARNING,"id :%d dataType :%d sendingWaitTime :%d pBuffer :%p  \n",
 								pInOutBuff->id, pInOutBuff->dataType,
@@ -49,7 +51,7 @@ netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pPara
 		
 		if(pInOutBuff->pBuffer == NULL)
 		{
-			free(pInOutBuff);
+			deleteInOutBuffer(&pInOutBuff); //free(pInOutBuff);
 		}
     }
     
@@ -67,7 +69,9 @@ void deleteInOutBuffer(netWork_inOutBuffer_t** ppInOutBuff)
 		if(pInOutBuff)
 		{
 			sal_print(PRINT_WARNING,"deleteInOutBuffer \n");//!! sup
-
+			
+			sal_mutex_destroy(&(pInOutBuff->mutex));
+			
 			free(pInOutBuff->pBuffer);
 		
 			free(pInOutBuff);
@@ -79,15 +83,14 @@ void deleteInOutBuffer(netWork_inOutBuffer_t** ppInOutBuff)
 
 void inOutBufferAckReceived(netWork_inOutBuffer_t* pInOutBuff, int seqNum)
 {
-	// !!! mutex ?
-	sal_print(PRINT_WARNING,"oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo \n");//!! sup
+	sal_mutex_lock(&(pInOutBuff->mutex)); // !!! mutex ?
+	
 	if(pInOutBuff->isWaitAck && pInOutBuff->seqWaitAck == seqNum)
 	{
-		sal_print(PRINT_WARNING,"whaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \n");//!! sup
 		pInOutBuff->isWaitAck = 0;
 		ringBuffPopFront( pInOutBuff->pBuffer, NULL );
 	}
-	// !!! mutex ?
+	sal_mutex_unlock(&(pInOutBuff->mutex)); // !!! mutex ?
 }
 
 netWork_inOutBuffer_t* inOutBufferWithId(	netWork_inOutBuffer_t** pptabInOutBuff,
@@ -109,4 +112,16 @@ netWork_inOutBuffer_t* inOutBufferWithId(	netWork_inOutBuffer_t** pptabInOutBuff
 	}
 	
 	return pInOutBuffSearched;
+}
+
+int inOutBuffeIsWaitAck(	netWork_inOutBuffer_t* pInOutBuff)
+{
+	int isWaitAckCpy = 0;
+	sal_mutex_lock(&(pInOutBuff->mutex));
+	
+	isWaitAckCpy = pInOutBuff->isWaitAck;
+	
+	sal_mutex_unlock(&(pInOutBuff->mutex));
+	
+	return isWaitAckCpy;
 }

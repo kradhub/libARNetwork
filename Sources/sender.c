@@ -73,7 +73,6 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 ******************************************/
 
 
-//netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBufferNum, ...)
 netWork_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int inputBufferNum,
 								netWork_inOutBuffer_t** ppTab_input)
 {
@@ -82,7 +81,6 @@ netWork_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int inputB
 	netWork_Sender_t* pSender =  malloc( sizeof(netWork_Sender_t));
 	
 	int iiInputBuff = 0;
-	//netWork_paramNewInOutBuffer_t paramNewInputBuff;
 	int error=0;
 	
 	if(pSender)
@@ -92,30 +90,10 @@ netWork_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int inputB
 
 		pSender->inputBufferNum = inputBufferNum;
 
-		pSender->pptab_inputBuffer = ppTab_input;//malloc(sizeof(netWork_inOutBuffer_t*) * inputBufferNum );
-		
-		/*
-		if(pSender->pptab_inputBuffer)
-		{
-			va_start( ap, inputBufferNum );
-			for(iiInputBuff = 0 ; iiInputBuff < inputBufferNum ; ++iiInputBuff) // pass it  !!!! ////
-			{
-				pSender->pptab_inputBuffer[iiInputBuff] = va_arg(ap, netWork_inOutBuffer_t*);
-				
-				sal_print(PRINT_WARNING,"pSender->pptab_inputBuffer[%d] :%p \n",iiInputBuff, pSender->pptab_inputBuffer[iiInputBuff]);//!! sup
-			}
-			va_end(ap);
-		}
-		else
-		{
-			error = 1;
-		}
-		*/
+		pSender->pptab_inputBuffer = ppTab_input;
 		
 		if(!error)
 		{
-			//pSender->sendingBufferSize = sendingBufferSize;
-			//pSender->pSendingBuffer = malloc( pSender->sendingBufferSize );
 			pSender->pSendingBuffer = newBuffer(sendingBufferSize, 1);
 			
 			if(pSender->pSendingBuffer == NULL)
@@ -147,20 +125,6 @@ void deleteSender(netWork_Sender_t** ppSender)
 		{
 			sal_print(PRINT_WARNING,"deleteSender \n");//!! sup
 			
-			/*
-			if(pSender->pptab_inputBuffer)
-			{
-				
-				for(iiInputBuff = 0 ; iiInputBuff < pSender->inputBufferNum ; ++iiInputBuff) // pass it  !!!! ////
-				{
-					deleteInOutBuffer( &(pSender->pptab_inputBuffer[ iiInputBuff ]) );
-				}
-				
-				free(pSender->pptab_inputBuffer);
-			}
-			*/
-			
-			//free(pSender->pSendingBuffer);
 			deleteBuffer( &(pSender->pSendingBuffer) );
 		
 			free(pSender);
@@ -194,7 +158,7 @@ void* runSendingThread(void* data)
 			}
 			
 
-			if(pInputTemp->isWaitAck) //mutex ?
+			if( inOutBuffeIsWaitAck(pInputTemp)  /*pInputTemp->isWaitAck*/) //mutex ?
 			{
 				sal_print(PRINT_WARNING,"  - WaitAck \n");
 				--(pInputTemp->ackWaitTimeCount);
@@ -286,7 +250,6 @@ void senderSend(netWork_Sender_t* pSender)
 		
 		sal_print(PRINT_WARNING," nbCharCopy :%d \n",nbCharCopy);
 			
-		//write(pSender->fd, pSender->pSendingBuffer->pStart, nbCharCopy);
 		sal_send(pSender->socket, pSender->pSendingBuffer->pStart, nbCharCopy, 0);
 			
 		pSender->pSendingBuffer->pFront = pSender->pSendingBuffer->pStart;
@@ -347,14 +310,13 @@ void senderAckReceived(netWork_Sender_t* pSender, int id, int seqNum)
 	if(pInputBuff != NULL)
 	{
 		inOutBufferAckReceived(pInputBuff, seqNum);
-		//ringBuffPopFront(pInputBuff->pBuffer, NULL);// !! pass in inOutBufferAckReceived ???
 	}
 }
 
-int senderConnection(netWork_Sender_t* pSender, int port)
+int senderConnection(netWork_Sender_t* pSender,const char* addr, int port)
 {
 	SOCKADDR_IN sendSin;
-	sendSin.sin_addr.s_addr = inet_addr("127.0.0.1"); // htonl(INADDR_ANY);  
+	sendSin.sin_addr.s_addr = inet_addr(addr);//inet_addr("127.0.0.1");
 	sendSin.sin_family = AF_INET /*AF_UNIX*/;
 	sendSin.sin_port = htons(port);
 	

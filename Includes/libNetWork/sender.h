@@ -37,7 +37,6 @@ struct netWork_Sender_t
 	int isAlive;
 	int sleepTime;
 	
-	//int fd;//fifopipe temp
 	int socket;
 };
 
@@ -47,7 +46,7 @@ struct netWork_Sender_t
  *	@post Call deleteSender()
  * 	@return Pointer on the new sender
 **/
-//netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBufferNum, ...);
+
 netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBufferNum,
 								netWork_inOutBuffer_t** ppTab_input);
 
@@ -90,7 +89,7 @@ void stopSender(netWork_Sender_t* pSender);
 **/
 void senderAckReceived(netWork_Sender_t* pSender, int id, int seqNum);
 
-int senderConnection(netWork_Sender_t* pSender, int port);
+int senderConnection(netWork_Sender_t* pSender,const char* addr, int port);
 
 #endif // _SENDER_H_
 

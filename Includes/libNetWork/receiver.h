@@ -43,7 +43,6 @@ typedef struct netWork_Receiver_t
 	int isAlive;
 	int sleepTime;
 	
-	//int fd;//fifopipe temp
 	int socket;
 	
 }netWork_Receiver_t;
@@ -54,7 +53,6 @@ typedef struct netWork_Receiver_t
  *	@post Call deleteReceiver()
  * 	@return Pointer on the new receiver
 **/
-//netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int outputBufferNum, ...);
 netWork_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int outputBufferNum,
 									netWork_inOutBuffer_t** pptab_output);
 

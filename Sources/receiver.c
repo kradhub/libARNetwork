@@ -9,18 +9,7 @@
 
 #include <stdlib.h>
 
-//#include <stdarg.h>
-
 #include <string.h>
-//#include <sys/types.h>
-//#include <inttypes.h>
-
-/*
-#include <stdio.h>// !!!! sup
-#include <sys/stat.h> //!!!sup
-#include <sys/types.h> // !! sup
-#include <fcntl.h> //!!!
-*/
 
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
@@ -61,7 +50,6 @@ int initRecvBuffer(netWork_Receiver_t* pReceiver);
 ******************************************/
 
 
-//netWork_Receiver_t* newReceiver(unsigned int recvBufferSize, unsigned int outputBufferNum, ...)
 netWork_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int outputBufferNum,
 									netWork_inOutBuffer_t** pptab_output)
 {
@@ -261,20 +249,8 @@ void returnASK(netWork_Receiver_t* pReceiver, int id, int seq)
 
 int receiverRead(netWork_Receiver_t* pReceiver)
 {
-
-/*
-	SOCKADDR_IN recvSin;
-	recvSin.sin_addr.s_addr = htonl(INADDR_ANY);   
-	recvSin.sin_family = AF_INET ;
-	recvSin.sin_port = htons(5551);
-	int size = sizeof (recvSin);
-	
-	int readDataSize =  sal_recvfrom(	pReceiver->socket, pReceiver->pRecvBuffer->pStart,
-								pReceiver->pRecvBuffer->buffSize, 0, &recvSin, &size);
-*/
 	int readDataSize =  sal_recv(	pReceiver->socket, pReceiver->pRecvBuffer->pStart,
 								pReceiver->pRecvBuffer->buffSize, 0);
-	
 
 	pReceiver->pRecvBuffer->pFront =  pReceiver->pRecvBuffer->pStart + readDataSize;
 	
