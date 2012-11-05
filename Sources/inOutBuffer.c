@@ -24,7 +24,7 @@ netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pPara
 {
 	netWork_inOutBuffer_t* pInOutBuff = malloc( sizeof(netWork_inOutBuffer_t));
 	sal_print(PRINT_WARNING,"newInOutBuffer \n"); //!! sup
-	int keepAliveData = 0x50505055;
+	int keepAliveData = ntohl (0x50505055); //!!!!!!!!!!!!!!!!!!
 	
 	if(pInOutBuff)
 	{

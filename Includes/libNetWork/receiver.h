@@ -96,7 +96,7 @@ int idOutputToIdAck( int id);
 //inline !!!!
 int idAckToIdInput( int id);
 
-int receiverBind(netWork_Receiver_t* pReceiver, unsigned short port);
+int receiverBind(netWork_Receiver_t* pReceiver, unsigned short port, int timeoutSec);
 
 #endif // _RECEIVER_H_
 

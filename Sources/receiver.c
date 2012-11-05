@@ -128,6 +128,8 @@ void* runReceivingThread(void* data)
 		//sal_print(PRINT_WARNING,"- read  tic  -\n");
 		//usleep(pReceiver->sleepTime);//sup ?
 		
+		//verif connect !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		
 		if( receiverRead( pReceiver ) > 0 /*pReceiver->readDataSize > 0*/)
 		{
 			sal_print(PRINT_WARNING,"--- read  Receiver: \n");
@@ -269,14 +271,21 @@ int idAckToIdInput( int id)
 	return id - 1000; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
-int receiverBind(netWork_Receiver_t* pReceiver, unsigned short port)
+int receiverBind(netWork_Receiver_t* pReceiver, unsigned short port, int timeoutSec)
 {
+	struct timeval timeout;  
+	
 	SOCKADDR_IN recvSin;
 	recvSin.sin_addr.s_addr = htonl(INADDR_ANY);   
 	recvSin.sin_family = AF_INET;
 	recvSin.sin_port = htons(port);
 	
 	pReceiver->socket = sal_socket(  AF_INET, SOCK_DGRAM,0);
+	
+	
+    timeout.tv_sec = timeoutSec;
+    timeout.tv_usec = 0; 
+	setsockopt (pReceiver->socket, SOL_SOCKET, SO_RCVTIMEO /*SO_SNDTIMEO*/, (char *)&timeout, sizeof(timeout));
 	
 	return sal_bind(pReceiver->socket, (SOCKADDR*)&recvSin, sizeof(recvSin));
 }
