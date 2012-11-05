@@ -24,7 +24,7 @@
 typedef struct netWork_paramNewInOutBuffer_t  
 {
     int id;
-    eAR_CMD_TYPE dataType;//int needAck;
+    eAR_CMD_TYPE dataType;
     int sendingWaitTime;
     int ackTimeoutMs;
     int nbOfRetry;
@@ -42,7 +42,7 @@ typedef struct netWork_inOutBuffer_t
 {
     int id;
     netWork_ringBuffer_t* pBuffer;
-    eAR_CMD_TYPE dataType;//int needAck;
+    eAR_CMD_TYPE dataType;
     int sendingWaitTime;
     int ackTimeoutMs;
     int nbOfRetry;
@@ -53,6 +53,8 @@ typedef struct netWork_inOutBuffer_t
     int waitTimeCount; // must be positive
     int ackWaitTimeCount;
     int retryCount;
+    
+    sal_mutex_t mutex;
     
 
 }netWork_inOutBuffer_t;
@@ -88,6 +90,8 @@ void inOutBufferAckReceived(netWork_inOutBuffer_t* pInOutBuff, int seqNum);
 **/
 netWork_inOutBuffer_t* inOutBufferWithId(	netWork_inOutBuffer_t** pptabInOutBuff,
 												int tabSize, int id);
+
+int inOutBuffeIsWaitAck( netWork_inOutBuffer_t* pInOutBuff);
 
 
 #endif // _IN_OUT_BUFFER_H_

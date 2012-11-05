@@ -160,8 +160,8 @@ void* runSendingThread(void* data)
 
 			if( inOutBuffeIsWaitAck(pInputTemp)  /*pInputTemp->isWaitAck*/) //mutex ?
 			{
-				sal_print(PRINT_WARNING,"  - WaitAck \n");
-				--(pInputTemp->ackWaitTimeCount);
+				
+				sal_print(PRINT_WARNING,"  - WaitAck ackWaitTimeCount: %d \n",pInputTemp->ackWaitTimeCount);
 				if(pInputTemp->ackWaitTimeCount == 0)
 				{
 					--(pInputTemp->retryCount);
@@ -180,6 +180,7 @@ void* runSendingThread(void* data)
 						pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
 					}
 				}
+				--(pInputTemp->ackWaitTimeCount);
 			}
 			else if( !ringBuffIsEmpty(pInputTemp->pBuffer) && !pInputTemp->waitTimeCount)
 			{
@@ -235,11 +236,7 @@ void stopSender(netWork_Sender_t* pSender)
 }
 
 void senderSend(netWork_Sender_t* pSender)
-{
-	// !!! temp
-	
-	sal_print(PRINT_WARNING," senderSend \n");
-	
+{	
 	int nbCharCopy = 0;
 	
 	if( !bufferIsEmpty(pSender->pSendingBuffer) )
