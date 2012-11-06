@@ -34,10 +34,62 @@ AM_CONDITIONAL([DEBUG_MODE], [test "$debugit" = "yes"])
 ##########################################################################
 # Define includes directories
 ##########################################################################
+
+
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+AC_ARG_WITH([libSalInstall],
+            AS_HELP_STRING([--with-libSalInstall=DIR],[directory of the libSal installation]),
+            [if test x$withval = xno; then
+              libSalInstall=""
+            else
+              libSalInstall="$withval"
+            fi], libSalInstall="")
+
+
+AC_ARG_WITH([libSalHeader],
+            AS_HELP_STRING([--with-libSalHeader=DIR],[directory of the libSal headers]),
+            [if test x$withval = xno; then
+              libSalHeader="$libSalInstall/include"
+            else
+              libSalHeader="$withval"
+            fi], libSalHeader="$libSalInstall/include")
+
+#!!AC_DEFINE_DIR([LIBSAL_HEADER],[libSalHeader],[Directory where to install browser plugin.])
+
+
+AC_ARG_WITH([libSalBin],
+            AS_HELP_STRING([--with-libSalBin=DIR],[directory of the libSal binaries]),
+            [if test x$withval = xno; then
+              libSalBin="$libSalInstall/lib"
+            else
+              libSalBin="$withval"
+            fi], libSalBin="$libSalInstall/lib")
+            
+#!!AC_DEFINE([libSalBin],[$libSalBin],[directory of the libSal binaries])
+#!!AC_SUBST([libSalBin])
+#!!AC_SUBST([LIBDIR])
+LDFLAGS="$LDFLAGS -L$libSalBin"
+
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
 CFLAGS="$CFLAGS -I../Includes"
 
-if test x"$INCLUDEDIR" != x""; then
-    CFLAGS="$CFLAGS -I$INCLUDEDIR"
+#!!if test x"$INCLUDEDIR" != x""; then
+#!!    CFLAGS="$CFLAGS -I$INCLUDEDIR"
+#!!fi
+
+echo "libSalInstall : $libSalInstall"
+echo "libSalHeader : $libSalHeader"
+echo "libSalBin : $libSalBin"
+
+echo "LDFLAGS : $LDFLAGS"
+
+if test x"$libSalHeader" != x""; then
+    CFLAGS="$CFLAGS -I$libSalHeader"
 fi
 
 CPPFLAGS="$CFLAGS"

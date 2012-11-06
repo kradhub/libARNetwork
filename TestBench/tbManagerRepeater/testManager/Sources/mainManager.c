@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 		switch(cmdType)
 		{
 			case 0 :
-				cmdType = 0;
+				cmdType = 0; 
 			break;
 			
 			case 1 :

@@ -34,18 +34,23 @@ libnetWork_la_HEADERS 	= $(HEADER_FILES)
 libnetWork_la_SOURCES 	= $(SOURCE_FILES)
 endif
 
-#!! check_PROGRAMS = ../TestBench/test1 ../TestBench/test2
-#!! ___TestBench_test1_SOURCES 	= ../TestBench/test1.c
-#!! ___TestBench_test2_SOURCES 	= ../TestBench/test2.c
-#!! if DEBUG_MODE
-#!! ___TestBench_test1_LDADD 	= libNetWork_dbg.la
-#!! ___TestBench_test2_LDADD 	= libNetWork_dbg.la
-#!! else
-#!! ___TestBench_test1_LDADD 	= libNetWork.la
-#!! ___TestBench_test2_LDADD 	= libNetWork.la
-#!! endif
 
-CLEAN_FILES = libNetWork.la libNetWork_dbg.la
+
+check_PROGRAMS = ../TestBench/test1
+___TestBench_test1_SOURCES 	= ../TestBench/test1.c
+if DEBUG_MODE
+#!!___TestBench_test1_LDFLAGS	=	$(LD_LIBRARY_PATH)
+#!!___TestBench_test1_LDADD 	= 	libsal.la \
+___TestBench_test1_LDADD 	= 	-lsal  \
+								libnetWork_dbg.la
+else
+#!!___TestBench_test1_LDFLAGS	=	$(LD_LIBRARY_PATH)
+#!!___TestBench_test1_LDADD 	= 	libsal.la \
+___TestBench_test1_LDADD 	= 	-lsal \
+								libnetWork.la
+endif
+
+CLEAN_FILES = libnetWork.la libnetWork_dbg.la
 
 EXTRA_DIST = bootstrap
 
