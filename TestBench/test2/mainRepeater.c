@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 						
 	while(scanfReturn != 1 || bindError != 0 || connectError != 0)
 	{
-		printf("manager IP address ? : ");
+		printf("manager IP address ? :");
 		scanfReturn = scanf("%s",&IpAddress);
 		
 		if(bindError != 0)
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 		
 		printf("	- Sender connect error: %d \n", connectError );			
 		printf("	- Receiver Bind  error: %d \n", bindError );
-		printf("\n ");
+		printf("\n");
 	}				
 	
 	sal_thread_t thread_send2;
@@ -109,8 +109,6 @@ int main(int argc, char *argv[])
 		
     }
 	
-	printf("wait ... \n");
-	
 	//stop all therad
 	stopSender(pNetWork2->pSender);
 	stopReceiver(pNetWork2->pReceiver);
@@ -124,6 +122,8 @@ int main(int argc, char *argv[])
 	ringBuffPrint(pInOutTemp->pBuffer);
 	
 	sal_print(PRINT_WARNING,"\n");
+	
+	printf("wait ... \n");
 	
 	//kill all thread
 	sal_thread_join(&(thread_send2), NULL);

@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 	paramNetWork1[1].dataType = CMD_TYPE_DATA_WITH_ACK;
 	paramNetWork1[1].sendingWaitTime = 2;
 	paramNetWork1[1].ackTimeoutMs = 10;
-	paramNetWork1[1].nbOfRetry = 5;
+	paramNetWork1[1].nbOfRetry = -1 /*5*/;
 	paramNetWork1[1].buffSize = 5;
 	paramNetWork1[1].buffCellSize = sizeof(int);
 	paramNetWork1[1].overwriting = 0;
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 		
 		printf("	- Sender connect error: %d \n", connectError );			
 		printf("	- Receiver Bind  error: %d \n", bindError );
-		printf("\n ");
+		printf("\n");
 	}
 
 	sal_thread_t thread_send1;
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 			
 				printf("char data ? ");
 				scanfReturn = scanf("%c", &chData);
-				printf("\n ");
+				printf("\n");
 				
 				pInOutTemp = inOutBufferWithId(	pNetWork1->ppTabInput, pNetWork1->numOfInput,
 												ID_CHAR_DATA);
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 			case 2 :
 				printf("int data acknowledged ?");
 				scanfReturn = scanf("%d", &intData);
-				printf("\n ");
+				printf("\n");
 				
 				pInOutTemp = inOutBufferWithId(	pNetWork1->ppTabInput,
 										pNetWork1->numOfInput, ID_INT_DATA_WITH_ACK);
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 	//delete
 	deleteNetWork( &pNetWork1 );
 	
-	sal_print(PRINT_WARNING,"end\n");
+	printf("end\n");
 
 }
 

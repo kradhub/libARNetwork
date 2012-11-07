@@ -18,39 +18,43 @@
 //Structures :
 
 /**
- *  @brief used for buffering the acknowledge commands 
+ *  @brief Basic ring buffer, multithread safe
 **/
 typedef struct netWork_ringBuffer_t  
 {
-    void* dataBuffer;
-    //unsigned int buffFreeCellNb;
-    unsigned int buffIndexInput;
-    unsigned int buffIndexOutput;
-    unsigned int buffSize;
-    unsigned int buffCellSize;
-    unsigned int overwriting;
-    sal_mutex_t mutex;
+    void* dataBuffer;				/**< Pointer on the data buffer */
+    unsigned int buffIndexInput;	/**< Index of the data input*/
+    unsigned int buffIndexOutput;	/**< Index of the data output*/
+    unsigned int buffSize;			/**< Maximum number of data stored*/
+    unsigned int buffCellSize;		/**< Size of one data in byte*/
+    unsigned int overwriting;		/**< Indicator of overwriting possibility (1 = true | 0 = false)*/
+    sal_mutex_t mutex;				/**< Mutex to take before use the ringBuffer*/
 
 }netWork_ringBuffer_t;
 
 /**
  *  @brief Create a new ring buffer
- * 	@param buffSize number of data cell of the ring buffer
+ * 	@warning This function allocate memory
+ * 	@param buffSize Maximum number of data cell of the ring buffer
  * 	@param buffCellSize size of one data cell of the ring buffer
  * 	@return Pointer on the new ring buffer
- * 	@post Call deleteRingBuffer()
+ * 	@post deleteRingBuffer() must be called to delete the ring buffer and free the memory allocated
  * 	@see newRingBufferWithOverwriting()
+ * 	@see deleteRingBuffer()
 **/
 netWork_ringBuffer_t* newRingBuffer(	unsigned int buffSize, unsigned int buffCellSize); 
 
 
 /**
- *  @brief Create a new ring buffer
- * 	@param buffSize number of data cell of the ring buffer
+ *  @brief Create a new ring buffer.
+ * 	@warning This function allocate memory
+ * 	@param buffSize Maximum number of data cell of the ring buffer
  * 	@param buffCellSize size of one data cell of the ring buffer
- * 	@param overwriting allow the overwriting if the buffer is full
- *	@post Call deleteRingBuffer()
+ * 	@param overwriting set to 1 allow the overwriting if the buffer is full otherwise set 0
  * 	@return Pointer on the new ring buffer
+ * 	@post deleteRingBuffer() must be called to delete the ring buffer and free the memory allocated
+ * 	@see newRingBufferWithOverwriting()
+ * 	@see deleteRingBuffer()
 **/
 netWork_ringBuffer_t* newRingBufferWithOverwriting(	unsigned int buffSize, 
 														unsigned int buffCellSize, 
@@ -100,18 +104,6 @@ extern inline int ringBuffIsEmpty(const netWork_ringBuffer_t* pRingBuff)
 {
 	return pRingBuff->buffIndexInput == pRingBuff->buffIndexOutput;
 }
-
-/**
- *  @brief check if the buffer is full
- * 	@param pRingBuff pointer on the ring buffer
- * 	@return 1 if the buffer is full else 0
-**/
-/*inline*/ //int ringBuffIsFull(const netWork_ringBuffer_t* pRingBuff);
-/*
-{
-	return ( ringBuffGetFreeCellNb(pRingBuff) < pRingBuff->buffSize ); /// !!! no
-}
-*/
 
 /**
  *  @brief return a pointer on the front data

@@ -21,13 +21,11 @@
 typedef struct netWork_buffer_t
 {
     void* 	pStart;
-	void* 	pFront;//private
-	void* 	pEnd;//private
-	//void* 	pCursor;//private
+	void* 	pFront;
+	void* 	pEnd;
 	unsigned int buffSize;
     unsigned int buffCellSize;
 	sal_mutex_t mutex;
-	//int 		sendingBufferSize;
 }netWork_buffer_t;
 
 
@@ -44,8 +42,6 @@ netWork_buffer_t* newBuffer(unsigned int buffSize, unsigned int buffCellSize);
  * 	@see newBuffPilotCmd()
 **/
 void deleteBuffer(netWork_buffer_t** ppBuffer);
-
-//int bufferPushFront(netWork_buffer_t* pBuffer, void* pData);
 
 /**
  *  @brief return the number of free cell of the buffer

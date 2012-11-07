@@ -9,7 +9,7 @@
 #define _SENDER_H_
 
 #include <libNetWork/inOutBuffer.h>
-#include <libNetWork/singleBuffer.h>
+#include <libNetWork/buffer.h>
 
 // static :
 

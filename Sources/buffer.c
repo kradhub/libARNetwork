@@ -13,7 +13,7 @@
 
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
-#include <libNetWork/singleBuffer.h>
+#include <libNetWork/buffer.h>
 
 /*****************************************
  * 
@@ -33,7 +33,6 @@ netWork_buffer_t* newBuffer(unsigned int buffSize, unsigned int buffCellSize)
 		pBuffer->pStart = malloc( buffCellSize * buffSize );
 		pBuffer->pEnd = pBuffer->pStart + ( buffCellSize * buffSize );
 		pBuffer->pFront = pBuffer->pStart;
-		//pBuffer->pCursor = pBuffer->pStart;
 		
 		if( pBuffer->pStart == NULL)
 		{
@@ -64,34 +63,6 @@ void deleteBuffer(netWork_buffer_t** ppBuffer)
 	}
 }
 
-/*
-int bufferPushFront(netWork_buffer_t* pBuffer, void* pData)
-{
-	int error = 1; //!!
-	
-	sal_print(PRINT_WARNING,"bufferPuchFront ");//!! sup
-	
-	sal_mutex_lock(&(pBuffer->mutex));
-	
-	if( !bufferIsEmpty(pBuffer) )
-	{	
-		memcpy(pBuffer->pFront, pData, pBuffer->buffCellSize);
-		
-		pBuffer->pFront += pBuffer->buffCellSize;
-		
-		sal_print(PRINT_WARNING," ok " );//!! sup
-		
-		error = 0; //!!
-	}
-	
-	sal_mutex_unlock(&(pBuffer->mutex));
-	
-	sal_print(PRINT_WARNING,"\n");//!! sup
-
-	return error;
-}
-*/
-
 unsigned int bufferGetFreeCellNb(const netWork_buffer_t* pBuffer)
 {
 	return (pBuffer->pEnd - pBuffer->pFront) / pBuffer->buffCellSize;
@@ -105,7 +76,6 @@ int bufferIsEmpty(netWork_buffer_t* pBuffer)
 void bufferClean(netWork_buffer_t* pBuffer)
 {
 	pBuffer->pFront = pBuffer->pStart;
-	//pBuffer->pCursor = pBuffer->pStart;
 }
 
 void bufferPrint(netWork_buffer_t* pBuffer)

@@ -70,7 +70,7 @@ void deleteInOutBuffer(netWork_inOutBuffer_t** ppInOutBuff)
 		pInOutBuff = *ppInOutBuff;
 		
 		if(pInOutBuff)
-		{
+		{	
 			sal_mutex_destroy(&(pInOutBuff->mutex));
 			
 			free(pInOutBuff->pBuffer);
@@ -118,6 +118,7 @@ netWork_inOutBuffer_t* inOutBufferWithId(	netWork_inOutBuffer_t** pptabInOutBuff
 int inOutBuffeIsWaitAck(	netWork_inOutBuffer_t* pInOutBuff)
 {
 	int isWaitAckCpy = 0;
+	
 	sal_mutex_lock(&(pInOutBuff->mutex));
 	
 	isWaitAckCpy = pInOutBuff->isWaitAck;

@@ -38,7 +38,6 @@ netWork_ringBuffer_t* newRingBufferWithOverwriting(	unsigned int buffSize,
 	{
 		pRingBuff->buffSize = buffSize;
 		pRingBuff->buffCellSize = buffCellSize;
-		//pRingBuff->buffFreeCellNb = buffCellSize;
 		pRingBuff->buffIndexInput = 0;
 		pRingBuff->buffIndexOutput = 0;
 		pRingBuff->overwriting = overwriting;
@@ -133,55 +132,28 @@ int ringBuffPopFront(netWork_ringBuffer_t* pRingBuff, void* pPopData)
 	return error;
 }
 
-/*
-int ringBuffGetFreeCellNb(const netWork_ringBuffer_t* pRingBuff)
-{
-	return pRingBuff->buffSize - ( 
-			(pRingBuff->buffIndexInput - pRingBuff->buffIndexOutput) / pRingBuff->buffCellSize );
-}
-* */
-
-/*
-int ringBuffIsEmpty(const netWork_ringBuffer_t* pRingBuff)
-{
-	return pRingBuff->buffIndexInput == pRingBuff->buffIndexOutput;
-}
-*/
-
-
-/*
-int ringBuffIsFull(const netWork_ringBuffer_t* pRingBuff)
-{
-	return ( ringBuffGetFreeCellNb(pRingBuff) < pRingBuff->buffSize );
-}
-*/
-
 int ringBuffFront(netWork_ringBuffer_t* pRingBuff, void* pFrontData)
 {
 	int error = 1;
-	void* buffPointor = pRingBuff->dataBuffer + 
-					(pRingBuff->buffIndexOutput % ( pRingBuff->buffSize * pRingBuff->buffCellSize) );
+	void* buffPointor = NULL;
+					
+	sal_mutex_lock(&(pRingBuff->mutex));
+	
+	buffPointor = pRingBuff->dataBuffer + 
+					(pRingBuff->buffIndexOutput % (pRingBuff->buffSize * pRingBuff->buffCellSize) );
 	
 	if( !ringBuffIsEmpty(pRingBuff) )
 	{
-		sal_mutex_lock(&(pRingBuff->mutex));
 	
 		memcpy(pFrontData, buffPointor, pRingBuff->buffCellSize);
-	
-		sal_mutex_unlock(&(pRingBuff->mutex));
 		
 		error = 0;
 	}
 	
+	sal_mutex_unlock(&(pRingBuff->mutex));
+	
 	return error;
 }
-
-/*
-void ringBuffClean(netWork_ringBuffer_t* pRingBuff)
-{
-	pRingBuff->buffIndexInput = pRingBuff->buffIndexOutput;
-}
-*/
 
 void ringBuffPrint(netWork_ringBuffer_t* pRingBuff)
 {
@@ -204,18 +176,19 @@ void ringBuffPrint(netWork_ringBuffer_t* pRingBuff)
 
 void ringBuffDataPrint(netWork_ringBuffer_t* pRingBuff)
 {
-	void* it = pRingBuff->dataBuffer + 
-					(pRingBuff->buffIndexOutput % ( pRingBuff->buffSize * pRingBuff->buffCellSize) );
-
-	void* itEnd = pRingBuff->dataBuffer + 
-					(pRingBuff->buffIndexInput % ( pRingBuff->buffSize * pRingBuff->buffCellSize) );
-	
-	int  ii = 0;
-	
 	sal_mutex_lock(&(pRingBuff->mutex));
 	
-	while( it < itEnd )
+	void* it = NULL;
+	
+	int  iindex = 0;
+	int  ii = 0;
+	
+	for( 	iindex = pRingBuff->buffIndexOutput ; 
+			iindex < pRingBuff->buffIndexInput ;
+			iindex += pRingBuff->buffCellSize )
 	{
+		it = pRingBuff->dataBuffer + (iindex % (pRingBuff->buffSize * pRingBuff->buffCellSize) );
+		
 		sal_print(PRINT_WARNING,"	- 0x: ");
 		for(ii = 0 ; ii < pRingBuff->buffCellSize ; ++ii)
 		{

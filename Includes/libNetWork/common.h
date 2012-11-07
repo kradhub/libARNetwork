@@ -14,7 +14,6 @@
 
 //Enumerations :
 
-
 /**
  *  @brief sending mode
 **/
@@ -39,7 +38,6 @@ typedef enum eAR_CMD_TYPE
     CMD_TYPE_DEFAULT
 }eAR_CMD_TYPE;
 
-
 /**
  *  @brief sending mode
 **/
@@ -52,17 +50,6 @@ typedef enum eAR_CMD_INDEX
 	AR_CMD_INDEX_DATA = 16, /**< ... */
 	AR_CMD_HEADER_SIZE = 16 /**< ... */
 }eAR_CMD_INDEX;
-
-/**
- *  @brief  command
-**/
-//typedef struct AR_CMD_HEADER
-//{
-//    eAR_CMD_TYPE type;
-//    int id;
-//    int size;
-//}AR_CMD_HEADER;
-
 
 /**
  *  @brief 

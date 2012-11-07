@@ -15,8 +15,8 @@
 #include <libSAL/mutex.h>//voir ?
 #include <libSAL/socket.h>
 #include <libNetWork/common.h>
+#include <libNetWork/buffer.h>
 #include <libNetWork/inOutBuffer.h>
-#include <libNetWork/singleBuffer.h>
 #include <libNetWork/sender.h>
 
 typedef struct sockaddr_in SOCKADDR_IN;
@@ -50,7 +50,7 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 						int seqNum);
 						
 #define MILLISECOND 1000
-#define SENDER_SLEEP_TIME_MS 25//1
+#define SENDER_SLEEP_TIME_MS 1
 #define INPUT_PARAM_NUM 7
 
 /*****************************************
@@ -91,7 +91,6 @@ netWork_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int inputB
 		{
 			deleteSender(&pSender);
 		}
-		
 	}
 	
 	return pSender;
@@ -119,7 +118,7 @@ void deleteSender(netWork_Sender_t** ppSender)
 void* runSendingThread(void* data)
 {
 	netWork_Sender_t* pSender = data;
-	int seq = 0;
+	int seq = 1;
 	int indexInput = 0;
 	int callBackReturn = 0;
 	
@@ -138,13 +137,15 @@ void* runSendingThread(void* data)
 				--(pInputTemp->waitTimeCount);
 			}
 
-			if( inOutBuffeIsWaitAck(pInputTemp)  /*pInputTemp->isWaitAck*/) //mutex ?
+			if( inOutBuffeIsWaitAck(pInputTemp)  ) 
 			{
 				if(pInputTemp->ackWaitTimeCount == 0)
 				{
 					if(pInputTemp->retryCount == 0)
 					{
 						//callBackReturn = pInputTemp->timeoutCallback();
+						sal_print(PRINT_WARNING," !!! too retry !!! \n");
+						
 						if(callBackReturn)
 						{
 							pInputTemp->retryCount = pInputTemp->nbOfRetry;
@@ -229,7 +230,7 @@ void senderSend(netWork_Sender_t* pSender)
 	
 	if( !bufferIsEmpty(pSender->pSendingBuffer) )
 	{
-		bufferPrint(pSender->pSendingBuffer); //!!!!!!!!!!!!!!!!
+		//bufferPrint(pSender->pSendingBuffer); //!!! debug
 		
 		nbCharCopy = pSender->pSendingBuffer->pFront - pSender->pSendingBuffer->pStart;
 		
@@ -238,15 +239,12 @@ void senderSend(netWork_Sender_t* pSender)
 		sal_send(pSender->socket, pSender->pSendingBuffer->pStart, nbCharCopy, 0);
 			
 		pSender->pSendingBuffer->pFront = pSender->pSendingBuffer->pStart;
-		
 	}
 }
 
 int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pinputBuff,
 						int seqNum)
 {
-	//sal_print(PRINT_WARNING," senderAddToBuffer \n");
-	
 	int error = 1;
 	int sizeNeed = AR_CMD_HEADER_SIZE + pinputBuff->pBuffer->buffCellSize;
 	
@@ -279,10 +277,6 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 		{
 			pSender->pSendingBuffer->pFront -= AR_CMD_HEADER_SIZE;
 		}
-		
-		/*sal_print(PRINT_WARNING," AddToBuffer : \n");
-		bufferPrint(pSender->pSendingBuffer);*/
-
 	}
 	
 	return error;

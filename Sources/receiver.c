@@ -14,7 +14,8 @@
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
 #include <libSAL/socket.h>
-#include <libNetWork/common.h>// !! modif
+#include <libNetWork/common.h>
+#include <libNetWork/buffer.h>
 #include <libNetWork/inOutBuffer.h>
 #include <libNetWork/sender.h>
 #include <libNetWork/receiver.h>
@@ -62,7 +63,7 @@ netWork_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int outpu
 		pReceiver->isAlive = 1;
 		pReceiver->sleepTime = 25 * MICRO_SECOND;
 		
-		pReceiver->pSender = NULL; // !!!!!!
+		pReceiver->pSender = NULL;
 		
 		pReceiver->outputBufferNum = outputBufferNum;
 		pReceiver->pptab_outputBuffer = pptab_output;
@@ -117,13 +118,10 @@ void* runReceivingThread(void* data)
 	recvCmd.pTabUint8 = NULL;
 	
 	while( pReceiver->isAlive )
-	{
-		//usleep(pReceiver->sleepTime);//sup ?
-		
-		if( receiverRead( pReceiver ) > 0 /*pReceiver->readDataSize > 0*/)
+	{	
+		if( receiverRead( pReceiver ) > 0)
 		{
-			sal_print(PRINT_WARNING,"--- read  Receiver: \n");
-			bufferPrint(pReceiver->pRecvBuffer);
+			//sal_print(PRINT_WARNING,"- read  Receiver: \n");
 			
 			while( !getCmd( pReceiver, &(recvCmd.pTabUint8) ) )
 			{
@@ -131,13 +129,13 @@ void* runReceivingThread(void* data)
 				switch (recvCmd.pCmd->type)
 				{
 					case CMD_TYPE_ACK:
-						sal_print(PRINT_WARNING," -CMD_TYPE_ACK \n");
+						sal_print(PRINT_DEBUG,"	- CMD_TYPE_ACK \n");
 						senderAckReceived(pReceiver->pSender,idAckToIdInput(recvCmd.pCmd->id),recvCmd.pCmd->seq);
 					break;
 					
 					case CMD_TYPE_DATA:
 					
-						sal_print(PRINT_WARNING," -CMD_TYPE_DATA \n");
+						sal_print(PRINT_DEBUG," 	- CMD_TYPE_DATA \n");
 						
 						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->outputBufferNum,
@@ -145,36 +143,36 @@ void* runReceivingThread(void* data)
 						
 						if(pOutBufferTemp != NULL)
 						{
-							//sup pushError
-							pushError = ringBuffPushBack(	pOutBufferTemp->pBuffer,
+							ringBuffPushBack(	pOutBufferTemp->pBuffer,
 												( recvCmd.pTabUint8 + AR_CMD_INDEX_DATA ) );
-												
-							sal_print(PRINT_WARNING," pushError :%d \n",pushError);
-							//ringPrint(pOutBufferTemp->pBuffer);
 						}							
 					break;
 					
 					case CMD_TYPE_DATA_WITH_ACK:
 					
-						sal_print(PRINT_WARNING," -CMD_TYPE_DATA_WITH_ACK \n");
+						sal_print(PRINT_DEBUG," 	- CMD_TYPE_DATA_WITH_ACK \n");
 					
 						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->outputBufferNum,
 															recvCmd.pCmd->id);
 						if(pOutBufferTemp != NULL)
 						{
-							pushError = ringBuffPushBack(	pOutBufferTemp->pBuffer,
-															&(recvCmd.pTabUint8[AR_CMD_INDEX_DATA]));
-							
-							if( !pushError)
+							//OutBuffer->seqWaitAck used to save the last seq 
+							if( recvCmd.pCmd->seq != pOutBufferTemp->seqWaitAck )
 							{
-								returnASK(pReceiver, recvCmd.pCmd->id, recvCmd.pCmd->seq);
+								pushError = ringBuffPushBack(	pOutBufferTemp->pBuffer,
+														&(recvCmd.pTabUint8[AR_CMD_INDEX_DATA]));
+								if( !pushError)
+								{
+									returnASK(pReceiver, recvCmd.pCmd->id, recvCmd.pCmd->seq);
+									pOutBufferTemp->seqWaitAck = recvCmd.pCmd->seq;
+								}
 							}
 						}							
 					break;
 					
 					default:
-						sal_print(PRINT_WARNING," default \n");
+						sal_print(PRINT_WARNING," !!! command type not known !!! \n");
 					break;
 				}
 			}
@@ -194,7 +192,6 @@ void stopReceiver(netWork_Receiver_t* pReceiver)
 
 int getCmd(netWork_Receiver_t* pReceiver, uint8_t** ppCmd)
 {
-	sal_print(PRINT_WARNING," getCmd \n");
 	int error = 1;
 
 	int cmdSize = 0 ;
@@ -233,10 +230,9 @@ void returnASK(netWork_Receiver_t* pReceiver, int id, int seq)
 	netWork_inOutBuffer_t* pBufferASK = inOutBufferWithId(	pReceiver->pptab_outputBuffer,
 																pReceiver->outputBufferNum,
 																idOutputToIdAck(id) );
-
 	if(pBufferASK != NULL)
 	{
-		ringBuffPushBack(pBufferASK->pBuffer, &seq ); ///!!!
+		ringBuffPushBack(pBufferASK->pBuffer, &seq );
 	}
 }
 
@@ -272,7 +268,6 @@ int receiverBind(netWork_Receiver_t* pReceiver, unsigned short port, int timeout
 	recvSin.sin_port = htons(port);
 	
 	pReceiver->socket = sal_socket(  AF_INET, SOCK_DGRAM,0);
-	
 	
     timeout.tv_sec = timeoutSec;
     timeout.tv_usec = 0; 

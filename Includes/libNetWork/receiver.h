@@ -10,6 +10,7 @@
 
 #include <libNetWork/inOutBuffer.h>
 #include <libNetWork/sender.h>
+#include <libNetWork/buffer.h>
 
 
 #define NAV_CMD_BUFFER_SIZE 256
