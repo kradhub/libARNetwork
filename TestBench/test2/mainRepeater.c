@@ -5,6 +5,7 @@
  *  @author maxime.maitre@parrot.com
 **/
 
+#include <stdio.h> //sup
 #include <stdlib.h> 
 #include <libSAL/print.h>
 #include <libSAL/thread.h>
@@ -28,6 +29,9 @@ int main(int argc, char *argv[])
 	netWork_t* pNetWork2= NULL;
 	
 	char chData = 0;
+	
+	char IpAddress[16];
+	int scanfReturn = 0;
 	
 	netWork_inOutBuffer_t* pInOutTemp = NULL;
 	
@@ -72,10 +76,17 @@ int main(int argc, char *argv[])
 							paramNetWork2[1], paramNetWork2[2],
 							paramNetWork2[0]);
 							
+	while(scanfReturn == 0)
+	{
+		sal_print(PRINT_WARNING,"scanfReturn %d", scanfReturn);
+		sal_print(PRINT_WARNING,"repeater IP address ? : ");
+		scanfReturn = scanf("%s",&IpAddress);
+	}
+							
 	sal_print( PRINT_WARNING,	" ------pNetWork2->pReceiver Bind  error: %d \n",
 								receiverBind(pNetWork2->pReceiver, 5551, 10) );
 	sal_print( PRINT_WARNING,	" ------pNetWork2->pSender connect error: %d \n",
-								senderConnection(pNetWork2->pSender,"127.0.0.1", 5552) );
+								senderConnection(pNetWork2->pSender,&IpAddress/*"127.0.0.1"*/, 5552) );
 	
 	sal_thread_t thread_send2;
 	sal_thread_t thread_recv2;
