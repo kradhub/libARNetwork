@@ -55,8 +55,6 @@ AC_ARG_WITH([libSalHeader],
               libSalHeader="$withval"
             fi], libSalHeader="$libSalInstall/include")
 
-#!!AC_DEFINE_DIR([LIBSAL_HEADER],[libSalHeader],[Directory where to install browser plugin.])
-
 
 AC_ARG_WITH([libSalBin],
             AS_HELP_STRING([--with-libSalBin=DIR],[directory of the libSal binaries]),
@@ -65,32 +63,14 @@ AC_ARG_WITH([libSalBin],
             else
               libSalBin="$withval"
             fi], libSalBin="$libSalInstall/lib")
-            
-#!!AC_DEFINE([libSalBin],[$libSalBin],[directory of the libSal binaries])
-#!!AC_SUBST([libSalBin])
-#!!AC_SUBST([LIBDIR])
+
+
 LDFLAGS="$LDFLAGS -L$libSalBin"
 
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
-
-
+CFLAGS="$CFLAGS -I$libSalHeader"
 CFLAGS="$CFLAGS -I../Includes"
-
-#!!if test x"$INCLUDEDIR" != x""; then
-#!!    CFLAGS="$CFLAGS -I$INCLUDEDIR"
-#!!fi
-
-echo "libSalInstall : $libSalInstall"
-echo "libSalHeader : $libSalHeader"
-echo "libSalBin : $libSalBin"
-
-echo "LDFLAGS : $LDFLAGS"
-
-if test x"$libSalHeader" != x""; then
-    CFLAGS="$CFLAGS -I$libSalHeader"
-fi
 
 CPPFLAGS="$CFLAGS"
 ##########################################################################

@@ -22,7 +22,7 @@
 
 #include <unistd.h>
 
-#include <netWorkDef.h>
+#include "Includes/netWorkDef.h"
 
 int main(int argc, char *argv[])
 {
@@ -33,6 +33,9 @@ int main(int argc, char *argv[])
 	char chData = 0;
 	
 	int intData = 0;
+	
+	char IpAddress[16];
+	int scanfReturn = 0;
 	
 	netWork_inOutBuffer_t* pInOutTemp = NULL;
 	
@@ -85,9 +88,16 @@ int main(int argc, char *argv[])
 	pNetWork1 = newNetWork( 256, 256, 1, 3,
 							paramNetWork1[3],
 							paramNetWork1[0], paramNetWork1[1], paramNetWork1[2]);
+	
+	while(scanfReturn == 0)
+	{
+		sal_print(PRINT_WARNING,"scanfReturn %d", scanfReturn);
+		sal_print(PRINT_WARNING,"repeater IP address ? : ");
+		scanfReturn = scanf("%s",&IpAddress);
+	}
 												
 	sal_print( PRINT_WARNING," ------pNetWork1->pSender connect error: %d \n", 
-								senderConnection(pNetWork1->pSender,"127.0.0.1", 5551) );
+								senderConnection(pNetWork1->pSender,/*"127.0.0.1"*/ &IpAddress, 5551) );
 								
 	sal_print( PRINT_WARNING," ------pNetWork1->pReceiver Bind  error: %d \n", 
 								receiverBind(pNetWork1->pReceiver, 5552, 10) );
@@ -113,7 +123,7 @@ int main(int argc, char *argv[])
 	2 - send int ack \n \
 	0 - quit \n");
 	
-		scanf("%d",&cmdType);
+		scanfReturn = scanf("%d",&cmdType);
 		
 		while ( ((chData = getchar()) != '\n') && chData != EOF)
 		{
@@ -128,7 +138,7 @@ int main(int argc, char *argv[])
 			case 1 :
 			
 				printf("char data ? ");
-				scanf("%c", &chData);
+				scanfReturn = scanf("%c", &chData);
 				printf("\n ");
 				
 				pInOutTemp = inOutBufferWithId(	pNetWork1->ppTabInput, pNetWork1->numOfInput,
@@ -139,7 +149,7 @@ int main(int argc, char *argv[])
 			
 			case 2 :
 				printf("int data ?");
-				scanf("%d", &intData);
+				scanfReturn = scanf("%d", &intData);
 				printf("\n ");
 				
 				pInOutTemp = inOutBufferWithId(	pNetWork1->ppTabInput,

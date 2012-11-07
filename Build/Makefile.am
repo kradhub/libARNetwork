@@ -36,18 +36,29 @@ endif
 
 
 
-check_PROGRAMS = ../TestBench/test1
+check_PROGRAMS = 	../TestBench/test1 \
+					../TestBench/test2/manager \
+					../TestBench/test2/repeater 
+					
 ___TestBench_test1_SOURCES 	= ../TestBench/test1.c
+___TestBench_test2_manager_SOURCES 	= ../TestBench/test2/mainManager.c
+___TestBench_test2_repeater_SOURCES = ../TestBench/test2/mainRepeater.c
 if DEBUG_MODE
-#!!___TestBench_test1_LDFLAGS	=	$(LD_LIBRARY_PATH)
-#!!___TestBench_test1_LDADD 	= 	libsal.la \
-___TestBench_test1_LDADD 	= 	-lsal  \
-								libnetWork_dbg.la
+___TestBench_test1_LDADD = 	-lsal  \
+							libnetWork_dbg.la
+___TestBench_test2_manager_LDADD = 	-lsal  \
+									libnetWork_dbg.la
+___TestBench_test2_repeater_LDADD = -lsal  \
+									libnetWork_dbg.la
 else
 #!!___TestBench_test1_LDFLAGS	=	$(LD_LIBRARY_PATH)
 #!!___TestBench_test1_LDADD 	= 	libsal.la \
 ___TestBench_test1_LDADD 	= 	-lsal \
 								libnetWork.la
+___TestBench_test2_manager_LDADD = 	-lsal  \
+									libnetWork.la
+___TestBench_test2_repeater_LDADD = -lsal  \
+									libnetWork.la
 endif
 
 CLEAN_FILES = libnetWork.la libnetWork_dbg.la
