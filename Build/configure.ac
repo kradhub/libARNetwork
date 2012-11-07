@@ -32,12 +32,10 @@ fi
 AM_CONDITIONAL([DEBUG_MODE], [test "$debugit" = "yes"])
 
 ##########################################################################
-# Define includes directories
+# Define libraries directories
 ##########################################################################
 
-
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+# get the directories of libSal
 AC_ARG_WITH([libSalInstall],
             AS_HELP_STRING([--with-libSalInstall=DIR],[directory of the libSal installation]),
             [if test x$withval = xno; then
@@ -45,7 +43,6 @@ AC_ARG_WITH([libSalInstall],
             else
               libSalInstall="$withval"
             fi], libSalInstall="")
-
 
 AC_ARG_WITH([libSalHeader],
             AS_HELP_STRING([--with-libSalHeader=DIR],[directory of the libSal headers]),
@@ -55,7 +52,6 @@ AC_ARG_WITH([libSalHeader],
               libSalHeader="$withval"
             fi], libSalHeader="$libSalInstall/include")
 
-
 AC_ARG_WITH([libSalBin],
             AS_HELP_STRING([--with-libSalBin=DIR],[directory of the libSal binaries]),
             [if test x$withval = xno; then
@@ -64,15 +60,23 @@ AC_ARG_WITH([libSalBin],
               libSalBin="$withval"
             fi], libSalBin="$libSalInstall/lib")
 
+##########################################################################
+# Define includes directories
+##########################################################################
 
-LDFLAGS="$LDFLAGS -L$libSalBin"
-
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+# add the headers directory of libSal
 CFLAGS="$CFLAGS -I$libSalHeader"
+
 CFLAGS="$CFLAGS -I../Includes"
 
 CPPFLAGS="$CFLAGS"
+##########################################################################
+# Define binaries directories
+##########################################################################
+
+# add the binaries directory of libSal
+LDFLAGS="$LDFLAGS -L$libSalBin"
+
 ##########################################################################
 # Check headers
 ##########################################################################

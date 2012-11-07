@@ -185,13 +185,6 @@ void ringBuffClean(netWork_ringBuffer_t* pRingBuff)
 
 void ringBuffPrint(netWork_ringBuffer_t* pRingBuff)
 {
-	void* it = pRingBuff->dataBuffer + 
-					(pRingBuff->buffIndexOutput % ( pRingBuff->buffSize * pRingBuff->buffCellSize) );
-
-	void* itEnd = pRingBuff->dataBuffer + 
-					(pRingBuff->buffIndexInput % ( pRingBuff->buffSize * pRingBuff->buffCellSize) );
-	
-	int  ii = 0;
 	
 	sal_mutex_lock(&(pRingBuff->mutex));
 	
@@ -202,6 +195,24 @@ void ringBuffPrint(netWork_ringBuffer_t* pRingBuff)
 	sal_print(PRINT_WARNING," buffIndexInput :%d \n",pRingBuff->buffIndexInput);
 	sal_print(PRINT_WARNING," overwriting :%d \n",pRingBuff->overwriting);
 	sal_print(PRINT_WARNING," data : \n",pRingBuff->overwriting);
+	
+	sal_mutex_unlock(&(pRingBuff->mutex));
+	
+	ringBuffDataPrint(pRingBuff);
+	
+}
+
+void ringBuffDataPrint(netWork_ringBuffer_t* pRingBuff)
+{
+	void* it = pRingBuff->dataBuffer + 
+					(pRingBuff->buffIndexOutput % ( pRingBuff->buffSize * pRingBuff->buffCellSize) );
+
+	void* itEnd = pRingBuff->dataBuffer + 
+					(pRingBuff->buffIndexInput % ( pRingBuff->buffSize * pRingBuff->buffCellSize) );
+	
+	int  ii = 0;
+	
+	sal_mutex_lock(&(pRingBuff->mutex));
 	
 	while( it < itEnd )
 	{

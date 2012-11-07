@@ -23,7 +23,7 @@
 netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pParam )
 {
 	netWork_inOutBuffer_t* pInOutBuff = malloc( sizeof(netWork_inOutBuffer_t));
-	sal_print(PRINT_WARNING,"newInOutBuffer \n"); //!! sup
+	
 	int keepAliveData = ntohl (0x50505055); //!!!!!!!!!!!!!!!!!!
 	
 	if(pInOutBuff)
@@ -45,10 +45,6 @@ netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pPara
 		
 		sal_mutex_init( &(pInOutBuff->mutex) );
 		
-		sal_print(PRINT_WARNING,"id :%d dataType :%d sendingWaitTime :%d pBuffer :%p  \n",
-								pInOutBuff->id, pInOutBuff->dataType,
-								pInOutBuff->sendingWaitTime, pInOutBuff->pBuffer ); //!! sup
-		
 		if(pInOutBuff->pBuffer != NULL)
 		{
 			if(pInOutBuff->dataType == CMD_TYPE_KEEP_ALIVE)
@@ -58,7 +54,7 @@ netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pPara
 		}
 		else
 		{
-			deleteInOutBuffer(&pInOutBuff); //free(pInOutBuff);
+			deleteInOutBuffer(&pInOutBuff);
 		}
     }
     
@@ -75,8 +71,6 @@ void deleteInOutBuffer(netWork_inOutBuffer_t** ppInOutBuff)
 		
 		if(pInOutBuff)
 		{
-			sal_print(PRINT_WARNING,"deleteInOutBuffer \n");//!! sup
-			
 			sal_mutex_destroy(&(pInOutBuff->mutex));
 			
 			free(pInOutBuff->pBuffer);

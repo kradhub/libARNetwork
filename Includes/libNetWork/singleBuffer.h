@@ -60,6 +60,7 @@ void bufferClean(netWork_buffer_t* pBuffer);
 
 void bufferPrint(netWork_buffer_t* pBuffer);
 
+void bufferDataPrint(netWork_buffer_t* pBuffer);
 
 #endif // _BUFFER_H_
 

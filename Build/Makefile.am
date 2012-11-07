@@ -51,8 +51,6 @@ ___TestBench_test2_manager_LDADD = 	-lsal  \
 ___TestBench_test2_repeater_LDADD = -lsal  \
 									libnetWork_dbg.la
 else
-#!!___TestBench_test1_LDFLAGS	=	$(LD_LIBRARY_PATH)
-#!!___TestBench_test1_LDADD 	= 	libsal.la \
 ___TestBench_test1_LDADD 	= 	-lsal \
 								libnetWork.la
 ___TestBench_test2_manager_LDADD = 	-lsal  \

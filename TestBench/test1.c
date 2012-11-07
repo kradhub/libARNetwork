@@ -12,7 +12,7 @@
 #include <string.h>
 
 //#include <libSAL/mutex.h>
-#include <libNetWork/common.h>//!! modif
+#include <libNetWork/common.h>
 #include <libNetWork/inOutBuffer.h>
 #include <libNetWork/sender.h>
 #include <libNetWork/receiver.h>

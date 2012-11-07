@@ -34,7 +34,6 @@ netWork_t* newNetWork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 						unsigned int numberOfOutput, unsigned int numberOfInput, ...)
 {
 	netWork_t* pNetWork = malloc( sizeof(netWork_t));
-	sal_print(PRINT_WARNING,"newNetWork \n"); //!! sup
 	
 	int error = 0;
 	
@@ -77,8 +76,6 @@ netWork_t* newNetWork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 				pNetWork->ppTabOutput[ii] = newInOutBuffer(&paramNewInOutput);
 				
 				paramNewACK.id = idOutputToIdAck(paramNewInOutput.id); 
-				
-				sal_print(PRINT_WARNING,"paramNewACK.id :%d \n", paramNewACK.id ); //!! sup
 				
 				indexAckOutput = numberOfOutput + ii;
 				pNetWork->ppTabOutput[ indexAckOutput ] = newInOutBuffer(&paramNewACK);
@@ -128,8 +125,6 @@ void deleteNetWork(netWork_t** ppNetWork)
 	
 	netWork_t* pNetWork = NULL;
 	int ii = 0;
-	
-	sal_print(PRINT_WARNING," deleteNetWork \n");//!! sup
 	
 	if(ppNetWork)
 	{

@@ -24,7 +24,6 @@
 netWork_buffer_t* newBuffer(unsigned int buffSize, unsigned int buffCellSize)
 {
 	netWork_buffer_t* pBuffer = malloc( sizeof(netWork_buffer_t));
-	sal_print(PRINT_WARNING,"newBuffer \n"); //!! sup
 	
 	if(pBuffer)
 	{
@@ -56,8 +55,6 @@ void deleteBuffer(netWork_buffer_t** ppBuffer)
 		
 		if(pBuffer)
 		{
-			sal_print(PRINT_WARNING,"deleteBuffer \n");//!! sup
-
 			sal_mutex_destroy(&(pBuffer->mutex));
 			free(pBuffer->pStart);
 			
@@ -113,9 +110,6 @@ void bufferClean(netWork_buffer_t* pBuffer)
 
 void bufferPrint(netWork_buffer_t* pBuffer)
 {
-	//void* it = pBuffer->pStart;
-	
-
 	void* it = pBuffer->pStart;
 	
 	void* itEnd = pBuffer->pFront;
@@ -128,7 +122,17 @@ void bufferPrint(netWork_buffer_t* pBuffer)
 	
 	sal_print(PRINT_WARNING," data : \n");
 
+	bufferDataPrint(pBuffer);
+}
 
+void bufferDataPrint(netWork_buffer_t* pBuffer)
+{
+	void* it = pBuffer->pStart;
+	
+	void* itEnd = pBuffer->pFront;
+	
+	int  ii = 0;
+	
 	while( it < itEnd )
 	{
 		sal_print(PRINT_WARNING,"	- 0x: ");
@@ -139,12 +143,4 @@ void bufferPrint(netWork_buffer_t* pBuffer)
 		}
 		sal_print(PRINT_WARNING,"\n");
 	}
-
-	/*
-	for( ; it < pBuffer->pFront ; ++it )
-	{
-		sal_print(PRINT_WARNING," - 0x : %x \n",*( (char*) it ) );
-	}
-	*/
-	
 }

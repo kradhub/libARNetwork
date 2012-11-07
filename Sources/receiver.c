@@ -52,10 +52,7 @@ int initRecvBuffer(netWork_Receiver_t* pReceiver);
 
 netWork_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int outputBufferNum,
 									netWork_inOutBuffer_t** pptab_output)
-{
-	sal_print(PRINT_WARNING,"newReceiver \n");//!! sup
-	
-	
+{	
 	netWork_Receiver_t* pReceiver =  malloc( sizeof(netWork_Receiver_t));
 
 	int error = 0;
@@ -92,8 +89,6 @@ void deleteReceiver(netWork_Receiver_t** ppReceiver)
 {
 	netWork_Receiver_t* pReceiver = NULL;
 	
-	sal_print(PRINT_WARNING," deleteReceiver \n");//!! sup
-	
 	int iiOutputBuff = 0;
 	
 	if(ppReceiver)
@@ -111,9 +106,7 @@ void deleteReceiver(netWork_Receiver_t** ppReceiver)
 }
 
 void* runReceivingThread(void* data)
-{
-	//sal_print(PRINT_WARNING,"- runReceivingThread -\n");
-	
+{	
 	netWork_Receiver_t* pReceiver = data;
 	
 	UNION_CMD recvCmd;
@@ -125,10 +118,7 @@ void* runReceivingThread(void* data)
 	
 	while( pReceiver->isAlive )
 	{
-		//sal_print(PRINT_WARNING,"- read  tic  -\n");
 		//usleep(pReceiver->sleepTime);//sup ?
-		
-		//verif connect !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		
 		if( receiverRead( pReceiver ) > 0 /*pReceiver->readDataSize > 0*/)
 		{
@@ -188,6 +178,7 @@ void* runReceivingThread(void* data)
 					break;
 				}
 			}
+			bufferClean(pReceiver->pRecvBuffer);
 		}
 	}
 

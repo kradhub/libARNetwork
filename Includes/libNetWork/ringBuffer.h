@@ -138,5 +138,7 @@ extern inline void ringBuffClean(netWork_ringBuffer_t* pRingBuff)
 **/
 void ringBuffPrint(netWork_ringBuffer_t* pRingBuff);
 
+void ringBuffDataPrint(netWork_ringBuffer_t* pRingBuff);
+
 #endif // _RING_BUFFER_H_
 
