@@ -19,13 +19,13 @@
 typedef struct network_Sender_t network_Sender_t;
 struct network_Sender_t
 {
-	network_buffer_t* pSendingBuffer;	/**< Pointer on the data buffer to send*/
+	network_buffer_t* pSendingBuffer; /**< Pointer on the data buffer to send*/
 	
-	network_inOutBuffer_t** pptab_inputBuffer;	/**< address of the table of pointers of input buffer*/
-	int numOfInputBuff; /**< Number of input buffer*/
-	int socket;	/**< sending Socket. Must be accessed through senderConnection()*/
+	network_inOutBuffer_t** pptab_inputBuffer; /**< address of the table of pointers of input buffer*/
+	int numOfInputBuff; 
+	int socket; /**< sending Socket. Must be accessed through senderConnection()*/
 	
-	int isAlive;	/**< Indicator of aliving used for kill the thread calling the runSendingThread function (1 = alive | 0 = dead). Must be accessed through stopSender()*/
+	int isAlive; /**< Indicator of aliving used for kill the thread calling the runSendingThread function (1 = alive | 0 = dead). Must be accessed through stopSender()*/
 	//int sleepTime; /**< Time between two sending try*/
 };
 
@@ -52,8 +52,8 @@ network_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int numOfIn
 void deleteSender(network_Sender_t** ppSender);
 
 /**
- *  @brief Manage the communication between the drone and the application
- * 	@warning This function must be called by a specific thread
+ *  @brief Manage the sending of the data on the sender' scoket 
+ * 	@warning This function must be called by a specific thread.
  * 	@warning At the end of this function the socket of the sender is closed.
  * 	@pre The socket of the sender must be initialized through senderConnection().
  * 	@post Before join the thread calling this function, stopSender() must be called.

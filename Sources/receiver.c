@@ -51,7 +51,7 @@ int initRecvBuffer(network_Receiver_t* pReceiver);
 ******************************************/
 
 
-network_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int outputBufferNum,
+network_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int numOfOutputBuff,
 									network_inOutBuffer_t** pptab_output)
 {	
 	network_Receiver_t* pReceiver =  malloc( sizeof(network_Receiver_t));
@@ -61,11 +61,9 @@ network_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int outpu
 	if(pReceiver)
 	{
 		pReceiver->isAlive = 1;
-		pReceiver->sleepTime = 25 * MICRO_SECOND;
-		
 		pReceiver->pSender = NULL;
 		
-		pReceiver->outputBufferNum = outputBufferNum;
+		pReceiver->numOfOutputBuff = numOfOutputBuff;
 		pReceiver->pptab_outputBuffer = pptab_output;
 		
 		if(!error)
@@ -138,7 +136,7 @@ void* runReceivingThread(void* data)
 						sal_print(PRINT_DEBUG," 	- CMD_TYPE_DATA \n");
 						
 						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
-															pReceiver->outputBufferNum,
+															pReceiver->numOfOutputBuff,
 															recvCmd.pCmd->id);
 						
 						if(pOutBufferTemp != NULL)
@@ -153,7 +151,7 @@ void* runReceivingThread(void* data)
 						sal_print(PRINT_DEBUG," 	- CMD_TYPE_DATA_WITH_ACK \n");
 					
 						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
-															pReceiver->outputBufferNum,
+															pReceiver->numOfOutputBuff,
 															recvCmd.pCmd->id);
 						if(pOutBufferTemp != NULL)
 						{
@@ -228,7 +226,7 @@ int getCmd(network_Receiver_t* pReceiver, uint8_t** ppCmd)
 void returnASK(network_Receiver_t* pReceiver, int id, int seq)
 {
 	network_inOutBuffer_t* pBufferASK = inOutBufferWithId(	pReceiver->pptab_outputBuffer,
-																pReceiver->outputBufferNum,
+																pReceiver->numOfOutputBuff,
 																idOutputToIdAck(id) );
 	if(pBufferASK != NULL)
 	{
@@ -246,18 +244,6 @@ int receiverRead(network_Receiver_t* pReceiver)
 	return readDataSize;
 }
 
-//inline !!!!
-int idOutputToIdAck( int id)
-{
-	return id + 1000; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-}
-
-//inline !!!!
-int idAckToIdInput( int id)
-{
-	return id - 1000; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-}
-
 int receiverBind(network_Receiver_t* pReceiver, unsigned short port, int timeoutSec)
 {
 	struct timeval timeout;  
@@ -268,6 +254,7 @@ int receiverBind(network_Receiver_t* pReceiver, unsigned short port, int timeout
 	recvSin.sin_port = htons(port);
 	
 	pReceiver->socket = sal_socket(  AF_INET, SOCK_DGRAM,0);
+	
 	
     timeout.tv_sec = timeoutSec;
     timeout.tv_usec = 0; 
