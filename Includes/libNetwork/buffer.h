@@ -16,6 +16,8 @@
 
 /**
  *  @brief basic buffer 
+ * 	@warning before to be used the buffer must be created through newBuffer()
+ * 	@post after its using the buffer must be deleted through deleteBuffer()
 **/
 typedef struct network_buffer_t
 {
@@ -29,8 +31,8 @@ typedef struct network_buffer_t
 /**
  *  @brief Create a new buffer
  * 	@warning This function allocate memory
- * 	@param buffSize Maximum number of data cell of the buffer
- * 	@param buffCellSize size of one data cell of the buffe
+ * 	@param[in] buffSize Maximum number of data cell of the buffer
+ * 	@param[in] buffCellSize size of one data cell of the buffe
  *	@post deleteBuffer() must be called to delete the ring buffer and free the memory allocated
  * 	@return Pointer on the new buffer
  * 	@see deleteBuffer()

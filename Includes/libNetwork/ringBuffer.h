@@ -10,15 +10,11 @@
 
 #include <libSAL/mutex.h>
 
-// static :
-
-//Enumerations :
-
-
-//Structures :
 
 /**
  *  @brief Basic ring buffer, multithread safe
+ * 	@warning before to be used the ring buffer must be created through newRingBuffer() or newRingBufferWithOverwriting()
+ * 	@post after its using the ring buffer must be deleted through deleteRingBuffer()
 **/
 typedef struct network_ringBuffer_t  
 {
@@ -35,10 +31,10 @@ typedef struct network_ringBuffer_t
 /**
  *  @brief Create a new ring buffer
  * 	@warning This function allocate memory
- * 	@param buffSize Maximum number of data cell of the ring buffer
- * 	@param buffCellSize size of one data cell of the ring buffer
- * 	@return Pointer on the new ring buffer
  * 	@post deleteRingBuffer() must be called to delete the ring buffer and free the memory allocated
+ * 	@param[in] buffSize Maximum number of data cell of the ring buffer
+ * 	@param[in] buffCellSize size of one data cell of the ring buffer
+ * 	@return Pointer on the new ring buffer
  * 	@see newRingBufferWithOverwriting()
  * 	@see deleteRingBuffer()
 **/
@@ -48,11 +44,11 @@ network_ringBuffer_t* newRingBuffer(	unsigned int buffSize, unsigned int buffCel
 /**
  *  @brief Create a new ring buffer.
  * 	@warning This function allocate memory
- * 	@param buffSize Maximum number of data cell of the ring buffer
- * 	@param buffCellSize size of one data cell of the ring buffer
- * 	@param overwriting set to 1 allow the overwriting if the buffer is full otherwise set 0
- * 	@return Pointer on the new ring buffer
  * 	@post deleteRingBuffer() must be called to delete the ring buffer and free the memory allocated
+ * 	@param[in] buffSize Maximum number of data cell of the ring buffer
+ * 	@param[in] buffCellSize size of one data cell of the ring buffer
+ * 	@param[in] overwriting set to 1 allow the overwriting if the buffer is full otherwise set 0
+ * 	@return Pointer on the new ring buffer
  * 	@see newRingBufferWithOverwriting()
  * 	@see deleteRingBuffer()
 **/
@@ -72,7 +68,7 @@ void deleteRingBuffer(network_ringBuffer_t** ppRingBuff);
 /**
  *  @brief Add the new data at the back of the ring buffer
  * 	@param pRingBuff pointer on the ring buffer
- * 	@param newData pointer on the data to add
+ * 	@param[in] newData pointer on the data to add
  * 	@return error equal to 1 if the data is not correctly pushed
 **/
 int ringBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData);
@@ -80,7 +76,7 @@ int ringBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData);
 /**
  *  @brief Pop the oldest data
  * 	@param pRingBuff pointer on the ring buffer
- * 	@param popData pointer on the data popped
+ * 	@param[out] popData pointer on the data popped
  * 	@return error equal to 1 if the buffer is empty 
 **/
 int ringBuffPopFront(network_ringBuffer_t* pRingBuff, void* pPopData);
@@ -109,7 +105,7 @@ extern inline int ringBuffIsEmpty(const network_ringBuffer_t* pRingBuff)
 /**
  *  @brief Return a pointer on the front data
  * 	@param pRingBuff pointer on the ring buffer
- * 	@param pFrontData pointer on the data popped
+ * 	@param[out] pFrontData pointer on the front data
  * 	@return error equal to 1 if the ring buffer is empty 
 **/
 int ringBuffFront( network_ringBuffer_t* pRingBuff, void* pFrontData);

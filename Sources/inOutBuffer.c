@@ -91,7 +91,7 @@ int inOutBufferAckReceived(network_inOutBuffer_t* pInOutBuff, int seqNum)
 	{
 		pInOutBuff->isWaitAck = 0;
 		ringBuffPopFront( pInOutBuff->pBuffer, NULL );
-		error = 0 ;
+		error = 0;
 	}
 	sal_mutex_unlock(&(pInOutBuff->mutex)); // !!! mutex ?
 	

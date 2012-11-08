@@ -1,6 +1,6 @@
 /**
  *	@file inOutBuffer.h
- *  @brief input or output buffer used by libNetwork::receiver or libNetwork::sender
+ *  @brief input or output buffer, used by libNetwork::receiver or libNetwork::sender
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
 **/
@@ -30,6 +30,8 @@ typedef struct network_paramNewInOutBuffer_t
 
 /**
  *  @brief Input buffer used by libNetwork::sender or output buffer used by libNetwork::receiver
+ * 	@warning before to be used the inOutBuffer must be created through newInOutBuffer()
+ * 	@post after its using the inOutBuffer must be deleted through deleteInOutBuffer()
 **/
 typedef struct network_inOutBuffer_t  
 {
@@ -55,7 +57,7 @@ typedef struct network_inOutBuffer_t
  *  @brief Create a new input or output buffer
  * 	@warning This function allocate memory
  *	@post deleteInOutBuffer() must be called to delete the input or output buffer and free the memory allocated
- * 	@param pParam Pointer on the parameters for the new input or output buffer
+ * 	@param[in] pParam Pointer on the parameters for the new input or output buffer
  * 	@return Pointer on the new input or output buffer
  * 	@see deleteInOutBuffer()
 **/
@@ -70,19 +72,19 @@ network_inOutBuffer_t* newInOutBuffer(const network_paramNewInOutBuffer_t *pPara
 void deleteInOutBuffer(network_inOutBuffer_t** ppInOutBuff);
 
 /**
- *  @brief Pass an acknowledgement to a inOutBuffer.
+ *  @brief Receive an acknowledgement to a inOutBuffer.
  * 	@details If the inOutBuffer is waiting about an acknowledgement and seqNum is equal to the sequence number waited, the inOutBuffer pops the last data and delete its is waiting acknowledgement.
- * 	@param pInOutBuff Pointer on the input or output buffer
- * 	@param seqNum sequence number of the acknowledgement
+ * 	@param[in] pInOutBuff Pointer on the input or output buffer
+ * 	@param[in] seqNum sequence number of the acknowledgement
  * 	@return error equal to 0 if the data has been correctly acknowledged otherwise equal to 1
 **/
 int inOutBufferAckReceived(network_inOutBuffer_t* pInOutBuff, int seqNum);
 
 /**
- *  @brief search a inOutBuffer with its identifier in a table
- * 	@param pptabInOutBuff address of the table of pointer of inOutBuffer
- * 	@param tabSize size of the table of pointer of inOutBuffer
- * 	@param id identifier of the inOutBuffer searched
+ *  @brief Search a inOutBuffer with its identifier in a table
+ * 	@param[in] pptabInOutBuff address of the table of pointer of inOutBuffer
+ * 	@param[in] tabSize size of the table of pointers of inOutBuffer
+ * 	@param[in] id identifier of the inOutBuffer searched
  * 	@return address of the inOutBuffer with the identifier searched (equal to NULL if the inOutBuffer is not find)
 **/
 network_inOutBuffer_t* inOutBufferWithId(	network_inOutBuffer_t** pptabInOutBuff,

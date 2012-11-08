@@ -60,7 +60,7 @@ int senderAddToBuffer(	network_Sender_t* pSender,const network_inOutBuffer_t* pi
 ******************************************/
 
 
-network_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int inputBufferNum,
+network_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int numOfInputBuff,
 								network_inOutBuffer_t** ppTab_input)
 {	
 	network_Sender_t* pSender =  malloc( sizeof(network_Sender_t));
@@ -71,9 +71,9 @@ network_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int inputB
 	if(pSender)
 	{
 		pSender->isAlive = 1;
-		pSender->sleepTime = MILLISECOND * SENDER_SLEEP_TIME_MS;
+		//pSender->sleepTime = MILLISECOND * SENDER_SLEEP_TIME_MS;
 
-		pSender->inputBufferNum = inputBufferNum;
+		pSender->numOfInputBuff = numOfInputBuff;
 
 		pSender->pptab_inputBuffer = ppTab_input;
 		
@@ -126,9 +126,9 @@ void* runSendingThread(void* data)
 	
 	while( pSender->isAlive )
 	{		
-		usleep(pSender->sleepTime);
+		usleep(MILLISECOND /*pSender->sleepTime*/);
 		
-		for(indexInput = 0 ; indexInput < pSender->inputBufferNum ; ++indexInput  )
+		for(indexInput = 0 ; indexInput < pSender->numOfInputBuff ; ++indexInput  )
 		{
 			pInputTemp = pSender->pptab_inputBuffer[indexInput];
 			
@@ -286,7 +286,7 @@ int senderAckReceived(network_Sender_t* pSender, int id, int seqNum)
 {
 	int error = 1;
 	network_inOutBuffer_t* pInputBuff = inOutBufferWithId( pSender->pptab_inputBuffer,
-															pSender->inputBufferNum, id );
+															pSender->numOfInputBuff, id );
 	if(pInputBuff != NULL)
 	{
 		error = inOutBufferAckReceived(pInputBuff, seqNum);
