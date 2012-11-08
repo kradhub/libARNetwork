@@ -282,14 +282,17 @@ int senderAddToBuffer(	network_Sender_t* pSender,const network_inOutBuffer_t* pi
 	return error;
 }
 
-void senderAckReceived(network_Sender_t* pSender, int id, int seqNum)
+int senderAckReceived(network_Sender_t* pSender, int id, int seqNum)
 {
+	int error = 1;
 	network_inOutBuffer_t* pInputBuff = inOutBufferWithId( pSender->pptab_inputBuffer,
 															pSender->inputBufferNum, id );
 	if(pInputBuff != NULL)
 	{
-		inOutBufferAckReceived(pInputBuff, seqNum);
+		error = inOutBufferAckReceived(pInputBuff, seqNum);
 	}
+	
+	return error;
 }
 
 int senderConnection(network_Sender_t* pSender,const char* addr, int port)

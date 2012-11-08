@@ -85,8 +85,9 @@ void stopSender(network_Sender_t* pSender);
  * 	@param pSender the pointer on the Sender
  * 	@param id identifier of the command CMD_TYPE_ACK received
  *	@param seqNum sequence number of the acknowledge
+ * 	@return
 **/
-void senderAckReceived(network_Sender_t* pSender, int id, int seqNum);
+int senderAckReceived(network_Sender_t* pSender, int id, int seqNum);
 
 int senderConnection(network_Sender_t* pSender,const char* addr, int port);
 

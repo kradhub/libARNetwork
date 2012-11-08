@@ -28,7 +28,7 @@ typedef struct network_ringBuffer_t
     unsigned int buffSize;			/**< Maximum number of data stored*/
     unsigned int buffCellSize;		/**< Size of one data in byte*/
     unsigned int overwriting;		/**< Indicator of overwriting possibility (1 = true | 0 = false)*/
-    sal_mutex_t mutex;				/**< Mutex to take before use the ringBuffer*/
+    sal_mutex_t mutex;				/**< Mutex to take before to use the ringBuffer*/
 
 }network_ringBuffer_t;
 
@@ -73,7 +73,7 @@ void deleteRingBuffer(network_ringBuffer_t** ppRingBuff);
  *  @brief Add the new data at the back of the ring buffer
  * 	@param pRingBuff pointer on the ring buffer
  * 	@param newData pointer on the data to add
- * 	@return error equal 1 if the data is not correctly pushed
+ * 	@return error equal to 1 if the data is not correctly pushed
 **/
 int ringBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData);
 
@@ -81,7 +81,7 @@ int ringBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData);
  *  @brief Pop the oldest data
  * 	@param pRingBuff pointer on the ring buffer
  * 	@param popData pointer on the data popped
- * 	@return error equal 1 if the buffer is empty 
+ * 	@return error equal to 1 if the buffer is empty 
 **/
 int ringBuffPopFront(network_ringBuffer_t* pRingBuff, void* pPopData);
 
@@ -99,7 +99,7 @@ extern inline int ringBuffGetFreeCellNb(const network_ringBuffer_t* pRingBuff)
 /**
  *  @brief Check if the ring buffer is empty
  * 	@param pRingBuff pointer on the ring buffer
- * 	@return equal 1 if the ring buffer is empty else 0
+ * 	@return equal to 1 if the ring buffer is empty else 0
 **/
 extern inline int ringBuffIsEmpty(const network_ringBuffer_t* pRingBuff)
 {
@@ -110,7 +110,7 @@ extern inline int ringBuffIsEmpty(const network_ringBuffer_t* pRingBuff)
  *  @brief Return a pointer on the front data
  * 	@param pRingBuff pointer on the ring buffer
  * 	@param pFrontData pointer on the data popped
- * 	@return error equal 1 if the ring buffer is empty 
+ * 	@return error equal to 1 if the ring buffer is empty 
 **/
 int ringBuffFront( network_ringBuffer_t* pRingBuff, void* pFrontData);
 

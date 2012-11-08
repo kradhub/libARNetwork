@@ -82,16 +82,20 @@ void deleteInOutBuffer(network_inOutBuffer_t** ppInOutBuff)
 
 }
 
-void inOutBufferAckReceived(network_inOutBuffer_t* pInOutBuff, int seqNum)
+int inOutBufferAckReceived(network_inOutBuffer_t* pInOutBuff, int seqNum)
 {
+	int error = 1;
 	sal_mutex_lock(&(pInOutBuff->mutex)); // !!! mutex ?
 	
 	if(pInOutBuff->isWaitAck && pInOutBuff->seqWaitAck == seqNum)
 	{
 		pInOutBuff->isWaitAck = 0;
 		ringBuffPopFront( pInOutBuff->pBuffer, NULL );
+		error = 0 ;
 	}
 	sal_mutex_unlock(&(pInOutBuff->mutex)); // !!! mutex ?
+	
+	return error;
 }
 
 network_inOutBuffer_t* inOutBufferWithId(	network_inOutBuffer_t** pptabInOutBuff,
