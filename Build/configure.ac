@@ -1,6 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT([libNetWork], [1.0], [ardrone@ardrone.org])
+AC_INIT([libNetwork], [1.0], [ardrone@ardrone.org])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(m4)
@@ -102,7 +102,7 @@ DX_RTF_FEATURE(OFF)
 DX_XML_FEATURE(OFF)
 DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)
-DX_INIT_DOXYGEN([libNetWork], [doxygen.cfg], [../Doc])
+DX_INIT_DOXYGEN([libNetwork], [doxygen.cfg], [../Doc])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
 # Checks for header files.

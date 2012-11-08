@@ -8,8 +8,8 @@
 #ifndef _SENDER_H_
 #define _SENDER_H_
 
-#include <libNetWork/inOutBuffer.h>
-#include <libNetWork/buffer.h>
+#include <libNetwork/inOutBuffer.h>
+#include <libNetwork/buffer.h>
 
 // static :
 
@@ -21,16 +21,16 @@
 /**
  *  @brief properties of the sender
 **/
-typedef struct netWork_Sender_t netWork_Sender_t;
-struct netWork_Sender_t
+typedef struct network_Sender_t network_Sender_t;
+struct network_Sender_t
 {
 
-	netWork_buffer_t* pSendingBuffer;
+	network_buffer_t* pSendingBuffer;
 	int 	sendingBufferSize;
 	char* 	pSendingBuffercursor;//private
 	char* 	pSendingBufferEnd;//private
 	
-	netWork_inOutBuffer_t** pptab_inputBuffer;
+	network_inOutBuffer_t** pptab_inputBuffer;
 	int inputBufferNum;
 	
 	// !! sal_mutex_t mutex; //??? !!!!
@@ -46,21 +46,20 @@ struct netWork_Sender_t
  *	@post Call deleteSender()
  * 	@return Pointer on the new sender
 **/
-
-netWork_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBufferNum,
-								netWork_inOutBuffer_t** ppTab_input);
+network_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int inputBufferNum,
+								network_inOutBuffer_t** ppTab_input);
 
 /**
  *  @brief Delete the sender
  * 	@param ppSender address of the pointer on the Sender
  *	@see newSender()
 **/
-void deleteSender(netWork_Sender_t** ppSender);
+void deleteSender(network_Sender_t** ppSender);
 
 /**
  *  @brief manage the communication between the drone and the application
  * 	Must be called by a specific thread 
- * 	@param data thread datas of type netWork_Sender_t*
+ * 	@param data thread datas of type network_Sender_t*
 **/
 void* runSendingThread(void* data);
 
@@ -71,7 +70,7 @@ void* runSendingThread(void* data);
  //*	@pre the thread calling runSendingThread() must be created
  //* 	@see runSendingThread()
 // **/
-//void startSender(netWork_Sender_t* pSender);
+//void startSender(network_Sender_t* pSender);
 
 /**
  *  @brief stop the sending
@@ -79,7 +78,7 @@ void* runSendingThread(void* data);
  *	@pre the thread calling runSendingThread() must be created
  * 	@see runSendingThread()
 **/
-void stopSender(netWork_Sender_t* pSender);
+void stopSender(network_Sender_t* pSender);
 
 /**
  *  @brief received
@@ -87,9 +86,9 @@ void stopSender(netWork_Sender_t* pSender);
  * 	@param id identifier of the command CMD_TYPE_ACK received
  *	@param seqNum sequence number of the acknowledge
 **/
-void senderAckReceived(netWork_Sender_t* pSender, int id, int seqNum);
+void senderAckReceived(network_Sender_t* pSender, int id, int seqNum);
 
-int senderConnection(netWork_Sender_t* pSender,const char* addr, int port);
+int senderConnection(network_Sender_t* pSender,const char* addr, int port);
 
 #endif // _SENDER_H_
 

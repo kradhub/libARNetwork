@@ -1,6 +1,6 @@
 /**
- *	@file singleBuffer.c
- *  @brief single buffer
+ *	@file buffer.c
+ *  @brief basic buffer
  *  @date 28/09/2012
  *  @author maxime.maitre@parrot.com
 **/
@@ -13,7 +13,7 @@
 
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
-#include <libNetWork/buffer.h>
+#include <libNetwork/buffer.h>
 
 /*****************************************
  * 
@@ -21,13 +21,12 @@
  *
 ******************************************/
 
-netWork_buffer_t* newBuffer(unsigned int buffSize, unsigned int buffCellSize)
+network_buffer_t* newBuffer(unsigned int buffSize, unsigned int buffCellSize)
 {
-	netWork_buffer_t* pBuffer = malloc( sizeof(netWork_buffer_t));
+	network_buffer_t* pBuffer = malloc( sizeof(network_buffer_t));
 	
 	if(pBuffer)
 	{
-		sal_mutex_init( &(pBuffer->mutex) );
 		pBuffer->buffSize = buffSize;
 		pBuffer->buffCellSize = buffCellSize;
 		pBuffer->pStart = malloc( buffCellSize * buffSize );
@@ -44,9 +43,9 @@ netWork_buffer_t* newBuffer(unsigned int buffSize, unsigned int buffCellSize)
     return pBuffer;
 }
 
-void deleteBuffer(netWork_buffer_t** ppBuffer)
+void deleteBuffer(network_buffer_t** ppBuffer)
 {	
-	netWork_buffer_t* pBuffer = NULL;
+	network_buffer_t* pBuffer = NULL;
 	
 	if(ppBuffer)
 	{
@@ -54,7 +53,6 @@ void deleteBuffer(netWork_buffer_t** ppBuffer)
 		
 		if(pBuffer)
 		{
-			sal_mutex_destroy(&(pBuffer->mutex));
 			free(pBuffer->pStart);
 			
 			free(pBuffer);
@@ -63,22 +61,7 @@ void deleteBuffer(netWork_buffer_t** ppBuffer)
 	}
 }
 
-unsigned int bufferGetFreeCellNb(const netWork_buffer_t* pBuffer)
-{
-	return (pBuffer->pEnd - pBuffer->pFront) / pBuffer->buffCellSize;
-}
-
-int bufferIsEmpty(netWork_buffer_t* pBuffer)
-{
-	return pBuffer->pStart == pBuffer->pFront;
-}
-
-void bufferClean(netWork_buffer_t* pBuffer)
-{
-	pBuffer->pFront = pBuffer->pStart;
-}
-
-void bufferPrint(netWork_buffer_t* pBuffer)
+void bufferPrint(network_buffer_t* pBuffer)
 {
 	void* it = pBuffer->pStart;
 	
@@ -95,7 +78,7 @@ void bufferPrint(netWork_buffer_t* pBuffer)
 	bufferDataPrint(pBuffer);
 }
 
-void bufferDataPrint(netWork_buffer_t* pBuffer)
+void bufferDataPrint(network_buffer_t* pBuffer)
 {
 	void* it = pBuffer->pStart;
 	

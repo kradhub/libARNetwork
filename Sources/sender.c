@@ -14,10 +14,10 @@
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>//voir ?
 #include <libSAL/socket.h>
-#include <libNetWork/common.h>
-#include <libNetWork/buffer.h>
-#include <libNetWork/inOutBuffer.h>
-#include <libNetWork/sender.h>
+#include <libNetwork/common.h>
+#include <libNetwork/buffer.h>
+#include <libNetwork/inOutBuffer.h>
+#include <libNetwork/sender.h>
 
 typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;
@@ -33,7 +33,7 @@ typedef struct sockaddr SOCKADDR;
  *	@pre only call by runSendingThread()
  * 	@see runSendingThread()
 **/
-void senderSend(netWork_Sender_t* pSender);
+void senderSend(network_Sender_t* pSender);
 
 /**
  *  @brief add data to the sender buffer
@@ -46,7 +46,7 @@ void senderSend(netWork_Sender_t* pSender);
  *	@pre the thread calling runSendingThread() must be created
  * 	@see runSendingThread()
 **/
-int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pinputBuff,
+int senderAddToBuffer(	network_Sender_t* pSender,const network_inOutBuffer_t* pinputBuff,
 						int seqNum);
 						
 #define MILLISECOND 1000
@@ -60,10 +60,10 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 ******************************************/
 
 
-netWork_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int inputBufferNum,
-								netWork_inOutBuffer_t** ppTab_input)
+network_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int inputBufferNum,
+								network_inOutBuffer_t** ppTab_input)
 {	
-	netWork_Sender_t* pSender =  malloc( sizeof(netWork_Sender_t));
+	network_Sender_t* pSender =  malloc( sizeof(network_Sender_t));
 	
 	int iiInputBuff = 0;
 	int error=0;
@@ -96,9 +96,9 @@ netWork_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int inputB
 	return pSender;
 }
 
-void deleteSender(netWork_Sender_t** ppSender)
+void deleteSender(network_Sender_t** ppSender)
 {
-	netWork_Sender_t* pSender = NULL;
+	network_Sender_t* pSender = NULL;
 	int iiInputBuff = 0;
 	
 	if(ppSender)
@@ -117,12 +117,12 @@ void deleteSender(netWork_Sender_t** ppSender)
 
 void* runSendingThread(void* data)
 {
-	netWork_Sender_t* pSender = data;
+	network_Sender_t* pSender = data;
 	int seq = 1;
 	int indexInput = 0;
 	int callBackReturn = 0;
 	
-	netWork_inOutBuffer_t* pInputTemp;
+	network_inOutBuffer_t* pInputTemp;
 	
 	while( pSender->isAlive )
 	{		
@@ -213,18 +213,18 @@ void* runSendingThread(void* data)
 }
 
 /*
-void startSender(netWork_Sender_t* pSender)
+void startSender(network_Sender_t* pSender)
 {
 	pSender->isAlive = 1;
 }
 */
 
-void stopSender(netWork_Sender_t* pSender)
+void stopSender(network_Sender_t* pSender)
 {
 	pSender->isAlive = 0;
 }
 
-void senderSend(netWork_Sender_t* pSender)
+void senderSend(network_Sender_t* pSender)
 {	
 	int nbCharCopy = 0;
 	
@@ -242,7 +242,7 @@ void senderSend(netWork_Sender_t* pSender)
 	}
 }
 
-int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pinputBuff,
+int senderAddToBuffer(	network_Sender_t* pSender,const network_inOutBuffer_t* pinputBuff,
 						int seqNum)
 {
 	int error = 1;
@@ -282,9 +282,9 @@ int senderAddToBuffer(	netWork_Sender_t* pSender,const netWork_inOutBuffer_t* pi
 	return error;
 }
 
-void senderAckReceived(netWork_Sender_t* pSender, int id, int seqNum)
+void senderAckReceived(network_Sender_t* pSender, int id, int seqNum)
 {
-	netWork_inOutBuffer_t* pInputBuff = inOutBufferWithId( pSender->pptab_inputBuffer,
+	network_inOutBuffer_t* pInputBuff = inOutBufferWithId( pSender->pptab_inputBuffer,
 															pSender->inputBufferNum, id );
 	if(pInputBuff != NULL)
 	{
@@ -292,7 +292,7 @@ void senderAckReceived(netWork_Sender_t* pSender, int id, int seqNum)
 	}
 }
 
-int senderConnection(netWork_Sender_t* pSender,const char* addr, int port)
+int senderConnection(network_Sender_t* pSender,const char* addr, int port)
 {
 	SOCKADDR_IN sendSin;
 	sendSin.sin_addr.s_addr = inet_addr(addr);

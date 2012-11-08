@@ -8,9 +8,9 @@
 #ifndef _RECEIVER_H_
 #define _RECEIVER_H_
 
-#include <libNetWork/inOutBuffer.h>
-#include <libNetWork/sender.h>
-#include <libNetWork/buffer.h>
+#include <libNetwork/inOutBuffer.h>
+#include <libNetwork/sender.h>
+#include <libNetwork/buffer.h>
 
 
 #define NAV_CMD_BUFFER_SIZE 256
@@ -31,13 +31,13 @@
 /**
  *  @brief properties of the receiver
 **/
-typedef struct netWork_Receiver_t
+typedef struct network_Receiver_t
 {
-	netWork_buffer_t* pRecvBuffer;
+	network_buffer_t* pRecvBuffer;
 	
-	netWork_Sender_t* pSender;
+	network_Sender_t* pSender;
 	
-	netWork_inOutBuffer_t** pptab_outputBuffer;
+	network_inOutBuffer_t** pptab_outputBuffer;
 	int outputBufferNum;
 	
 	// !! sal_mutex_t mutex; //???
@@ -46,7 +46,7 @@ typedef struct netWork_Receiver_t
 	
 	int socket;
 	
-}netWork_Receiver_t;
+}network_Receiver_t;
 
 
 /**
@@ -54,20 +54,20 @@ typedef struct netWork_Receiver_t
  *	@post Call deleteReceiver()
  * 	@return Pointer on the new receiver
 **/
-netWork_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int outputBufferNum,
-									netWork_inOutBuffer_t** pptab_output);
+network_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int outputBufferNum,
+									network_inOutBuffer_t** pptab_output);
 
 /**
  *  @brief Delete the Receiver
  * 	@param ppReceiver address of the pointer on the Receiver
  *	@see newReceiver()
 **/
-void deleteReceiver(netWork_Receiver_t** ppReceiver);
+void deleteReceiver(network_Receiver_t** ppReceiver);
 
 /**
  *  @brief manage the communication between the drone and the application
  * 	Must be called by a specific thread 
- * 	@param data thread datas of type netWork_Receive_t*
+ * 	@param data thread datas of type network_Receive_t*
 **/
 void* runReceivingThread(void* data);
 
@@ -77,7 +77,7 @@ void* runReceivingThread(void* data);
  *	@pre the thread calling runSendingThread() must be created
  * 	@see runReceivingThread()
 **/
-void stopReceiver(netWork_Receiver_t* pReceiver);
+void stopReceiver(network_Receiver_t* pReceiver);
 
 /**
  *  @brief return a acknowledged by the sender
@@ -86,18 +86,18 @@ void stopReceiver(netWork_Receiver_t* pReceiver);
  * 	@param seq sequence of the command to acknowledged
  *	@see newReceiver()
 **/
-void returnASK(netWork_Receiver_t* pReceiver, int id, int seq);
+void returnASK(network_Receiver_t* pReceiver, int id, int seq);
 
 
 
-int receiverRead(netWork_Receiver_t* pReceiver);
+int receiverRead(network_Receiver_t* pReceiver);
 
 //inline !!!!
 int idOutputToIdAck( int id);
 //inline !!!!
 int idAckToIdInput( int id);
 
-int receiverBind(netWork_Receiver_t* pReceiver, unsigned short port, int timeoutSec);
+int receiverBind(network_Receiver_t* pReceiver, unsigned short port, int timeoutSec);
 
 #endif // _RECEIVER_H_
 

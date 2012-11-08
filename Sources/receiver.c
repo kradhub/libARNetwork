@@ -14,11 +14,11 @@
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
 #include <libSAL/socket.h>
-#include <libNetWork/common.h>
-#include <libNetWork/buffer.h>
-#include <libNetWork/inOutBuffer.h>
-#include <libNetWork/sender.h>
-#include <libNetWork/receiver.h>
+#include <libNetwork/common.h>
+#include <libNetwork/buffer.h>
+#include <libNetwork/inOutBuffer.h>
+#include <libNetwork/sender.h>
+#include <libNetwork/receiver.h>
 
 typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;
@@ -36,10 +36,10 @@ typedef struct sockaddr SOCKADDR;
  *	@pre only call by runSendingThread()
  * 	@see runSendingThread()
 **/
-int getCmd(netWork_Receiver_t* pReceiver, uint8_t** ppCmd);
+int getCmd(network_Receiver_t* pReceiver, uint8_t** ppCmd);
 
 
-int initRecvBuffer(netWork_Receiver_t* pReceiver);
+int initRecvBuffer(network_Receiver_t* pReceiver);
 
 #define OUTPUT_PARAM_NUM 4
 #define MICRO_SECOND 1000
@@ -51,10 +51,10 @@ int initRecvBuffer(netWork_Receiver_t* pReceiver);
 ******************************************/
 
 
-netWork_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int outputBufferNum,
-									netWork_inOutBuffer_t** pptab_output)
+network_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int outputBufferNum,
+									network_inOutBuffer_t** pptab_output)
 {	
-	netWork_Receiver_t* pReceiver =  malloc( sizeof(netWork_Receiver_t));
+	network_Receiver_t* pReceiver =  malloc( sizeof(network_Receiver_t));
 
 	int error = 0;
 	
@@ -86,9 +86,9 @@ netWork_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int outpu
 	return pReceiver;
 }
 
-void deleteReceiver(netWork_Receiver_t** ppReceiver)
+void deleteReceiver(network_Receiver_t** ppReceiver)
 {
-	netWork_Receiver_t* pReceiver = NULL;
+	network_Receiver_t* pReceiver = NULL;
 	
 	int iiOutputBuff = 0;
 	
@@ -108,10 +108,10 @@ void deleteReceiver(netWork_Receiver_t** ppReceiver)
 
 void* runReceivingThread(void* data)
 {	
-	netWork_Receiver_t* pReceiver = data;
+	network_Receiver_t* pReceiver = data;
 	
 	UNION_CMD recvCmd;
-	netWork_inOutBuffer_t* pOutBufferTemp = NULL;
+	network_inOutBuffer_t* pOutBufferTemp = NULL;
 	
 	int pushError = 0;
 	
@@ -185,12 +185,12 @@ void* runReceivingThread(void* data)
     return NULL;
 }
 
-void stopReceiver(netWork_Receiver_t* pReceiver)
+void stopReceiver(network_Receiver_t* pReceiver)
 {
 	pReceiver->isAlive = 0;
 }
 
-int getCmd(netWork_Receiver_t* pReceiver, uint8_t** ppCmd)
+int getCmd(network_Receiver_t* pReceiver, uint8_t** ppCmd)
 {
 	int error = 1;
 
@@ -225,9 +225,9 @@ int getCmd(netWork_Receiver_t* pReceiver, uint8_t** ppCmd)
 	return error;
 }
 
-void returnASK(netWork_Receiver_t* pReceiver, int id, int seq)
+void returnASK(network_Receiver_t* pReceiver, int id, int seq)
 {
-	netWork_inOutBuffer_t* pBufferASK = inOutBufferWithId(	pReceiver->pptab_outputBuffer,
+	network_inOutBuffer_t* pBufferASK = inOutBufferWithId(	pReceiver->pptab_outputBuffer,
 																pReceiver->outputBufferNum,
 																idOutputToIdAck(id) );
 	if(pBufferASK != NULL)
@@ -236,7 +236,7 @@ void returnASK(netWork_Receiver_t* pReceiver, int id, int seq)
 	}
 }
 
-int receiverRead(netWork_Receiver_t* pReceiver)
+int receiverRead(network_Receiver_t* pReceiver)
 {
 	int readDataSize =  sal_recv(	pReceiver->socket, pReceiver->pRecvBuffer->pStart,
 								pReceiver->pRecvBuffer->buffSize, 0);
@@ -258,7 +258,7 @@ int idAckToIdInput( int id)
 	return id - 1000; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
-int receiverBind(netWork_Receiver_t* pReceiver, unsigned short port, int timeoutSec)
+int receiverBind(network_Receiver_t* pReceiver, unsigned short port, int timeoutSec)
 {
 	struct timeval timeout;  
 	

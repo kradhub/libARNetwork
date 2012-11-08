@@ -10,19 +10,19 @@
 #include <libSAL/print.h>
 #include <libSAL/thread.h>
 
-#include <libNetWork/common.h>
-#include <libNetWork/inOutBuffer.h>
-#include <libNetWork/sender.h>
-#include <libNetWork/receiver.h>
-#include <libNetWork/netWork.h>
+#include <libNetwork/common.h>
+#include <libNetwork/inOutBuffer.h>
+#include <libNetwork/sender.h>
+#include <libNetwork/receiver.h>
+#include <libNetwork/network.h>
 
 #include <unistd.h>
 
-#include "Includes/netWorkDef.h"
+#include "Includes/networkDef.h"
 
 int main(int argc, char *argv[])
 {
-	netWork_t* pNetWork2= NULL;
+	network_t* pNetwork2= NULL;
 	
 	char chData = 0;
 	
@@ -31,48 +31,48 @@ int main(int argc, char *argv[])
 	int bindError = -1;
 	int connectError = -1;
 	
-	netWork_inOutBuffer_t* pInOutTemp = NULL;
+	network_inOutBuffer_t* pInOutTemp = NULL;
 	
-	netWork_paramNewInOutBuffer_t paramNetWork2[3];
+	network_paramNewInOutBuffer_t paramNetwork2[3];
 	
 	
-	//--- netWork 2 ---
+	//--- network 2 ---
 	
 	// input ID_INT_DATA char
-	paramNetWork2[0].id = ID_INT_DATA;
-	paramNetWork2[0].dataType = CMD_TYPE_DATA;
-	paramNetWork2[0].sendingWaitTime = 2;
-	paramNetWork2[0].ackTimeoutMs = 10;//not used
-	paramNetWork2[0].nbOfRetry = 5;//not used
-	paramNetWork2[0].buffSize = 2;
-	paramNetWork2[0].buffCellSize = sizeof(int);
-	paramNetWork2[1].overwriting = 1;
+	paramNetwork2[0].id = ID_INT_DATA;
+	paramNetwork2[0].dataType = CMD_TYPE_DATA;
+	paramNetwork2[0].sendingWaitTime = 2;
+	paramNetwork2[0].ackTimeoutMs = 10;//not used
+	paramNetwork2[0].nbOfRetry = 5;//not used
+	paramNetwork2[0].buffSize = 2;
+	paramNetwork2[0].buffCellSize = sizeof(int);
+	paramNetwork2[1].overwriting = 1;
 	
 	// output ID_CHAR_DATA int
-	paramNetWork2[1].id = ID_CHAR_DATA;
-	paramNetWork2[1].dataType = CMD_TYPE_DATA;
-	paramNetWork2[1].sendingWaitTime = 3;
-	paramNetWork2[1].ackTimeoutMs = 10;//not used
-	paramNetWork2[1].nbOfRetry = 5;//not used
-	paramNetWork2[1].buffSize = 1;
-	paramNetWork2[1].buffCellSize = sizeof(char);
-	paramNetWork2[1].overwriting = 1;
+	paramNetwork2[1].id = ID_CHAR_DATA;
+	paramNetwork2[1].dataType = CMD_TYPE_DATA;
+	paramNetwork2[1].sendingWaitTime = 3;
+	paramNetwork2[1].ackTimeoutMs = 10;//not used
+	paramNetwork2[1].nbOfRetry = 5;//not used
+	paramNetwork2[1].buffSize = 1;
+	paramNetwork2[1].buffCellSize = sizeof(char);
+	paramNetwork2[1].overwriting = 1;
 	
 	// output ID_INT_DATA_WITH_ACK int
-	paramNetWork2[2].id = ID_INT_DATA_WITH_ACK;
-	paramNetWork2[2].dataType = CMD_TYPE_DATA_WITH_ACK;//not used
-	paramNetWork2[2].sendingWaitTime = 2;//not used
-	paramNetWork2[2].ackTimeoutMs = 10;//not used
-	paramNetWork2[2].nbOfRetry = 5;//not used
-	paramNetWork2[2].buffSize = 5;
-	paramNetWork2[2].buffCellSize = sizeof(int);
-	paramNetWork2[2].overwriting = 0;
+	paramNetwork2[2].id = ID_INT_DATA_WITH_ACK;
+	paramNetwork2[2].dataType = CMD_TYPE_DATA_WITH_ACK;//not used
+	paramNetwork2[2].sendingWaitTime = 2;//not used
+	paramNetwork2[2].ackTimeoutMs = 10;//not used
+	paramNetwork2[2].nbOfRetry = 5;//not used
+	paramNetwork2[2].buffSize = 5;
+	paramNetwork2[2].buffCellSize = sizeof(int);
+	paramNetwork2[2].overwriting = 0;
 	
 	//-----------------------------
 
-	pNetWork2 = newNetWork( 256, 256, 2, 1,
-							paramNetWork2[1], paramNetWork2[2],
-							paramNetWork2[0]);
+	pNetwork2 = newNetwork( 256, 256, 2, 1,
+							paramNetwork2[1], paramNetwork2[2],
+							paramNetwork2[0]);
 	
 	printf("\n~~ This soft receives data sent by the manager soft ~~ \n \n");
 						
@@ -83,12 +83,12 @@ int main(int argc, char *argv[])
 		
 		if(bindError != 0)
 		{
-			bindError = receiverBind(pNetWork2->pReceiver, 5551, 10);
+			bindError = receiverBind(pNetwork2->pReceiver, 5551, 10);
 		}
 		
 		if(connectError != 0)
 		{
-			connectError = senderConnection(pNetWork2->pSender,&IpAddress, 5552);
+			connectError = senderConnection(pNetwork2->pSender,&IpAddress, 5552);
 		}
 		
 		printf("	- Sender connect error: %d \n", connectError );			
@@ -99,8 +99,8 @@ int main(int argc, char *argv[])
 	sal_thread_t thread_send2;
 	sal_thread_t thread_recv2;
 	
-	sal_thread_create(&(thread_recv2), (sal_thread_routine) runReceivingThread, pNetWork2->pReceiver);
-	sal_thread_create(&thread_send2, (sal_thread_routine) runSendingThread, pNetWork2->pSender);
+	sal_thread_create(&(thread_recv2), (sal_thread_routine) runReceivingThread, pNetwork2->pReceiver);
+	sal_thread_create(&thread_send2, (sal_thread_routine) runSendingThread, pNetwork2->pSender);
 
 	printf("press 'q' to quit and to see the date received : \n");
 
@@ -110,15 +110,15 @@ int main(int argc, char *argv[])
     }
 	
 	//stop all therad
-	stopSender(pNetWork2->pSender);
-	stopReceiver(pNetWork2->pReceiver);
+	stopSender(pNetwork2->pSender);
+	stopReceiver(pNetwork2->pReceiver);
 	
 	printf("\n the last char transmited:\n");
-	pInOutTemp = inOutBufferWithId(	pNetWork2->ppTabOutput, pNetWork2->numOfOutput, ID_CHAR_DATA);
+	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_CHAR_DATA);
 	ringBuffPrint(pInOutTemp->pBuffer);
 	
 	printf("\n the integers transmited:\n");
-	pInOutTemp = inOutBufferWithId(	pNetWork2->ppTabOutput, pNetWork2->numOfOutput, ID_INT_DATA_WITH_ACK);
+	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_INT_DATA_WITH_ACK);
 	ringBuffPrint(pInOutTemp->pBuffer);
 	
 	sal_print(PRINT_WARNING,"\n");
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 	sal_thread_join(&(thread_recv2), NULL);
 
 	//delete
-	deleteNetWork( &pNetWork2 );
+	deleteNetwork( &pNetwork2 );
 	
 	printf("end \n");
 }

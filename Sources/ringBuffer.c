@@ -1,6 +1,6 @@
 /**
- *	@file circularBuffer.c
- *  @brief circular buffer for the commands to send
+ *	@file ringBuffer.c
+ *  @brief Ring buffer, multithread safe with overwriting possibility.
  *  @date 28/09/2012
  *  @author maxime.maitre@parrot.com
 **/
@@ -13,7 +13,7 @@
 
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
-#include <libNetWork/ringBuffer.h>
+#include <libNetwork/ringBuffer.h>
 
 /*****************************************
  * 
@@ -22,17 +22,16 @@
 ******************************************/
 
 
-netWork_ringBuffer_t* newRingBuffer(	unsigned int buffSize, unsigned int buffCellSize)
+network_ringBuffer_t* newRingBuffer(	unsigned int buffSize, unsigned int buffCellSize)
 {
 	return newRingBufferWithOverwriting(	buffSize, buffCellSize, 0 );
 }
 
-
-netWork_ringBuffer_t* newRingBufferWithOverwriting(	unsigned int buffSize, 
+network_ringBuffer_t* newRingBufferWithOverwriting(	unsigned int buffSize, 
 														unsigned int buffCellSize, 
 														int overwriting )
 {
-	netWork_ringBuffer_t* pRingBuff =  malloc( sizeof(netWork_ringBuffer_t));
+	network_ringBuffer_t* pRingBuff =  malloc( sizeof(network_ringBuffer_t));
 	
 	if(pRingBuff)
 	{
@@ -54,9 +53,9 @@ netWork_ringBuffer_t* newRingBufferWithOverwriting(	unsigned int buffSize,
 	return pRingBuff;
 }
 
-void deleteRingBuffer(netWork_ringBuffer_t** ppRingBuff)
+void deleteRingBuffer(network_ringBuffer_t** ppRingBuff)
 {
-	netWork_ringBuffer_t* pRingBuff = NULL;
+	network_ringBuffer_t* pRingBuff = NULL;
 	
 	if(ppRingBuff)
 	{
@@ -73,7 +72,7 @@ void deleteRingBuffer(netWork_ringBuffer_t** ppRingBuff)
 	}
 }
 
-int ringBuffPushBack(netWork_ringBuffer_t* pRingBuff, const void* pNewData)
+int ringBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData)
 {
 	int error = 1; //!!
 	void* buffPointor = NULL;
@@ -95,7 +94,7 @@ int ringBuffPushBack(netWork_ringBuffer_t* pRingBuff, const void* pNewData)
 		
 		pRingBuff->buffIndexInput += pRingBuff->buffCellSize;
 		
-		error = 0; //!!
+		error = 0;
 	}
 	
 	sal_mutex_unlock(&(pRingBuff->mutex));
@@ -103,7 +102,7 @@ int ringBuffPushBack(netWork_ringBuffer_t* pRingBuff, const void* pNewData)
 	return error;
 }
 
-int ringBuffPopFront(netWork_ringBuffer_t* pRingBuff, void* pPopData)
+int ringBuffPopFront(network_ringBuffer_t* pRingBuff, void* pPopData)
 {
 	void* buffPointor = NULL;
 	int error = 0;
@@ -132,7 +131,7 @@ int ringBuffPopFront(netWork_ringBuffer_t* pRingBuff, void* pPopData)
 	return error;
 }
 
-int ringBuffFront(netWork_ringBuffer_t* pRingBuff, void* pFrontData)
+int ringBuffFront(network_ringBuffer_t* pRingBuff, void* pFrontData)
 {
 	int error = 1;
 	void* buffPointor = NULL;
@@ -155,7 +154,7 @@ int ringBuffFront(netWork_ringBuffer_t* pRingBuff, void* pFrontData)
 	return error;
 }
 
-void ringBuffPrint(netWork_ringBuffer_t* pRingBuff)
+void ringBuffPrint(network_ringBuffer_t* pRingBuff)
 {
 	
 	sal_mutex_lock(&(pRingBuff->mutex));
@@ -174,7 +173,7 @@ void ringBuffPrint(netWork_ringBuffer_t* pRingBuff)
 	
 }
 
-void ringBuffDataPrint(netWork_ringBuffer_t* pRingBuff)
+void ringBuffDataPrint(network_ringBuffer_t* pRingBuff)
 {
 	sal_mutex_lock(&(pRingBuff->mutex));
 	
@@ -199,5 +198,4 @@ void ringBuffDataPrint(netWork_ringBuffer_t* pRingBuff)
 	}
 	
 	sal_mutex_unlock(&(pRingBuff->mutex));
-	
 }

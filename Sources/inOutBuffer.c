@@ -1,5 +1,5 @@
 /**
- *	@file netWork.c
+ *	@file network.c
  *  @brief single buffer
  *  @date 28/09/2012
  *  @author maxime.maitre@parrot.com
@@ -10,9 +10,9 @@
 #include <stdlib.h>
 #include <libSAL/print.h>
 #include <libSAL/mutex.h> //sup ?
-#include <libNetWork/ringBuffer.h>
-#include <libNetWork/common.h>//!! modif
-#include <libNetWork/inOutBuffer.h>
+#include <libNetwork/ringBuffer.h>
+#include <libNetwork/common.h>//!! modif
+#include <libNetwork/inOutBuffer.h>
 
 /*****************************************
  * 
@@ -20,9 +20,9 @@
  *
 ******************************************/
 
-netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pParam )
+network_inOutBuffer_t* newInOutBuffer(const network_paramNewInOutBuffer_t *pParam )
 {
-	netWork_inOutBuffer_t* pInOutBuff = malloc( sizeof(netWork_inOutBuffer_t));
+	network_inOutBuffer_t* pInOutBuff = malloc( sizeof(network_inOutBuffer_t));
 	
 	int keepAliveData = ntohl (0x50505055); //!!!!!!!!!!!!!!!!!!
 	
@@ -35,7 +35,7 @@ netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pPara
 		pInOutBuff->sendingWaitTime = pParam->sendingWaitTime;
 		pInOutBuff->ackTimeoutMs = pParam->ackTimeoutMs;
 		pInOutBuff->nbOfRetry = pParam->nbOfRetry;
-		//	timeoutCallback(netWork_inOutBuffer_t* this)
+		//	timeoutCallback(network_inOutBuffer_t* this)
 		
 		pInOutBuff->isWaitAck = 0;
 		pInOutBuff->seqWaitAck = 0;
@@ -61,9 +61,9 @@ netWork_inOutBuffer_t* newInOutBuffer(const netWork_paramNewInOutBuffer_t *pPara
     return pInOutBuff;
 }
 
-void deleteInOutBuffer(netWork_inOutBuffer_t** ppInOutBuff)
+void deleteInOutBuffer(network_inOutBuffer_t** ppInOutBuff)
 {	
-	netWork_inOutBuffer_t* pInOutBuff = NULL;
+	network_inOutBuffer_t* pInOutBuff = NULL;
 	
 	if(ppInOutBuff)
 	{
@@ -82,7 +82,7 @@ void deleteInOutBuffer(netWork_inOutBuffer_t** ppInOutBuff)
 
 }
 
-void inOutBufferAckReceived(netWork_inOutBuffer_t* pInOutBuff, int seqNum)
+void inOutBufferAckReceived(network_inOutBuffer_t* pInOutBuff, int seqNum)
 {
 	sal_mutex_lock(&(pInOutBuff->mutex)); // !!! mutex ?
 	
@@ -94,12 +94,12 @@ void inOutBufferAckReceived(netWork_inOutBuffer_t* pInOutBuff, int seqNum)
 	sal_mutex_unlock(&(pInOutBuff->mutex)); // !!! mutex ?
 }
 
-netWork_inOutBuffer_t* inOutBufferWithId(	netWork_inOutBuffer_t** pptabInOutBuff,
+network_inOutBuffer_t* inOutBufferWithId(	network_inOutBuffer_t** pptabInOutBuff,
 												int tabSize, int id)
 {
-	netWork_inOutBuffer_t** it = pptabInOutBuff ;
-	netWork_inOutBuffer_t** itEnd = pptabInOutBuff + (tabSize);
-	netWork_inOutBuffer_t* pInOutBuffSearched = NULL;
+	network_inOutBuffer_t** it = pptabInOutBuff ;
+	network_inOutBuffer_t** itEnd = pptabInOutBuff + (tabSize);
+	network_inOutBuffer_t* pInOutBuffSearched = NULL;
 	
 	int find = 0;
 	
@@ -115,7 +115,7 @@ netWork_inOutBuffer_t* inOutBufferWithId(	netWork_inOutBuffer_t** pptabInOutBuff
 	return pInOutBuffSearched;
 }
 
-int inOutBuffeIsWaitAck(	netWork_inOutBuffer_t* pInOutBuff)
+int inOutBuffeIsWaitAck(	network_inOutBuffer_t* pInOutBuff)
 {
 	int isWaitAckCpy = 0;
 	
