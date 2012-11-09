@@ -57,7 +57,7 @@ void deleteReceiver(network_Receiver_t** ppReceiver);
  * 	@warning At the end of this function the socket of the receiver is closed.
  * 	@pre The socket of the receiver must be initialized through receiverBind().
  * 	@post Before join the thread calling this function, stopReceiver() must be called.
- * 	@details This function receives the data through receiverRead() and stores them in the output buffers according to their parameters.
+ * 	@note This function receives the data through receiverRead() and stores them in the output buffers according to their parameters.
  * 	@param data thread datas of type network_Receive_t*
  * 	@see receiverBind()
  * 	@see stopReceiver()
