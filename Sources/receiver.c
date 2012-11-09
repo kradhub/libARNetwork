@@ -88,8 +88,6 @@ void deleteReceiver(network_Receiver_t** ppReceiver)
 {
 	network_Receiver_t* pReceiver = NULL;
 	
-	int iiOutputBuff = 0;
-	
 	if(ppReceiver)
 	{
 		pReceiver = *ppReceiver;

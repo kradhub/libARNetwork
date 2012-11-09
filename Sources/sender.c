@@ -9,15 +9,17 @@
 
 #include <stdlib.h>
 
+#include <unistd.h>
 #include <string.h>
 
 #include <libSAL/print.h>
-#include <libSAL/mutex.h>//voir ?
 #include <libSAL/socket.h>
 #include <libNetwork/common.h>
 #include <libNetwork/buffer.h>
 #include <libNetwork/inOutBuffer.h>
 #include <libNetwork/sender.h>
+
+#include <arpa/inet.h> // !!!!!!!!!!!!!!!!!!!!!!!!!!!pass in libsal
 
 typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;
@@ -65,7 +67,6 @@ network_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int numOfI
 {	
 	network_Sender_t* pSender =  malloc( sizeof(network_Sender_t));
 	
-	int iiInputBuff = 0;
 	int error=0;
 	
 	if(pSender)
@@ -99,7 +100,6 @@ network_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int numOfI
 void deleteSender(network_Sender_t** ppSender)
 {
 	network_Sender_t* pSender = NULL;
-	int iiInputBuff = 0;
 	
 	if(ppSender)
 	{
@@ -233,8 +233,6 @@ void senderSend(network_Sender_t* pSender)
 		//bufferPrint(pSender->pSendingBuffer); //!!! debug
 		
 		nbCharCopy = pSender->pSendingBuffer->pFront - pSender->pSendingBuffer->pStart;
-		
-		sal_print(PRINT_WARNING," nbCharCopy :%d \n",nbCharCopy);
 			
 		sal_send(pSender->socket, pSender->pSendingBuffer->pStart, nbCharCopy, 0);
 			

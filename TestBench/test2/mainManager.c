@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 	while(scanfReturn != 1 || bindError != 0 || connectError != 0)
 	{
 		sal_print(PRINT_WARNING,"repeater IP address ? : ");
-		scanfReturn = scanf("%s",&IpAddress);
+		scanfReturn = scanf("%s",IpAddress);
 		
 		if(bindError != 0)
 		{
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 		
 		if(connectError != 0)
 		{
-			connectError = senderConnection(pNetwork1->pSender,&IpAddress, 5551);
+			connectError = senderConnection(pNetwork1->pSender,IpAddress, 5551);
 		}
 		
 		printf("	- Sender connect error: %d \n", connectError );			
@@ -175,5 +175,6 @@ int main(int argc, char *argv[])
 	
 	printf("end\n");
 
+	return 0;
 }
 

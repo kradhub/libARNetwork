@@ -24,7 +24,7 @@ AC_MSG_RESULT([$debugit])
 
 if test x"$debugit" = x"yes"; then
     AC_DEFINE([DEBUG],[],[Debug Mode])
-    CFLAGS="$CFLAGS -g -Wall -Werror -Wno-uninitialized -O0"
+    CFLAGS="$CFLAGS -g -Wall -Werror -Wno-uninitialized -O0 -fno-inline"
 else
     AC_DEFINE([NDEBUG],[],[No-debug Mode])
     CFLAGS="$CFLAGS -O3"

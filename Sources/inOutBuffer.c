@@ -24,7 +24,7 @@ network_inOutBuffer_t* newInOutBuffer(const network_paramNewInOutBuffer_t *pPara
 {
 	network_inOutBuffer_t* pInOutBuff = malloc( sizeof(network_inOutBuffer_t));
 	
-	int keepAliveData = ntohl (0x50505055); //!!!!!!!!!!!!!!!!!!
+	int keepAliveData = 0x00;//ntohl (0x50505055); //!!!!!!!!!!!!!!!!!!
 	
 	if(pInOutBuff)
 	{

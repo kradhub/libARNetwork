@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 {
 	network_t* pNetwork2= NULL;
 	
-	char chData = 0;
+	//char chData = 0;
 	
 	char IpAddress[16];
 	int scanfReturn = 0;
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 	while(scanfReturn != 1 || bindError != 0 || connectError != 0)
 	{
 		printf("manager IP address ? :");
-		scanfReturn = scanf("%s",&IpAddress);
+		scanfReturn = scanf("%s",IpAddress);
 		
 		if(bindError != 0)
 		{
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 		
 		if(connectError != 0)
 		{
-			connectError = senderConnection(pNetwork2->pSender,&IpAddress, 5552);
+			connectError = senderConnection(pNetwork2->pSender,IpAddress, 5552);
 		}
 		
 		printf("	- Sender connect error: %d \n", connectError );			
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_INT_DATA_WITH_ACK);
 	ringBuffPrint(pInOutTemp->pBuffer);
 	
-	sal_print(PRINT_WARNING,"\n");
+	printf("\n");
 	
 	printf("wait ... \n");
 	
@@ -133,5 +133,7 @@ int main(int argc, char *argv[])
 	deleteNetwork( &pNetwork2 );
 	
 	printf("end \n");
+	
+	return 0;
 }
 

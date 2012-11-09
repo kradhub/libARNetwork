@@ -97,7 +97,7 @@ int receiverRead(network_Receiver_t* pReceiver);
  * 	@param[in] id identifier of the output buffer waiting an acknowledgment.
  * 	@return identifier of the output buffer storing the acknowledgment.
 **/
-extern inline int idOutputToIdAck( int id)
+static inline int idOutputToIdAck( int id)
 {
 	return id + 1000;
 }
@@ -107,7 +107,7 @@ extern inline int idOutputToIdAck( int id)
  * 	@param[in] id identifier of the output buffer storing the acknowledgment.
  * 	@return identifier of the output buffer waiting an acknowledgment.
 **/
-extern inline int idAckToIdInput( int id)
+static inline int idAckToIdInput( int id)
 {
 	return id - 1000;
 }

@@ -5,13 +5,13 @@
  *  @author maxime.maitre@parrot.com
 **/
 
+#include <stdio.h> 
 #include <stdlib.h> 
 #include <libSAL/print.h>
 #include <libSAL/thread.h>
 
 #include <string.h>
 
-//#include <libSAL/mutex.h>
 #include <libNetwork/common.h>
 #include <libNetwork/inOutBuffer.h>
 #include <libNetwork/sender.h>
@@ -54,12 +54,7 @@ int main(int argc, char *argv[])
 	
 	network_paramNewInOutBuffer_t paramNetwork2[3];
 	
-	
-	mkfifo("wifi", 0666);
-	
 	//--- network 1 ---
-	
-	
 	
 	// input ID_CHAR_DATA int
 	paramNetwork1[0].id = ID_CHAR_DATA;
@@ -76,7 +71,7 @@ int main(int argc, char *argv[])
 	paramNetwork1[1].dataType = CMD_TYPE_DATA_WITH_ACK;
 	paramNetwork1[1].sendingWaitTime = 2;
 	paramNetwork1[1].ackTimeoutMs = 10;
-	paramNetwork1[1].nbOfRetry = 5;
+	paramNetwork1[1].nbOfRetry = -1/*20*/;
 	paramNetwork1[1].buffSize = 5;
 	paramNetwork1[1].buffCellSize = sizeof(int);
 	paramNetwork1[1].overwriting = 0;
@@ -112,7 +107,7 @@ int main(int argc, char *argv[])
 	paramNetwork2[1].sendingWaitTime = 3;
 	paramNetwork2[1].ackTimeoutMs = 10;//not used
 	paramNetwork2[1].nbOfRetry = 10;//not used
-	paramNetwork2[1].buffSize = 10;
+	paramNetwork2[1].buffSize = 1;
 	paramNetwork2[1].buffCellSize = sizeof(char);
 	paramNetwork2[1].overwriting = 1;
 	
@@ -133,19 +128,19 @@ int main(int argc, char *argv[])
 							paramNetwork1[2],
 							paramNetwork1[0], paramNetwork1[1]);
 							
-	sal_print( PRINT_WARNING," ------pNetwork1->pSender connect error: %d \n", 
+	sal_print( PRINT_WARNING," -pNetwork1->pSender connect error: %d \n", 
 								senderConnection(pNetwork1->pSender,"127.0.0.1", 5551) );
 								
-	sal_print( PRINT_WARNING," ------pNetwork1->pReceiver Bind  error: %d \n", 
+	sal_print( PRINT_WARNING," -pNetwork1->pReceiver Bind  error: %d \n", 
 								receiverBind(pNetwork1->pReceiver, 5552, 10) );
 	
 	pNetwork2 = newNetwork( 256, 256, 2, 1,
 							paramNetwork2[1], paramNetwork2[2],
 							paramNetwork2[0]);
 							
-	sal_print( PRINT_WARNING,	" ------pNetwork2->pReceiver Bind  error: %d \n",
+	sal_print( PRINT_WARNING,	" -pNetwork2->pReceiver Bind  error: %d \n",
 								receiverBind(pNetwork2->pReceiver, 5551, 5) );
-	sal_print( PRINT_WARNING,	" ------pNetwork2->pSender connect error: %d \n",
+	sal_print( PRINT_WARNING,	" -pNetwork2->pSender connect error: %d \n",
 								senderConnection(pNetwork2->pSender,"127.0.0.1", 5552) );
 								
 	sal_thread_t thread_send1;
@@ -159,42 +154,31 @@ int main(int argc, char *argv[])
 	
 	sal_thread_create(&(thread_recv2), (sal_thread_routine) runReceivingThread, pNetwork2->pReceiver);
 	sal_thread_create(&(thread_recv1), (sal_thread_routine) runReceivingThread, pNetwork1->pReceiver);
-
-	usleep(50000);
-	
-	sal_print(PRINT_WARNING,"after wait 1s \n");
 	
 	sal_thread_create(&thread_send1, (sal_thread_routine) runSendingThread, pNetwork1->pSender);
 	sal_thread_create(&thread_send2, (sal_thread_routine) runSendingThread, pNetwork2->pSender);
 
     for(i=0 ; i<5 ; i++)
     {
-		sal_print(PRINT_WARNING," \n --tic boucle i; %d \n",i);
 		
-		/*
-		chData = ntohl (0x55 + i);
+		//chData = ntohl (0x50 + i);
+		chData =  i;
+		printf(" send char: %d \n",chData);
 		pInOutTemp = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput, ID_CHAR_DATA);
-
 		ringBuffPushBack(pInOutTemp->pBuffer, &chData);
-		
-		sal_print(PRINT_WARNING," \n -- ID_CHAR_DATA data send : \n");
-		ringBuffPrint(pInOutTemp->pBuffer);*/
-		
+
 		
 		intData = ntohl (0x11223340 +i);
+		printf(" send int: %0x \n",0x11223340 +i);
 		pInOutTemp = inOutBufferWithId(	pNetwork1->ppTabInput,
-										pNetwork1->numOfInput, ID_INT_DATA_WITH_ACK);
-										
+										pNetwork1->numOfInput, ID_INT_DATA_WITH_ACK);						
 		ringBuffPushBack(pInOutTemp->pBuffer, &intData);
-		
-		sal_print(PRINT_WARNING," \n -- ID_INT_DATA_WITH_ACK data send : \n");
-		//ringBuffPrint(pInOutTemp->pBuffer);
 		
 		
         usleep(50000);
     }
 	
-	sal_print(PRINT_WARNING," #### stop thread:\n");
+	printf(" -- stop-- \n");
 	
 	//stop all therad
 	stopSender(pNetwork1->pSender);
@@ -202,18 +186,16 @@ int main(int argc, char *argv[])
 	stopReceiver(pNetwork1->pReceiver);
 	stopReceiver(pNetwork2->pReceiver);
 	
-	/*
-	sal_print(PRINT_WARNING,"\n ID_CHAR_DATA transmited:\n");
+	printf("\n the last char transmited:\n");
 	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_CHAR_DATA);
 	ringBuffPrint(pInOutTemp->pBuffer);
-	*/
 	
-	sal_print(PRINT_WARNING,"\n ID_INT_DATA_WITH_ACK transmited:\n");
+	printf("\n the integers transmited:\n");
 	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_INT_DATA_WITH_ACK);
 	ringBuffPrint(pInOutTemp->pBuffer);
 	
-	
-	sal_print(PRINT_WARNING,"\n");
+	printf("\n");
+	printf("wait ... \n");
 	
 	//kill all thread
 	
@@ -226,10 +208,9 @@ int main(int argc, char *argv[])
 	//delete
 	deleteNetwork( &pNetwork1 );
 	deleteNetwork( &pNetwork2 );
-	
-	remove("wifi");
-	
-	sal_print(PRINT_WARNING,"fin\n");
 
+	printf("end \n");
+
+	return 0;
 }
 

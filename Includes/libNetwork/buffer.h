@@ -8,12 +8,6 @@
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
-// static :
-
-//Enumerations :
-
-//Structures :
-
 /**
  *  @brief basic buffer 
  * 	@warning before to be used the buffer must be created through newBuffer()
@@ -52,7 +46,7 @@ void deleteBuffer(network_buffer_t** ppBuffer);
  * 	@param pBuffer pointer on the buffer
  * 	@return number of free cell of the buffer 
 **/
-extern inline unsigned int bufferGetFreeCellNb(const network_buffer_t* pBuffer)
+static inline unsigned int bufferGetFreeCellNb(const network_buffer_t* pBuffer)
 {
 	return (pBuffer->pEnd - pBuffer->pFront) / pBuffer->buffCellSize;
 }
@@ -62,7 +56,7 @@ extern inline unsigned int bufferGetFreeCellNb(const network_buffer_t* pBuffer)
  * 	@param pBuffer pointer on the buffer
  * 	@return equal 1 if the buffer is empty else 0
 **/
-extern inline int bufferIsEmpty(network_buffer_t* pBuffer)
+static inline int bufferIsEmpty(network_buffer_t* pBuffer)
 {
 	return pBuffer->pStart == pBuffer->pFront;
 }
@@ -71,7 +65,7 @@ extern inline int bufferIsEmpty(network_buffer_t* pBuffer)
  *  @brief Clean the buffer
  * 	@param pBuffer pointer on the buffer
 **/
-extern inline void bufferClean(network_buffer_t* pBuffer)
+static inline void bufferClean(network_buffer_t* pBuffer)
 {
 	pBuffer->pFront = pBuffer->pStart;
 }

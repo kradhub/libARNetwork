@@ -16,8 +16,7 @@
  * 	@warning before to be used the sender must be created through newSender()
  * 	@post after its using the sender must be deleted through deleteSender()
 **/
-typedef struct network_Sender_t network_Sender_t;
-struct network_Sender_t
+typedef struct network_Sender_t
 {
 	network_buffer_t* pSendingBuffer; /**< Pointer on the data buffer to send*/
 	
@@ -26,8 +25,7 @@ struct network_Sender_t
 	int socket; /**< sending Socket. Must be accessed through senderConnection()*/
 	
 	int isAlive; /**< Indicator of aliving used for kill the thread calling the runSendingThread function (1 = alive | 0 = dead). Must be accessed through stopSender()*/
-	//int sleepTime; /**< Time between two sending try*/
-};
+}network_Sender_t;
 
 
 /**

@@ -62,13 +62,7 @@ void deleteBuffer(network_buffer_t** ppBuffer)
 }
 
 void bufferPrint(network_buffer_t* pBuffer)
-{
-	void* it = pBuffer->pStart;
-	
-	void* itEnd = pBuffer->pFront;
-	
-	int  ii = 0;
-	
+{	
 	sal_print(PRINT_WARNING," pointer dataBuffer :%d \n",pBuffer->pStart);
 	sal_print(PRINT_WARNING," buffSize :%d \n",pBuffer->buffSize);
 	sal_print(PRINT_WARNING," buffCellSize :%d \n",pBuffer->buffCellSize);
