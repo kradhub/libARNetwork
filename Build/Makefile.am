@@ -44,11 +44,11 @@ ___TestBench_test1_SOURCES 	= ../TestBench/test1.c
 ___TestBench_test2_manager_SOURCES 	= ../TestBench/test2/mainManager.c
 ___TestBench_test2_repeater_SOURCES = ../TestBench/test2/mainRepeater.c
 if DEBUG_MODE
-___TestBench_test1_LDADD = 	-lsal  \
+___TestBench_test1_LDADD = 	-lsal_dbg  \
 							libnetwork_dbg.la
-___TestBench_test2_manager_LDADD = 	-lsal  \
+___TestBench_test2_manager_LDADD = 	-lsal_dbg  \
 									libnetwork_dbg.la
-___TestBench_test2_repeater_LDADD = -lsal  \
+___TestBench_test2_repeater_LDADD = -lsal_dbg  \
 									libnetwork_dbg.la
 else
 ___TestBench_test1_LDADD 	= 	-lsal \

@@ -120,18 +120,21 @@ void* runReceivingThread(void* data)
 			//sal_print(PRINT_WARNING,"- read  Receiver: \n");
 			
 			while( !getCmd( pReceiver, &(recvCmd.pTabUint8) ) )
-			{
-				
+			{			
 				switch (recvCmd.pCmd->type)
 				{
 					case CMD_TYPE_ACK:
-						sal_print(PRINT_DEBUG,"	- CMD_TYPE_ACK \n");
-						senderAckReceived(pReceiver->pSender,idAckToIdInput(recvCmd.pCmd->id),recvCmd.pCmd->seq);
+						sal_print(PRINT_DEBUG,"	- TYPE: CMD_TYPE_ACK | SEQ:%d | ID:%d \n",
+												recvCmd.pCmd->seq, recvCmd.pCmd->id);
+												
+						senderAckReceived( pReceiver->pSender,idAckToIdInput(recvCmd.pCmd->id),
+											(int) recvCmd.pTabUint8[AR_CMD_INDEX_DATA] );
 					break;
 					
 					case CMD_TYPE_DATA:
 					
-						sal_print(PRINT_DEBUG," 	- CMD_TYPE_DATA \n");
+						sal_print(PRINT_DEBUG," - TYPE: CMD_TYPE_DATA | SEQ:%d | ID:%d \n",
+												recvCmd.pCmd->seq, recvCmd.pCmd->id);
 						
 						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->numOfOutputBuff,
@@ -146,14 +149,15 @@ void* runReceivingThread(void* data)
 					
 					case CMD_TYPE_DATA_WITH_ACK:
 					
-						sal_print(PRINT_DEBUG," 	- CMD_TYPE_DATA_WITH_ACK \n");
+						sal_print(PRINT_DEBUG," - TYPE: CMD_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
+													recvCmd.pCmd->seq, recvCmd.pCmd->id);
 					
 						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->numOfOutputBuff,
 															recvCmd.pCmd->id);
 						if(pOutBufferTemp != NULL)
 						{
-							//OutBuffer->seqWaitAck used to save the last seq 
+							// OutBuffer->seqWaitAck used to save the last seq 
 							if( recvCmd.pCmd->seq != pOutBufferTemp->seqWaitAck )
 							{
 								pushError = ringBuffPushBack(	pOutBufferTemp->pBuffer,
@@ -164,7 +168,8 @@ void* runReceivingThread(void* data)
 									pOutBufferTemp->seqWaitAck = recvCmd.pCmd->seq;
 								}
 							}
-						}							
+						}	
+												
 					break;
 					
 					default:
