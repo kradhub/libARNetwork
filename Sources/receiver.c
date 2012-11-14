@@ -132,7 +132,6 @@ void* runReceivingThread(void* data)
 					break;
 					
 					case CMD_TYPE_DATA:
-					
 						sal_print(PRINT_DEBUG," - TYPE: CMD_TYPE_DATA | SEQ:%d | ID:%d \n",
 												recvCmd.pCmd->seq, recvCmd.pCmd->id);
 						
@@ -148,7 +147,6 @@ void* runReceivingThread(void* data)
 					break;
 					
 					case CMD_TYPE_DATA_WITH_ACK:
-					
 						sal_print(PRINT_DEBUG," - TYPE: CMD_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
 													recvCmd.pCmd->seq, recvCmd.pCmd->id);
 					
