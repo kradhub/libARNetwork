@@ -147,10 +147,10 @@
     char chdata = 0;
     while( !ringBuffPopFront(pInOutTemp->pBuffer, &chdata) )
     {
-        NSLog(@" - %d \n",chdata);
+        NSLog(@" - %c \n",chdata);
         
         
-        [self.viewController.textViewInfo appendText: [@"- " stringByAppendingFormat:@"%d \n",chdata ]];
+        [self.viewController.textViewInfo appendText: [@"- " stringByAppendingFormat:@"%c \n",chdata ]];
         
     }
 	

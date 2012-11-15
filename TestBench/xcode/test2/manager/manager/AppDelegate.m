@@ -181,13 +181,14 @@
 
 - (bool) sendChar:(NSString * )data
 {
-    char chData = [data intValue];
+    //char chData = [data intValue];
     
     NSLog(@"sendChar");
-    [self.viewController.textViewInfo appendText:[ @"" stringByAppendingFormat: @"sendChar : %d \n",chData ] ];
+    [self.viewController.textViewInfo appendText:[ @"" stringByAppendingFormat: @"sendChar : %c \n", *[data UTF8String] ] ];
     
     network_inOutBuffer_t* pInOutTemp = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput, ID_CHAR_DATA);
-    return (bool)ringBuffPushBack(pInOutTemp->pBuffer, &chData);
+    //return (bool)ringBuffPushBack(pInOutTemp->pBuffer, &chData);
+    return (bool)ringBuffPushBack(pInOutTemp->pBuffer, [data UTF8String]);
 }
 
 - (bool) sendIntAck:(NSString * )data
