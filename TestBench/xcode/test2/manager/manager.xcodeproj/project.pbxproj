@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FD1C3F2416550ECA002584D9 /* TextViewConsole.m in Sources */ = {isa = PBXBuildFile; fileRef = FD1C3F2316550ECA002584D9 /* TextViewConsole.m */; };
 		FDBBB6081651600B00B84AF6 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FDBBB6071651600B00B84AF6 /* UIKit.framework */; };
 		FDBBB60A1651600B00B84AF6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FDBBB6091651600B00B84AF6 /* Foundation.framework */; };
 		FDBBB60C1651600B00B84AF6 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FDBBB60B1651600B00B84AF6 /* CoreGraphics.framework */; };
@@ -22,6 +23,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		FD1C3F2216550ECA002584D9 /* TextViewConsole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextViewConsole.h; sourceTree = "<group>"; };
+		FD1C3F2316550ECA002584D9 /* TextViewConsole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TextViewConsole.m; sourceTree = "<group>"; };
 		FDBBB6031651600B00B84AF6 /* manager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = manager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDBBB6071651600B00B84AF6 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		FDBBB6091651600B00B84AF6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -85,6 +88,8 @@
 		FDBBB60D1651600B00B84AF6 /* manager */ = {
 			isa = PBXGroup;
 			children = (
+				FD1C3F2216550ECA002584D9 /* TextViewConsole.h */,
+				FD1C3F2316550ECA002584D9 /* TextViewConsole.m */,
 				FDBBB6161651600B00B84AF6 /* AppDelegate.h */,
 				FDBBB6171651600B00B84AF6 /* AppDelegate.m */,
 				FDBBB61F1651600B00B84AF6 /* ViewController.h */,
@@ -213,6 +218,7 @@
 				FDBBB6141651600B00B84AF6 /* main.m in Sources */,
 				FDBBB6181651600B00B84AF6 /* AppDelegate.m in Sources */,
 				FDBBB6211651600B00B84AF6 /* ViewController.m in Sources */,
+				FD1C3F2416550ECA002584D9 /* TextViewConsole.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

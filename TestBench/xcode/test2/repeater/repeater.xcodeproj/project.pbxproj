@@ -19,6 +19,7 @@
 		FD19AC3A165394F6008A706B /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FD19AC39165394F6008A706B /* ViewController.m */; };
 		FD19AC3D165394F6008A706B /* ViewController_iPhone.xib in Resources */ = {isa = PBXBuildFile; fileRef = FD19AC3B165394F6008A706B /* ViewController_iPhone.xib */; };
 		FD19AC40165394F6008A706B /* ViewController_iPad.xib in Resources */ = {isa = PBXBuildFile; fileRef = FD19AC3E165394F6008A706B /* ViewController_iPad.xib */; };
+		FD1C3F2016550C23002584D9 /* TextViewConsole.m in Sources */ = {isa = PBXBuildFile; fileRef = FD1C3F1F16550C23002584D9 /* TextViewConsole.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +40,8 @@
 		FD19AC39165394F6008A706B /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		FD19AC3C165394F6008A706B /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ViewController_iPhone.xib; sourceTree = "<group>"; };
 		FD19AC3F165394F6008A706B /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ViewController_iPad.xib; sourceTree = "<group>"; };
+		FD1C3F1E16550C23002584D9 /* TextViewConsole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextViewConsole.h; sourceTree = "<group>"; };
+		FD1C3F1F16550C23002584D9 /* TextViewConsole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TextViewConsole.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +88,8 @@
 		FD19AC26165394F6008A706B /* repeater */ = {
 			isa = PBXGroup;
 			children = (
+				FD1C3F1E16550C23002584D9 /* TextViewConsole.h */,
+				FD1C3F1F16550C23002584D9 /* TextViewConsole.m */,
 				FD19AC2F165394F6008A706B /* AppDelegate.h */,
 				FD19AC30165394F6008A706B /* AppDelegate.m */,
 				FD19AC38165394F6008A706B /* ViewController.h */,
@@ -213,6 +218,7 @@
 				FD19AC2D165394F6008A706B /* main.m in Sources */,
 				FD19AC31165394F6008A706B /* AppDelegate.m in Sources */,
 				FD19AC3A165394F6008A706B /* ViewController.m in Sources */,
+				FD1C3F2016550C23002584D9 /* TextViewConsole.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

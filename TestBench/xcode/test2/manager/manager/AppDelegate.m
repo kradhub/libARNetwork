@@ -124,8 +124,7 @@
 {
     NSLog(@" wait ...");
     
-    [self.viewController textViewInfo].text =
-    [ @" wait ..." stringByAppendingString: [self.viewController textViewInfo].text ];
+    [self.viewController.textViewInfo appendText:@" wait ..." ];
     
     [self stopThreadManager];
     
@@ -175,8 +174,7 @@
      NSLog(@"connected = %d", connected);
     
     
-    [self.viewController textViewInfo].text =
-    [ @" connected \n" stringByAppendingString: [self.viewController textViewInfo].text ];
+    [ self.viewController.textViewInfo appendText: @" connected \n"];
     
     return connected;
 }
@@ -186,9 +184,7 @@
     char chData = [data intValue];
     
     NSLog(@"sendChar");
-    [self.viewController textViewInfo].text =
-    [ [ @"" stringByAppendingFormat: @"sendChar : %d \n",chData ]
-     stringByAppendingString: [self.viewController textViewInfo].text ];
+    [self.viewController.textViewInfo appendText:[ @"" stringByAppendingFormat: @"sendChar : %d \n",chData ] ];
     
     network_inOutBuffer_t* pInOutTemp = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput, ID_CHAR_DATA);
     return (bool)ringBuffPushBack(pInOutTemp->pBuffer, &chData);
@@ -199,9 +195,7 @@
     int intData = [data intValue];
     NSLog(@"sendIntAck");
     
-    [self.viewController textViewInfo].text =
-    [ [ @"" stringByAppendingFormat: @"sendIntAck : %d \n",intData ]
-     stringByAppendingString: [self.viewController textViewInfo].text ];
+    [self.viewController.textViewInfo appendText: [ @"" stringByAppendingFormat: @"sendIntAck : %d \n",intData ] ];
     
     network_inOutBuffer_t*  pInOutTemp = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput, ID_INT_DATA_WITH_ACK);
     return (bool) ringBuffPushBack(pInOutTemp->pBuffer, &intData);

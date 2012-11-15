@@ -87,12 +87,11 @@
 
 - (void)stopThreadRepeater
 {
-    network_inOutBuffer_t* pInOutTemp = NULL;
+    //network_inOutBuffer_t* pInOutTemp = NULL;
     
     NSLog(@"stopThreadRepeater");
     
-    [self.viewController textViewInfo].text =
-    [ @" stopThreadRepeater \n" stringByAppendingString: [self.viewController textViewInfo].text ];
+    [self.viewController.textViewInfo appendText:@" stopThreadRepeater \n" ];
     
 	//stop all therad
     if(pNetwork2 != NULL)
@@ -101,21 +100,7 @@
         stopReceiver(pNetwork2->pReceiver);
     }
     
-    
-    
-    
-	
-	NSLog(@"\n the last char transmited:\n");
-	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_CHAR_DATA);
-	ringBuffPrint(pInOutTemp->pBuffer);
-	
-	NSLog(@"\n the integers transmited:\n");
-	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_INT_DATA_WITH_ACK);
-	ringBuffPrint(pInOutTemp->pBuffer);
-    
-    
-    
-    
+    [self print];
 	
 	//kill all thread
 	if(thread_send2 != NULL)
@@ -137,8 +122,7 @@
 {
     NSLog(@" wait ...");
     
-    [self.viewController textViewInfo].text =
-    [ @" wait ..." stringByAppendingString: [self.viewController textViewInfo].text ];
+    [self.viewController.textViewInfo appendText:@" wait ..." ];
     
     [self stopThreadRepeater];
     
@@ -147,6 +131,47 @@
     
     exit(0);
 }
+
+
+- (void) print
+{
+    network_inOutBuffer_t* pInOutTemp = NULL;
+    
+	NSLog(@"\n the last char transmited:\n");
+
+    [self.viewController.textViewInfo appendText: @"\n the last char transmited:\n"];
+    
+	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_CHAR_DATA);
+	ringBuffPrint(pInOutTemp->pBuffer);
+    
+    char chdata = 0;
+    while( !ringBuffPopFront(pInOutTemp->pBuffer, &chdata) )
+    {
+        NSLog(@" - %d \n",chdata);
+        
+        
+        [self.viewController.textViewInfo appendText: [@"- " stringByAppendingFormat:@"%d \n",chdata ]];
+        
+    }
+	
+    
+    
+	NSLog(@"\n the integers transmited:\n");
+    
+    [self.viewController.textViewInfo appendText:@"\n the integers transmited:\n"];
+    
+	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_INT_DATA_WITH_ACK);
+	ringBuffPrint(pInOutTemp->pBuffer);
+    
+    int intdata = 0;
+    while( !ringBuffPopFront(pInOutTemp->pBuffer, &intdata) )
+    {
+        NSLog(@" - %d \n",intdata);
+        
+        [self.viewController.textViewInfo appendText:[@"- " stringByAppendingFormat:@"%d \n",intdata ]];
+    }
+}
+
 
 - (bool) connection:(NSString  *)ip
 {
@@ -188,12 +213,10 @@
     NSLog(@"connected = %d", connected);
     
     
-    [self.viewController textViewInfo].text =
-    [ @" connected \n" stringByAppendingString: [self.viewController textViewInfo].text ];
+    [self.viewController.textViewInfo appendText: @" connected \n"];
     
     return connected;
 }
-
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
@@ -212,6 +235,8 @@
     
     thread_send2 = NULL;
     thread_recv2 = NULL;
+
+    
     
     [self netWorkConstructor];
     //[self.viewController setDelegate:self];

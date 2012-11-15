@@ -14,6 +14,8 @@
 
 #include <libNetwork/network.h>
 
+#import "TextViewConsole.h"
+
 #import "AppDelegate.h"
 
 @interface ViewController : UIViewController
@@ -28,7 +30,7 @@
     IBOutlet UIButton* buttonSendIntAck;
     IBOutlet UIButton* buttonExit;
     
-    IBOutlet UITextView* textViewInfo;
+    IBOutlet TextViewConsole* textViewInfo;
     
     //id delegate;
     
@@ -37,7 +39,7 @@
 }
 
 @property (nonatomic, retain) AppDelegate* pAppDelegate;
-@property (nonatomic, readonly) IBOutlet UITextView* textViewInfo;
+@property (nonatomic, readonly) IBOutlet TextViewConsole* textViewInfo;
 //@property(nonatomic,assign)   id  delegate;
 
 - (IBAction)clickConnection;

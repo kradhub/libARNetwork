@@ -41,7 +41,8 @@
 - (void)startThreadRepeater;
 - (void)stopThreadRepeater;
 - (void)exit;
-
+- (void) print;
 - (bool) connection:(NSString * )ip ;
+
 
 @end

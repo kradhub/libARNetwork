@@ -6,6 +6,7 @@
 //  Copyright (c) 2012 Parrot SA. All rights reserved.
 //
 
+#import "TextViewConsole.h"
 #import "ViewController.h"
 
 @interface ViewController ()
@@ -23,6 +24,7 @@
 	// Do any additional setup after loading the view, typically from a nib.
     
     [textfieldIP setDelegate:self];
+    
 }
 
 - (void)didReceiveMemoryWarning
@@ -72,5 +74,6 @@
 {
    [pAppDelegate stopThreadRepeater];
 }
+
 
 @end

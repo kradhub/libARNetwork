@@ -165,7 +165,6 @@
 						<string key="NSFrame">{{169, 159}, {136, 44}}</string>
 						<reference key="NSSuperview" ref="774585933"/>
 						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView"/>
 						<string key="NSReuseIdentifierKey">_NS:9</string>
 						<bool key="IBUIOpaque">NO</bool>
 						<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
@@ -412,7 +411,7 @@
 						<reference key="source" ref="372490531"/>
 						<reference key="destination" ref="118161363"/>
 					</object>
-					<int key="connectionID">151</int>
+					<int key="connectionID">152</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBCocoaTouchEventConnection" key="connection">
@@ -559,6 +558,7 @@
 				<string key="138.IBPluginDependency">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
 				<string key="139.IBPluginDependency">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
 				<string key="145.IBPluginDependency">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
+				<string key="150.CustomClassName">TextViewConsole</string>
 				<string key="150.IBPluginDependency">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
 				<string key="52.IBPluginDependency">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
 				<string key="6.IBPluginDependency">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
@@ -569,10 +569,18 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">151</int>
+			<int key="maxID">152</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
+				<object class="IBPartialClassDescription">
+					<string key="className">TextViewConsole</string>
+					<string key="superclassName">UITextView</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/TextViewConsole.h</string>
+					</object>
+				</object>
 				<object class="IBPartialClassDescription">
 					<string key="className">ViewController</string>
 					<string key="superclassName">UIViewController</string>
@@ -605,7 +613,7 @@
 						<string key="buttonExit">UIButton</string>
 						<string key="buttonSendChar">UIButton</string>
 						<string key="buttonSendIntAck">UIButton</string>
-						<string key="textViewInfo">UITextView</string>
+						<string key="textViewInfo">TextViewConsole</string>
 						<string key="textfieldChar">UITextField</string>
 						<string key="textfieldIP">UITextField</string>
 						<string key="textfieldIntAck">UITextField</string>
@@ -629,7 +637,7 @@
 						</object>
 						<object class="IBToOneOutletInfo" key="textViewInfo">
 							<string key="name">textViewInfo</string>
-							<string key="candidateClassName">UITextView</string>
+							<string key="candidateClassName">TextViewConsole</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="textfieldChar">
 							<string key="name">textfieldChar</string>
