@@ -128,28 +128,28 @@ int main(int argc, char *argv[])
 							paramNetwork1[2],
 							paramNetwork1[0], paramNetwork1[1]);
 							
-	sal_print( PRINT_WARNING," -pNetwork1->pSender connect error: %d \n", 
+	printf(" -pNetwork1->pSender connect error: %d \n", 
 								senderConnection(pNetwork1->pSender,"127.0.0.1", 5551) );
 								
-	sal_print( PRINT_WARNING," -pNetwork1->pReceiver Bind  error: %d \n", 
+	printf(" -pNetwork1->pReceiver Bind  error: %d \n", 
 								receiverBind(pNetwork1->pReceiver, 5552, 10) );
 	
 	pNetwork2 = newNetwork( 256, 256, 2, 1,
 							paramNetwork2[1], paramNetwork2[2],
 							paramNetwork2[0]);
 							
-	sal_print( PRINT_WARNING,	" -pNetwork2->pReceiver Bind  error: %d \n",
+	printf(" -pNetwork2->pReceiver Bind  error: %d \n",
 								receiverBind(pNetwork2->pReceiver, 5551, 5) );
-	sal_print( PRINT_WARNING,	" -pNetwork2->pSender connect error: %d \n",
+	printf(" -pNetwork2->pSender connect error: %d \n",
 								senderConnection(pNetwork2->pSender,"127.0.0.1", 5552) );
 								
-	sal_thread_t thread_send1;
-	sal_thread_t thread_recv1;
+	sal_thread_t thread_send1 = NULL;
+	sal_thread_t thread_recv1 = NULL;
 	
-	sal_thread_t thread_send2;
-	sal_thread_t thread_recv2;
+	sal_thread_t thread_send2 = NULL;
+	sal_thread_t thread_recv2 = NULL;
 	
-	sal_print(PRINT_WARNING,"main start \n");
+	printf("main start \n");
 	
 	
 	sal_thread_create(&(thread_recv2), (sal_thread_routine) runReceivingThread, pNetwork2->pReceiver);
@@ -198,12 +198,24 @@ int main(int argc, char *argv[])
 	printf("wait ... \n");
 	
 	//kill all thread
+	if(thread_send1 != NULL)
+	{
+		sal_thread_join(&(thread_send1), NULL);
+	}
+	if(thread_send2 != NULL)
+	{
+		sal_thread_join(&(thread_send2), NULL);
+	}
 	
-	sal_thread_join(&(thread_send1), NULL);
-	sal_thread_join(&(thread_send2), NULL);
+	if(thread_recv1 != NULL)
+	{
+		sal_thread_join(&(thread_recv1), NULL);
+	}
 	
-	sal_thread_join(&(thread_recv1), NULL);
-	sal_thread_join(&(thread_recv2), NULL);
+	if(thread_recv2 != NULL)
+	{
+		sal_thread_join(&(thread_recv2), NULL);
+	}
 
 	//delete
 	deleteNetwork( &pNetwork1 );

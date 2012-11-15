@@ -24,7 +24,8 @@ int main(int argc, char *argv[])
 {
 	network_t* pNetwork2= NULL;
 	
-	//char chData = 0;
+	char chData = 0;
+	int intData = 0;
 	
 	char IpAddress[16];
 	int scanfReturn = 0;
@@ -103,7 +104,7 @@ int main(int argc, char *argv[])
 	sal_thread_create(&thread_send2, (sal_thread_routine) runSendingThread, pNetwork2->pSender);
 
 	printf("press 'q' to quit and to see the date received : \n");
-
+	
     while(getchar() != 'q')
 	{
 		
@@ -115,11 +116,21 @@ int main(int argc, char *argv[])
 	
 	printf("\n the last char transmited:\n");
 	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_CHAR_DATA);
-	ringBuffPrint(pInOutTemp->pBuffer);
+	//ringBuffPrint(pInOutTemp->pBuffer);
+
+	
+	while( !ringBuffPopFront(pInOutTemp->pBuffer, &chData) )
+	{
+		printf("- %c \n",chData);
+	}
 	
 	printf("\n the integers transmited:\n");
 	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_INT_DATA_WITH_ACK);
-	ringBuffPrint(pInOutTemp->pBuffer);
+	//ringBuffPrint(pInOutTemp->pBuffer);
+	while( !ringBuffPopFront(pInOutTemp->pBuffer, &intData) )
+	{
+		printf("- %d \n",intData);
+	}
 	
 	printf("\n");
 	

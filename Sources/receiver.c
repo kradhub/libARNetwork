@@ -14,6 +14,8 @@
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
 #include <libSAL/socket.h>
+#include <libSAL/endianness.h>
+
 #include <libNetwork/common.h>
 #include <libNetwork/buffer.h>
 #include <libNetwork/inOutBuffer.h>
@@ -192,26 +194,31 @@ void stopReceiver(network_Receiver_t* pReceiver)
 int getCmd(network_Receiver_t* pReceiver, uint8_t** ppCmd)
 {
 	int error = 1;
-
-	int cmdSize = 0 ;
+	UNION_CMD recvCmd ;
 
 	if(*ppCmd == NULL)
 	{
-		*ppCmd = pReceiver->pRecvBuffer->pStart;
+		*ppCmd = pReceiver->pRecvBuffer->pStart;//!!!voir
 	}
 	else
 	{
 		//point the next command
-		(*ppCmd) +=  (int) ( (*ppCmd)[AR_CMD_INDEX_SIZE] ) ;
+		(*ppCmd) += *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_SIZE) );
 	}
+	
+	recvCmd.pTabUint8 = *ppCmd;
 	
 	//check if the buffer stores enough data
 	if(*ppCmd <= (uint8_t*) pReceiver->pRecvBuffer->pFront - AR_CMD_HEADER_SIZE)
 	{	
-		cmdSize = *( (int*) (*ppCmd + AR_CMD_INDEX_SIZE) ) ;
+		// pass the command to the host endian 
+		recvCmd.pCmd->type = dtohl( *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_TYPE) ) );
+		recvCmd.pCmd->id = dtohl( *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_ID) ) );
+		recvCmd.pCmd->seq = dtohl( *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_SEQ) ) );
+		recvCmd.pCmd->size = dtohl( *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_SIZE) ) );
 		
+		if(*ppCmd <= (uint8_t*) pReceiver->pRecvBuffer->pFront - recvCmd.pCmd->size)
 		{
-		if(*ppCmd <= (uint8_t*) pReceiver->pRecvBuffer->pFront - cmdSize)
 			error = 0;
 		}
 	}

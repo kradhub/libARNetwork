@@ -14,6 +14,8 @@
 
 #include <libSAL/print.h>
 #include <libSAL/socket.h>
+#include <libSAL/endianness.h>
+
 #include <libNetwork/common.h>
 #include <libNetwork/buffer.h>
 #include <libNetwork/inOutBuffer.h>
@@ -245,24 +247,29 @@ int senderAddToBuffer(	network_Sender_t* pSender,const network_inOutBuffer_t* pi
 {
 	int error = 1;
 	int sizeNeed = AR_CMD_HEADER_SIZE + pinputBuff->pBuffer->buffCellSize;
+	uint32_t droneEndianInt32 = 0;
 	
 	if( bufferGetFreeCellNb(pSender->pSendingBuffer) >= sizeNeed )
 	{	
-		//add type 
-		memcpy( pSender->pSendingBuffer->pFront, &(pinputBuff->dataType), sizeof(int));
-		pSender->pSendingBuffer->pFront +=  sizeof(int) ;
+		//add type
+		droneEndianInt32 =  htodl( (uint32_t) pinputBuff->dataType );
+		memcpy( pSender->pSendingBuffer->pFront, &(droneEndianInt32), sizeof(uint32_t));
+		pSender->pSendingBuffer->pFront +=  sizeof(uint32_t) ;
 		
 		//add id 
-		memcpy( pSender->pSendingBuffer->pFront, &(pinputBuff->id), sizeof(int));
-		pSender->pSendingBuffer->pFront +=  sizeof(int) ;
+		droneEndianInt32 =  htodl(pinputBuff->id);
+		memcpy( pSender->pSendingBuffer->pFront, &(droneEndianInt32), sizeof(uint32_t));
+		pSender->pSendingBuffer->pFront +=  sizeof(uint32_t) ;
 		
 		//add seq 
-		memcpy( pSender->pSendingBuffer->pFront, &(seqNum), sizeof(int));
-		pSender->pSendingBuffer->pFront +=  sizeof(int) ;
+		droneEndianInt32 =  htodl(seqNum);
+		memcpy( pSender->pSendingBuffer->pFront, &(droneEndianInt32), sizeof(uint32_t));
+		pSender->pSendingBuffer->pFront +=  sizeof(uint32_t) ;
 		
-		//add size 
-		memcpy( pSender->pSendingBuffer->pFront, &(sizeNeed), sizeof(int));
-		pSender->pSendingBuffer->pFront +=  sizeof(int) ;
+		//add size
+		droneEndianInt32 =  htodl(sizeNeed); 
+		memcpy( pSender->pSendingBuffer->pFront, &(droneEndianInt32), sizeof(uint32_t));
+		pSender->pSendingBuffer->pFront +=  sizeof(uint32_t) ;
 		
 		//add data						
 		error = ringBuffFront(pinputBuff->pBuffer, pSender->pSendingBuffer->pFront);
@@ -275,6 +282,7 @@ int senderAddToBuffer(	network_Sender_t* pSender,const network_inOutBuffer_t* pi
 		{
 			pSender->pSendingBuffer->pFront -= AR_CMD_HEADER_SIZE;
 		}
+		
 	}
 	
 	return error;
