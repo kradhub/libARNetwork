@@ -24,7 +24,7 @@
 
 #define MILLISECOND 1000
 
-typedef struct printThread // pass uint32_t
+typedef struct printThread
 {
 	network_inOutBuffer_t* pOutBuffChar;
 	network_inOutBuffer_t* pOutBuffIntAck;
