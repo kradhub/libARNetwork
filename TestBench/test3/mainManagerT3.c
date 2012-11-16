@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 	sal_thread_create(&(thread_recv1), (sal_thread_routine) runReceivingThread, pNetwork1->pReceiver);
 	sal_thread_create(&thread_send1, (sal_thread_routine) runSendingThread, pNetwork1->pSender);
 	
-	
+	chData = 0;
 	
 	setupNonBlockingTerm ();
 	
@@ -185,7 +185,11 @@ int main(int argc, char *argv[])
 				pInOutTemp = inOutBufferWithId(	pNetwork1->ppTabInput,
 										pNetwork1->numOfInput, ID_INT_DATA_WITH_ACK);
 										
-				ringBuffPushBack(pInOutTemp->pBuffer, &intData);
+				if( ringBuffPushBack(pInOutTemp->pBuffer, &intData) )
+				{
+					printf("buffer fulll \n");
+				}
+				
 			break;
 				
 			default:
