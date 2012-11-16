@@ -7,7 +7,7 @@ To compile library
 On Linux and MacOS X platform :
 $cd Build
 $./bootstrap
-$./configure --prefix <path to install>
+$./configure --prefix=<path to install> --with-libSalInstall=<path of libSAL install>
 $make
 $make install (if you want to install library)
 

@@ -85,7 +85,7 @@ LDFLAGS="$LDFLAGS -L$libSalBin"
 AC_CHECK_HEADERS([libSAL/print.h libSAL/thread.h libSAL/mutex.h \
 libSAL/socket.h libSAL/time.h],,
 	AC_MSG_ERROR(The libSAL header is required in order to build the library ! 
-- Use INCLUDEDIR for indicate a specific include path.))
+- Use --with-libSalInstall for indicate the libSAL install path or --with-libSalHeader for indicate a specific libSAL include path.))
 
 ##########################################################################
 # Checks for programs.
