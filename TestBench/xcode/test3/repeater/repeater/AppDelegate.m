@@ -148,12 +148,14 @@
         sal_thread_join(&(thread_recv2), NULL);
         thread_recv2 = NULL;
     }
+    /*
     
     if(thread_printBuff != NULL)
     {
         sal_thread_join(&(thread_printBuff), NULL);
         thread_printBuff = NULL;
     }
+     */
     
 }
 
@@ -267,7 +269,6 @@
     
     thread_send2 = NULL;
     thread_recv2 = NULL;
-    thread_printBuff = NULL;
     
     timer = nil;
     

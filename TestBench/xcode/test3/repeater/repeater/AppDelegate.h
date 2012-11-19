@@ -62,7 +62,6 @@ void* printBuff(void* data);
     
     sal_thread_t thread_send2;
 	sal_thread_t thread_recv2;
-	sal_thread_t thread_printBuff;
 }
 
 @property (strong, nonatomic) UIWindow *window;
