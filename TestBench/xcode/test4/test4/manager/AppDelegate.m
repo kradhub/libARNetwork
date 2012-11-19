@@ -191,10 +191,9 @@
     
     NSLog(@" end \n");
     
-    //exit(0);
+    exit(0);
     
-    
-    [self applicationWillTerminate:[UIApplication sharedApplication]];
+    //[self applicationWillTerminate:[UIApplication sharedApplication]];
     //[[UIApplication sharedApplication] terminate];
 }
 

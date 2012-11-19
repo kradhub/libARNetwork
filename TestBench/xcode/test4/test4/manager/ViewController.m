@@ -53,12 +53,9 @@
         
         [pAppDelegate startThreadManager];
         
-        
-        [buttonSendChar setEnabled:YES];
-        [buttonSendIntAck setEnabled:YES];
-        
         [buttonCreate setEnabled:NO];
         
+        [textfieldIP setEnabled:YES];
         [buttonConnection setEnabled:YES];
         
         [textViewInfo appendText:@"Created \n"];
@@ -94,6 +91,7 @@
 
             [buttonSendChar setEnabled:YES];
             [buttonSendIntAck setEnabled:YES];
+            
         
             //[textfieldIP setEnabled:NO];
         }
