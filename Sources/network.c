@@ -62,9 +62,13 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 	
 	if( !error )
 	{
+		pNetwork->numOfOutputWithoutAck = numberOfOutput;
+		// create output buffers and for each of them a buffer of acknowledgement
 		pNetwork->numOfOutput = 2 * numberOfOutput;
 		pNetwork->ppTabOutput = malloc(sizeof(network_inOutBuffer_t*) * pNetwork->numOfOutput );
 		
+		pNetwork->numOfInputWithoutAck = numberOfInput;
+		// create input buffers 
 		pNetwork->numOfInput = numberOfInput + numberOfOutput;
 		pNetwork->ppTabInput = malloc( sizeof(network_inOutBuffer_t*) * pNetwork->numOfInput );
 		
@@ -135,15 +139,15 @@ void deleteNetwork(network_t** ppNetwork)
 			deleteSender( &(pNetwork->pSender) );
 			deleteReceiver( &(pNetwork->pReceiver) );
 			
-			for(ii = 0; ii< pNetwork->numOfInput ; ++ii)
-			{
-				deleteInOutBuffer( &(pNetwork->ppTabInput[ii]) );
-			}
-			
 			for(ii = 0; ii< pNetwork->numOfOutput ; ++ii)
 			{
 				deleteInOutBuffer( &(pNetwork->ppTabOutput[ii]) );
 			}	
+			
+			for(ii = 0; ii< pNetwork->numOfInputWithoutAck ; ++ii)
+			{
+				deleteInOutBuffer( &(pNetwork->ppTabInput[ii]) );
+			}
 			
 			free(pNetwork);
 		}

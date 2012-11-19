@@ -17,8 +17,10 @@ typedef struct network_t
     network_Receiver_t* pReceiver; /**< Pointer on the receiver*/
     network_inOutBuffer_t** ppTabInput; /**< Address of the table storing the input buffer*/
     network_inOutBuffer_t** ppTabOutput; /**< Address of the table storing the output buffer*/
-    int numOfInput; /**< Numbur of input buffer*/
-    int numOfOutput; /**< Numbur of output buffer*/
+    int numOfInput; /**< Number of input buffer*/
+    int numOfOutput; /**< Number of output buffer*/
+    int numOfInputWithoutAck; /**< Number of input buffer without the  buffers of acknowledgement*/
+    int numOfOutputWithoutAck; /**< Number of output buffer without the  buffers of acknowledgement*/
     
 }network_t;
 
