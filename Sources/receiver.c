@@ -266,7 +266,7 @@ int receiverBind(network_Receiver_t* pReceiver, unsigned short port, int timeout
 	
     timeout.tv_sec = timeoutSec;
     timeout.tv_usec = 0; 
-	setsockopt (pReceiver->socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
+	sal_setsockopt(pReceiver->socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
 	
 	return sal_bind(pReceiver->socket, (SOCKADDR*)&recvSin, sizeof(recvSin));
 }
