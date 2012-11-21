@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 	paramInputNetwork2[0].nbOfRetry = 5;//not used
 	paramInputNetwork2[0].buffSize = 2;
 	paramInputNetwork2[0].buffCellSize = sizeof(int);
-	paramInputNetwork2[1].overwriting = 1;
+	paramInputNetwork2[0].overwriting = 1;
 	
 	// output ID_CHAR_DATA int
 	paramOutputNetwork2[0].id = ID_CHAR_DATA;
