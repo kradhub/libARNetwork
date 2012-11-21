@@ -283,6 +283,7 @@
 				GCC_PREFIX_HEADER = "test1/test1-Prefix.pch";
 				HEADER_SEARCH_PATHS = Debug/include;
 				INFOPLIST_FILE = "test1/test1-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = Debug/lib;
 				OTHER_LDFLAGS = (
 					"-lsal_dbg",
@@ -302,6 +303,7 @@
 				GCC_PREFIX_HEADER = "test1/test1-Prefix.pch";
 				HEADER_SEARCH_PATHS = Release/include;
 				INFOPLIST_FILE = "test1/test1-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = Release/lib;
 				OTHER_LDFLAGS = (
 					"-lsal",
