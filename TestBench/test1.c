@@ -50,41 +50,45 @@ int main(int argc, char *argv[])
 	
 	network_inOutBuffer_t* pInOutTemp = NULL;
 	
-	network_paramNewInOutBuffer_t paramNetwork1[3];
+	//network_paramNewInOutBuffer_t paramNetwork1[3];
+	network_paramNewInOutBuffer_t paramInputNetwork1[2];
+	network_paramNewInOutBuffer_t paramOutputNetwork1[1];
 	
-	network_paramNewInOutBuffer_t paramNetwork2[3];
+	//network_paramNewInOutBuffer_t paramNetwork2[3];
+	network_paramNewInOutBuffer_t paramInputNetwork2[1];
+	network_paramNewInOutBuffer_t paramOutputNetwork2[2];
 	
 	//--- network 1 ---
 	
 	// input ID_CHAR_DATA int
-	paramNetwork1[0].id = ID_CHAR_DATA;
-	paramNetwork1[0].dataType = CMD_TYPE_DATA;
-	paramNetwork1[0].sendingWaitTime = 3;//not used
-	paramNetwork1[0].ackTimeoutMs = 10;//not used
-	paramNetwork1[0].nbOfRetry = 5;//not used
-	paramNetwork1[0].buffSize = 1;
-	paramNetwork1[0].buffCellSize = sizeof(char);
-	paramNetwork1[0].overwriting = 1;
+	paramInputNetwork1[0].id = ID_CHAR_DATA;
+	paramInputNetwork1[0].dataType = CMD_TYPE_DATA;
+	paramInputNetwork1[0].sendingWaitTime = 3;//not used
+	paramInputNetwork1[0].ackTimeoutMs = 10;//not used
+	paramInputNetwork1[0].nbOfRetry = 5;//not used
+	paramInputNetwork1[0].buffSize = 1;
+	paramInputNetwork1[0].buffCellSize = sizeof(char);
+	paramInputNetwork1[0].overwriting = 1;
 	
 	// input ID_INT_DATA_WITH_ACK char
-	paramNetwork1[1].id = ID_INT_DATA_WITH_ACK;
-	paramNetwork1[1].dataType = CMD_TYPE_DATA_WITH_ACK;
-	paramNetwork1[1].sendingWaitTime = 2;
-	paramNetwork1[1].ackTimeoutMs = 10;
-	paramNetwork1[1].nbOfRetry = -1/*20*/;
-	paramNetwork1[1].buffSize = 5;
-	paramNetwork1[1].buffCellSize = sizeof(int);
-	paramNetwork1[1].overwriting = 0;
+	paramInputNetwork1[1].id = ID_INT_DATA_WITH_ACK;
+	paramInputNetwork1[1].dataType = CMD_TYPE_DATA_WITH_ACK;
+	paramInputNetwork1[1].sendingWaitTime = 2;
+	paramInputNetwork1[1].ackTimeoutMs = 10;
+	paramInputNetwork1[1].nbOfRetry = -1/*20*/;
+	paramInputNetwork1[1].buffSize = 5;
+	paramInputNetwork1[1].buffCellSize = sizeof(int);
+	paramInputNetwork1[1].overwriting = 0;
 	
 	// output ID_INT_DATA int
-	paramNetwork1[2].id = ID_INT_DATA;
-	paramNetwork1[2].dataType = CMD_TYPE_DATA;
-	paramNetwork1[2].sendingWaitTime = 3;//not used
-	paramNetwork1[2].ackTimeoutMs = 10;//not used
-	paramNetwork1[2].nbOfRetry = 5;//not used
-	paramNetwork1[2].buffSize = 10;
-	paramNetwork1[2].buffCellSize = sizeof(int);
-	paramNetwork1[2].overwriting = 1;
+	paramOutputNetwork1[0].id = ID_INT_DATA;
+	paramOutputNetwork1[0].dataType = CMD_TYPE_DATA;
+	paramOutputNetwork1[0].sendingWaitTime = 3;//not used
+	paramOutputNetwork1[0].ackTimeoutMs = 10;//not used
+	paramOutputNetwork1[0].nbOfRetry = 5;//not used
+	paramOutputNetwork1[0].buffSize = 10;
+	paramOutputNetwork1[0].buffCellSize = sizeof(int);
+	paramOutputNetwork1[0].overwriting = 1;
 	
 	//-----------------------------
 	
@@ -92,51 +96,56 @@ int main(int argc, char *argv[])
 	//--- network 2 ---
 	
 	// input ID_INT_DATA char
-	paramNetwork2[0].id = ID_INT_DATA;
-	paramNetwork2[0].dataType = CMD_TYPE_DATA;
-	paramNetwork2[0].sendingWaitTime = 2;
-	paramNetwork2[0].ackTimeoutMs = 10;//not used
-	paramNetwork2[0].nbOfRetry = 5;//not used
-	paramNetwork2[0].buffSize = 2;
-	paramNetwork2[0].buffCellSize = sizeof(int);
-	paramNetwork2[1].overwriting = 1;
+	paramInputNetwork2[0].id = ID_INT_DATA;
+	paramInputNetwork2[0].dataType = CMD_TYPE_DATA;
+	paramInputNetwork2[0].sendingWaitTime = 2;
+	paramInputNetwork2[0].ackTimeoutMs = 10;//not used
+	paramInputNetwork2[0].nbOfRetry = 5;//not used
+	paramInputNetwork2[0].buffSize = 2;
+	paramInputNetwork2[0].buffCellSize = sizeof(int);
+	paramInputNetwork2[1].overwriting = 1;
 	
 	// output ID_CHAR_DATA int
-	paramNetwork2[1].id = ID_CHAR_DATA;
-	paramNetwork2[1].dataType = CMD_TYPE_DATA;
-	paramNetwork2[1].sendingWaitTime = 3;
-	paramNetwork2[1].ackTimeoutMs = 10;//not used
-	paramNetwork2[1].nbOfRetry = 10;//not used
-	paramNetwork2[1].buffSize = 1;
-	paramNetwork2[1].buffCellSize = sizeof(char);
-	paramNetwork2[1].overwriting = 1;
+	paramOutputNetwork2[0].id = ID_CHAR_DATA;
+	paramOutputNetwork2[0].dataType = CMD_TYPE_DATA;
+	paramOutputNetwork2[0].sendingWaitTime = 3;
+	paramOutputNetwork2[0].ackTimeoutMs = 10;//not used
+	paramOutputNetwork2[0].nbOfRetry = 10;//not used
+	paramOutputNetwork2[0].buffSize = 1;
+	paramOutputNetwork2[0].buffCellSize = sizeof(char);
+	paramOutputNetwork2[0].overwriting = 1;
 	
 	// output ID_INT_DATA_WITH_ACK int
-	paramNetwork2[2].id = ID_INT_DATA_WITH_ACK;
-	paramNetwork2[2].dataType = CMD_TYPE_DATA_WITH_ACK;//not used
-	paramNetwork2[2].sendingWaitTime = 3;//not used
-	paramNetwork2[2].ackTimeoutMs = 10;//not used
-	paramNetwork2[2].nbOfRetry = 10;//not used
-	paramNetwork2[2].buffSize = 5;
-	paramNetwork2[2].buffCellSize = sizeof(int);
-	paramNetwork2[2].overwriting = 0;
+	paramOutputNetwork2[1].id = ID_INT_DATA_WITH_ACK;
+	paramOutputNetwork2[1].dataType = CMD_TYPE_DATA_WITH_ACK;//not used
+	paramOutputNetwork2[1].sendingWaitTime = 3;//not used
+	paramOutputNetwork2[1].ackTimeoutMs = 10;//not used
+	paramOutputNetwork2[1].nbOfRetry = 10;//not used
+	paramOutputNetwork2[1].buffSize = 5;
+	paramOutputNetwork2[1].buffCellSize = sizeof(int);
+	paramOutputNetwork2[1].overwriting = 0;
 	
 	//-----------------------------
 						
-						
-	pNetwork1 = newNetwork( 256, 256, 1, 2,
+	/*					
+	pNetwork1 = newNetworkWithVarg( 256, 256, 1, 2,
 							paramNetwork1[2],
 							paramNetwork1[0], paramNetwork1[1]);
+	*/
+	
+	pNetwork1 = newNetwork( 256, 256, 2, paramInputNetwork1, 1, paramOutputNetwork1);
 							
 	printf(" -pNetwork1->pSender connect error: %d \n", 
 								senderConnection(pNetwork1->pSender,"127.0.0.1", 5551) );
 								
 	printf(" -pNetwork1->pReceiver Bind  error: %d \n", 
 								receiverBind(pNetwork1->pReceiver, 5552, 10) );
-	
-	pNetwork2 = newNetwork( 256, 256, 2, 1,
+	/*
+	pNetwork2 = newNetworkWithVarg( 256, 256, 2, 1,
 							paramNetwork2[1], paramNetwork2[2],
 							paramNetwork2[0]);
+	*/
+	pNetwork2 = newNetwork( 256, 256, 1, paramInputNetwork2, 2, paramOutputNetwork2);
 							
 	printf(" -pNetwork2->pReceiver Bind  error: %d \n",
 								receiverBind(pNetwork2->pReceiver, 5551, 5) );

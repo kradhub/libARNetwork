@@ -53,46 +53,52 @@ int main(int argc, char *argv[])
 	
 	printThread printThread1;
 	
-	network_paramNewInOutBuffer_t paramNetwork2[3];
+	//network_paramNewInOutBuffer_t paramNetwork2[3];
+	network_paramNewInOutBuffer_t paramInputNetwork2[1];
+	network_paramNewInOutBuffer_t paramOutputNetwork2[2];
 	
 	
 	//--- network 2 ---
 	
 	// input ID_INT_DATA char
-	paramNetwork2[0].id = ID_INT_DATA;
-	paramNetwork2[0].dataType = CMD_TYPE_DATA;
-	paramNetwork2[0].sendingWaitTime = 2;
-	paramNetwork2[0].ackTimeoutMs = 10;//not used
-	paramNetwork2[0].nbOfRetry = 5;//not used
-	paramNetwork2[0].buffSize = 2;
-	paramNetwork2[0].buffCellSize = sizeof(int);
-	paramNetwork2[1].overwriting = 1;
+	paramInputNetwork2[0].id = ID_INT_DATA;
+	paramInputNetwork2[0].dataType = CMD_TYPE_DATA;
+	paramInputNetwork2[0].sendingWaitTime = 2;
+	paramInputNetwork2[0].ackTimeoutMs = 10;//not used
+	paramInputNetwork2[0].nbOfRetry = 5;//not used
+	paramInputNetwork2[0].buffSize = 2;
+	paramInputNetwork2[0].buffCellSize = sizeof(int);
+	paramInputNetwork2[1].overwriting = 1;
 	
 	// output ID_CHAR_DATA int
-	paramNetwork2[1].id = ID_CHAR_DATA;
-	paramNetwork2[1].dataType = CMD_TYPE_DATA;
-	paramNetwork2[1].sendingWaitTime = 3;
-	paramNetwork2[1].ackTimeoutMs = 10;//not used
-	paramNetwork2[1].nbOfRetry = 5;//not used
-	paramNetwork2[1].buffSize = 1;
-	paramNetwork2[1].buffCellSize = sizeof(char);
-	paramNetwork2[1].overwriting = 1;
+	paramOutputNetwork2[0].id = ID_CHAR_DATA;
+	paramOutputNetwork2[0].dataType = CMD_TYPE_DATA;
+	paramOutputNetwork2[0].sendingWaitTime = 3;
+	paramOutputNetwork2[0].ackTimeoutMs = 10;//not used
+	paramOutputNetwork2[0].nbOfRetry = 5;//not used
+	paramOutputNetwork2[0].buffSize = 1;
+	paramOutputNetwork2[0].buffCellSize = sizeof(char);
+	paramOutputNetwork2[0].overwriting = 1;
 	
 	// output ID_INT_DATA_WITH_ACK int
-	paramNetwork2[2].id = ID_INT_DATA_WITH_ACK;
-	paramNetwork2[2].dataType = CMD_TYPE_DATA_WITH_ACK;//not used
-	paramNetwork2[2].sendingWaitTime = 2;//not used
-	paramNetwork2[2].ackTimeoutMs = 10;//not used
-	paramNetwork2[2].nbOfRetry = 5;//not used
-	paramNetwork2[2].buffSize = 5;
-	paramNetwork2[2].buffCellSize = sizeof(int);
-	paramNetwork2[2].overwriting = 0;
+	paramOutputNetwork2[1].id = ID_INT_DATA_WITH_ACK;
+	paramOutputNetwork2[1].dataType = CMD_TYPE_DATA_WITH_ACK;//not used
+	paramOutputNetwork2[1].sendingWaitTime = 2;//not used
+	paramOutputNetwork2[1].ackTimeoutMs = 10;//not used
+	paramOutputNetwork2[1].nbOfRetry = 5;//not used
+	paramOutputNetwork2[1].buffSize = 5;
+	paramOutputNetwork2[1].buffCellSize = sizeof(int);
+	paramOutputNetwork2[1].overwriting = 0;
 	
 	//-----------------------------
 
-	pNetwork2 = newNetwork( 256, 256, 2, 1,
+	/*
+	pNetwork2 = newNetworkWithVarg( 256, 256, 2, 1,
 							paramNetwork2[1], paramNetwork2[2],
 							paramNetwork2[0]);
+	*/
+	
+	pNetwork2 = newNetwork( 256, 256, 1, paramInputNetwork2, 2, paramOutputNetwork2);
 							
 					
 	printThread1.alive=1;		

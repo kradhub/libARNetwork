@@ -9,14 +9,14 @@
 
 #include <stdlib.h>
 
-#include <stdarg.h>
 #include <inttypes.h>
-#include <unistd.h>
+//#include <unistd.h>
 
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
 #include <libSAL/socket.h>
-#include <libNetwork/common.h>//!! modif
+#include <libNetwork/common.h>
+#include <libNetwork/inOutBuffer.h>
 #include <libNetwork/sender.h>
 #include <libNetwork/receiver.h>
 #include <libNetwork/network.h>
@@ -31,13 +31,12 @@ typedef struct sockaddr SOCKADDR;
 ******************************************/
 
 network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
-						unsigned int numberOfOutput, unsigned int numberOfInput, ...)
+				unsigned int numberOfInput, network_paramNewInOutBuffer_t* ptabParamInput,
+				unsigned int numberOfOutput, network_paramNewInOutBuffer_t* ptabParamOutput)
 {
 	network_t* pNetwork = malloc( sizeof(network_t));
 	
 	int error = 0;
-	
-	va_list ap;
 	
 	int ii = 0;
 	int indexAckOutput = 0;
@@ -52,13 +51,10 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
     paramNewACK.ackTimeoutMs = 0; //not used
     paramNewACK.nbOfRetry = 0 ; //not used
     
-    
 	if(pNetwork == NULL)
 	{
 		error = 1;
 	}
-	
-	va_start(ap, numberOfInput );
 	
 	if( !error )
 	{
@@ -76,7 +72,7 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 		{
 			for(ii = 0; ii< numberOfOutput ; ++ii)
 			{
-				paramNewInOutput = va_arg(ap, network_paramNewInOutBuffer_t);
+				paramNewInOutput = ptabParamOutput[ii]; //va_arg(ap, network_paramNewInOutBuffer_t);
 				pNetwork->ppTabOutput[ii] = newInOutBuffer(&paramNewInOutput);
 				
 				paramNewACK.id = idOutputToIdAck(paramNewInOutput.id); 
@@ -89,7 +85,7 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 			
 			for(ii = 0; ii< numberOfInput ; ++ii)
 			{
-				paramNewInOutput = va_arg(ap, network_paramNewInOutBuffer_t);
+				paramNewInOutput = ptabParamInput[ii]; // va_arg(ap, network_paramNewInOutBuffer_t);
 				pNetwork->ppTabInput[ii] = newInOutBuffer(&paramNewInOutput);
 			}
 		}
@@ -98,8 +94,6 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 			error = 1;
 		}
 	}
-	
-	va_end(ap);
 	
 	if( !error )
 	{		

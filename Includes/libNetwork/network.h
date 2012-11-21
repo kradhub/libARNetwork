@@ -32,6 +32,27 @@ typedef struct network_t
  *  @post deleteNetwork() must be called to delete the Network and free the memory allocated.
  * 	@param[in] recvBuffSize size in byte of the receiving buffer. ideally must be equal to the sum of the sizes of one data of all output buffers
  * 	@param[in] sendBuffSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
+ * 	@param[in] numberOfInput Number of input buffer
+ * 	@param[in] ptabParamInput Table of the parameters of creation of the inputs. The table must contain as many parameters as the number of input buffer.
+ * 	@param[in] numberOfOutput Number of output buffer
+ * 	@param[in] ptabParamOutput Table of the parameters of creation of the outputs. The table must contain as many parameters as the number of output buffer.
+ * 	@return Pointer on the new Network
+ * 	@note This creator adds for all output, one other inOutBuffer for storing the acknowledgment to return.
+ * These new buffers are added in the input and output buffer tables.
+ * 	@see deleteNetwork()
+**/
+network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
+				unsigned int numberOfInput, network_paramNewInOutBuffer_t* ptabParamInput,
+				unsigned int numberOfOutput, network_paramNewInOutBuffer_t* ptabParamOutput);
+						
+/**
+ *  @brief Create a new Network
+ * 	@warning This function allocate memory
+ * 	@post senderConnection() must be called to indicate on which address send the data.
+ * 	@post receiverBind() must be called to indicate on which address receive the data.
+ *  @post deleteNetwork() must be called to delete the Network and free the memory allocated.
+ * 	@param[in] recvBuffSize size in byte of the receiving buffer. ideally must be equal to the sum of the sizes of one data of all output buffers
+ * 	@param[in] sendBuffSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
  * 	@param[in] numberOfOutput Number of output buffer
  * 	@param[in] numberOfInput Number of input buffer
  * 	@param[in] ... Parameters of creation of the output buffers followed by the parameters of creation of the input buffers.
@@ -42,14 +63,14 @@ typedef struct network_t
  * These new buffers are added in the input and output buffer tables.
  * 	@see deleteNetwork()
 **/
-network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
-						unsigned int numberOfOutput, unsigned int numberOfInput, ...);
+network_t* newNetworkWithVarg(	unsigned int recvBuffSize,unsigned int sendBuffSize,
+								unsigned int numberOfOutput, unsigned int numberOfInput, ...);
 
 /**
  *  @brief Delete the Network
  * 	@warning This function free memory
  * 	@param ppNetwork address of the pointer on Network
- * 	@see newNetwork()
+ * 	@see newNetworkWithVarg()
 **/
 void deleteNetwork(network_t** ppNetwork);
 

@@ -37,53 +37,59 @@ int main(int argc, char *argv[])
 	
 	network_inOutBuffer_t* pInOutTemp = NULL;
 	
-	network_paramNewInOutBuffer_t paramNetwork1[4];
+	//network_paramNewInOutBuffer_t paramNetwork1[4];
+	network_paramNewInOutBuffer_t paramInputNetwork1[3];
+	network_paramNewInOutBuffer_t paramOutputNetwork1[1];
 	
 	//--- network 1 ---
 	
 	// input ID_CHAR_DATA int
-	paramNetwork1[0].id = ID_CHAR_DATA;
-	paramNetwork1[0].dataType = CMD_TYPE_DATA;
-	paramNetwork1[0].sendingWaitTime = 3;
-	paramNetwork1[0].ackTimeoutMs = 10;//not used
-	paramNetwork1[0].nbOfRetry = 5;//not used
-	paramNetwork1[0].buffSize = 1;
-	paramNetwork1[0].buffCellSize = sizeof(char);
-	paramNetwork1[0].overwriting = 1;
+	paramInputNetwork1[0].id = ID_CHAR_DATA;
+	paramInputNetwork1[0].dataType = CMD_TYPE_DATA;
+	paramInputNetwork1[0].sendingWaitTime = 3;
+	paramInputNetwork1[0].ackTimeoutMs = 10;//not used
+	paramInputNetwork1[0].nbOfRetry = 5;//not used
+	paramInputNetwork1[0].buffSize = 1;
+	paramInputNetwork1[0].buffCellSize = sizeof(char);
+	paramInputNetwork1[0].overwriting = 1;
 	
 	// input ID_INT_DATA_WITH_ACK char
-	paramNetwork1[1].id = ID_INT_DATA_WITH_ACK;
-	paramNetwork1[1].dataType = CMD_TYPE_DATA_WITH_ACK;
-	paramNetwork1[1].sendingWaitTime = 2;
-	paramNetwork1[1].ackTimeoutMs = 10;
-	paramNetwork1[1].nbOfRetry = -1 /*5*/;
-	paramNetwork1[1].buffSize = 5;
-	paramNetwork1[1].buffCellSize = sizeof(int);
-	paramNetwork1[1].overwriting = 0;
+	paramInputNetwork1[1].id = ID_INT_DATA_WITH_ACK;
+	paramInputNetwork1[1].dataType = CMD_TYPE_DATA_WITH_ACK;
+	paramInputNetwork1[1].sendingWaitTime = 2;
+	paramInputNetwork1[1].ackTimeoutMs = 10;
+	paramInputNetwork1[1].nbOfRetry = -1 /*5*/;
+	paramInputNetwork1[1].buffSize = 5;
+	paramInputNetwork1[1].buffCellSize = sizeof(int);
+	paramInputNetwork1[1].overwriting = 0;
 	
 	// input ID_KEEP_ALIVE char
-	paramNetwork1[2].id = ID_KEEP_ALIVE;
-	paramNetwork1[2].dataType = CMD_TYPE_KEEP_ALIVE;
-	paramNetwork1[2].sendingWaitTime = 100;
-	paramNetwork1[2].ackTimeoutMs = 10;//not used
-	paramNetwork1[2].nbOfRetry = 5;//not used
-	paramNetwork1[2].buffSize = 1;
-	paramNetwork1[2].buffCellSize = sizeof(int);
-	paramNetwork1[2].overwriting = 1;
+	paramInputNetwork1[2].id = ID_KEEP_ALIVE;
+	paramInputNetwork1[2].dataType = CMD_TYPE_KEEP_ALIVE;
+	paramInputNetwork1[2].sendingWaitTime = 100;
+	paramInputNetwork1[2].ackTimeoutMs = 10;//not used
+	paramInputNetwork1[2].nbOfRetry = 5;//not used
+	paramInputNetwork1[2].buffSize = 1;
+	paramInputNetwork1[2].buffCellSize = sizeof(int);
+	paramInputNetwork1[2].overwriting = 1;
 	
 	// output ID_INT_DATA int
-	paramNetwork1[3].id = ID_INT_DATA;
-	paramNetwork1[3].dataType = CMD_TYPE_DATA;
-	paramNetwork1[3].sendingWaitTime = 3;//not used
-	paramNetwork1[3].ackTimeoutMs = 10;//not used
-	paramNetwork1[3].nbOfRetry = 5;//not used
-	paramNetwork1[3].buffSize = 10;
-	paramNetwork1[3].buffCellSize = sizeof(int);
-	paramNetwork1[3].overwriting = 1;		
-					
-	pNetwork1 = newNetwork( 256, 256, 1, 2/*3*/,
-							paramNetwork1[3],
-							paramNetwork1[0], paramNetwork1[1]/*, paramNetwork1[2]*/);
+	paramOutputNetwork1[0].id = ID_INT_DATA;
+	paramOutputNetwork1[0].dataType = CMD_TYPE_DATA;
+	paramOutputNetwork1[0].sendingWaitTime = 3;//not used
+	paramOutputNetwork1[0].ackTimeoutMs = 10;//not used
+	paramOutputNetwork1[0].nbOfRetry = 5;//not used
+	paramOutputNetwork1[0].buffSize = 10;
+	paramOutputNetwork1[0].buffCellSize = sizeof(int);
+	paramOutputNetwork1[0].overwriting = 1;		
+		
+				
+	//pNetwork1 = newNetworkWithVarg( 256, 256, 1, 2/*3*/,
+	//						paramNetwork1[3],
+	//						paramNetwork1[0], paramNetwork1[1]/*, paramNetwork1[2]*/);
+	
+	pNetwork1 = newNetwork( 256, 256, 2/*3*/,paramInputNetwork1, 1,paramOutputNetwork1);
+	
 	
 	printf("\n ~~ This soft sends data to the repeater soft ~~ \n \n");
 	
