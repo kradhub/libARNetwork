@@ -10,12 +10,13 @@
 #include <stdlib.h>
 
 #include <inttypes.h>
-//#include <unistd.h>
 
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
 #include <libSAL/socket.h>
+
 #include <libNetwork/common.h>
+#include <libNetwork/ringBuffer.h>
 #include <libNetwork/inOutBuffer.h>
 #include <libNetwork/sender.h>
 #include <libNetwork/receiver.h>
@@ -34,22 +35,36 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 				unsigned int numberOfInput, network_paramNewInOutBuffer_t* ptabParamInput,
 				unsigned int numberOfOutput, network_paramNewInOutBuffer_t* ptabParamOutput)
 {
-	network_t* pNetwork = malloc( sizeof(network_t));
+	/**
+	 *  -- Create a new Network --
+	**/
 	
+	/**
+	 *  local declarations
+	**/
+	network_t* pNetwork = NULL;
 	int error = 0;
 	
 	int ii = 0;
 	int indexAckOutput = 0;
-	network_paramNewInOutBuffer_t paramNewInOutput;
 	network_paramNewInOutBuffer_t paramNewACK;
 	
+	/**
+	 *  Initialize the default parameters for the buffers of acknowledgement.
+	**/
+	// call paramDefault !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     paramNewACK.dataType = CMD_TYPE_ACK;
     paramNewACK.buffSize = 1;
 	paramNewACK.buffCellSize = sizeof(int);
 	paramNewACK.overwriting = 0;
-    paramNewACK.sendingWaitTime = 0; //not used
-    paramNewACK.ackTimeoutMs = 0; //not used
-    paramNewACK.nbOfRetry = 0 ; //not used
+    paramNewACK.sendingWaitTime = 0; /* not used */
+    paramNewACK.ackTimeoutMs = 0; /* not used */
+    paramNewACK.nbOfRetry = 0 ; /* not used */
+    
+    /**
+	 *  Create the Network
+	**/
+    pNetwork = malloc( sizeof(network_t));
     
 	if(pNetwork == NULL)
 	{
@@ -58,35 +73,56 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 	
 	if( !error )
 	{
+		/**
+		 *  For each output buffer a buffer of acknowledgement is add and referenced
+		 *  in the output buffer list and the input buffer list.
+		**/
+		
+		/** 
+		 * Allocate the output buffer list of size of the number of output plus the number of 
+		 * buffer of acknowledgement. The size of the list is then two times the number of output.
+		**/
 		pNetwork->numOfOutputWithoutAck = numberOfOutput;
-		// create output buffers and for each of them a buffer of acknowledgement
 		pNetwork->numOfOutput = 2 * numberOfOutput;
 		pNetwork->ppTabOutput = malloc(sizeof(network_inOutBuffer_t*) * pNetwork->numOfOutput );
 		
+		/** 
+		 * Allocate the input buffer list of size of the number of input plus the number of 
+		 * buffer of acknowledgement. 
+		 * The size of the list is then number of input plus the number of output.
+		**/ 
 		pNetwork->numOfInputWithoutAck = numberOfInput;
-		// create input buffers 
 		pNetwork->numOfInput = numberOfInput + numberOfOutput;
 		pNetwork->ppTabInput = malloc( sizeof(network_inOutBuffer_t*) * pNetwork->numOfInput );
 		
+		
 		if( pNetwork->ppTabOutput && pNetwork->ppTabInput)
 		{
-			for(ii = 0; ii< numberOfOutput ; ++ii)
+			/** 
+			 * Create the output buffers and the buffers of acknowledgement
+			**/
+			for(ii = 0; ii < numberOfOutput; ++ii)
 			{
-				paramNewInOutput = ptabParamOutput[ii]; //va_arg(ap, network_paramNewInOutBuffer_t);
-				pNetwork->ppTabOutput[ii] = newInOutBuffer(&paramNewInOutput);
+				pNetwork->ppTabOutput[ii] = newInOutBuffer( &(ptabParamOutput[ii]) );
 				
-				paramNewACK.id = idOutputToIdAck(paramNewInOutput.id); 
-				
+				/** 
+				 * Create the buffer of acknowledgement associated with the output buffer and 
+				 * store it at the end of the output and input buffer lists.
+				**/
+				paramNewACK.id = idOutputToIdAck(ptabParamOutput[ii].id); 
 				indexAckOutput = numberOfOutput + ii;
+				
 				pNetwork->ppTabOutput[ indexAckOutput ] = newInOutBuffer(&paramNewACK);
 				
 				pNetwork->ppTabInput[numberOfInput + ii] = pNetwork->ppTabOutput[ indexAckOutput ];
 			}
 			
+			/** 
+			 * Create the input buffers
+			**/
 			for(ii = 0; ii< numberOfInput ; ++ii)
 			{
-				paramNewInOutput = ptabParamInput[ii]; // va_arg(ap, network_paramNewInOutBuffer_t);
-				pNetwork->ppTabInput[ii] = newInOutBuffer(&paramNewInOutput);
+				pNetwork->ppTabInput[ii] = newInOutBuffer( &(ptabParamInput[ii]) );
 			}
 		}
 		else
@@ -96,7 +132,10 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 	}
 	
 	if( !error )
-	{		
+	{
+		/** 
+		 * Create the Sender and the Receiver
+		**/
 		pNetwork->pSender = newSender(sendBuffSize, pNetwork->numOfInput, pNetwork->ppTabInput);
 		pNetwork->pReceiver = newReceiver(recvBuffSize, pNetwork->numOfOutput, pNetwork->ppTabOutput);
 		
@@ -110,8 +149,12 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 		}
 	}
     
+    /** 
+	 * delete the network if an error occurred  
+	**/
     if(error)
     {
+		
 		deleteNetwork(&pNetwork);
 	}
     
@@ -120,7 +163,13 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 
 void deleteNetwork(network_t** ppNetwork)
 {	
+	/**
+	 * -- Delete the Network --
+	**/
 	
+	/**
+	 *  local declarations
+	**/
 	network_t* pNetwork = NULL;
 	int ii = 0;
 	
@@ -133,11 +182,17 @@ void deleteNetwork(network_t** ppNetwork)
 			deleteSender( &(pNetwork->pSender) );
 			deleteReceiver( &(pNetwork->pReceiver) );
 			
+			/**
+			 *  Delete all output buffers including the the buffers of acknowledgement
+			**/
 			for(ii = 0; ii< pNetwork->numOfOutput ; ++ii)
 			{
 				deleteInOutBuffer( &(pNetwork->ppTabOutput[ii]) );
 			}	
 			
+			/**
+			 *  Delete the input buffers but not the buffers of acknowledgement already deleted
+			**/
 			for(ii = 0; ii< pNetwork->numOfInputWithoutAck ; ++ii)
 			{
 				deleteInOutBuffer( &(pNetwork->ppTabInput[ii]) );
@@ -145,8 +200,51 @@ void deleteNetwork(network_t** ppNetwork)
 			
 			free(pNetwork);
 		}
+		
 		*ppNetwork = NULL;
 	}
 }
 
+int networkSendData(network_t* pNetwork, int inputBufferId, const void* pData)
+{
+	/**
+	 * -- Add data to send --
+	**/
+	
+	/**
+	 *  local declarations
+	**/
+	int error = 1;
+	network_inOutBuffer_t* pInputBuffer = NULL;
+	
+	pInputBuffer = inOutBufferWithId( pNetwork->ppTabInput, pNetwork->numOfInput, inputBufferId);
+	
+	if(pInputBuffer != NULL)
+	{
+		error = ringBuffPushBack(pInputBuffer->pBuffer, pData);
+	}
+	
+	return error;
+}
 
+int networkReadData(network_t* pNetwork, int outputBufferId, void* pData)
+{
+	/**
+	 * -- read data received --
+	**/
+	
+	/**
+	 *  local declarations
+	**/
+	int error = 1;
+	network_inOutBuffer_t* pOutputBuffer = NULL;
+	
+	pOutputBuffer = inOutBufferWithId( pNetwork->ppTabOutput, pNetwork->numOfOutput, outputBufferId);
+	
+	if(pOutputBuffer != NULL)
+	{
+		error = ringBuffPopFront(pOutputBuffer->pBuffer, pData);
+	}
+	
+	return error;
+}

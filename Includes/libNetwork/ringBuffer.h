@@ -10,7 +10,6 @@
 
 #include <libSAL/mutex.h>
 
-
 /**
  *  @brief Basic ring buffer, multithread safe
  * 	@warning before to be used the ring buffer must be created through newRingBuffer() or newRingBufferWithOverwriting()

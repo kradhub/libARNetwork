@@ -5,11 +5,9 @@
  *  @author maxime.maitre@parrot.com
 **/
 
-//include :
-
 #include <stdlib.h>
 #include <libSAL/print.h>
-#include <libSAL/mutex.h> //sup ?
+#include <libSAL/mutex.h>
 #include <libNetwork/ringBuffer.h>
 #include <libNetwork/common.h>//!! modif
 #include <libNetwork/inOutBuffer.h>
@@ -22,9 +20,20 @@
 
 network_inOutBuffer_t* newInOutBuffer(const network_paramNewInOutBuffer_t *pParam )
 {
-	network_inOutBuffer_t* pInOutBuff = malloc( sizeof(network_inOutBuffer_t));
+	/**
+	 * -- Create a new input or output buffer --
+	**/
 	
-	int keepAliveData = 0x00;//ntohl (0x50505055); //!!!!!!!!!!!!!!!!!!
+	/**
+	 *  local declarations
+	**/
+	network_inOutBuffer_t* pInOutBuff = NULL;
+	int keepAliveData = 0x00;
+	
+	/**
+	 * Create the input or output buffer
+	**/
+	pInOutBuff = malloc( sizeof(network_inOutBuffer_t));
 	
 	if(pInOutBuff)
 	{
@@ -85,7 +94,7 @@ void deleteInOutBuffer(network_inOutBuffer_t** ppInOutBuff)
 int inOutBufferAckReceived(network_inOutBuffer_t* pInOutBuff, int seqNum)
 {
 	int error = 1;
-	sal_mutex_lock(&(pInOutBuff->mutex)); // !!! mutex ?
+	sal_mutex_lock(&(pInOutBuff->mutex));
 	
 	if(pInOutBuff->isWaitAck && pInOutBuff->seqWaitAck == seqNum)
 	{
@@ -93,7 +102,7 @@ int inOutBufferAckReceived(network_inOutBuffer_t* pInOutBuff, int seqNum)
 		ringBuffPopFront( pInOutBuff->pBuffer, NULL );
 		error = 0;
 	}
-	sal_mutex_unlock(&(pInOutBuff->mutex)); // !!! mutex ?
+	sal_mutex_unlock(&(pInOutBuff->mutex));
 	
 	return error;
 }

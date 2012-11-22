@@ -214,13 +214,6 @@ void* runSendingThread(void* data)
     return NULL;
 }
 
-/*
-void startSender(network_Sender_t* pSender)
-{
-	pSender->isAlive = 1;
-}
-*/
-
 void stopSender(network_Sender_t* pSender)
 {
 	pSender->isAlive = 0;

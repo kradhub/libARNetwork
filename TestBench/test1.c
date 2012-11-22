@@ -43,18 +43,18 @@ int main(int argc, char *argv[])
 	network_t* pNetwork1= NULL;
 	network_t* pNetwork2= NULL;
 	
-	int i=0;
-	char chData = 0;
+	int ii = 0;
 	
+	int error = 0;
+	
+	char chData = 0;
 	int intData = 0;
 	
 	network_inOutBuffer_t* pInOutTemp = NULL;
 	
-	//network_paramNewInOutBuffer_t paramNetwork1[3];
 	network_paramNewInOutBuffer_t paramInputNetwork1[2];
 	network_paramNewInOutBuffer_t paramOutputNetwork1[1];
 	
-	//network_paramNewInOutBuffer_t paramNetwork2[3];
 	network_paramNewInOutBuffer_t paramInputNetwork2[1];
 	network_paramNewInOutBuffer_t paramOutputNetwork2[2];
 	
@@ -92,7 +92,6 @@ int main(int argc, char *argv[])
 	
 	//-----------------------------
 	
-	
 	//--- network 2 ---
 	
 	// input ID_INT_DATA char
@@ -126,12 +125,6 @@ int main(int argc, char *argv[])
 	paramOutputNetwork2[1].overwriting = 0;
 	
 	//-----------------------------
-						
-	/*					
-	pNetwork1 = newNetworkWithVarg( 256, 256, 1, 2,
-							paramNetwork1[2],
-							paramNetwork1[0], paramNetwork1[1]);
-	*/
 	
 	pNetwork1 = newNetwork( 256, 256, 2, paramInputNetwork1, 1, paramOutputNetwork1);
 							
@@ -140,11 +133,7 @@ int main(int argc, char *argv[])
 								
 	printf(" -pNetwork1->pReceiver Bind  error: %d \n", 
 								receiverBind(pNetwork1->pReceiver, 5552, 10) );
-	/*
-	pNetwork2 = newNetworkWithVarg( 256, 256, 2, 1,
-							paramNetwork2[1], paramNetwork2[2],
-							paramNetwork2[0]);
-	*/
+
 	pNetwork2 = newNetwork( 256, 256, 1, paramInputNetwork2, 2, paramOutputNetwork2);
 							
 	printf(" -pNetwork2->pReceiver Bind  error: %d \n",
@@ -167,22 +156,27 @@ int main(int argc, char *argv[])
 	sal_thread_create(&thread_send1, (sal_thread_routine) runSendingThread, pNetwork1->pSender);
 	sal_thread_create(&thread_send2, (sal_thread_routine) runSendingThread, pNetwork2->pSender);
 
-    for(i=0 ; i<5 ; i++)
+    for(ii = 0; ii < 5; ii++)
     {
 		
-		//chData = ntohl (0x50 + i);
-		chData =  i;
+		chData = ii;
 		printf(" send char: %d \n",chData);
-		pInOutTemp = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput, ID_CHAR_DATA);
-		ringBuffPushBack(pInOutTemp->pBuffer, &chData);
+		error = networkSendData(pNetwork1, ID_CHAR_DATA, &chData);
+		
+		if( error )
+		{
+			printf(" error send char \n");
+		}
 
 		
-		intData = ntohl (0x11223340 +i);
-		printf(" send int: %0x \n",0x11223340 +i);
-		pInOutTemp = inOutBufferWithId(	pNetwork1->ppTabInput,
-										pNetwork1->numOfInput, ID_INT_DATA_WITH_ACK);						
-		ringBuffPushBack(pInOutTemp->pBuffer, &intData);
+		intData = ntohl (0x11223340 + ii);
+		printf(" send int: %0x \n",0x11223340 + ii);		
+		error = networkSendData(pNetwork1, ID_INT_DATA_WITH_ACK, &intData);
 		
+		if( error )
+		{
+			printf(" error send int ack \n");
+		}
 		
         usleep(50000);
     }

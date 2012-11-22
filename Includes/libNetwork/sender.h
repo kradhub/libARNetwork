@@ -62,14 +62,6 @@ void deleteSender(network_Sender_t** ppSender);
 **/
 void* runSendingThread(void* data);
 
-// /**
- //*  @brief start the sending
- //* 	@param pBuffsend the pointer on the Sender
- //*	@pre the thread calling runSendingThread() must be created
- //* 	@see runSendingThread()
-// **/
-//void startSender(network_Sender_t* pSender);
-
 /**
  *  @brief Stop the sending
  * 	@details Used to kill the thread calling runSendingThread().

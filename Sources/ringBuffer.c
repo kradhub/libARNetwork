@@ -74,7 +74,7 @@ void deleteRingBuffer(network_ringBuffer_t** ppRingBuff)
 
 int ringBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData)
 {
-	int error = 1; //!!
+	int error = 1;
 	void* buffPointor = NULL;
 	
 	sal_mutex_lock(&(pRingBuff->mutex));
