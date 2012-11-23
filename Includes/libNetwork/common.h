@@ -1,5 +1,5 @@
 /**
- *	@file NETWORK_Common.h
+ *	@file common.h
  *  @brief define the network protocol
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com

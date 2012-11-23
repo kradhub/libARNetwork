@@ -6,20 +6,20 @@ ACLOCAL_AMFLAGS = -I m4
 # The list of header files that belong to the library (to be installed later)
 HEADER_FILES	=	../Includes/libNetwork/buffer.h \
 					../Includes/libNetwork/ringBuffer.h \
-					../Includes/libNetwork/inOutBuffer.h\
+					../Includes/libNetwork/ioBuffer.h\
 					../Includes/libNetwork/sender.h \
 					../Includes/libNetwork/receiver.h \
-					../Includes/libNetwork/network.h \
+					../Includes/libNetwork/manager.h \
 					../Includes/libNetwork/common.h
 
 # The sources to add to the library and to add to the source distribution
 SOURCE_FILES 	= 	$(HEADER_FILES)		\
 					../Sources/buffer.c \
 					../Sources/ringBuffer.c	\
-					../Sources/inOutBuffer.c\
+					../Sources/ioBuffer.c\
 					../Sources/sender.c \
 					../Sources/receiver.c \
-					../Sources/network.c
+					../Sources/manager.c
 					
 # The library names to build (note we are building static and shared libs)
 if DEBUG_MODE

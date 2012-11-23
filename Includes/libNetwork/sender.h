@@ -1,5 +1,5 @@
 /**
- *	@file NETWORK_Sender.h
+ *	@file sender.h
  *  @brief manage the data sending, used by libNetwork::network and libNetwork::receiver
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
@@ -8,7 +8,7 @@
 #ifndef _NETWORK_SENDER_H_
 #define _NETWORK_SENDER_H_
 
-#include <libNetwork/inOutBuffer.h>
+#include <libNetwork/ioBuffer.h>
 #include <libNetwork/buffer.h>
 
 /**

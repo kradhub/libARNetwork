@@ -1,5 +1,5 @@
 /**
- *	@file NETWORK_Manager.h
+ *	@file manager.h
  *  @brief network manager allow to send data acknowledged or not.
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
@@ -8,7 +8,7 @@
 #ifndef _NETWORK_MANGER_H_
 #define _NETWORK_MANGER_H_
 
-#include <libNetwork/inOutBuffer.h>
+#include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
 #include <libNetwork/receiver.h>
 

@@ -1,6 +1,6 @@
 /**
  *	@file receiver.c
- *  @brief manage the data receiving
+ *  @brief manage the data received, used by libNetwork/network
  *  @date 28/09/2012
  *  @author maxime.maitre@parrot.com
 **/
@@ -22,7 +22,7 @@
 
 #include <libNetwork/common.h>
 #include <libNetwork/buffer.h>
-#include <libNetwork/inOutBuffer.h>
+#include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
 #include <libNetwork/receiver.h>
 

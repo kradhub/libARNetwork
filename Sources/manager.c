@@ -1,6 +1,6 @@
 /**
- *	@file NETWORK_Manager.c
- *  @brief single buffer
+ *	@file manager.c
+ *  @brief network manager allow to send data acknowledged or not.
  *  @date 28/09/2012
  *  @author maxime.maitre@parrot.com
 **/
@@ -21,10 +21,10 @@
 
 #include <libNetwork/common.h>
 #include <libNetwork/ringBuffer.h>
-#include <libNetwork/inOutBuffer.h>
+#include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
 #include <libNetwork/receiver.h>
-#include <libNetwork/network.h>
+#include <libNetwork/manager.h>
 
 typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;

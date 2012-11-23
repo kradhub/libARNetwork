@@ -1,5 +1,5 @@
 /**
- *	@file NETWORK_IoBuffer.c
+ *	@file ioBuffer.c
  *  @brief single buffer
  *  @date 28/09/2012
  *  @author maxime.maitre@parrot.com
@@ -16,7 +16,7 @@
 #include <libSAL/mutex.h>
 #include <libNetwork/ringBuffer.h>
 #include <libNetwork/common.h>
-#include <libNetwork/inOutBuffer.h>
+#include <libNetwork/ioBuffer.h>
 
 /*****************************************
  * 

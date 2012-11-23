@@ -1,6 +1,6 @@
 /**
- *	@file NETWORK_Receiver.h
- *  @brief manage the data received, used by libNetwork::network
+ *	@file receiver.h
+ *  @brief manage the data received, used by libNetwork/network
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
 **/
@@ -8,7 +8,7 @@
 #ifndef _NETWORK_RECEIVER_H_
 #define _NETWORK_RECEIVER_H_
 
-#include <libNetwork/inOutBuffer.h>
+#include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
 #include <libNetwork/buffer.h>
 

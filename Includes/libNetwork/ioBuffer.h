@@ -1,5 +1,5 @@
 /**
- *	@file NETWORK_IoBuffer.h
+ *	@file ioBuffer.h
  *  @brief input or output buffer, used by libNetwork::receiver or libNetwork::sender
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com

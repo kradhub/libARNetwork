@@ -22,7 +22,7 @@
 
 #include <libNetwork/common.h>
 #include <libNetwork/buffer.h>
-#include <libNetwork/inOutBuffer.h>
+#include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
 
 #include <arpa/inet.h> // !!!!!!!!!!!!!!!!!!!!!!!!!!!pass in libsal
