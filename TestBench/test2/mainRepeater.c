@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	int bindError = -1;
 	int connectError = -1;
 	
-	network_inOutBuffer_t* pInOutTemp = NULL;
+	network_ioBuffer_t* pInOutTemp = NULL;
 	
 	//network_paramNewInOutBuffer_t paramNetwork2[3];
 	network_paramNewInOutBuffer_t paramInputNetwork2[1];
@@ -90,12 +90,12 @@ int main(int argc, char *argv[])
 		
 		if(bindError != 0)
 		{
-			bindError = receiverBind(pNetwork2->pReceiver, 5551, 10);
+			bindError = NETWORK_ReceiverBind(pNetwork2->pReceiver, 5551, 10);
 		}
 		
 		if(connectError != 0)
 		{
-			connectError = senderConnection(pNetwork2->pSender,IpAddress, 5552);
+			connectError = NETWORK_SenderConnection(pNetwork2->pSender,IpAddress, 5552);
 		}
 		
 		printf("	- Sender connect error: %d \n", connectError );			
@@ -106,8 +106,8 @@ int main(int argc, char *argv[])
 	sal_thread_t thread_send2;
 	sal_thread_t thread_recv2;
 	
-	sal_thread_create(&(thread_recv2), (sal_thread_routine) runReceivingThread, pNetwork2->pReceiver);
-	sal_thread_create(&thread_send2, (sal_thread_routine) runSendingThread, pNetwork2->pSender);
+	sal_thread_create(&(thread_recv2), (sal_thread_routine) NETWORK_RunReceivingThread, pNetwork2->pReceiver);
+	sal_thread_create(&thread_send2, (sal_thread_routine) NETWORK_RunSendingThread, pNetwork2->pSender);
 
 	printf("press 'q' to quit and to see the date received : \n");
 	
@@ -117,8 +117,8 @@ int main(int argc, char *argv[])
     }
 	
 	//stop all therad
-	stopSender(pNetwork2->pSender);
-	stopReceiver(pNetwork2->pReceiver);
+	NETWORK_StopSender(pNetwork2->pSender);
+	NETWORK_StopReceiver(pNetwork2->pReceiver);
 	
 	printf("\n the last char transmited:\n");
 	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_CHAR_DATA);

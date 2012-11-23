@@ -38,20 +38,20 @@ typedef struct sockaddr SOCKADDR;
 /**
  *  @brief send the data
  * 	@param pSender the pointer on the Sender
- *	@note only call by runSendingThread()
- * 	@see runSendingThread()
+ *	@note only call by NETWORK_RunSendingThread()
+ * 	@see NETWORK_RunSendingThread()
 **/
-void senderSend(network_Sender_t* pSender);
+void senderSend(network_sender_t* pSender);
 
 /**
  *  @brief add data to the sender buffer
  * 	@param pSender the pointer on the Sender
  *	@param pinputBuff
  * 	@param seqNum
- * 	@note only call by runSendingThread()
- * 	@see runSendingThread()
+ * 	@note only call by NETWORK_RunSendingThread()
+ * 	@see NETWORK_RunSendingThread()
 **/
-int senderAddToBuffer(	network_Sender_t* pSender,const network_inOutBuffer_t* pinputBuff,
+int senderAddToBuffer(	network_sender_t* pSender,const network_ioBuffer_t* pinputBuff,
 						int seqNum);
 
 /*****************************************
@@ -69,17 +69,17 @@ int senderAddToBuffer(	network_Sender_t* pSender,const network_inOutBuffer_t* pi
 ******************************************/
 
 
-network_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int numOfInputBuff,
-								network_inOutBuffer_t** ppTab_input)
+network_sender_t* NETWORK_NewSender(	unsigned int sendingBufferSize, unsigned int numOfInputBuff,
+								network_ioBuffer_t** ppTab_input)
 {	
 	/** -- Create a new sender -- */
 	
 	/** local declarations */
-	network_Sender_t* pSender =  NULL;
+	network_sender_t* pSender =  NULL;
 	int error=0;
 	
 	/** Create the sender */
-	pSender =  malloc( sizeof(network_Sender_t));
+	pSender =  malloc( sizeof(network_sender_t));
 	
 	if(pSender)
 	{
@@ -98,19 +98,19 @@ network_Sender_t* newSender(	unsigned int sendingBufferSize, unsigned int numOfI
 		/** delete the sender if an error occurred */
 		if(error)
 		{
-			deleteSender(&pSender);
+			NETWORK_DeleteSender(&pSender);
 		}
 	}
 	
 	return pSender;
 }
 
-void deleteSender(network_Sender_t** ppSender)
+void NETWORK_DeleteSender(network_sender_t** ppSender)
 {
 	/** -- Delete the sender -- */
 	
 	/** local declarations */
-	network_Sender_t* pSender = NULL;
+	network_sender_t* pSender = NULL;
 	
 	if(ppSender)
 	{
@@ -126,16 +126,16 @@ void deleteSender(network_Sender_t** ppSender)
 	}
 }
 
-void* runSendingThread(void* data)
+void* NETWORK_RunSendingThread(void* data)
 {
 	/** -- Manage the sending of the data on the sender' socket -- */
 	
 	/** local declarations */
-	network_Sender_t* pSender = data;
+	network_sender_t* pSender = data;
 	int seq = 1;
 	int indexInput = 0;
 	int callBackReturn = 0;
-	network_inOutBuffer_t* pInputTemp = NULL;
+	network_ioBuffer_t* pInputTemp = NULL;
 	
 	
 	while( pSender->isAlive )
@@ -244,18 +244,18 @@ void* runSendingThread(void* data)
     return NULL;
 }
 
-void stopSender(network_Sender_t* pSender)
+void NETWORK_StopSender(network_sender_t* pSender)
 {
 	/** -- Stop the sending -- */
 	pSender->isAlive = 0;
 }
 
-int senderAckReceived(network_Sender_t* pSender, int id, int seqNum)
+int NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum)
 {
 	/** -- Receive an acknowledgment fo a data -- */
 	
 	/** local declarations */
-	network_inOutBuffer_t* pInputBuff = NULL;
+	network_ioBuffer_t* pInputBuff = NULL;
 	int error = 1;
 	
 	pInputBuff = inOutBufferWithId( pSender->pptab_inputBuffer, pSender->numOfInputBuff, id );
@@ -272,7 +272,7 @@ int senderAckReceived(network_Sender_t* pSender, int id, int seqNum)
 	return error;
 }
 
-int senderConnection(network_Sender_t* pSender,const char* addr, int port)
+int NETWORK_SenderConnection(network_sender_t* pSender,const char* addr, int port)
 {
 	/** -- Connect the socket in UDP to a port of an address -- */
 	
@@ -294,7 +294,7 @@ int senderConnection(network_Sender_t* pSender,const char* addr, int port)
  *
 ******************************************/
 
-void senderSend(network_Sender_t* pSender)
+void senderSend(network_sender_t* pSender)
 {	
 	/**  -- send the data -- */
 	
@@ -311,7 +311,7 @@ void senderSend(network_Sender_t* pSender)
 	}
 }
 
-int senderAddToBuffer( network_Sender_t* pSender,const network_inOutBuffer_t* pinputBuff,
+int senderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_t* pinputBuff,
 						int seqNum)
 {
 	/** -- add data to the sender buffer -- */

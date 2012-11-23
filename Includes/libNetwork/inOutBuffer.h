@@ -1,12 +1,12 @@
 /**
- *	@file inOutBuffer.h
+ *	@file NETWORK_IoBuffer.h
  *  @brief input or output buffer, used by libNetwork::receiver or libNetwork::sender
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _INOUTBUFFER_H_
-#define _INOUTBUFFER_H_
+#ifndef _NETWORK_IOBUFFER_H_
+#define _NETWORK_IOBUFFER_H_
 
 #include <libNetwork/common.h>
 #include <libNetwork/ringBuffer.h>
@@ -41,7 +41,7 @@ void paramNewInOutBufferDefaultInit(network_paramNewInOutBuffer_t *pParam);
  * 	@warning before to be used the inOutBuffer must be created through newInOutBuffer()
  * 	@post after its using the inOutBuffer must be deleted through deleteInOutBuffer()
 **/
-typedef struct network_inOutBuffer_t  
+typedef struct network_ioBuffer_t  
 {
     int id;		/**< Identifier used to find the InOutBuffer in a table*/
     network_ringBuffer_t* pBuffer;	/**< Pointer on the ringBuffer used to store the data*/
@@ -49,7 +49,7 @@ typedef struct network_inOutBuffer_t
     int sendingWaitTime;	/**< Time in millisecond between 2 send when the InOutBuffer if used with a libNetwork::sender*/
     int ackTimeoutMs;	/**< Timeout in millisecond after retry to send the data when the InOutBuffer is used with a libNetwork::sender*/
     int nbOfRetry;	/**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libNetwork::sender*/
-    //	timeoutCallback(network_inOutBuffer_t* this)
+    //	timeoutCallback(network_ioBuffer_t* this)
     
     int isWaitAck;	/**< Indicator of waiting an acknowledgement  (1 = true | 0 = false). Must be accessed through inOutBuffeIsWaitAck()*/
     int seqWaitAck; /**< Sequence number of the acknowledge waiting if used with a libNetwork::sender or of the last command stored if used with a libNetwork::reveiver*/
@@ -59,7 +59,7 @@ typedef struct network_inOutBuffer_t
     
     sal_mutex_t mutex;	/**< Mutex to take before to use the ringBuffer*/
 
-}network_inOutBuffer_t;
+}network_ioBuffer_t;
 
 /**
  *  @brief Create a new input or output buffer
@@ -69,7 +69,7 @@ typedef struct network_inOutBuffer_t
  * 	@return Pointer on the new input or output buffer
  * 	@see deleteInOutBuffer()
 **/
-network_inOutBuffer_t* newInOutBuffer(const network_paramNewInOutBuffer_t *pParam); 
+network_ioBuffer_t* newInOutBuffer(const network_paramNewInOutBuffer_t *pParam); 
 
 /**
  *  @brief Delete the input or output buffer
@@ -77,7 +77,7 @@ network_inOutBuffer_t* newInOutBuffer(const network_paramNewInOutBuffer_t *pPara
  * 	@param ppInOutBuff address of the pointer on the input or output buffer to delete
  *	@see newInOutBuffer()
 **/
-void deleteInOutBuffer( network_inOutBuffer_t** ppInOutBuff );
+void deleteInOutBuffer( network_ioBuffer_t** ppInOutBuff );
 
 /**
  *  @brief Receive an acknowledgement to a inOutBuffer.
@@ -86,7 +86,7 @@ void deleteInOutBuffer( network_inOutBuffer_t** ppInOutBuff );
  * 	@param[in] seqNum sequence number of the acknowledgement
  * 	@return error equal to 0 if the data has been correctly acknowledged otherwise equal to 1
 **/
-int inOutBufferAckReceived( network_inOutBuffer_t* pInOutBuff, int seqNum );
+int inOutBufferAckReceived( network_ioBuffer_t* pInOutBuff, int seqNum );
 
 /**
  *  @brief Search a inOutBuffer with its identifier, in a table
@@ -95,7 +95,7 @@ int inOutBufferAckReceived( network_inOutBuffer_t* pInOutBuff, int seqNum );
  * 	@param[in] id identifier of the inOutBuffer searched
  * 	@return address of the inOutBuffer with the identifier searched (equal to NULL if the inOutBuffer is not find)
 **/
-network_inOutBuffer_t* inOutBufferWithId( network_inOutBuffer_t** pptabInOutBuff,
+network_ioBuffer_t* inOutBufferWithId( network_ioBuffer_t** pptabInOutBuff,
 												int tabSize, int id );
 
 /**
@@ -103,8 +103,8 @@ network_inOutBuffer_t* inOutBufferWithId( network_inOutBuffer_t** pptabInOutBuff
  * 	@param pInOutBuff Pointer on the input or output buffer
  * 	@return IsWaitAck equal to 1 if the inOutBuffer is waiting an acknowledgement otherwise equal to 0
 **/
-int inOutBuffeIsWaitAck( network_inOutBuffer_t* pInOutBuff );
+int inOutBuffeIsWaitAck( network_ioBuffer_t* pInOutBuff );
 
 
-#endif // _INOUTBUFFER_H_
+#endif // _NETWORK_IOBUFFER_H_
 

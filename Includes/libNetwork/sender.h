@@ -1,74 +1,74 @@
 /**
- *	@file sender.h
+ *	@file NETWORK_Sender.h
  *  @brief manage the data sending, used by libNetwork::network and libNetwork::receiver
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _SENDER_H_
-#define _SENDER_H_
+#ifndef _NETWORK_SENDER_H_
+#define _NETWORK_SENDER_H_
 
 #include <libNetwork/inOutBuffer.h>
 #include <libNetwork/buffer.h>
 
 /**
  *  @brief sending manager
- * 	@warning before to be used the sender must be created through newSender()
- * 	@post after its using the sender must be deleted through deleteSender()
+ * 	@warning before to be used the sender must be created through NETWORK_NewSender()
+ * 	@post after its using the sender must be deleted through NETWORK_DeleteSender()
 **/
-typedef struct network_Sender_t
+typedef struct network_sender_t
 {
 	network_buffer_t* pSendingBuffer; /**< Pointer on the data buffer to send*/
 	
-	network_inOutBuffer_t** pptab_inputBuffer; /**< address of the table of pointers of input buffer*/
+	network_ioBuffer_t** pptab_inputBuffer; /**< address of the table of pointers of input buffer*/
 	int numOfInputBuff; 
-	int socket; /**< sending Socket. Must be accessed through senderConnection()*/
+	int socket; /**< sending Socket. Must be accessed through NETWORK_SenderConnection()*/
 	
-	int isAlive; /**< Indicator of aliving used for kill the thread calling the runSendingThread function (1 = alive | 0 = dead). Must be accessed through stopSender()*/
-}network_Sender_t;
+	int isAlive; /**< Indicator of aliving used for kill the thread calling the NETWORK_RunSendingThread function (1 = alive | 0 = dead). Must be accessed through NETWORK_StopSender()*/
+}network_sender_t;
 
 
 /**
  *  @brief Create a new sender
  * 	@warning This function allocate memory
- *	@post deleteSender() must be called to delete the sender and free the memory allocated
+ *	@post NETWORK_DeleteSender() must be called to delete the sender and free the memory allocated
  * 	@param[in] sendingBufferSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
  * 	@param[in] numOfInputBuff Number of input buffer
  * 	@param[in] ppTab_input address of the table of the pointers on the input buffers
  * 	@return Pointer on the new sender
- * 	@see deleteSender()
+ * 	@see NETWORK_DeleteSender()
 **/
-network_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int numOfInputBuff,
-								network_inOutBuffer_t** ppTab_input);
+network_sender_t* NETWORK_NewSender(unsigned int sendingBufferSize, unsigned int numOfInputBuff,
+								network_ioBuffer_t** ppTab_input);
 
 /**
  *  @brief Delete the sender
  * 	@warning This function free memory
  * 	@param ppSender address of the pointer on the Sender to delete
- *	@see newSender()
+ *	@see NETWORK_NewSender()
 **/
-void deleteSender(network_Sender_t** ppSender);
+void NETWORK_DeleteSender(network_sender_t** ppSender);
 
 /**
  *  @brief Manage the sending of the data on the sender' socket 
  * 	@warning This function must be called by a specific thread.
  * 	@warning At the end of this function the socket of the sender is closed.
- * 	@pre The socket of the sender must be initialized through senderConnection().
- * 	@post Before join the thread calling this function, stopSender() must be called.
+ * 	@pre The socket of the sender must be initialized through NETWORK_SenderConnection().
+ * 	@post Before join the thread calling this function, NETWORK_StopSender() must be called.
  * 	@details This function sends the data present in the input buffers according to their parameters.
- * 	@param data thread datas of type network_Sender_t*
- * 	@see senderConnection()
- * 	@see stopSender()
+ * 	@param data thread datas of type network_sender_t*
+ * 	@see NETWORK_SenderConnection()
+ * 	@see NETWORK_StopSender()
 **/
-void* runSendingThread(void* data);
+void* NETWORK_RunSendingThread(void* data);
 
 /**
  *  @brief Stop the sending
- * 	@details Used to kill the thread calling runSendingThread().
+ * 	@details Used to kill the thread calling NETWORK_RunSendingThread().
  * 	@param pSender the pointer on the Sender
- * 	@see runSendingThread()
+ * 	@see NETWORK_RunSendingThread()
 **/
-void stopSender(network_Sender_t* pSender);
+void NETWORK_StopSender(network_sender_t* pSender);
 
 /**
  *  @brief Receive an acknowledgment fo a data.
@@ -78,17 +78,17 @@ void stopSender(network_Sender_t* pSender);
  *	@param[in] seqNum sequence number of the acknowledgment
  * 	@return error equal to 0 if the data has been correctly acknowledged otherwise equal to 1.
 **/
-int senderAckReceived(network_Sender_t* pSender, int id, int seqNum);
+int NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum);
 
 /**
  *  @brief Connect the socket in UDP to a port of an address. the socket will be used to send the data.
- * 	@warning Must be called before the start of the thread running runSendingThread().
+ * 	@warning Must be called before the start of the thread running NETWORK_RunSendingThread().
  * 	@param pSender the pointer on the Sender
  * 	@param[in] addr address of connection at which the data will be sent.
  *	@param[in] port port on which the data will be sent.
  * 	@return error equal to 0 if the connection if successful otherwise equal to 1.
 **/
-int senderConnection(network_Sender_t* pSender,const char* addr, int port);
+int NETWORK_SenderConnection(network_sender_t* pSender,const char* addr, int port);
 
-#endif // _SENDER_H_
+#endif // _NETWORK_SENDER_H_
 

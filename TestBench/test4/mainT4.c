@@ -30,8 +30,8 @@
 
 typedef struct printThread // pass uint32_t
 {
-	network_inOutBuffer_t* pOutBuffChar;
-	network_inOutBuffer_t* pOutBuffIntAck;
+	network_ioBuffer_t* pOutBuffChar;
+	network_ioBuffer_t* pOutBuffIntAck;
 	int alive;
 	
 }printThread;
@@ -79,8 +79,8 @@ int main(int argc, char *argv[])
 	
 	printThread printThread1;
 	
-	network_inOutBuffer_t* pInputBuffChar = NULL;
-	network_inOutBuffer_t* pInputBuffIntAck = NULL;
+	network_ioBuffer_t* pInputBuffChar = NULL;
+	network_ioBuffer_t* pInputBuffIntAck = NULL;
 	
 	sal_thread_t thread_send1;
 	sal_thread_t thread_recv1;
@@ -198,11 +198,11 @@ int main(int argc, char *argv[])
 		{
 			if(netType == '1')
 			{
-				bindError = receiverBind(pNetwork1->pReceiver, 5552, 10);
+				bindError = NETWORK_ReceiverBind(pNetwork1->pReceiver, 5552, 10);
 			}
 			else
 			{
-				bindError = receiverBind(pNetwork1->pReceiver, 5551, 10);
+				bindError = NETWORK_ReceiverBind(pNetwork1->pReceiver, 5551, 10);
 			}
 		}
 		
@@ -210,11 +210,11 @@ int main(int argc, char *argv[])
 		{
 			if(netType == '1')
 			{
-				connectError = senderConnection(pNetwork1->pSender,IpAddress, 5551);
+				connectError = NETWORK_SenderConnection(pNetwork1->pSender,IpAddress, 5551);
 			}
 			else
 			{
-				connectError = senderConnection(pNetwork1->pSender,IpAddress, 5552);
+				connectError = NETWORK_SenderConnection(pNetwork1->pSender,IpAddress, 5552);
 			}
 		}
 		
@@ -230,8 +230,8 @@ int main(int argc, char *argv[])
 	printThread1.alive=1;
 	
 	sal_thread_create(&thread_printBuff, (sal_thread_routine) printBuff, &printThread1 );
-	sal_thread_create(&(thread_recv1), (sal_thread_routine) runReceivingThread, pNetwork1->pReceiver);
-	sal_thread_create(&thread_send1, (sal_thread_routine) runSendingThread, pNetwork1->pSender);
+	sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_RunReceivingThread, pNetwork1->pReceiver);
+	sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_RunSendingThread, pNetwork1->pSender);
 	
 	chData = 0;
 	
@@ -284,8 +284,8 @@ int main(int argc, char *argv[])
 	
 	//stop all therad
 	printThread1.alive = 0;
-	stopSender(pNetwork1->pSender);
-	stopReceiver(pNetwork1->pReceiver);
+	NETWORK_StopSender(pNetwork1->pSender);
+	NETWORK_StopReceiver(pNetwork1->pReceiver);
 	
 	//kill all thread
 	

@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 	char chData = 0;
 	int intData = 0;
 	
-	network_inOutBuffer_t* pInOutTemp = NULL;
+	network_ioBuffer_t* pInOutTemp = NULL;
 	
 	network_paramNewInOutBuffer_t paramInputNetwork1[2];
 	network_paramNewInOutBuffer_t paramOutputNetwork1[1];
@@ -129,17 +129,17 @@ int main(int argc, char *argv[])
 	pNetwork1 = newNetwork( 256, 256, 2, paramInputNetwork1, 1, paramOutputNetwork1);
 							
 	printf(" -pNetwork1->pSender connect error: %d \n", 
-								senderConnection(pNetwork1->pSender,"127.0.0.1", 5551) );
+								NETWORK_SenderConnection(pNetwork1->pSender,"127.0.0.1", 5551) );
 								
 	printf(" -pNetwork1->pReceiver Bind  error: %d \n", 
-								receiverBind(pNetwork1->pReceiver, 5552, 10) );
+								NETWORK_ReceiverBind(pNetwork1->pReceiver, 5552, 10) );
 
 	pNetwork2 = newNetwork( 256, 256, 1, paramInputNetwork2, 2, paramOutputNetwork2);
 							
 	printf(" -pNetwork2->pReceiver Bind  error: %d \n",
-								receiverBind(pNetwork2->pReceiver, 5551, 5) );
+								NETWORK_ReceiverBind(pNetwork2->pReceiver, 5551, 5) );
 	printf(" -pNetwork2->pSender connect error: %d \n",
-								senderConnection(pNetwork2->pSender,"127.0.0.1", 5552) );
+								NETWORK_SenderConnection(pNetwork2->pSender,"127.0.0.1", 5552) );
 								
 	sal_thread_t thread_send1 = NULL;
 	sal_thread_t thread_recv1 = NULL;
@@ -150,11 +150,11 @@ int main(int argc, char *argv[])
 	printf("main start \n");
 	
 	
-	sal_thread_create(&(thread_recv2), (sal_thread_routine) runReceivingThread, pNetwork2->pReceiver);
-	sal_thread_create(&(thread_recv1), (sal_thread_routine) runReceivingThread, pNetwork1->pReceiver);
+	sal_thread_create(&(thread_recv2), (sal_thread_routine) NETWORK_RunReceivingThread, pNetwork2->pReceiver);
+	sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_RunReceivingThread, pNetwork1->pReceiver);
 	
-	sal_thread_create(&thread_send1, (sal_thread_routine) runSendingThread, pNetwork1->pSender);
-	sal_thread_create(&thread_send2, (sal_thread_routine) runSendingThread, pNetwork2->pSender);
+	sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_RunSendingThread, pNetwork1->pSender);
+	sal_thread_create(&thread_send2, (sal_thread_routine) NETWORK_RunSendingThread, pNetwork2->pSender);
 
     for(ii = 0; ii < 5; ii++)
     {
@@ -184,10 +184,10 @@ int main(int argc, char *argv[])
 	printf(" -- stop-- \n");
 	
 	//stop all therad
-	stopSender(pNetwork1->pSender);
-	stopSender(pNetwork2->pSender);
-	stopReceiver(pNetwork1->pReceiver);
-	stopReceiver(pNetwork2->pReceiver);
+	NETWORK_StopSender(pNetwork1->pSender);
+	NETWORK_StopSender(pNetwork2->pSender);
+	NETWORK_StopReceiver(pNetwork1->pReceiver);
+	NETWORK_StopReceiver(pNetwork2->pReceiver);
 	
 	printf("\n the last char transmited:\n");
 	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_CHAR_DATA);

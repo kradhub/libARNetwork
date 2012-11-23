@@ -1,12 +1,12 @@
 /**
- *	@file common.h
+ *	@file NETWORK_Common.h
  *  @brief define the network protocol
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _COMMON_H_
-#define _COMMON_H_
+#ifndef _NETWORK_COMMON_H_
+#define _NETWORK_COMMON_H_
 
 #include <inttypes.h>
 
@@ -56,4 +56,4 @@ typedef union UNION_CMD
     uint8_t* 	pTabUint8;
 }UNION_CMD;
 
-#endif // _COMMON_H_
+#endif // _NETWORK_COMMON_H_

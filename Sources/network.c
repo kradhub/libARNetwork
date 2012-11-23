@@ -1,5 +1,5 @@
 /**
- *	@file network.c
+ *	@file NETWORK_Manager.c
  *  @brief single buffer
  *  @date 28/09/2012
  *  @author maxime.maitre@parrot.com
@@ -43,7 +43,7 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 	
 	/** local declarations */
 	network_t* pNetwork = NULL;
-	int error = 0;
+	int error = NETWORK_MANAGER_OK;
 	
 	int ii = 0;
 	int indexAckOutput = 0;
@@ -80,7 +80,7 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 		**/
 		pNetwork->numOfOutputWithoutAck = numberOfOutput;
 		pNetwork->numOfOutput = 2 * numberOfOutput;
-		pNetwork->ppTabOutput = malloc(sizeof(network_inOutBuffer_t*) * pNetwork->numOfOutput );
+		pNetwork->ppTabOutput = malloc(sizeof(network_ioBuffer_t*) * pNetwork->numOfOutput );
 		
 		/** 
 		 * Allocate the input buffer list of size of the number of input plus the number of 
@@ -89,7 +89,7 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 		**/ 
 		pNetwork->numOfInputWithoutAck = numberOfInput;
 		pNetwork->numOfInput = numberOfInput + numberOfOutput;
-		pNetwork->ppTabInput = malloc( sizeof(network_inOutBuffer_t*) * pNetwork->numOfInput );
+		pNetwork->ppTabInput = malloc( sizeof(network_ioBuffer_t*) * pNetwork->numOfInput );
 		
 		
 		if( pNetwork->ppTabOutput && pNetwork->ppTabInput)
@@ -126,8 +126,8 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 	if( !error )
 	{
 		/** Create the Sender and the Receiver */
-		pNetwork->pSender = newSender(sendBuffSize, pNetwork->numOfInput, pNetwork->ppTabInput);
-		pNetwork->pReceiver = newReceiver(recvBuffSize, pNetwork->numOfOutput, pNetwork->ppTabOutput);
+		pNetwork->pSender = NETWORK_NewSender(sendBuffSize, pNetwork->numOfInput, pNetwork->ppTabInput);
+		pNetwork->pReceiver = NETWORK_NewReceiver(recvBuffSize, pNetwork->numOfOutput, pNetwork->ppTabOutput);
 		
 		if( pNetwork->ppTabOutput && pNetwork->ppTabInput )
 		{
@@ -142,7 +142,6 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
     /** delete the network if an error occurred */
     if(error)
     {
-		
 		deleteNetwork(&pNetwork);
 	}
     
@@ -163,8 +162,8 @@ void deleteNetwork(network_t** ppNetwork)
 		
 		if(pNetwork)
 		{
-			deleteSender( &(pNetwork->pSender) );
-			deleteReceiver( &(pNetwork->pReceiver) );
+			NETWORK_DeleteSender( &(pNetwork->pSender) );
+			NETWORK_DeleteReceiver( &(pNetwork->pReceiver) );
 			
 			/** Delete all output buffers including the the buffers of acknowledgement */
 			for(ii = 0; ii< pNetwork->numOfOutput ; ++ii)
@@ -191,7 +190,7 @@ int networkSendData(network_t* pNetwork, int inputBufferId, const void* pData)
 	
 	/** local declarations */
 	int error = 1;
-	network_inOutBuffer_t* pInputBuffer = NULL;
+	network_ioBuffer_t* pInputBuffer = NULL;
 	
 	pInputBuffer = inOutBufferWithId( pNetwork->ppTabInput, pNetwork->numOfInput, inputBufferId);
 	
@@ -209,7 +208,7 @@ int networkReadData(network_t* pNetwork, int outputBufferId, void* pData)
 	
 	/** local declarations */
 	int error = 1;
-	network_inOutBuffer_t* pOutputBuffer = NULL;
+	network_ioBuffer_t* pOutputBuffer = NULL;
 	
 	pOutputBuffer = inOutBufferWithId( pNetwork->ppTabOutput, pNetwork->numOfOutput, outputBufferId);
 	

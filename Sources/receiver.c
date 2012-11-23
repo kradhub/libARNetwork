@@ -39,10 +39,10 @@ typedef struct sockaddr SOCKADDR;
  * 	@param pBuffsend the pointer on the receiver
  * 	@param pCmd adress of the pointer on the command
  * 	@return error 1 if buffer is empty
- *	@pre only call by runSendingThread()
- * 	@see runSendingThread()
+ *	@pre only call by NETWORK_RunSendingThread()
+ * 	@see NETWORK_RunSendingThread()
 **/
-int getCmd(network_Receiver_t* pReceiver, uint8_t** ppCmd);
+int NETWORK_GetCmd(network_receiver_t* pReceiver, uint8_t** ppCmd);
 
 /*****************************************
  * 
@@ -51,17 +51,17 @@ int getCmd(network_Receiver_t* pReceiver, uint8_t** ppCmd);
 ******************************************/
 
 
-network_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int numOfOutputBuff,
-									network_inOutBuffer_t** pptab_output)
+network_receiver_t* NETWORK_NewReceiver(	unsigned int recvBufferSize, unsigned int numOfOutputBuff,
+									network_ioBuffer_t** pptab_output)
 {	
 	/** -- Create a new receiver -- */
 	
 	/** local declarations */
-	network_Receiver_t* pReceiver = NULL;
+	network_receiver_t* pReceiver = NULL;
 	int error = 0;
 	
 	/** Create the receiver */
-	pReceiver =  malloc( sizeof(network_Receiver_t) );
+	pReceiver =  malloc( sizeof(network_receiver_t) );
 	
 	if(pReceiver)
 	{
@@ -80,19 +80,19 @@ network_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int numOf
 		/** delete the receiver if an error occurred */
 		if(error)
 		{
-			deleteReceiver(&pReceiver);
+			NETWORK_DeleteReceiver(&pReceiver);
 		}
 	}
 	
 	return pReceiver;
 }
 
-void deleteReceiver(network_Receiver_t** ppReceiver)
+void NETWORK_DeleteReceiver(network_receiver_t** ppReceiver)
 {
 	/** -- Delete the Receiver -- */
 	
 	/** local declarations */
-	network_Receiver_t* pReceiver = NULL;
+	network_receiver_t* pReceiver = NULL;
 	
 	if(ppReceiver)
 	{
@@ -108,14 +108,14 @@ void deleteReceiver(network_Receiver_t** ppReceiver)
 	}
 }
 
-void* runReceivingThread(void* data)
+void* NETWORK_RunReceivingThread(void* data)
 {	
 	/** -- Manage the reception of the data on the Receiver' scoket. -- */
 	
 	/** local declarations */
-	network_Receiver_t* pReceiver = data;
+	network_receiver_t* pReceiver = data;
 	UNION_CMD recvCmd;
-	network_inOutBuffer_t* pOutBufferTemp = NULL;
+	network_ioBuffer_t* pOutBufferTemp = NULL;
 	int pushError = 0;
 	
 	/** initialization local */
@@ -124,10 +124,10 @@ void* runReceivingThread(void* data)
 	while( pReceiver->isAlive )
 	{	
 		/** wait a receipt */
-		if( receiverRead( pReceiver ) > 0)
+		if( NETWORK_ReceiverRead( pReceiver ) > 0)
 		{	
 			/** for each command present in the receiver buffer */		
-			while( !getCmd( pReceiver, &(recvCmd.pTabUint8) ) )
+			while( !NETWORK_GetCmd( pReceiver, &(recvCmd.pTabUint8) ) )
 			{	
 				/** management by the command type */			
 				switch (recvCmd.pCmd->type)
@@ -137,7 +137,7 @@ void* runReceivingThread(void* data)
 												recvCmd.pCmd->seq, recvCmd.pCmd->id);
 												
 						/** transmit the acknowledgement to the sender */
-						senderAckReceived( pReceiver->pSender,idAckToIdInput(recvCmd.pCmd->id),
+						NETWORK_SenderAckReceived( pReceiver->pSender,idAckToIdInput(recvCmd.pCmd->id),
 											(int) recvCmd.pTabUint8[AR_CMD_INDEX_DATA] );
 					break;
 					
@@ -177,7 +177,7 @@ void* runReceivingThread(void* data)
 														&(recvCmd.pTabUint8[AR_CMD_INDEX_DATA]));
 								if( !pushError)
 								{
-									returnASK(pReceiver, recvCmd.pCmd->id, recvCmd.pCmd->seq);
+									NETWORK_ReturnASK(pReceiver, recvCmd.pCmd->id, recvCmd.pCmd->seq);
 									pOutBufferTemp->seqWaitAck = recvCmd.pCmd->seq;
 								}
 							}
@@ -199,19 +199,19 @@ void* runReceivingThread(void* data)
     return NULL;
 }
 
-void stopReceiver(network_Receiver_t* pReceiver)
+void NETWORK_StopReceiver(network_receiver_t* pReceiver)
 {
 	/** -- stop the reception -- */
 	pReceiver->isAlive = 0;
 }
 
 
-void returnASK(network_Receiver_t* pReceiver, int id, int seq)
+void NETWORK_ReturnASK(network_receiver_t* pReceiver, int id, int seq)
 {
 	/** -- return an acknowledgement -- */
 	
 	/** local declarations */
-	network_inOutBuffer_t* pBufferASK = inOutBufferWithId(	pReceiver->pptab_outputBuffer,
+	network_ioBuffer_t* pBufferASK = inOutBufferWithId(	pReceiver->pptab_outputBuffer,
 																pReceiver->numOfOutputBuff,
 																idOutputToIdAck(id) );
 	if(pBufferASK != NULL)
@@ -220,7 +220,7 @@ void returnASK(network_Receiver_t* pReceiver, int id, int seq)
 	}
 }
 
-int receiverRead(network_Receiver_t* pReceiver)
+int NETWORK_ReceiverRead(network_receiver_t* pReceiver)
 {
 	/** -- receiving data present on the socket -- */
 	
@@ -233,7 +233,7 @@ int receiverRead(network_Receiver_t* pReceiver)
 	return readDataSize;
 }
 
-int receiverBind(network_Receiver_t* pReceiver, unsigned short port, int timeoutSec)
+int NETWORK_ReceiverBind(network_receiver_t* pReceiver, unsigned short port, int timeoutSec)
 {
 	/** -- receiving data present on the socket -- */
 	
@@ -262,7 +262,7 @@ int receiverBind(network_Receiver_t* pReceiver, unsigned short port, int timeout
  *
 ******************************************/
 
-int getCmd(network_Receiver_t* pReceiver, uint8_t** ppCmd)
+int NETWORK_GetCmd(network_receiver_t* pReceiver, uint8_t** ppCmd)
 {
 	/** -- get a command in the receiving buffer-- */
 	

@@ -26,8 +26,8 @@
 
 typedef struct printThread
 {
-	network_inOutBuffer_t* pOutBuffChar;
-	network_inOutBuffer_t* pOutBuffIntAck;
+	network_ioBuffer_t* pOutBuffChar;
+	network_ioBuffer_t* pOutBuffIntAck;
 	int alive;
 	
 }printThread;
@@ -114,12 +114,12 @@ int main(int argc, char *argv[])
 		
 		if(bindError != 0)
 		{
-			bindError = receiverBind(pNetwork2->pReceiver, 5551, 10);
+			bindError = NETWORK_ReceiverBind(pNetwork2->pReceiver, 5551, 10);
 		}
 		
 		if(connectError != 0)
 		{
-			connectError = senderConnection(pNetwork2->pSender,IpAddress, 5552);
+			connectError = NETWORK_SenderConnection(pNetwork2->pSender,IpAddress, 5552);
 		}
 		
 		printf("	- Sender connect error: %d \n", connectError );			
@@ -132,8 +132,8 @@ int main(int argc, char *argv[])
 	sal_thread_t thread_printBuff;
 	
 	sal_thread_create(&thread_printBuff, (sal_thread_routine) printBuff, &printThread1 );
-	sal_thread_create(&thread_recv2, (sal_thread_routine) runReceivingThread, pNetwork2->pReceiver);
-	sal_thread_create(&thread_send2, (sal_thread_routine) runSendingThread, pNetwork2->pSender);
+	sal_thread_create(&thread_recv2, (sal_thread_routine) NETWORK_RunReceivingThread, pNetwork2->pReceiver);
+	sal_thread_create(&thread_send2, (sal_thread_routine) NETWORK_RunSendingThread, pNetwork2->pSender);
 
 	printf("press 'q' to quit : \n");
 	
@@ -144,8 +144,8 @@ int main(int argc, char *argv[])
 	
 	//stop all therad
 	printThread1.alive = 0;
-	stopSender(pNetwork2->pSender);
-	stopReceiver(pNetwork2->pReceiver);
+	NETWORK_StopSender(pNetwork2->pSender);
+	NETWORK_StopReceiver(pNetwork2->pReceiver);
 	
 	printf("wait ... \n");
 	

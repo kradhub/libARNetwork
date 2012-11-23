@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 	sal_thread_t thread_send1;
 	sal_thread_t thread_recv1;
 	
-	network_inOutBuffer_t* pInOutTemp = NULL;
+	network_ioBuffer_t* pInOutTemp = NULL;
 	
 	//network_paramNewInOutBuffer_t paramNetwork1[4];
 	network_paramNewInOutBuffer_t paramInputNetwork1[3];
@@ -128,12 +128,12 @@ int main(int argc, char *argv[])
 		
 		if(bindError != 0)
 		{
-			bindError = receiverBind(pNetwork1->pReceiver, 5552, 10);
+			bindError = NETWORK_ReceiverBind(pNetwork1->pReceiver, 5552, 10);
 		}
 		
 		if(connectError != 0)
 		{
-			connectError = senderConnection(pNetwork1->pSender,IpAddress, 5551);
+			connectError = NETWORK_SenderConnection(pNetwork1->pSender,IpAddress, 5551);
 		}
 		
 		printf("	- Sender connect error: %d \n", connectError );			
@@ -146,8 +146,8 @@ int main(int argc, char *argv[])
 	};
 	
 	
-	sal_thread_create(&(thread_recv1), (sal_thread_routine) runReceivingThread, pNetwork1->pReceiver);
-	sal_thread_create(&thread_send1, (sal_thread_routine) runSendingThread, pNetwork1->pSender);
+	sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_RunReceivingThread, pNetwork1->pReceiver);
+	sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_RunSendingThread, pNetwork1->pSender);
 	
 	chData = 0;
 	
@@ -204,8 +204,8 @@ int main(int argc, char *argv[])
 	}
 	
 	//stop all therad
-	stopSender(pNetwork1->pSender);
-	stopReceiver(pNetwork1->pReceiver);
+	NETWORK_StopSender(pNetwork1->pSender);
+	NETWORK_StopReceiver(pNetwork1->pReceiver);
 	
 	//kill all thread
 	

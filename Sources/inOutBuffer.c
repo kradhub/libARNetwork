@@ -1,5 +1,5 @@
 /**
- *	@file network.c
+ *	@file NETWORK_IoBuffer.c
  *  @brief single buffer
  *  @date 28/09/2012
  *  @author maxime.maitre@parrot.com
@@ -24,14 +24,14 @@
  *
 ******************************************/
 
-#define INOUTBUFFER_ID_DEFAULT -1
-#define INOUTBUFFER_DATATYPE_DEFAULT CMD_TYPE_DEFAULT
-#define INOUTBUFFER_SENDINGWAITTIME_DEFAULT 1
-#define INOUTBUFFER_ACKTILEOUTMS_DEFAULT 0
-#define INOUTBUFFER_NBOFRETRY_DEFAULT 0
-#define INOUTBUFFER_BUFFSIZE_DEFAULT 1
-#define INOUTBUFFER_BUFFCELLSIZE_DEFAULT 1
-#define INOUTBUFFER_OVERWRITING_DEFAULT 0
+#define NETWORK_IOBUFFER_ID_DEFAULT -1
+#define NETWORK_IOBUFFER_DATATYPE_DEFAULT CMD_TYPE_DEFAULT
+#define NETWORK_IOBUFFER_SENDINGWAITTIME_DEFAULT 1
+#define NETWORK_IOBUFFER_ACKTILEOUTMS_DEFAULT 0
+#define NETWORK_IOBUFFER_NBOFRETRY_DEFAULT 0
+#define NETWORK_IOBUFFER_BUFFSIZE_DEFAULT 1
+#define NETWORK_IOBUFFER_BUFFCELLSIZE_DEFAULT 1
+#define NETWORK_IOBUFFER_OVERWRITING_DEFAULT 0
 
 /*****************************************
  * 
@@ -43,28 +43,28 @@ void paramNewInOutBufferDefaultInit(network_paramNewInOutBuffer_t *pParam)
 {
 	/** -- initialization of the paramNewInOutBuffer with default parameters -- */
 	
-	pParam->id = INOUTBUFFER_ID_DEFAULT;
-    pParam->dataType = INOUTBUFFER_DATATYPE_DEFAULT;	
-    pParam->sendingWaitTime = INOUTBUFFER_SENDINGWAITTIME_DEFAULT;
-    pParam->ackTimeoutMs = INOUTBUFFER_ACKTILEOUTMS_DEFAULT;
-    pParam->nbOfRetry = INOUTBUFFER_NBOFRETRY_DEFAULT;
+	pParam->id = NETWORK_IOBUFFER_ID_DEFAULT;
+    pParam->dataType = NETWORK_IOBUFFER_DATATYPE_DEFAULT;	
+    pParam->sendingWaitTime = NETWORK_IOBUFFER_SENDINGWAITTIME_DEFAULT;
+    pParam->ackTimeoutMs = NETWORK_IOBUFFER_ACKTILEOUTMS_DEFAULT;
+    pParam->nbOfRetry = NETWORK_IOBUFFER_NBOFRETRY_DEFAULT;
     
-    pParam->buffSize = INOUTBUFFER_BUFFSIZE_DEFAULT;	
-    pParam->buffCellSize = INOUTBUFFER_BUFFCELLSIZE_DEFAULT;
-    pParam->overwriting = INOUTBUFFER_OVERWRITING_DEFAULT;
+    pParam->buffSize = NETWORK_IOBUFFER_BUFFSIZE_DEFAULT;	
+    pParam->buffCellSize = NETWORK_IOBUFFER_BUFFCELLSIZE_DEFAULT;
+    pParam->overwriting = NETWORK_IOBUFFER_OVERWRITING_DEFAULT;
 }
 
 
-network_inOutBuffer_t* newInOutBuffer( const network_paramNewInOutBuffer_t *pParam )
+network_ioBuffer_t* newInOutBuffer( const network_paramNewInOutBuffer_t *pParam )
 {
 	/** -- Create a new input or output buffer -- */
 	
 	/** local declarations */
-	network_inOutBuffer_t* pInOutBuff = NULL;
+	network_ioBuffer_t* pInOutBuff = NULL;
 	int keepAliveData = 0x00;
 	
 	/** Create the input or output buffer in accordance with parameters set in pParam */
-	pInOutBuff = malloc( sizeof(network_inOutBuffer_t) );
+	pInOutBuff = malloc( sizeof(network_ioBuffer_t) );
 	
 	if( pInOutBuff )
 	{ 
@@ -73,7 +73,7 @@ network_inOutBuffer_t* newInOutBuffer( const network_paramNewInOutBuffer_t *pPar
 		pInOutBuff->sendingWaitTime = pParam->sendingWaitTime;
 		pInOutBuff->ackTimeoutMs = pParam->ackTimeoutMs;
 		pInOutBuff->nbOfRetry = pParam->nbOfRetry;
-		//	timeoutCallback(network_inOutBuffer_t* this)
+		//	timeoutCallback(network_ioBuffer_t* this)
 		
 		pInOutBuff->isWaitAck = 0;
 		pInOutBuff->seqWaitAck = 0;
@@ -105,12 +105,12 @@ network_inOutBuffer_t* newInOutBuffer( const network_paramNewInOutBuffer_t *pPar
     return pInOutBuff;
 }
 
-void deleteInOutBuffer( network_inOutBuffer_t** ppInOutBuff )
+void deleteInOutBuffer( network_ioBuffer_t** ppInOutBuff )
 {	
 	/** -- Delete the input or output buffer -- */
 	
 	/** local declarations */
-	network_inOutBuffer_t* pInOutBuff = NULL;
+	network_ioBuffer_t* pInOutBuff = NULL;
 	
 	if(ppInOutBuff)
 	{
@@ -129,7 +129,7 @@ void deleteInOutBuffer( network_inOutBuffer_t** ppInOutBuff )
 
 }
 
-int inOutBufferAckReceived( network_inOutBuffer_t* pInOutBuff, int seqNum )
+int inOutBufferAckReceived( network_ioBuffer_t* pInOutBuff, int seqNum )
 {
 	/** -- Receive an acknowledgement to a inOutBuffer -- */ 
 	
@@ -151,15 +151,15 @@ int inOutBufferAckReceived( network_inOutBuffer_t* pInOutBuff, int seqNum )
 	return error;
 }
 
-network_inOutBuffer_t* inOutBufferWithId( network_inOutBuffer_t** pptabInOutBuff,
+network_ioBuffer_t* inOutBufferWithId( network_ioBuffer_t** pptabInOutBuff,
 												int tabSize, int id )
 {
 	/** -- Search a inOutBuffer with its identifier, in a table -- */
 	
 	/** local declarations */
-	network_inOutBuffer_t** it = pptabInOutBuff ;
-	network_inOutBuffer_t** itEnd = pptabInOutBuff + (tabSize);
-	network_inOutBuffer_t* pInOutBuffSearched = NULL;
+	network_ioBuffer_t** it = pptabInOutBuff ;
+	network_ioBuffer_t** itEnd = pptabInOutBuff + (tabSize);
+	network_ioBuffer_t* pInOutBuffSearched = NULL;
 	int find = 0;
 	
 	/** for each inoutBuffer of the table check if the ID is the same as the ID searched */
@@ -175,7 +175,7 @@ network_inOutBuffer_t* inOutBufferWithId( network_inOutBuffer_t** pptabInOutBuff
 	return pInOutBuffSearched;
 }
 
-int inOutBuffeIsWaitAck(	network_inOutBuffer_t* pInOutBuff)
+int inOutBuffeIsWaitAck(	network_ioBuffer_t* pInOutBuff)
 {
 	/** -- Get if the inOutBuffer is waiting an acknowledgement -- */
 	

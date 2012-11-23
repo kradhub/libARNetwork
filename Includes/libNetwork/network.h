@@ -1,26 +1,36 @@
 /**
- *	@file network.h
+ *	@file NETWORK_Manager.h
  *  @brief network manager allow to send data acknowledged or not.
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _NETWORK_H_
-#define _NETWORK_H_
+#ifndef _NETWORK_MANGER_H_
+#define _NETWORK_MANGER_H_
 
 #include <libNetwork/inOutBuffer.h>
 #include <libNetwork/sender.h>
 #include <libNetwork/receiver.h>
 
 /**
+ *  @brief NETWORK_Manager errors know.
+**/
+typedef enum
+{
+	NETWORK_MANAGER_OK = 0, /**< no error */
+	NETWORK_MANAGER_ERROR_ALLOC = -1000 /**< flksdqljlk */ 
+	
+} eNET_Manager_Error;
+
+/**
  *  @brief network manager allow to send data acknowledged or not.
 **/
 typedef struct network_t
 {
-    network_Sender_t* pSender; /**< Pointer on the sender*/
-    network_Receiver_t* pReceiver; /**< Pointer on the receiver*/
-    network_inOutBuffer_t** ppTabInput; /**< Address of the table storing the input buffer*/
-    network_inOutBuffer_t** ppTabOutput; /**< Address of the table storing the output buffer*/
+    network_sender_t* pSender; /**< Pointer on the sender*/
+    network_receiver_t* pReceiver; /**< Pointer on the receiver*/
+    network_ioBuffer_t** ppTabInput; /**< Address of the table storing the input buffer*/
+    network_ioBuffer_t** ppTabOutput; /**< Address of the table storing the output buffer*/
     int numOfInput; /**< Number of input buffer*/
     int numOfOutput; /**< Number of output buffer*/
     int numOfInputWithoutAck; /**< Number of input buffer without the  buffers of acknowledgement*/
@@ -31,8 +41,8 @@ typedef struct network_t
 /**
  *  @brief Create a new Network
  * 	@warning This function allocate memory
- * 	@post senderConnection() must be called to indicate on which address send the data.
- * 	@post receiverBind() must be called to indicate on which address receive the data.
+ * 	@post NETWORK_SenderConnection() must be called to indicate on which address send the data.
+ * 	@post NETWORK_ReceiverBind() must be called to indicate on which address receive the data.
  *  @post deleteNetwork() must be called to delete the Network and free the memory allocated.
  * 	@param[in] recvBuffSize size in byte of the receiving buffer. ideally must be equal to the sum of the sizes of one data of all output buffers
  * 	@param[in] sendBuffSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
@@ -75,5 +85,5 @@ int networkSendData(network_t* pNetwork, int inputBufferId, const void* pData);
 **/
 int networkReadData(network_t* pNetwork, int outputBufferId, void* pData);
 
-#endif // _NETWORK_H_
+#endif // _NETWORK_MANGER_H_
 
