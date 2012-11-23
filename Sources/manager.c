@@ -39,10 +39,10 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 				unsigned int numberOfInput, network_paramNewInOutBuffer_t* ptabParamInput,
 				unsigned int numberOfOutput, network_paramNewInOutBuffer_t* ptabParamOutput)
 {
-	/** -- Create a new Network -- */
+	/** -- Create a new Manager -- */
 	
 	/** local declarations */
-	network_manager_t* pNetwork = NULL;
+	network_manager_t* pManager = NULL;
 	int error = NETWORK_MANAGER_OK;
 	
 	int ii = 0;
@@ -59,10 +59,10 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
     paramNewACK.ackTimeoutMs = 0; /* not used */
     paramNewACK.nbOfRetry = 0 ; /* not used */
     
-    /** Create the Network */
-    pNetwork = malloc( sizeof(network_manager_t));
+    /** Create the Manager */
+    pManager = malloc( sizeof(network_manager_t));
     
-	if(pNetwork == NULL)
+	if(pManager == NULL)
 	{
 		error = 1;
 	}
@@ -78,26 +78,26 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 		 * Allocate the output buffer list of size of the number of output plus the number of 
 		 * buffer of acknowledgement. The size of the list is then two times the number of output.
 		**/
-		pNetwork->numOfOutputWithoutAck = numberOfOutput;
-		pNetwork->numOfOutput = 2 * numberOfOutput;
-		pNetwork->ppTabOutput = malloc(sizeof(network_ioBuffer_t*) * pNetwork->numOfOutput );
+		pManager->numOfOutputWithoutAck = numberOfOutput;
+		pManager->numOfOutput = 2 * numberOfOutput;
+		pManager->ppTabOutput = malloc(sizeof(network_ioBuffer_t*) * pManager->numOfOutput );
 		
 		/** 
 		 * Allocate the input buffer list of size of the number of input plus the number of 
 		 * buffer of acknowledgement. 
 		 * The size of the list is then number of input plus the number of output.
 		**/ 
-		pNetwork->numOfInputWithoutAck = numberOfInput;
-		pNetwork->numOfInput = numberOfInput + numberOfOutput;
-		pNetwork->ppTabInput = malloc( sizeof(network_ioBuffer_t*) * pNetwork->numOfInput );
+		pManager->numOfInputWithoutAck = numberOfInput;
+		pManager->numOfInput = numberOfInput + numberOfOutput;
+		pManager->ppTabInput = malloc( sizeof(network_ioBuffer_t*) * pManager->numOfInput );
 		
 		
-		if( pNetwork->ppTabOutput && pNetwork->ppTabInput)
+		if( pManager->ppTabOutput && pManager->ppTabInput)
 		{
 			/** Create the output buffers and the buffers of acknowledgement */
 			for(ii = 0; ii < numberOfOutput; ++ii)
 			{
-				pNetwork->ppTabOutput[ii] = newInOutBuffer( &(ptabParamOutput[ii]) );
+				pManager->ppTabOutput[ii] = newInOutBuffer( &(ptabParamOutput[ii]) );
 				
 				/** 
 				 * Create the buffer of acknowledgement associated with the output buffer and 
@@ -106,15 +106,15 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 				paramNewACK.id = idOutputToIdAck(ptabParamOutput[ii].id); 
 				indexAckOutput = numberOfOutput + ii;
 				
-				pNetwork->ppTabOutput[ indexAckOutput ] = newInOutBuffer(&paramNewACK);
+				pManager->ppTabOutput[ indexAckOutput ] = newInOutBuffer(&paramNewACK);
 				
-				pNetwork->ppTabInput[numberOfInput + ii] = pNetwork->ppTabOutput[ indexAckOutput ];
+				pManager->ppTabInput[numberOfInput + ii] = pManager->ppTabOutput[ indexAckOutput ];
 			}
 			
 			/** Create the input buffers */
 			for(ii = 0; ii< numberOfInput ; ++ii)
 			{
-				pNetwork->ppTabInput[ii] = newInOutBuffer( &(ptabParamInput[ii]) );
+				pManager->ppTabInput[ii] = newInOutBuffer( &(ptabParamInput[ii]) );
 			}
 		}
 		else
@@ -126,12 +126,12 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 	if( !error )
 	{
 		/** Create the Sender and the Receiver */
-		pNetwork->pSender = NETWORK_NewSender(sendBuffSize, pNetwork->numOfInput, pNetwork->ppTabInput);
-		pNetwork->pReceiver = NETWORK_NewReceiver(recvBuffSize, pNetwork->numOfOutput, pNetwork->ppTabOutput);
+		pManager->pSender = NETWORK_NewSender(sendBuffSize, pManager->numOfInput, pManager->ppTabInput);
+		pManager->pReceiver = NETWORK_NewReceiver(recvBuffSize, pManager->numOfOutput, pManager->ppTabOutput);
 		
-		if( pNetwork->ppTabOutput && pNetwork->ppTabInput )
+		if( pManager->ppTabOutput && pManager->ppTabInput )
 		{
-			pNetwork->pReceiver->pSender = pNetwork->pSender;
+			pManager->pReceiver->pSender = pManager->pSender;
 		}
 		else
 		{
@@ -139,52 +139,52 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 		}
 	}
     
-    /** delete the network if an error occurred */
+    /** delete the Manager if an error occurred */
     if(error)
     {
-		NETWORK_DeleteManager(&pNetwork);
+		NETWORK_DeleteManager(&pManager);
 	}
     
-    return pNetwork;
+    return pManager;
 }
 
-void NETWORK_DeleteManager(network_manager_t** ppNetwork)
+void NETWORK_DeleteManager(network_manager_t** ppManager)
 {	
-	/** -- Delete the Network -- */
+	/** -- Delete the Manager -- */
 	
 	/** local declarations */
-	network_manager_t* pNetwork = NULL;
+	network_manager_t* pManager = NULL;
 	int ii = 0;
 	
-	if(ppNetwork)
+	if(ppManager)
 	{
-		pNetwork = *ppNetwork;
+		pManager = *ppManager;
 		
-		if(pNetwork)
+		if(pManager)
 		{
-			NETWORK_DeleteSender( &(pNetwork->pSender) );
-			NETWORK_DeleteReceiver( &(pNetwork->pReceiver) );
+			NETWORK_DeleteSender( &(pManager->pSender) );
+			NETWORK_DeleteReceiver( &(pManager->pReceiver) );
 			
 			/** Delete all output buffers including the the buffers of acknowledgement */
-			for(ii = 0; ii< pNetwork->numOfOutput ; ++ii)
+			for(ii = 0; ii< pManager->numOfOutput ; ++ii)
 			{
-				deleteInOutBuffer( &(pNetwork->ppTabOutput[ii]) );
+				deleteInOutBuffer( &(pManager->ppTabOutput[ii]) );
 			}	
 			
 			/** Delete the input buffers but not the buffers of acknowledgement already deleted */
-			for(ii = 0; ii< pNetwork->numOfInputWithoutAck ; ++ii)
+			for(ii = 0; ii< pManager->numOfInputWithoutAck ; ++ii)
 			{
-				deleteInOutBuffer( &(pNetwork->ppTabInput[ii]) );
+				deleteInOutBuffer( &(pManager->ppTabInput[ii]) );
 			}
 			
-			free(pNetwork);
+			free(pManager);
 		}
 		
-		*ppNetwork = NULL;
+		*ppManager = NULL;
 	}
 }
 
-int NETWORK_ManagerSendData(network_manager_t* pNetwork, int inputBufferId, const void* pData)
+int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, const void* pData)
 {
 	/** -- Add data to send -- */
 	
@@ -192,7 +192,7 @@ int NETWORK_ManagerSendData(network_manager_t* pNetwork, int inputBufferId, cons
 	int error = 1;
 	network_ioBuffer_t* pInputBuffer = NULL;
 	
-	pInputBuffer = inOutBufferWithId( pNetwork->ppTabInput, pNetwork->numOfInput, inputBufferId);
+	pInputBuffer = inOutBufferWithId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
 	
 	if(pInputBuffer != NULL)
 	{
@@ -202,7 +202,7 @@ int NETWORK_ManagerSendData(network_manager_t* pNetwork, int inputBufferId, cons
 	return error;
 }
 
-int NETWORK_ManagerReadData(network_manager_t* pNetwork, int outputBufferId, void* pData)
+int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, void* pData)
 {
 	/** -- read data received -- */
 	
@@ -210,7 +210,7 @@ int NETWORK_ManagerReadData(network_manager_t* pNetwork, int outputBufferId, voi
 	int error = 1;
 	network_ioBuffer_t* pOutputBuffer = NULL;
 	
-	pOutputBuffer = inOutBufferWithId( pNetwork->ppTabOutput, pNetwork->numOfOutput, outputBufferId);
+	pOutputBuffer = inOutBufferWithId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
 	
 	if(pOutputBuffer != NULL)
 	{

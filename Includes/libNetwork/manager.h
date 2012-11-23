@@ -39,7 +39,7 @@ typedef struct network_manager_t
 }network_manager_t;
 
 /**
- *  @brief Create a new Network
+ *  @brief Create a new Manager
  * 	@warning This function allocate memory
  * 	@post NETWORK_SenderConnection() must be called to indicate on which address send the data.
  * 	@post NETWORK_ReceiverBind() must be called to indicate on which address receive the data.
@@ -50,7 +50,7 @@ typedef struct network_manager_t
  * 	@param[in] ptabParamInput Table of the parameters of creation of the inputs. The table must contain as many parameters as the number of input buffer.
  * 	@param[in] numberOfOutput Number of output buffer
  * 	@param[in] ptabParamOutput Table of the parameters of creation of the outputs. The table must contain as many parameters as the number of output buffer.
- * 	@return Pointer on the new Network
+ * 	@return Pointer on the new Manager
  * 	@note This creator adds for all output, one other inOutBuffer for storing the acknowledgment to return.
  * These new buffers are added in the input and output buffer tables.
  * 	@see NETWORK_DeleteManager()
@@ -60,30 +60,30 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 				unsigned int numberOfOutput, network_paramNewInOutBuffer_t* ptabParamOutput);
 
 /**
- *  @brief Delete the Network
+ *  @brief Delete the Manager
  * 	@warning This function free memory
- * 	@param ppNetwork address of the pointer on Network
+ * 	@param ppManager address of the pointer on Network
  * 	@see NETWORK_NewManager()
 **/
-void NETWORK_DeleteManager(network_manager_t** ppNetwork);
+void NETWORK_DeleteManager(network_manager_t** ppManager);
 
 /**
  *  @brief Add data to send
- * 	@param pNetwork pointer on the Network
+ * 	@param pManager pointer on the Manager
  * 	@param[in] inputBufferId identifier of the input buffer in which the data must be stored
  * 	@param[in] pData pointer on the data to send
  *  @return error equal to 1 if the data is not correctly pushed in the the input buffer
 **/
-int NETWORK_ManagerSendData(network_manager_t* pNetwork, int inputBufferId, const void* pData);
+int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, const void* pData);
 
 /**
  *  @brief Read data received
- * 	@param pNetwork pointer on the Network
+ * 	@param pManager pointer on the Manager
  * 	@param[in] outputBufferId identifier of the output buffer in which the data must be read
  * 	@param[out] pData pointer on the data read
  *  @return error equal to 1 if the buffer is empty or the ID doesn't exist
 **/
-int NETWORK_ManagerReadData(network_manager_t* pNetwork, int outputBufferId, void* pData);
+int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, void* pData);
 
 #endif // _NETWORK_MANGER_H_
 

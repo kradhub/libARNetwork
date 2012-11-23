@@ -1,6 +1,6 @@
 /**
  *	@file sender.h
- *  @brief manage the data sending, used by libNetwork::network and libNetwork::receiver
+ *  @brief manage the data sending, used by libNetwork/manager and libNetwork/receiver
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
 **/

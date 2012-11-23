@@ -23,7 +23,7 @@
 int main(int argc, char *argv[])
 {
 	
-	network_manager_t* pNetwork1= NULL;
+	network_manager_t* pManager1= NULL;
 	
 	int cmdType = -1;
 	char chData = 0;
@@ -84,11 +84,11 @@ int main(int argc, char *argv[])
 	paramOutputNetwork1[0].overwriting = 1;		
 		
 				
-	//pNetwork1 = NETWORK_NewManagerWithVarg( 256, 256, 1, 2/*3*/,
+	//pManager1 = NETWORK_NewManagerWithVarg( 256, 256, 1, 2/*3*/,
 	//						paramNetwork1[3],
 	//						paramNetwork1[0], paramNetwork1[1]/*, paramNetwork1[2]*/);
 	
-	pNetwork1 = NETWORK_NewManager( 256, 256, 2/*3*/,paramInputNetwork1, 1,paramOutputNetwork1);
+	pManager1 = NETWORK_NewManager( 256, 256, 2/*3*/,paramInputNetwork1, 1,paramOutputNetwork1);
 	
 	
 	printf("\n ~~ This soft sends data to the repeater soft ~~ \n \n");
@@ -100,12 +100,12 @@ int main(int argc, char *argv[])
 		
 		if(bindError != 0)
 		{
-			bindError = NETWORK_ReceiverBind(pNetwork1->pReceiver, 5552, 10);
+			bindError = NETWORK_ReceiverBind(pManager1->pReceiver, 5552, 10);
 		}
 		
 		if(connectError != 0)
 		{
-			connectError = NETWORK_SenderConnection(pNetwork1->pSender,IpAddress, 5551);
+			connectError = NETWORK_SenderConnection(pManager1->pSender,IpAddress, 5551);
 		}
 		
 		printf("	- Sender connect error: %d \n", connectError );			
@@ -116,8 +116,8 @@ int main(int argc, char *argv[])
 	sal_thread_t thread_send1;
 	sal_thread_t thread_recv1;
 
-	sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_RunReceivingThread, pNetwork1->pReceiver);
-	sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_RunSendingThread, pNetwork1->pSender);
+	sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_RunReceivingThread, pManager1->pReceiver);
+	sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_RunSendingThread, pManager1->pSender);
 	
 	while(cmdType != 0)
 	{
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 				scanfReturn = scanf("%c", &chData);
 				printf("\n");
 				
-				pInOutTemp = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput,
+				pInOutTemp = inOutBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput,
 												ID_CHAR_DATA);
 				ringBuffPushBack(pInOutTemp->pBuffer, &chData);
 				
@@ -155,8 +155,8 @@ int main(int argc, char *argv[])
 				scanfReturn = scanf("%d", &intData);
 				printf("\n");
 				
-				pInOutTemp = inOutBufferWithId(	pNetwork1->ppTabInput,
-										pNetwork1->numOfInput, ID_INT_DATA_WITH_ACK);
+				pInOutTemp = inOutBufferWithId(	pManager1->ppTabInput,
+										pManager1->numOfInput, ID_INT_DATA_WITH_ACK);
 										
 				ringBuffPushBack(pInOutTemp->pBuffer, &intData);
 			break;
@@ -168,8 +168,8 @@ int main(int argc, char *argv[])
 	}
 	
 	//stop all therad
-	NETWORK_StopSender(pNetwork1->pSender);
-	NETWORK_StopReceiver(pNetwork1->pReceiver);
+	NETWORK_StopSender(pManager1->pSender);
+	NETWORK_StopReceiver(pManager1->pReceiver);
 	
 	//kill all thread
 	
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
 	sal_thread_join(&(thread_recv1), NULL);
 
 	//delete
-	NETWORK_DeleteManager( &pNetwork1 );
+	NETWORK_DeleteManager( &pManager1 );
 	
 	printf("end\n");
 

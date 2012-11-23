@@ -36,21 +36,21 @@ endif
 
 
 
-check_PROGRAMS = 	../TestBench/test1 \
+check_PROGRAMS = 	../TestBench/autoTest \
 					../TestBench/test2/manager \
 					../TestBench/test2/repeater \
 					../TestBench/test3/managerT3 \
 					../TestBench/test3/repeaterT3 \
 					../TestBench/test4/test4  
 					
-___TestBench_test1_SOURCES 	= ../TestBench/test1.c
+___TestBench_autoTest_SOURCES 	= ../TestBench/autoTest.c
 ___TestBench_test2_manager_SOURCES 	= ../TestBench/test2/mainManager.c
 ___TestBench_test2_repeater_SOURCES = ../TestBench/test2/mainRepeater.c
 ___TestBench_test3_managerT3_SOURCES 	= ../TestBench/test3/mainManagerT3.c
 ___TestBench_test3_repeaterT3_SOURCES = ../TestBench/test3/mainRepeaterT3.c
 ___TestBench_test4_test4_SOURCES = ../TestBench/test4/mainT4.c
 if DEBUG_MODE
-___TestBench_test1_LDADD = 	-lsal_dbg  \
+___TestBench_autoTest_LDADD = 	-lsal_dbg  \
 							libnetwork_dbg.la
 ___TestBench_test2_manager_LDADD = 	-lsal_dbg  \
 									libnetwork_dbg.la
@@ -63,7 +63,7 @@ ___TestBench_test3_repeaterT3_LDADD = -lsal_dbg  \
 ___TestBench_test4_test4_LDADD = -lsal_dbg  \
 									libnetwork_dbg.la
 else
-___TestBench_test1_LDADD 	= 	-lsal \
+___TestBench_autoTest_LDADD 	= 	-lsal \
 								libnetwork.la
 ___TestBench_test2_manager_LDADD = 	-lsal  \
 									libnetwork.la

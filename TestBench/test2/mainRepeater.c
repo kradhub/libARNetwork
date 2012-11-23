@@ -22,7 +22,7 @@
 
 int main(int argc, char *argv[])
 {
-	network_manager_t* pNetwork2= NULL;
+	network_manager_t* pManager2= NULL;
 	
 	char chData = 0;
 	int intData = 0;
@@ -74,12 +74,12 @@ int main(int argc, char *argv[])
 	//-----------------------------
 
 	/*
-	pNetwork2 = NETWORK_NewManagerWithVarg( 256, 256, 2, 1,
+	pManager2 = NETWORK_NewManagerWithVarg( 256, 256, 2, 1,
 							paramNetwork2[1], paramNetwork2[2],
 							paramNetwork2[0]);
 	*/
 	
-	pNetwork2 = NETWORK_NewManager( 256, 256, 1, paramInputNetwork2, 2, paramOutputNetwork2);
+	pManager2 = NETWORK_NewManager( 256, 256, 1, paramInputNetwork2, 2, paramOutputNetwork2);
 							
 	printf("\n~~ This soft receives data sent by the manager soft ~~ \n \n");
 						
@@ -90,12 +90,12 @@ int main(int argc, char *argv[])
 		
 		if(bindError != 0)
 		{
-			bindError = NETWORK_ReceiverBind(pNetwork2->pReceiver, 5551, 10);
+			bindError = NETWORK_ReceiverBind(pManager2->pReceiver, 5551, 10);
 		}
 		
 		if(connectError != 0)
 		{
-			connectError = NETWORK_SenderConnection(pNetwork2->pSender,IpAddress, 5552);
+			connectError = NETWORK_SenderConnection(pManager2->pSender,IpAddress, 5552);
 		}
 		
 		printf("	- Sender connect error: %d \n", connectError );			
@@ -106,8 +106,8 @@ int main(int argc, char *argv[])
 	sal_thread_t thread_send2;
 	sal_thread_t thread_recv2;
 	
-	sal_thread_create(&(thread_recv2), (sal_thread_routine) NETWORK_RunReceivingThread, pNetwork2->pReceiver);
-	sal_thread_create(&thread_send2, (sal_thread_routine) NETWORK_RunSendingThread, pNetwork2->pSender);
+	sal_thread_create(&(thread_recv2), (sal_thread_routine) NETWORK_RunReceivingThread, pManager2->pReceiver);
+	sal_thread_create(&thread_send2, (sal_thread_routine) NETWORK_RunSendingThread, pManager2->pSender);
 
 	printf("press 'q' to quit and to see the date received : \n");
 	
@@ -117,11 +117,11 @@ int main(int argc, char *argv[])
     }
 	
 	//stop all therad
-	NETWORK_StopSender(pNetwork2->pSender);
-	NETWORK_StopReceiver(pNetwork2->pReceiver);
+	NETWORK_StopSender(pManager2->pSender);
+	NETWORK_StopReceiver(pManager2->pReceiver);
 	
 	printf("\n the last char transmited:\n");
-	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_CHAR_DATA);
+	pInOutTemp = inOutBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_CHAR_DATA);
 	//ringBuffPrint(pInOutTemp->pBuffer);
 
 	
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 	}
 	
 	printf("\n the integers transmited:\n");
-	pInOutTemp = inOutBufferWithId(	pNetwork2->ppTabOutput, pNetwork2->numOfOutput, ID_INT_DATA_WITH_ACK);
+	pInOutTemp = inOutBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_INT_DATA_WITH_ACK);
 	//ringBuffPrint(pInOutTemp->pBuffer);
 	while( !ringBuffPopFront(pInOutTemp->pBuffer, &intData) )
 	{
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 	sal_thread_join(&(thread_recv2), NULL);
 
 	//delete
-	NETWORK_DeleteManager( &pNetwork2 );
+	NETWORK_DeleteManager( &pManager2 );
 	
 	printf("end \n");
 	

@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 	tcgetattr(0,&initial_settings);	
 	signal (SIGINT, fixTerminal);
 		
-	network_manager_t* pNetwork1= NULL;
+	network_manager_t* pManager1= NULL;
 	
 	char netType = 0;
 	
@@ -153,34 +153,34 @@ int main(int argc, char *argv[])
 		switch(netType)
 		{
 			case '1':
-				//pNetwork1 = NETWORK_NewManagerWithVarg( 256, 256, 2, 2/*3*/,
+				//pManager1 = NETWORK_NewManagerWithVarg( 256, 256, 2, 2/*3*/,
 				//			paramNetwork1[3], paramNetwork1[4],
 				//			paramNetwork1[0], paramNetwork1[1]/*, paramNetwork1[2]*/);
 				
-				pNetwork1 = NETWORK_NewManager( 256, 256, 2/*3*/, paramNetworkL1, 2 ,paramNetworkL2);
+				pManager1 = NETWORK_NewManager( 256, 256, 2/*3*/, paramNetworkL1, 2 ,paramNetworkL2);
 									
-				printThread1.pOutBuffChar = inOutBufferWithId(	pNetwork1->ppTabOutput, pNetwork1->numOfOutput, ID_CHAR_DATA_2);
-				printThread1.pOutBuffIntAck = inOutBufferWithId(	pNetwork1->ppTabOutput, pNetwork1->numOfOutput, ID_INT_DATA_WITH_ACK_2);
+				printThread1.pOutBuffChar = inOutBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_CHAR_DATA_2);
+				printThread1.pOutBuffIntAck = inOutBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_INT_DATA_WITH_ACK_2);
 				
-				pInputBuffChar  = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput, ID_CHAR_DATA);
-				pInputBuffIntAck = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput, ID_INT_DATA_WITH_ACK);
+				pInputBuffChar  = inOutBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_CHAR_DATA);
+				pInputBuffIntAck = inOutBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_INT_DATA_WITH_ACK);
 				
 			break;
 			
 			case '2':
 				/*
-				pNetwork1 = NETWORK_NewManagerWithVarg( 256, 256, 2, 2,
+				pManager1 = NETWORK_NewManagerWithVarg( 256, 256, 2, 2,
 							paramNetwork1[0], paramNetwork1[1],
 							paramNetwork1[3], paramNetwork1[4]);
 				*/
 				
-				pNetwork1 = NETWORK_NewManager( 256, 256, 2, paramNetworkL2, 2,paramNetworkL1);
+				pManager1 = NETWORK_NewManager( 256, 256, 2, paramNetworkL2, 2,paramNetworkL1);
 							
-				printThread1.pOutBuffChar = inOutBufferWithId(	pNetwork1->ppTabOutput, pNetwork1->numOfOutput, ID_CHAR_DATA);
-				printThread1.pOutBuffIntAck = inOutBufferWithId(	pNetwork1->ppTabOutput, pNetwork1->numOfOutput, ID_INT_DATA_WITH_ACK);
+				printThread1.pOutBuffChar = inOutBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_CHAR_DATA);
+				printThread1.pOutBuffIntAck = inOutBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_INT_DATA_WITH_ACK);
 				
-				pInputBuffChar  = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput, ID_CHAR_DATA_2);
-				pInputBuffIntAck = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput, ID_INT_DATA_WITH_ACK_2);
+				pInputBuffChar  = inOutBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_CHAR_DATA_2);
+				pInputBuffIntAck = inOutBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_INT_DATA_WITH_ACK_2);
 			break;
 			
 			default:
@@ -198,11 +198,11 @@ int main(int argc, char *argv[])
 		{
 			if(netType == '1')
 			{
-				bindError = NETWORK_ReceiverBind(pNetwork1->pReceiver, 5552, 10);
+				bindError = NETWORK_ReceiverBind(pManager1->pReceiver, 5552, 10);
 			}
 			else
 			{
-				bindError = NETWORK_ReceiverBind(pNetwork1->pReceiver, 5551, 10);
+				bindError = NETWORK_ReceiverBind(pManager1->pReceiver, 5551, 10);
 			}
 		}
 		
@@ -210,11 +210,11 @@ int main(int argc, char *argv[])
 		{
 			if(netType == '1')
 			{
-				connectError = NETWORK_SenderConnection(pNetwork1->pSender,IpAddress, 5551);
+				connectError = NETWORK_SenderConnection(pManager1->pSender,IpAddress, 5551);
 			}
 			else
 			{
-				connectError = NETWORK_SenderConnection(pNetwork1->pSender,IpAddress, 5552);
+				connectError = NETWORK_SenderConnection(pManager1->pSender,IpAddress, 5552);
 			}
 		}
 		
@@ -230,8 +230,8 @@ int main(int argc, char *argv[])
 	printThread1.alive=1;
 	
 	sal_thread_create(&thread_printBuff, (sal_thread_routine) printBuff, &printThread1 );
-	sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_RunReceivingThread, pNetwork1->pReceiver);
-	sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_RunSendingThread, pNetwork1->pSender);
+	sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_RunReceivingThread, pManager1->pReceiver);
+	sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_RunSendingThread, pManager1->pSender);
 	
 	chData = 0;
 	
@@ -284,8 +284,8 @@ int main(int argc, char *argv[])
 	
 	//stop all therad
 	printThread1.alive = 0;
-	NETWORK_StopSender(pNetwork1->pSender);
-	NETWORK_StopReceiver(pNetwork1->pReceiver);
+	NETWORK_StopSender(pManager1->pSender);
+	NETWORK_StopReceiver(pManager1->pReceiver);
 	
 	//kill all thread
 	
@@ -294,7 +294,7 @@ int main(int argc, char *argv[])
 	sal_thread_join(&(thread_printBuff), NULL);
 
 	//delete
-	NETWORK_DeleteManager( &pNetwork1 );
+	NETWORK_DeleteManager( &pManager1 );
 	
 	printf("end\n");
 
