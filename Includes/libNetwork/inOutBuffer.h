@@ -29,6 +29,14 @@ typedef struct network_paramNewInOutBuffer_t
 }network_paramNewInOutBuffer_t;
 
 /**
+ *  @brief initialization of the paramNewInOutBuffer with default parameters
+ * 	@pre before to use the paramNewInOutBuffer the paramaters useful must be set.
+ * 	@param[in,out] pParam Pointer on the parameters for the new input or output buffer
+**/
+void paramNewInOutBufferDefaultInit(network_paramNewInOutBuffer_t *pParam); 
+
+
+/**
  *  @brief Input buffer used by libNetwork::sender or output buffer used by libNetwork::receiver
  * 	@warning before to be used the inOutBuffer must be created through newInOutBuffer()
  * 	@post after its using the inOutBuffer must be deleted through deleteInOutBuffer()
@@ -81,7 +89,7 @@ void deleteInOutBuffer( network_inOutBuffer_t** ppInOutBuff );
 int inOutBufferAckReceived( network_inOutBuffer_t* pInOutBuff, int seqNum );
 
 /**
- *  @brief Search a inOutBuffer with its identifier in a table
+ *  @brief Search a inOutBuffer with its identifier, in a table
  * 	@param[in] pptabInOutBuff address of the table of pointer of inOutBuffer
  * 	@param[in] tabSize size of the table of pointers of inOutBuffer
  * 	@param[in] id identifier of the inOutBuffer searched

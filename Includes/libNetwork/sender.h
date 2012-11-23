@@ -50,7 +50,7 @@ network_Sender_t* newSender(unsigned int sendingBufferSize, unsigned int numOfIn
 void deleteSender(network_Sender_t** ppSender);
 
 /**
- *  @brief Manage the sending of the data on the sender' scoket 
+ *  @brief Manage the sending of the data on the sender' socket 
  * 	@warning This function must be called by a specific thread.
  * 	@warning At the end of this function the socket of the sender is closed.
  * 	@pre The socket of the sender must be initialized through senderConnection().

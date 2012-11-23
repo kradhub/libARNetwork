@@ -12,6 +12,8 @@
 #include <libNetwork/sender.h>
 #include <libNetwork/buffer.h>
 
+#define ID_ACK_OFFSET 1000
+
 /**
  *  @brief receiver manager
  * 	@warning before to be used, the receiver must be created through newReceiver().
@@ -28,7 +30,6 @@ typedef struct network_Receiver_t
 	int isAlive; /**< Indicator of aliving used for kill the thread calling the runReceivingThread function (1 = alive | 0 = dead). Must be accessed through stopReceiver()*/
 	
 }network_Receiver_t;
-
 
 /**
  *  @brief Create a new receiver
@@ -99,7 +100,7 @@ int receiverRead(network_Receiver_t* pReceiver);
 **/
 static inline int idOutputToIdAck( int id)
 {
-	return id + 1000;
+	return id + ID_ACK_OFFSET;
 }
 
 /**
@@ -109,7 +110,7 @@ static inline int idOutputToIdAck( int id)
 **/
 static inline int idAckToIdInput( int id)
 {
-	return id - 1000;
+	return id - ID_ACK_OFFSET;
 }
 
 /**

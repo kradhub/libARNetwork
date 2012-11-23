@@ -38,12 +38,12 @@ typedef enum eAR_CMD_INDEX
 /**
  *  @brief 
 **/
-typedef struct AR_CMD // pass uint32_t
+typedef struct AR_CMD
 {
-	eAR_CMD_TYPE type;
-    uint32_t id;
-    uint32_t seq;
-    uint32_t size;
+	eAR_CMD_TYPE type; /**< command type */
+    uint32_t id; /**< identifier of the buffer sending the command */
+    uint32_t seq; /**< sequence number of the command */
+    uint32_t size; /**< size of the command */
     //void* data;  // !!! ???
 }AR_CMD;
 

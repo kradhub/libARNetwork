@@ -5,7 +5,11 @@
  *  @author maxime.maitre@parrot.com
 **/
 
-//include :
+/*****************************************
+ * 
+ * 			include file :
+ *
+******************************************/
 
 #include <stdlib.h>
 
@@ -40,12 +44,6 @@ typedef struct sockaddr SOCKADDR;
 **/
 int getCmd(network_Receiver_t* pReceiver, uint8_t** ppCmd);
 
-
-int initRecvBuffer(network_Receiver_t* pReceiver);
-
-#define OUTPUT_PARAM_NUM 4
-#define MICRO_SECOND 1000
-
 /*****************************************
  * 
  * 			implementation :
@@ -56,9 +54,14 @@ int initRecvBuffer(network_Receiver_t* pReceiver);
 network_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int numOfOutputBuff,
 									network_inOutBuffer_t** pptab_output)
 {	
-	network_Receiver_t* pReceiver =  malloc( sizeof(network_Receiver_t));
-
+	/** -- Create a new receiver -- */
+	
+	/** local declarations */
+	network_Receiver_t* pReceiver = NULL;
 	int error = 0;
+	
+	/** Create the receiver */
+	pReceiver =  malloc( sizeof(network_Receiver_t) );
 	
 	if(pReceiver)
 	{
@@ -68,15 +71,13 @@ network_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int numOf
 		pReceiver->numOfOutputBuff = numOfOutputBuff;
 		pReceiver->pptab_outputBuffer = pptab_output;
 		
-		if(!error)
+		pReceiver->pRecvBuffer = newBuffer(recvBufferSize,1);
+		if(pReceiver->pRecvBuffer == NULL)
 		{
-			pReceiver->pRecvBuffer = newBuffer(recvBufferSize,1);
-			if(pReceiver->pRecvBuffer == NULL)
-			{
-				error = 1;
-			}
+			error = 1;
 		}
 	
+		/** delete the receiver if an error occurred */
 		if(error)
 		{
 			deleteReceiver(&pReceiver);
@@ -88,6 +89,9 @@ network_Receiver_t* newReceiver(	unsigned int recvBufferSize, unsigned int numOf
 
 void deleteReceiver(network_Receiver_t** ppReceiver)
 {
+	/** -- Delete the Receiver -- */
+	
+	/** local declarations */
 	network_Receiver_t* pReceiver = NULL;
 	
 	if(ppReceiver)
@@ -106,29 +110,33 @@ void deleteReceiver(network_Receiver_t** ppReceiver)
 
 void* runReceivingThread(void* data)
 {	
-	network_Receiver_t* pReceiver = data;
+	/** -- Manage the reception of the data on the Receiver' scoket. -- */
 	
+	/** local declarations */
+	network_Receiver_t* pReceiver = data;
 	UNION_CMD recvCmd;
 	network_inOutBuffer_t* pOutBufferTemp = NULL;
-	
 	int pushError = 0;
 	
+	/** initialization local */
 	recvCmd.pTabUint8 = NULL;
 	
 	while( pReceiver->isAlive )
 	{	
+		/** wait a receipt */
 		if( receiverRead( pReceiver ) > 0)
-		{
-			//sal_print(PRINT_WARNING,"- read  Receiver: \n");
-			
+		{	
+			/** for each command present in the receiver buffer */		
 			while( !getCmd( pReceiver, &(recvCmd.pTabUint8) ) )
-			{			
+			{	
+				/** management by the command type */			
 				switch (recvCmd.pCmd->type)
 				{
 					case CMD_TYPE_ACK:
 						sal_print(PRINT_DEBUG,"	- TYPE: CMD_TYPE_ACK | SEQ:%d | ID:%d \n",
 												recvCmd.pCmd->seq, recvCmd.pCmd->id);
 												
+						/** transmit the acknowledgement to the sender */
 						senderAckReceived( pReceiver->pSender,idAckToIdInput(recvCmd.pCmd->id),
 											(int) recvCmd.pTabUint8[AR_CMD_INDEX_DATA] );
 					break;
@@ -137,6 +145,7 @@ void* runReceivingThread(void* data)
 						sal_print(PRINT_DEBUG," - TYPE: CMD_TYPE_DATA | SEQ:%d | ID:%d \n",
 												recvCmd.pCmd->seq, recvCmd.pCmd->id);
 						
+						/** push the data received in the output buffer targeted */
 						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->numOfOutputBuff,
 															recvCmd.pCmd->id);
@@ -151,13 +160,17 @@ void* runReceivingThread(void* data)
 					case CMD_TYPE_DATA_WITH_ACK:
 						sal_print(PRINT_DEBUG," - TYPE: CMD_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
 													recvCmd.pCmd->seq, recvCmd.pCmd->id);
-					
+						
+						/** 
+						 * push the data received in the output buffer targeted, 
+						 * save the sequence of the command and return an acknowledgement
+						**/
 						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->numOfOutputBuff,
 															recvCmd.pCmd->id);
 						if(pOutBufferTemp != NULL)
 						{
-							// OutBuffer->seqWaitAck used to save the last seq 
+							/** OutBuffer->seqWaitAck used to save the last seq */
 							if( recvCmd.pCmd->seq != pOutBufferTemp->seqWaitAck )
 							{
 								pushError = ringBuffPushBack(	pOutBufferTemp->pBuffer,
@@ -188,30 +201,91 @@ void* runReceivingThread(void* data)
 
 void stopReceiver(network_Receiver_t* pReceiver)
 {
+	/** -- stop the reception -- */
 	pReceiver->isAlive = 0;
 }
 
+
+void returnASK(network_Receiver_t* pReceiver, int id, int seq)
+{
+	/** -- return an acknowledgement -- */
+	
+	/** local declarations */
+	network_inOutBuffer_t* pBufferASK = inOutBufferWithId(	pReceiver->pptab_outputBuffer,
+																pReceiver->numOfOutputBuff,
+																idOutputToIdAck(id) );
+	if(pBufferASK != NULL)
+	{
+		ringBuffPushBack(pBufferASK->pBuffer, &seq );
+	}
+}
+
+int receiverRead(network_Receiver_t* pReceiver)
+{
+	/** -- receiving data present on the socket -- */
+	
+	/** local declarations */
+	int readDataSize =  sal_recv(	pReceiver->socket, pReceiver->pRecvBuffer->pStart,
+								pReceiver->pRecvBuffer->buffSize, 0);
+
+	pReceiver->pRecvBuffer->pFront =  pReceiver->pRecvBuffer->pStart + readDataSize;
+	
+	return readDataSize;
+}
+
+int receiverBind(network_Receiver_t* pReceiver, unsigned short port, int timeoutSec)
+{
+	/** -- receiving data present on the socket -- */
+	
+	/** local declarations */
+	struct timeval timeout;  
+	SOCKADDR_IN recvSin;
+	
+	/** socket initialization */
+	recvSin.sin_addr.s_addr = htonl(INADDR_ANY);   
+	recvSin.sin_family = AF_INET;
+	recvSin.sin_port = htons(port);
+	
+	pReceiver->socket = sal_socket( AF_INET, SOCK_DGRAM, 0 );
+	
+	/** set the socket timeout */
+    timeout.tv_sec = timeoutSec;
+    timeout.tv_usec = 0; 
+	sal_setsockopt(pReceiver->socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
+	
+	return sal_bind(pReceiver->socket, (SOCKADDR*)&recvSin, sizeof(recvSin));
+}
+
+/*****************************************
+ * 
+ * 			private implementation:
+ *
+******************************************/
+
 int getCmd(network_Receiver_t* pReceiver, uint8_t** ppCmd)
 {
+	/** -- get a command in the receiving buffer-- */
+	
+	/** local declarations */
 	int error = 1;
 	UNION_CMD recvCmd ;
 
 	if(*ppCmd == NULL)
 	{
-		*ppCmd = pReceiver->pRecvBuffer->pStart;//!!!voir
+		*ppCmd = pReceiver->pRecvBuffer->pStart;
 	}
 	else
 	{
-		//point the next command
+		/** point the next command */
 		(*ppCmd) += *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_SIZE) );
 	}
 	
 	recvCmd.pTabUint8 = *ppCmd;
 	
-	//check if the buffer stores enough data
+	/** check if the buffer stores enough data */
 	if(*ppCmd <= (uint8_t*) pReceiver->pRecvBuffer->pFront - AR_CMD_HEADER_SIZE)
 	{	
-		// pass the command to the host endian 
+		/** pass the command to the host endian */
 		recvCmd.pCmd->type = dtohl( *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_TYPE) ) );
 		recvCmd.pCmd->id = dtohl( *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_ID) ) );
 		recvCmd.pCmd->seq = dtohl( *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_SEQ) ) );
@@ -229,44 +303,4 @@ int getCmd(network_Receiver_t* pReceiver, uint8_t** ppCmd)
 	}
 	
 	return error;
-}
-
-void returnASK(network_Receiver_t* pReceiver, int id, int seq)
-{
-	network_inOutBuffer_t* pBufferASK = inOutBufferWithId(	pReceiver->pptab_outputBuffer,
-																pReceiver->numOfOutputBuff,
-																idOutputToIdAck(id) );
-	if(pBufferASK != NULL)
-	{
-		ringBuffPushBack(pBufferASK->pBuffer, &seq );
-	}
-}
-
-int receiverRead(network_Receiver_t* pReceiver)
-{
-	int readDataSize =  sal_recv(	pReceiver->socket, pReceiver->pRecvBuffer->pStart,
-								pReceiver->pRecvBuffer->buffSize, 0);
-
-	pReceiver->pRecvBuffer->pFront =  pReceiver->pRecvBuffer->pStart + readDataSize;
-	
-	return readDataSize;
-}
-
-int receiverBind(network_Receiver_t* pReceiver, unsigned short port, int timeoutSec)
-{
-	struct timeval timeout;  
-	
-	SOCKADDR_IN recvSin;
-	recvSin.sin_addr.s_addr = htonl(INADDR_ANY);   
-	recvSin.sin_family = AF_INET;
-	recvSin.sin_port = htons(port);
-	
-	pReceiver->socket = sal_socket(  AF_INET, SOCK_DGRAM,0);
-	
-	
-    timeout.tv_sec = timeoutSec;
-    timeout.tv_usec = 0; 
-	sal_setsockopt(pReceiver->socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
-	
-	return sal_bind(pReceiver->socket, (SOCKADDR*)&recvSin, sizeof(recvSin));
 }

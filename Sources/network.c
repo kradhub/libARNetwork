@@ -5,7 +5,11 @@
  *  @author maxime.maitre@parrot.com
 **/
 
-//include :
+/*****************************************
+ * 
+ * 			include file :
+ *
+******************************************/
 
 #include <stdlib.h>
 
@@ -35,13 +39,9 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 				unsigned int numberOfInput, network_paramNewInOutBuffer_t* ptabParamInput,
 				unsigned int numberOfOutput, network_paramNewInOutBuffer_t* ptabParamOutput)
 {
-	/**
-	 *  -- Create a new Network --
-	**/
+	/** -- Create a new Network -- */
 	
-	/**
-	 *  local declarations
-	**/
+	/** local declarations */
 	network_t* pNetwork = NULL;
 	int error = 0;
 	
@@ -49,9 +49,7 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 	int indexAckOutput = 0;
 	network_paramNewInOutBuffer_t paramNewACK;
 	
-	/**
-	 *  Initialize the default parameters for the buffers of acknowledgement.
-	**/
+	/** Initialize the default parameters for the buffers of acknowledgement. */
 	// call paramDefault !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     paramNewACK.dataType = CMD_TYPE_ACK;
     paramNewACK.buffSize = 1;
@@ -61,9 +59,7 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
     paramNewACK.ackTimeoutMs = 0; /* not used */
     paramNewACK.nbOfRetry = 0 ; /* not used */
     
-    /**
-	 *  Create the Network
-	**/
+    /** Create the Network */
     pNetwork = malloc( sizeof(network_t));
     
 	if(pNetwork == NULL)
@@ -98,9 +94,7 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 		
 		if( pNetwork->ppTabOutput && pNetwork->ppTabInput)
 		{
-			/** 
-			 * Create the output buffers and the buffers of acknowledgement
-			**/
+			/** Create the output buffers and the buffers of acknowledgement */
 			for(ii = 0; ii < numberOfOutput; ++ii)
 			{
 				pNetwork->ppTabOutput[ii] = newInOutBuffer( &(ptabParamOutput[ii]) );
@@ -117,9 +111,7 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 				pNetwork->ppTabInput[numberOfInput + ii] = pNetwork->ppTabOutput[ indexAckOutput ];
 			}
 			
-			/** 
-			 * Create the input buffers
-			**/
+			/** Create the input buffers */
 			for(ii = 0; ii< numberOfInput ; ++ii)
 			{
 				pNetwork->ppTabInput[ii] = newInOutBuffer( &(ptabParamInput[ii]) );
@@ -133,9 +125,7 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 	
 	if( !error )
 	{
-		/** 
-		 * Create the Sender and the Receiver
-		**/
+		/** Create the Sender and the Receiver */
 		pNetwork->pSender = newSender(sendBuffSize, pNetwork->numOfInput, pNetwork->ppTabInput);
 		pNetwork->pReceiver = newReceiver(recvBuffSize, pNetwork->numOfOutput, pNetwork->ppTabOutput);
 		
@@ -149,9 +139,7 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 		}
 	}
     
-    /** 
-	 * delete the network if an error occurred  
-	**/
+    /** delete the network if an error occurred */
     if(error)
     {
 		
@@ -163,13 +151,9 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 
 void deleteNetwork(network_t** ppNetwork)
 {	
-	/**
-	 * -- Delete the Network --
-	**/
+	/** -- Delete the Network -- */
 	
-	/**
-	 *  local declarations
-	**/
+	/** local declarations */
 	network_t* pNetwork = NULL;
 	int ii = 0;
 	
@@ -182,17 +166,13 @@ void deleteNetwork(network_t** ppNetwork)
 			deleteSender( &(pNetwork->pSender) );
 			deleteReceiver( &(pNetwork->pReceiver) );
 			
-			/**
-			 *  Delete all output buffers including the the buffers of acknowledgement
-			**/
+			/** Delete all output buffers including the the buffers of acknowledgement */
 			for(ii = 0; ii< pNetwork->numOfOutput ; ++ii)
 			{
 				deleteInOutBuffer( &(pNetwork->ppTabOutput[ii]) );
 			}	
 			
-			/**
-			 *  Delete the input buffers but not the buffers of acknowledgement already deleted
-			**/
+			/** Delete the input buffers but not the buffers of acknowledgement already deleted */
 			for(ii = 0; ii< pNetwork->numOfInputWithoutAck ; ++ii)
 			{
 				deleteInOutBuffer( &(pNetwork->ppTabInput[ii]) );
@@ -207,13 +187,9 @@ void deleteNetwork(network_t** ppNetwork)
 
 int networkSendData(network_t* pNetwork, int inputBufferId, const void* pData)
 {
-	/**
-	 * -- Add data to send --
-	**/
+	/** -- Add data to send -- */
 	
-	/**
-	 *  local declarations
-	**/
+	/** local declarations */
 	int error = 1;
 	network_inOutBuffer_t* pInputBuffer = NULL;
 	
@@ -229,13 +205,9 @@ int networkSendData(network_t* pNetwork, int inputBufferId, const void* pData)
 
 int networkReadData(network_t* pNetwork, int outputBufferId, void* pData)
 {
-	/**
-	 * -- read data received --
-	**/
+	/** -- read data received -- */
 	
-	/**
-	 *  local declarations
-	**/
+	/** local declarations */
 	int error = 1;
 	network_inOutBuffer_t* pOutputBuffer = NULL;
 	

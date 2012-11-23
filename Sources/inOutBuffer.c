@@ -5,12 +5,33 @@
  *  @author maxime.maitre@parrot.com
 **/
 
+/*****************************************
+ * 
+ * 			include file :
+ *
+******************************************/
+
 #include <stdlib.h>
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
 #include <libNetwork/ringBuffer.h>
-#include <libNetwork/common.h>//!! modif
+#include <libNetwork/common.h>
 #include <libNetwork/inOutBuffer.h>
+
+/*****************************************
+ * 
+ * 			define :
+ *
+******************************************/
+
+#define INOUTBUFFER_ID_DEFAULT -1
+#define INOUTBUFFER_DATATYPE_DEFAULT CMD_TYPE_DEFAULT
+#define INOUTBUFFER_SENDINGWAITTIME_DEFAULT 1
+#define INOUTBUFFER_ACKTILEOUTMS_DEFAULT 0
+#define INOUTBUFFER_NBOFRETRY_DEFAULT 0
+#define INOUTBUFFER_BUFFSIZE_DEFAULT 1
+#define INOUTBUFFER_BUFFCELLSIZE_DEFAULT 1
+#define INOUTBUFFER_OVERWRITING_DEFAULT 0
 
 /*****************************************
  * 
@@ -18,28 +39,36 @@
  *
 ******************************************/
 
-network_inOutBuffer_t* newInOutBuffer(const network_paramNewInOutBuffer_t *pParam )
+void paramNewInOutBufferDefaultInit(network_paramNewInOutBuffer_t *pParam)
 {
-	/**
-	 * -- Create a new input or output buffer --
-	**/
+	/** -- initialization of the paramNewInOutBuffer with default parameters -- */
 	
-	/**
-	 *  local declarations
-	**/
+	pParam->id = INOUTBUFFER_ID_DEFAULT;
+    pParam->dataType = INOUTBUFFER_DATATYPE_DEFAULT;	
+    pParam->sendingWaitTime = INOUTBUFFER_SENDINGWAITTIME_DEFAULT;
+    pParam->ackTimeoutMs = INOUTBUFFER_ACKTILEOUTMS_DEFAULT;
+    pParam->nbOfRetry = INOUTBUFFER_NBOFRETRY_DEFAULT;
+    
+    pParam->buffSize = INOUTBUFFER_BUFFSIZE_DEFAULT;	
+    pParam->buffCellSize = INOUTBUFFER_BUFFCELLSIZE_DEFAULT;
+    pParam->overwriting = INOUTBUFFER_OVERWRITING_DEFAULT;
+}
+
+
+network_inOutBuffer_t* newInOutBuffer( const network_paramNewInOutBuffer_t *pParam )
+{
+	/** -- Create a new input or output buffer -- */
+	
+	/** local declarations */
 	network_inOutBuffer_t* pInOutBuff = NULL;
 	int keepAliveData = 0x00;
 	
-	/**
-	 * Create the input or output buffer
-	**/
-	pInOutBuff = malloc( sizeof(network_inOutBuffer_t));
+	/** Create the input or output buffer in accordance with parameters set in pParam */
+	pInOutBuff = malloc( sizeof(network_inOutBuffer_t) );
 	
-	if(pInOutBuff)
-	{
+	if( pInOutBuff )
+	{ 
 		pInOutBuff->id = pParam->id;
-		pInOutBuff->pBuffer = newRingBufferWithOverwriting(	pParam->buffSize, pParam->buffCellSize,
-															pParam->overwriting);
 		pInOutBuff->dataType = pParam->dataType;
 		pInOutBuff->sendingWaitTime = pParam->sendingWaitTime;
 		pInOutBuff->ackTimeoutMs = pParam->ackTimeoutMs;
@@ -54,15 +83,21 @@ network_inOutBuffer_t* newInOutBuffer(const network_paramNewInOutBuffer_t *pPara
 		
 		sal_mutex_init( &(pInOutBuff->mutex) );
 		
+		/** Create the RingBuffer */
+		pInOutBuff->pBuffer = newRingBufferWithOverwriting(	pParam->buffSize, pParam->buffCellSize,
+															pParam->overwriting);
+															
 		if(pInOutBuff->pBuffer != NULL)
 		{
-			if(pInOutBuff->dataType == CMD_TYPE_KEEP_ALIVE)
+			/** if it is a keep alive buffer, push in the data send for keep alive */ 
+			if( pInOutBuff->dataType == CMD_TYPE_KEEP_ALIVE )
 			{
 				ringBuffPushBack(pInOutBuff->pBuffer, &keepAliveData);
 			}
 		}
 		else
 		{
+			/** delete the inOutput buffer if an error occurred */
 			deleteInOutBuffer(&pInOutBuff);
 		}
     }
@@ -70,8 +105,11 @@ network_inOutBuffer_t* newInOutBuffer(const network_paramNewInOutBuffer_t *pPara
     return pInOutBuff;
 }
 
-void deleteInOutBuffer(network_inOutBuffer_t** ppInOutBuff)
+void deleteInOutBuffer( network_inOutBuffer_t** ppInOutBuff )
 {	
+	/** -- Delete the input or output buffer -- */
+	
+	/** local declarations */
 	network_inOutBuffer_t* pInOutBuff = NULL;
 	
 	if(ppInOutBuff)
@@ -80,9 +118,9 @@ void deleteInOutBuffer(network_inOutBuffer_t** ppInOutBuff)
 		
 		if(pInOutBuff)
 		{	
-			sal_mutex_destroy(&(pInOutBuff->mutex));
+			sal_mutex_destroy( &(pInOutBuff->mutex) );
 			
-			free(pInOutBuff->pBuffer);
+			deleteRingBuffer( &(pInOutBuff->pBuffer) );
 		
 			free(pInOutBuff);
 		}
@@ -91,31 +129,40 @@ void deleteInOutBuffer(network_inOutBuffer_t** ppInOutBuff)
 
 }
 
-int inOutBufferAckReceived(network_inOutBuffer_t* pInOutBuff, int seqNum)
+int inOutBufferAckReceived( network_inOutBuffer_t* pInOutBuff, int seqNum )
 {
-	int error = 1;
-	sal_mutex_lock(&(pInOutBuff->mutex));
+	/** -- Receive an acknowledgement to a inOutBuffer -- */ 
 	
-	if(pInOutBuff->isWaitAck && pInOutBuff->seqWaitAck == seqNum)
+	/** local declarations */
+	int error = 1;
+	
+	sal_mutex_lock( &(pInOutBuff->mutex) );
+	
+	/** delete the data if the sequence number received is same as the sequence number expected */
+	if( pInOutBuff->isWaitAck && pInOutBuff->seqWaitAck == seqNum )
 	{
 		pInOutBuff->isWaitAck = 0;
 		ringBuffPopFront( pInOutBuff->pBuffer, NULL );
 		error = 0;
 	}
+	
 	sal_mutex_unlock(&(pInOutBuff->mutex));
 	
 	return error;
 }
 
-network_inOutBuffer_t* inOutBufferWithId(	network_inOutBuffer_t** pptabInOutBuff,
-												int tabSize, int id)
+network_inOutBuffer_t* inOutBufferWithId( network_inOutBuffer_t** pptabInOutBuff,
+												int tabSize, int id )
 {
+	/** -- Search a inOutBuffer with its identifier, in a table -- */
+	
+	/** local declarations */
 	network_inOutBuffer_t** it = pptabInOutBuff ;
 	network_inOutBuffer_t** itEnd = pptabInOutBuff + (tabSize);
 	network_inOutBuffer_t* pInOutBuffSearched = NULL;
-	
 	int find = 0;
 	
+	/** for each inoutBuffer of the table check if the ID is the same as the ID searched */
 	for(it = pptabInOutBuff ; ( it != itEnd ) && !find ; ++it )
 	{
 		if( (*it)->id == id)
@@ -130,6 +177,9 @@ network_inOutBuffer_t* inOutBufferWithId(	network_inOutBuffer_t** pptabInOutBuff
 
 int inOutBuffeIsWaitAck(	network_inOutBuffer_t* pInOutBuff)
 {
+	/** -- Get if the inOutBuffer is waiting an acknowledgement -- */
+	
+	/** local declarations */
 	int isWaitAckCpy = 0;
 	
 	sal_mutex_lock(&(pInOutBuff->mutex));
