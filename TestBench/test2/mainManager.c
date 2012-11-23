@@ -23,7 +23,7 @@
 int main(int argc, char *argv[])
 {
 	
-	network_t* pNetwork1= NULL;
+	network_manager_t* pNetwork1= NULL;
 	
 	int cmdType = -1;
 	char chData = 0;
@@ -84,11 +84,11 @@ int main(int argc, char *argv[])
 	paramOutputNetwork1[0].overwriting = 1;		
 		
 				
-	//pNetwork1 = newNetworkWithVarg( 256, 256, 1, 2/*3*/,
+	//pNetwork1 = NETWORK_NewManagerWithVarg( 256, 256, 1, 2/*3*/,
 	//						paramNetwork1[3],
 	//						paramNetwork1[0], paramNetwork1[1]/*, paramNetwork1[2]*/);
 	
-	pNetwork1 = newNetwork( 256, 256, 2/*3*/,paramInputNetwork1, 1,paramOutputNetwork1);
+	pNetwork1 = NETWORK_NewManager( 256, 256, 2/*3*/,paramInputNetwork1, 1,paramOutputNetwork1);
 	
 	
 	printf("\n ~~ This soft sends data to the repeater soft ~~ \n \n");
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
 	sal_thread_join(&(thread_recv1), NULL);
 
 	//delete
-	deleteNetwork( &pNetwork1 );
+	NETWORK_DeleteManager( &pNetwork1 );
 	
 	printf("end\n");
 

@@ -35,14 +35,14 @@ typedef struct sockaddr SOCKADDR;
  *
 ******************************************/
 
-network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
+network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 				unsigned int numberOfInput, network_paramNewInOutBuffer_t* ptabParamInput,
 				unsigned int numberOfOutput, network_paramNewInOutBuffer_t* ptabParamOutput)
 {
 	/** -- Create a new Network -- */
 	
 	/** local declarations */
-	network_t* pNetwork = NULL;
+	network_manager_t* pNetwork = NULL;
 	int error = NETWORK_MANAGER_OK;
 	
 	int ii = 0;
@@ -60,7 +60,7 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
     paramNewACK.nbOfRetry = 0 ; /* not used */
     
     /** Create the Network */
-    pNetwork = malloc( sizeof(network_t));
+    pNetwork = malloc( sizeof(network_manager_t));
     
 	if(pNetwork == NULL)
 	{
@@ -142,18 +142,18 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
     /** delete the network if an error occurred */
     if(error)
     {
-		deleteNetwork(&pNetwork);
+		NETWORK_DeleteManager(&pNetwork);
 	}
     
     return pNetwork;
 }
 
-void deleteNetwork(network_t** ppNetwork)
+void NETWORK_DeleteManager(network_manager_t** ppNetwork)
 {	
 	/** -- Delete the Network -- */
 	
 	/** local declarations */
-	network_t* pNetwork = NULL;
+	network_manager_t* pNetwork = NULL;
 	int ii = 0;
 	
 	if(ppNetwork)
@@ -184,7 +184,7 @@ void deleteNetwork(network_t** ppNetwork)
 	}
 }
 
-int networkSendData(network_t* pNetwork, int inputBufferId, const void* pData)
+int NETWORK_ManagerSendData(network_manager_t* pNetwork, int inputBufferId, const void* pData)
 {
 	/** -- Add data to send -- */
 	
@@ -202,7 +202,7 @@ int networkSendData(network_t* pNetwork, int inputBufferId, const void* pData)
 	return error;
 }
 
-int networkReadData(network_t* pNetwork, int outputBufferId, void* pData)
+int NETWORK_ManagerReadData(network_manager_t* pNetwork, int outputBufferId, void* pData)
 {
 	/** -- read data received -- */
 	

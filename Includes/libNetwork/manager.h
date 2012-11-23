@@ -25,7 +25,7 @@ typedef enum
 /**
  *  @brief network manager allow to send data acknowledged or not.
 **/
-typedef struct network_t
+typedef struct network_manager_t
 {
     network_sender_t* pSender; /**< Pointer on the sender*/
     network_receiver_t* pReceiver; /**< Pointer on the receiver*/
@@ -36,14 +36,14 @@ typedef struct network_t
     int numOfInputWithoutAck; /**< Number of input buffer without the  buffers of acknowledgement*/
     int numOfOutputWithoutAck; /**< Number of output buffer without the  buffers of acknowledgement*/
     
-}network_t;
+}network_manager_t;
 
 /**
  *  @brief Create a new Network
  * 	@warning This function allocate memory
  * 	@post NETWORK_SenderConnection() must be called to indicate on which address send the data.
  * 	@post NETWORK_ReceiverBind() must be called to indicate on which address receive the data.
- *  @post deleteNetwork() must be called to delete the Network and free the memory allocated.
+ *  @post NETWORK_DeleteManager() must be called to delete the Network and free the memory allocated.
  * 	@param[in] recvBuffSize size in byte of the receiving buffer. ideally must be equal to the sum of the sizes of one data of all output buffers
  * 	@param[in] sendBuffSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
  * 	@param[in] numberOfInput Number of input buffer
@@ -53,9 +53,9 @@ typedef struct network_t
  * 	@return Pointer on the new Network
  * 	@note This creator adds for all output, one other inOutBuffer for storing the acknowledgment to return.
  * These new buffers are added in the input and output buffer tables.
- * 	@see deleteNetwork()
+ * 	@see NETWORK_DeleteManager()
 **/
-network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
+network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 				unsigned int numberOfInput, network_paramNewInOutBuffer_t* ptabParamInput,
 				unsigned int numberOfOutput, network_paramNewInOutBuffer_t* ptabParamOutput);
 
@@ -63,9 +63,9 @@ network_t* newNetwork(	unsigned int recvBuffSize,unsigned int sendBuffSize,
  *  @brief Delete the Network
  * 	@warning This function free memory
  * 	@param ppNetwork address of the pointer on Network
- * 	@see newNetwork()
+ * 	@see NETWORK_NewManager()
 **/
-void deleteNetwork(network_t** ppNetwork);
+void NETWORK_DeleteManager(network_manager_t** ppNetwork);
 
 /**
  *  @brief Add data to send
@@ -74,7 +74,7 @@ void deleteNetwork(network_t** ppNetwork);
  * 	@param[in] pData pointer on the data to send
  *  @return error equal to 1 if the data is not correctly pushed in the the input buffer
 **/
-int networkSendData(network_t* pNetwork, int inputBufferId, const void* pData);
+int NETWORK_ManagerSendData(network_manager_t* pNetwork, int inputBufferId, const void* pData);
 
 /**
  *  @brief Read data received
@@ -83,7 +83,7 @@ int networkSendData(network_t* pNetwork, int inputBufferId, const void* pData);
  * 	@param[out] pData pointer on the data read
  *  @return error equal to 1 if the buffer is empty or the ID doesn't exist
 **/
-int networkReadData(network_t* pNetwork, int outputBufferId, void* pData);
+int NETWORK_ManagerReadData(network_manager_t* pNetwork, int outputBufferId, void* pData);
 
 #endif // _NETWORK_MANGER_H_
 

@@ -1,6 +1,6 @@
 /**
  *	@file main.h
- *  @brief Test
+ *  @brief libNetWork TestBench auto
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
 **/
@@ -24,11 +24,7 @@
 #define RING_BUFFER_SIZE 256
 #define RING_BUFFER_CELL_SIZE 10
 
-#define ID_SEND_RING_BUFF 1
-#define ID_SEND_SING_BUFF 2
-
-#define ID_RECV_RING_BUFF 1
-
+/** define of the ioBuuffer identifiers */
 typedef enum eID_BUFF
 {
 	ID_CHAR_DATA = 5,
@@ -40,8 +36,8 @@ typedef enum eID_BUFF
 int main(int argc, char *argv[])
 {
 	
-	network_t* pNetwork1= NULL;
-	network_t* pNetwork2= NULL;
+	network_manager_t* pNetwork1= NULL;
+	network_manager_t* pNetwork2= NULL;
 	
 	int ii = 0;
 	
@@ -58,6 +54,7 @@ int main(int argc, char *argv[])
 	network_paramNewInOutBuffer_t paramInputNetwork2[1];
 	network_paramNewInOutBuffer_t paramOutputNetwork2[2];
 	
+    /** initialization of the buffer parameters */
 	//--- network 1 ---
 	
 	// input ID_CHAR_DATA int
@@ -126,7 +123,11 @@ int main(int argc, char *argv[])
 	
 	//-----------------------------
 	
-	pNetwork1 = newNetwork( 256, 256, 2, paramInputNetwork1, 1, paramOutputNetwork1);
+    printf(" -- libNetWork TestBench auto -- \n");
+    
+    /** create the Network1 */
+    
+	pNetwork1 = NETWORK_NewManager( 256, 256, 2, paramInputNetwork1, 1, paramOutputNetwork1);
 							
 	printf(" -pNetwork1->pSender connect error: %d \n", 
 								NETWORK_SenderConnection(pNetwork1->pSender,"127.0.0.1", 5551) );
@@ -134,7 +135,7 @@ int main(int argc, char *argv[])
 	printf(" -pNetwork1->pReceiver Bind  error: %d \n", 
 								NETWORK_ReceiverBind(pNetwork1->pReceiver, 5552, 10) );
 
-	pNetwork2 = newNetwork( 256, 256, 1, paramInputNetwork2, 2, paramOutputNetwork2);
+	pNetwork2 = NETWORK_NewManager( 256, 256, 1, paramInputNetwork2, 2, paramOutputNetwork2);
 							
 	printf(" -pNetwork2->pReceiver Bind  error: %d \n",
 								NETWORK_ReceiverBind(pNetwork2->pReceiver, 5551, 5) );
@@ -149,7 +150,6 @@ int main(int argc, char *argv[])
 	
 	printf("main start \n");
 	
-	
 	sal_thread_create(&(thread_recv2), (sal_thread_routine) NETWORK_RunReceivingThread, pNetwork2->pReceiver);
 	sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_RunReceivingThread, pNetwork1->pReceiver);
 	
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
 		
 		chData = ii;
 		printf(" send char: %d \n",chData);
-		error = networkSendData(pNetwork1, ID_CHAR_DATA, &chData);
+		error = NETWORK_ManagerSendData(pNetwork1, ID_CHAR_DATA, &chData);
 		
 		if( error )
 		{
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 		
 		intData = ntohl (0x11223340 + ii);
 		printf(" send int: %0x \n",0x11223340 + ii);		
-		error = networkSendData(pNetwork1, ID_INT_DATA_WITH_ACK, &intData);
+		error = NETWORK_ManagerSendData(pNetwork1, ID_INT_DATA_WITH_ACK, &intData);
 		
 		if( error )
 		{
@@ -221,8 +221,8 @@ int main(int argc, char *argv[])
 	}
 
 	//delete
-	deleteNetwork( &pNetwork1 );
-	deleteNetwork( &pNetwork2 );
+	NETWORK_DeleteManager( &pNetwork1 );
+	NETWORK_DeleteManager( &pNetwork2 );
 
 	printf("end \n");
 

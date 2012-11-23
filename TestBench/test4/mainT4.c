@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 	tcgetattr(0,&initial_settings);	
 	signal (SIGINT, fixTerminal);
 		
-	network_t* pNetwork1= NULL;
+	network_manager_t* pNetwork1= NULL;
 	
 	char netType = 0;
 	
@@ -153,11 +153,11 @@ int main(int argc, char *argv[])
 		switch(netType)
 		{
 			case '1':
-				//pNetwork1 = newNetworkWithVarg( 256, 256, 2, 2/*3*/,
+				//pNetwork1 = NETWORK_NewManagerWithVarg( 256, 256, 2, 2/*3*/,
 				//			paramNetwork1[3], paramNetwork1[4],
 				//			paramNetwork1[0], paramNetwork1[1]/*, paramNetwork1[2]*/);
 				
-				pNetwork1 = newNetwork( 256, 256, 2/*3*/, paramNetworkL1, 2 ,paramNetworkL2);
+				pNetwork1 = NETWORK_NewManager( 256, 256, 2/*3*/, paramNetworkL1, 2 ,paramNetworkL2);
 									
 				printThread1.pOutBuffChar = inOutBufferWithId(	pNetwork1->ppTabOutput, pNetwork1->numOfOutput, ID_CHAR_DATA_2);
 				printThread1.pOutBuffIntAck = inOutBufferWithId(	pNetwork1->ppTabOutput, pNetwork1->numOfOutput, ID_INT_DATA_WITH_ACK_2);
@@ -169,12 +169,12 @@ int main(int argc, char *argv[])
 			
 			case '2':
 				/*
-				pNetwork1 = newNetworkWithVarg( 256, 256, 2, 2,
+				pNetwork1 = NETWORK_NewManagerWithVarg( 256, 256, 2, 2,
 							paramNetwork1[0], paramNetwork1[1],
 							paramNetwork1[3], paramNetwork1[4]);
 				*/
 				
-				pNetwork1 = newNetwork( 256, 256, 2, paramNetworkL2, 2,paramNetworkL1);
+				pNetwork1 = NETWORK_NewManager( 256, 256, 2, paramNetworkL2, 2,paramNetworkL1);
 							
 				printThread1.pOutBuffChar = inOutBufferWithId(	pNetwork1->ppTabOutput, pNetwork1->numOfOutput, ID_CHAR_DATA);
 				printThread1.pOutBuffIntAck = inOutBufferWithId(	pNetwork1->ppTabOutput, pNetwork1->numOfOutput, ID_INT_DATA_WITH_ACK);
@@ -294,7 +294,7 @@ int main(int argc, char *argv[])
 	sal_thread_join(&(thread_printBuff), NULL);
 
 	//delete
-	deleteNetwork( &pNetwork1 );
+	NETWORK_DeleteManager( &pNetwork1 );
 	
 	printf("end\n");
 

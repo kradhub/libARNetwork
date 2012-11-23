@@ -5,8 +5,8 @@
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _RING_BUFFER_H_
-#define _RING_BUFFER_H_
+#ifndef _RINGBUFFER_H_
+#define _RINGBUFFER_H_
 
 #include <libSAL/mutex.h>
 
@@ -130,5 +130,5 @@ void ringBuffPrint(network_ringBuffer_t* pRingBuff);
 **/
 void ringBuffDataPrint(network_ringBuffer_t* pRingBuff);
 
-#endif // _RING_BUFFER_H_
+#endif // _RINGBUFFER_H_
 

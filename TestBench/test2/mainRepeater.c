@@ -22,7 +22,7 @@
 
 int main(int argc, char *argv[])
 {
-	network_t* pNetwork2= NULL;
+	network_manager_t* pNetwork2= NULL;
 	
 	char chData = 0;
 	int intData = 0;
@@ -74,12 +74,12 @@ int main(int argc, char *argv[])
 	//-----------------------------
 
 	/*
-	pNetwork2 = newNetworkWithVarg( 256, 256, 2, 1,
+	pNetwork2 = NETWORK_NewManagerWithVarg( 256, 256, 2, 1,
 							paramNetwork2[1], paramNetwork2[2],
 							paramNetwork2[0]);
 	*/
 	
-	pNetwork2 = newNetwork( 256, 256, 1, paramInputNetwork2, 2, paramOutputNetwork2);
+	pNetwork2 = NETWORK_NewManager( 256, 256, 1, paramInputNetwork2, 2, paramOutputNetwork2);
 							
 	printf("\n~~ This soft receives data sent by the manager soft ~~ \n \n");
 						
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 	sal_thread_join(&(thread_recv2), NULL);
 
 	//delete
-	deleteNetwork( &pNetwork2 );
+	NETWORK_DeleteManager( &pNetwork2 );
 	
 	printf("end \n");
 	
