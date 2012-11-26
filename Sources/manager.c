@@ -36,8 +36,8 @@ typedef struct sockaddr SOCKADDR;
 ******************************************/
 
 network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int sendBuffSize,
-				unsigned int numberOfInput, network_paramNewInOutBuffer_t* ptabParamInput,
-				unsigned int numberOfOutput, network_paramNewInOutBuffer_t* ptabParamOutput)
+				unsigned int numberOfInput, network_paramNewIoBuffer_t* ptabParamInput,
+				unsigned int numberOfOutput, network_paramNewIoBuffer_t* ptabParamOutput)
 {
 	/** -- Create a new Manager -- */
 	
@@ -47,10 +47,10 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 	
 	int ii = 0;
 	int indexAckOutput = 0;
-	network_paramNewInOutBuffer_t paramNewACK;
+	network_paramNewIoBuffer_t paramNewACK;
 	
 	/** Initialize the default parameters for the buffers of acknowledgement. */
-	paramNewInOutBufferDefaultInit(&paramNewACK); 
+	paramNewIoBufferDefaultInit(&paramNewACK); 
     paramNewACK.dataType = network_frame_t_TYPE_ACK;
     paramNewACK.buffSize = 1;
 	paramNewACK.buffCellSize = sizeof(int);
@@ -58,7 +58,6 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
     
     /** Create the Manager */
     pManager = malloc( sizeof(network_manager_t));
-    
 	if(pManager == NULL)
 	{
 		error = 1;
@@ -88,13 +87,16 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 		pManager->numOfInput = numberOfInput + numberOfOutput;
 		pManager->ppTabInput = malloc( sizeof(network_ioBuffer_t*) * pManager->numOfInput );
 		
-		
 		if( pManager->ppTabOutput && pManager->ppTabInput)
 		{
 			/** Create the output buffers and the buffers of acknowledgement */
 			for(ii = 0; ii < numberOfOutput; ++ii)
 			{
 				pManager->ppTabOutput[ii] = newInOutBuffer( &(ptabParamOutput[ii]) );
+                if(pManager->ppTabOutput[ii] == NULL)
+                {
+                    error = NETWORK_MANAGER_ERROR_NEW_IOBUFFER;
+                }
 				
 				/** 
 				 * Create the buffer of acknowledgement associated with the output buffer and 
@@ -104,6 +106,10 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 				indexAckOutput = numberOfOutput + ii;
 				
 				pManager->ppTabOutput[ indexAckOutput ] = newInOutBuffer(&paramNewACK);
+                if(pManager->ppTabOutput[indexAckOutput] == NULL)
+                {
+                    error = NETWORK_MANAGER_ERROR_NEW_IOBUFFER;
+                }
 				
 				pManager->ppTabInput[numberOfInput + ii] = pManager->ppTabOutput[ indexAckOutput ];
 			}
@@ -112,11 +118,15 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 			for(ii = 0; ii< numberOfInput ; ++ii)
 			{
 				pManager->ppTabInput[ii] = newInOutBuffer( &(ptabParamInput[ii]) );
+                if(pManager->ppTabInput[ii] == NULL)
+                {
+                    error = NETWORK_MANAGER_ERROR_NEW_IOBUFFER;
+                }
 			}
 		}
 		else
 		{
-			error = 1;
+			error = NETWORK_MANAGER_ERROR_ALLOC_TAB_IOBUFFER;
 		}
 	}
 	
@@ -139,9 +149,10 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
     /** delete the Manager if an error occurred */
     if(error)
     {
+        sal_print(PRINT_ERROR,"error: %d occurred \n", error );
 		NETWORK_DeleteManager(&pManager);
 	}
-    
+
     return pManager;
 }
 
@@ -166,19 +177,42 @@ void NETWORK_DeleteManager(network_manager_t** ppManager)
 			for(ii = 0; ii< pManager->numOfOutput ; ++ii)
 			{
 				deleteInOutBuffer( &(pManager->ppTabOutput[ii]) );
-			}	
+			}
+            free(pManager->ppTabOutput);
+            pManager->ppTabOutput = NULL;
 			
 			/** Delete the input buffers but not the buffers of acknowledgement already deleted */
 			for(ii = 0; ii< pManager->numOfInputWithoutAck ; ++ii)
 			{
 				deleteInOutBuffer( &(pManager->ppTabInput[ii]) );
 			}
+            free(pManager->ppTabInput);
+            pManager->ppTabInput = NULL;
 			
 			free(pManager);
+            pManager = NULL;
 		}
 		
 		*ppManager = NULL;
 	}
+}
+
+int NETWORK_ManagerScoketsInit(network_manager_t* pManager,const char* addr, int sendingPort,
+                                    int recvPort, int recvTimeoutSec)
+{
+    /** -- initialize UDP sockets of sending and receiving the data. -- */
+	
+	/** local declarations */
+    int error = NETWORK_MANAGER_OK;
+    
+    error = NETWORK_SenderConnection( pManager->pSender,addr, sendingPort );
+			
+    if( !error )
+    {
+        error = NETWORK_ReceiverBind( pManager->pReceiver, recvPort, recvTimeoutSec );
+    }
+    
+    return error;
 }
 
 int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, const void* pData)

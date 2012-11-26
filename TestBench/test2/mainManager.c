@@ -37,9 +37,9 @@ int main(int argc, char *argv[])
 	
 	network_ioBuffer_t* pInOutTemp = NULL;
 	
-	//network_paramNewInOutBuffer_t paramNetwork1[4];
-	network_paramNewInOutBuffer_t paramInputNetwork1[3];
-	network_paramNewInOutBuffer_t paramOutputNetwork1[1];
+	//network_paramNewIoBuffer_t paramNetwork1[4];
+	network_paramNewIoBuffer_t paramInputNetwork1[3];
+	network_paramNewIoBuffer_t paramOutputNetwork1[1];
 	
 	//--- network 1 ---
 	

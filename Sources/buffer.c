@@ -63,8 +63,10 @@ void NETWORK_DeleteBuffer(network_buffer_t** ppBuffer)
 		if(pBuffer)
 		{
 			free(pBuffer->pStart);
+            pBuffer->pStart = NULL;
 			
 			free(pBuffer);
+            pBuffer = NULL;
 		}
 		*ppBuffer = NULL;
 	}

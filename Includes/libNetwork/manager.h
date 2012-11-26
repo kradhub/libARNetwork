@@ -18,7 +18,9 @@
 typedef enum
 {
 	NETWORK_MANAGER_OK = 0, /**< no error */
-	NETWORK_MANAGER_ERROR_ALLOC = -1000 /**< flksdqljlk */ 
+    NETWORK_MANAGER_ERROR_UNKNOWN = -1000, /**< error unknown */ 
+    NETWORK_MANAGER_ERROR_NEW_IOBUFFER, /**< flksdqljlk */ 
+	NETWORK_MANAGER_ERROR_ALLOC_TAB_IOBUFFER /**< flksdqljlk */ 
 	
 } eNETWORK_Manager_Error;
 
@@ -41,8 +43,7 @@ typedef struct network_manager_t
 /**
  *  @brief Create a new Manager
  * 	@warning This function allocate memory
- * 	@post NETWORK_SenderConnection() must be called to indicate on which address send the data.
- * 	@post NETWORK_ReceiverBind() must be called to indicate on which address receive the data.
+ * 	@post NETWORK_ManagerScoketsInit() must be called to initialize the sockets, indicate on which address send the data, the sending port the receiving port and the timeout.
  *  @post NETWORK_DeleteManager() must be called to delete the Network and free the memory allocated.
  * 	@param[in] recvBuffSize size in byte of the receiving buffer. ideally must be equal to the sum of the sizes of one data of all output buffers
  * 	@param[in] sendBuffSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
@@ -56,8 +57,8 @@ typedef struct network_manager_t
  * 	@see NETWORK_DeleteManager()
 **/
 network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int sendBuffSize,
-				unsigned int numberOfInput, network_paramNewInOutBuffer_t* ptabParamInput,
-				unsigned int numberOfOutput, network_paramNewInOutBuffer_t* ptabParamOutput);
+				unsigned int numberOfInput, network_paramNewIoBuffer_t* ptabParamInput,
+				unsigned int numberOfOutput, network_paramNewIoBuffer_t* ptabParamOutput);
 
 /**
  *  @brief Delete the Manager
@@ -66,6 +67,17 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
  * 	@see NETWORK_NewManager()
 **/
 void NETWORK_DeleteManager(network_manager_t** ppManager);
+
+/**
+ *  @brief initialize UDP sockets of sending and receiving the data.
+ *  @param pManager pointer on the Manager
+ *  @param[in] addr address of connection at which the data will be sent.
+ *  @param[in] recvPort port on which the data will be received.
+ * 	@param[in] recvTimeoutSec timeout in seconds set on the socket to limit the time of blocking of the function NETWORK_ReceiverRead().
+ *  @return error equal to 0 if the Bind if successful otherwise see eNETWORK_Manager_Error.
+**/
+int NETWORK_ManagerScoketsInit(network_manager_t* pManager,const char* addr, int sendingPort,
+                                    int recvPort, int recvTimeoutSec);
 
 /**
  *  @brief Add data to send

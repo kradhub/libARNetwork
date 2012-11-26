@@ -100,6 +100,7 @@ void NETWORK_DeleteSender(network_sender_t** ppSender)
 			NETWORK_DeleteBuffer( &(pSender->pSendingBuffer) );
 		
 			free(pSender);
+            pSender = NULL;
 		}
 		*ppSender = NULL;
 	}

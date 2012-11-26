@@ -76,8 +76,10 @@ void deleteRingBuffer(network_ringBuffer_t** ppRingBuff)
 		{
 			sal_mutex_destroy(&(pRingBuff->mutex));
 			free(pRingBuff->dataBuffer);
+            pRingBuff->dataBuffer = NULL;
 		
 			free(pRingBuff);
+            pRingBuff = NULL;
 		}
 		*ppRingBuff = NULL;
 	}

@@ -86,9 +86,9 @@ int main(int argc, char *argv[])
 	sal_thread_t thread_recv1;
 	sal_thread_t thread_printBuff;
 	
-	//network_paramNewInOutBuffer_t paramNetwork1[5];
-	network_paramNewInOutBuffer_t paramNetworkL1[3];
-	network_paramNewInOutBuffer_t paramNetworkL2[2];
+	//network_paramNewIoBuffer_t paramNetwork1[5];
+	network_paramNewIoBuffer_t paramNetworkL1[3];
+	network_paramNewIoBuffer_t paramNetworkL2[2];
 
 	
 	//--- network 1 ---

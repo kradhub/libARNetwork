@@ -1,6 +1,6 @@
 /**
  *	@file ioBuffer.h
- *  @brief input or output buffer, used by libNetwork::receiver or libNetwork::sender
+ *  @brief input or output buffer, used by libNetwork/receiver or libNetwork/sender
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
 **/
@@ -14,29 +14,36 @@
 /**
  *  @brief used to set the parameters of a new inOutBuffer
 **/
-typedef struct network_paramNewInOutBuffer_t  
+typedef struct network_paramNewIoBuffer_t  
 {
     int id;						/**< Identifier used to find the InOutBuffer in a list*/
     eNETWOK_Frame_Type dataType;		/**< Type of the data stored in the buffer*/
-    int sendingWaitTime;		/**< Time in millisecond between 2 send when the InOutBuffer is used with a libNetwork::sender*/
-    int ackTimeoutMs;			/**< Timeout in millisecond before retry to send the data waiting an acknowledgement when the InOutBuffer is used with a libNetwork::sender*/
-    int nbOfRetry;				/**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libNetwork::sender*/
+    int sendingWaitTime;		/**< Time in millisecond between 2 send when the InOutBuffer is used with a libNetwork/sender*/
+    int ackTimeoutMs;			/**< Timeout in millisecond before retry to send the data waiting an acknowledgement when the InOutBuffer is used with a libNetwork/sender*/
+    int nbOfRetry;				/**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libNetwork/sender*/
     
     unsigned int buffSize;		/**< Maximum number of data stored*/
     unsigned int buffCellSize;	/**< Size of one data in byte*/
     int overwriting;			/**< Indicator of overwriting possibility (1 = true | 0 = false)*/
 
-}network_paramNewInOutBuffer_t;
+}network_paramNewIoBuffer_t;
 
 /**
- *  @brief initialization of the paramNewInOutBuffer with default parameters
- * 	@pre before to use the paramNewInOutBuffer the paramaters useful must be set.
+ *  @brief initialization of the paramNewIoBuffer with default parameters
+ * 	@pre before to use the paramNewIoBuffer the paramaters useful must be set.
  * 	@param[in,out] pParam Pointer on the parameters for the new input or output buffer
 **/
-void paramNewInOutBufferDefaultInit(network_paramNewInOutBuffer_t *pParam); 
+void paramNewIoBufferDefaultInit(network_paramNewIoBuffer_t* pParam); 
 
 /**
- *  @brief Input buffer used by libNetwork::sender or output buffer used by libNetwork::receiver
+ *  @brief check the values of the paramNewIoBuffer
+ * 	@param[in] pParam Pointer on the parameters for the new input or output buffer
+ * 	@return 1 if the paramNewIoBuffer is usable for create a new ioBuffer else 0
+**/
+int paramNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam );
+
+/**
+ *  @brief Input buffer used by libNetwork/sender or output buffer used by libNetwork/receiver
  * 	@warning before to be used the inOutBuffer must be created through newInOutBuffer()
  * 	@post after its using the inOutBuffer must be deleted through deleteInOutBuffer()
 **/
@@ -45,13 +52,13 @@ typedef struct network_ioBuffer_t
     int id;		/**< Identifier used to find the InOutBuffer in a table*/
     network_ringBuffer_t* pBuffer;	/**< Pointer on the ringBuffer used to store the data*/
     eNETWOK_Frame_Type dataType;		/**< Type of the data stored in the buffer*/
-    int sendingWaitTime;	/**< Time in millisecond between 2 send when the InOutBuffer if used with a libNetwork::sender*/
-    int ackTimeoutMs;	/**< Timeout in millisecond after retry to send the data when the InOutBuffer is used with a libNetwork::sender*/
-    int nbOfRetry;	/**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libNetwork::sender*/
+    int sendingWaitTime;	/**< Time in millisecond between 2 send when the InOutBuffer if used with a libNetwork/sender*/
+    int ackTimeoutMs;	/**< Timeout in millisecond after retry to send the data when the InOutBuffer is used with a libNetwork/sender*/
+    int nbOfRetry;	/**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libNetwork/sender*/
     //	timeoutCallback(network_ioBuffer_t* this)
     
     int isWaitAck;	/**< Indicator of waiting an acknowledgement  (1 = true | 0 = false). Must be accessed through inOutBuffeIsWaitAck()*/
-    int seqWaitAck; /**< Sequence number of the acknowledge waiting if used with a libNetwork::sender or of the last command stored if used with a libNetwork::reveiver*/
+    int seqWaitAck; /**< Sequence number of the acknowledge waiting if used with a libNetwork/sender or of the last command stored if used with a libNetwork/reveiver*/
     int waitTimeCount;	 /**< Counter of time to wait before the next sending*/
     int ackWaitTimeCount;	/**< Counter of time to wait before to consider a timeout without receiving an acknowledgement*/
     int retryCount;		/**< Counter of sending retry remaining before to consider a failure*/
@@ -68,7 +75,7 @@ typedef struct network_ioBuffer_t
  * 	@return Pointer on the new input or output buffer
  * 	@see deleteInOutBuffer()
 **/
-network_ioBuffer_t* newInOutBuffer(const network_paramNewInOutBuffer_t *pParam); 
+network_ioBuffer_t* newInOutBuffer(const network_paramNewIoBuffer_t* pParam); 
 
 /**
  *  @brief Delete the input or output buffer
@@ -103,7 +110,6 @@ network_ioBuffer_t* inOutBufferWithId( network_ioBuffer_t** pptabInOutBuff,
  * 	@return IsWaitAck equal to 1 if the inOutBuffer is waiting an acknowledgement otherwise equal to 0
 **/
 int inOutBuffeIsWaitAck( network_ioBuffer_t* pInOutBuff );
-
 
 #endif // _NETWORK_IOBUFFER_H_
 

@@ -71,9 +71,9 @@ void NETWORK_StopSender(network_sender_t* pSender);
 
 /**
  *  @brief Receive an acknowledgment fo a data.
- * 	@details Called by a libNetwork::receiver to transmit an acknowledgment.
+ * 	@details Called by a libNetwork/receiver to transmit an acknowledgment.
  * 	@param pSender the pointer on the Sender
- * 	@param[in] id identifier of the command with network_frame_t_TYPE_ACK type received by the libNetwork::receiver
+ * 	@param[in] id identifier of the command with network_frame_t_TYPE_ACK type received by the libNetwork/receiver
  *	@param[in] seqNum sequence number of the acknowledgment
  * 	@return error equal to 0 if the data has been correctly acknowledged otherwise equal to 1.
 **/

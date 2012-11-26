@@ -70,17 +70,17 @@ int main(int argc, char *argv[])
 	char chData = 0;
 	int intData = 0;
 	
-	network_paramNewInOutBuffer_t paramInputNetwork1[2];
-	network_paramNewInOutBuffer_t paramOutputNetwork1[1];
+	network_paramNewIoBuffer_t paramInputNetwork1[2];
+	network_paramNewIoBuffer_t paramOutputNetwork1[1];
 	
-	network_paramNewInOutBuffer_t paramInputNetwork2[1];
-	network_paramNewInOutBuffer_t paramOutputNetwork2[2];
+	network_paramNewIoBuffer_t paramInputNetwork2[1];
+	network_paramNewIoBuffer_t paramOutputNetwork2[2];
 	
     /** initialization of the buffer parameters */
 	/** --- network 1 --- */
 	
 	/** input ID_CHAR_DATA int */
-    paramNewInOutBufferDefaultInit( &(paramInputNetwork1[0]) );
+    paramNewIoBufferDefaultInit( &(paramInputNetwork1[0]) );
 	paramInputNetwork1[0].id = ID_CHAR_DATA;
 	paramInputNetwork1[0].dataType = network_frame_t_TYPE_DATA;
 	paramInputNetwork1[0].buffSize = 1;
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 	paramInputNetwork1[0].overwriting = 1;
 	
 	/** input ID_INT_DATA_WITH_ACK char */
-    paramNewInOutBufferDefaultInit( &(paramInputNetwork1[1]) );
+    paramNewIoBufferDefaultInit( &(paramInputNetwork1[1]) );
 	paramInputNetwork1[1].id = ID_INT_DATA_WITH_ACK;
 	paramInputNetwork1[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramInputNetwork1[1].sendingWaitTime = 2;
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 	paramInputNetwork1[1].overwriting = 0;
 	
 	/** output ID_INT_DATA int */
-    paramNewInOutBufferDefaultInit( &(paramOutputNetwork1[0]) );
+    paramNewIoBufferDefaultInit( &(paramOutputNetwork1[0]) );
 	paramOutputNetwork1[0].id = ID_INT_DATA;
 	paramOutputNetwork1[0].dataType = network_frame_t_TYPE_DATA;
 	paramOutputNetwork1[0].buffSize = 10;
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 	/**--- network 2 --- */
 	
 	/** input ID_INT_DATA char */
-    paramNewInOutBufferDefaultInit( &(paramInputNetwork2[0]) );
+    paramNewIoBufferDefaultInit( &(paramInputNetwork2[0]) );
 	paramInputNetwork2[0].id = ID_INT_DATA;
 	paramInputNetwork2[0].dataType = network_frame_t_TYPE_DATA;
 	paramInputNetwork2[0].sendingWaitTime = 2;
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 	paramInputNetwork2[0].overwriting = 1;
 	
 	/**  output ID_CHAR_DATA int */
-    paramNewInOutBufferDefaultInit( &(paramOutputNetwork2[0]) );
+    paramNewIoBufferDefaultInit( &(paramOutputNetwork2[0]) );
 	paramOutputNetwork2[0].id = ID_CHAR_DATA;
 	paramOutputNetwork2[0].dataType = network_frame_t_TYPE_DATA;
 	paramOutputNetwork2[0].sendingWaitTime = 3;
@@ -129,8 +129,9 @@ int main(int argc, char *argv[])
 	paramOutputNetwork2[0].overwriting = 1;
 	
 	/** output ID_INT_DATA_WITH_ACK int */
-    paramNewInOutBufferDefaultInit( &(paramOutputNetwork2[1]) );
+    paramNewIoBufferDefaultInit( &(paramOutputNetwork2[1]) );
 	paramOutputNetwork2[1].id = ID_INT_DATA_WITH_ACK;
+    paramOutputNetwork2[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramOutputNetwork2[1].buffSize = 5;
 	paramOutputNetwork2[1].buffCellSize = sizeof(int);
 	paramOutputNetwork2[1].overwriting = 0;
@@ -142,20 +143,32 @@ int main(int argc, char *argv[])
     /** create the Manger1 */
     
 	pManager1 = NETWORK_NewManager( 256, 256, 2, paramInputNetwork1, 1, paramOutputNetwork1);
-							
+    
+    /*
 	printf(" -pManager1->pSender connect error: %d \n", 
                             NETWORK_SenderConnection(pManager1->pSender,"127.0.0.1", 5551) );
 								
 	printf(" -pManager1->pReceiver Bind  error: %d \n", 
                             NETWORK_ReceiverBind(pManager1->pReceiver, 5552, RECEIVER_TIMEOUT_SEC) );
+    */
+                            
+    error = NETWORK_ManagerScoketsInit(pManager1, "127.0.0.1", 5551, 5552, RECEIVER_TIMEOUT_SEC);
+    
+    printf("error initScoket = %d", error);
 
     /** create the Manger2 */
-	pManager2 = NETWORK_NewManager( 256, 256, 1, paramInputNetwork2, 2, paramOutputNetwork2);
-							
+	pManager2 = NETWORK_NewManager( 256, 256, 1, paramInputNetwork2, 2, paramOutputNetwork2);          
+    
+    /*
 	printf(" -pManager2->pReceiver Bind  error: %d \n",
                             NETWORK_ReceiverBind(pManager2->pReceiver, 5551, RECEIVER_TIMEOUT_SEC) );
 	printf(" -pManager2->pSender connect error: %d \n",
                             NETWORK_SenderConnection(pManager2->pSender,"127.0.0.1", 5552) );
+    */
+                        
+    error = NETWORK_ManagerScoketsInit(pManager2, "127.0.0.1", 5552, 5551, RECEIVER_TIMEOUT_SEC);
+                            
+    printf("error initScoket = %d", error);
 	
 	printf("main start \n");
 	
@@ -198,21 +211,31 @@ int main(int argc, char *argv[])
 	NETWORK_StopReceiver(pManager1->pReceiver);
 	NETWORK_StopReceiver(pManager2->pReceiver);
 	
+    /** check */
+    ii = 0;
 	printf("\n the last char transmited:\n");
     while( ! NETWORK_ManagerReadData(pManager2, ID_CHAR_DATA, &chData) )
     {
+        ++ii;
         printf("- %c \n", chData);
+        /** check values */
         error = error || ( chData != ( FIRST_CHAR_SENT + (NUMBER_DATA_SENT - 1) ) );
     }
-	
+    /** check nb data */
+	error = error || ( ii != 1) ;
+    
+    
 	printf("\n the integers transmited:\n");
     ii = 0;
     while( ! NETWORK_ManagerReadData(pManager2, ID_INT_DATA_WITH_ACK, &intData) )
     {
         printf("- %d \n", intData);
-        error = error || ( intData != FIRST_INT_ACK_SENT + ii );
+        /** check values */
+        error = error || ( intData != FIRST_INT_ACK_SENT + ii);
         ++ii;
     }
+    /** check nb data */
+    error = error || ( ii != 5) ;
 	
 	printf("\n");
 	printf("wait ... \n");

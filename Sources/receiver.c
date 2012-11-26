@@ -93,6 +93,7 @@ void NETWORK_DeleteReceiver(network_receiver_t** ppReceiver)
 			NETWORK_DeleteBuffer( &(pReceiver->pRecvBuffer) );
 	
 			free(pReceiver);
+            pReceiver = NULL;
 		}
 		*ppReceiver = NULL;
 	}

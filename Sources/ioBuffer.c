@@ -27,7 +27,7 @@
 #define NETWORK_IOBUFFER_ID_DEFAULT -1
 #define NETWORK_IOBUFFER_DATATYPE_DEFAULT network_frame_t_TYPE_UNINITIALIZED
 #define NETWORK_IOBUFFER_SENDINGWAITTIME_DEFAULT 1
-#define NETWORK_IOBUFFER_ACKTILEOUTMS_DEFAULT 0
+#define NETWORK_IOBUFFER_ACKTILEOUTMS_DEFAULT -1
 #define NETWORK_IOBUFFER_NBOFRETRY_DEFAULT -1
 #define NETWORK_IOBUFFER_BUFFSIZE_DEFAULT 0
 #define NETWORK_IOBUFFER_BUFFCELLSIZE_DEFAULT 0
@@ -39,9 +39,9 @@
  *
 ******************************************/
 
-void paramNewInOutBufferDefaultInit(network_paramNewInOutBuffer_t *pParam)
+void paramNewIoBufferDefaultInit(network_paramNewIoBuffer_t *pParam)
 {
-	/** -- initialization of the paramNewInOutBuffer with default parameters -- */
+	/** -- initialization of the paramNewIoBuffer with default parameters -- */
 	
 	pParam->id = NETWORK_IOBUFFER_ID_DEFAULT;
     pParam->dataType = NETWORK_IOBUFFER_DATATYPE_DEFAULT;	
@@ -54,8 +54,41 @@ void paramNewInOutBufferDefaultInit(network_paramNewInOutBuffer_t *pParam)
     pParam->overwriting = NETWORK_IOBUFFER_OVERWRITING_DEFAULT;
 }
 
+int paramNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
+{
+    /** -- check the values of the paramNewIoBuffer -- */
+    
+    /** local declarations */
+    int ok = 0;
+    
+    if( pParam->id > NETWORK_IOBUFFER_ID_DEFAULT && 
+        pParam->dataType != network_frame_t_TYPE_UNINITIALIZED &&
+        pParam->sendingWaitTime > 0 &&
+        pParam->ackTimeoutMs >= -1 &&
+        pParam->nbOfRetry >= -1 &&
+        pParam->buffSize > 0 &&
+        pParam->buffCellSize > 0)
+    {
+        ok = 1;
+    }
+    else
+    {
+        sal_print(PRINT_ERROR," parameters for new IoBuffer are not correct. \n \
+values expected: \n \
+    - id > -1 \n \
+    - dataType != network_frame_t_TYPE_UNINITIALIZED \n \
+    - sendingWaitTime > 0 \n \
+    - ackTimeoutMs > 0 or -1 if not used \n \
+    - nbOfRetry > 0 or -1 if not used  \n \
+    - buffSize > 0 \n \
+    - buffCellSize > 0 \n \
+    - overwriting = 0 or 1 ");
+    }
+    
+   return ok; 
+}
 
-network_ioBuffer_t* newInOutBuffer( const network_paramNewInOutBuffer_t *pParam )
+network_ioBuffer_t* newInOutBuffer( const network_paramNewIoBuffer_t* pParam )
 {
 	/** -- Create a new input or output buffer -- */
 	
@@ -69,45 +102,56 @@ network_ioBuffer_t* newInOutBuffer( const network_paramNewInOutBuffer_t *pParam 
 	
 	if( pInOutBuff )
 	{ 
-    
-        // check parammmmmmmmmmmmmm!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-        pInOutBuff->id = pParam->id;
-		pInOutBuff->dataType = pParam->dataType;
-		pInOutBuff->sendingWaitTime = pParam->sendingWaitTime;
-		pInOutBuff->ackTimeoutMs = pParam->ackTimeoutMs;
+        sal_mutex_init( &(pInOutBuff->mutex) );
+        pInOutBuff->pBuffer = NULL;
+        pInOutBuff->pBuffer = NULL;
         
-        if(pParam->nbOfRetry > 0)
+        if( paramNewIoBufferCheck(pParam) )
         {
-            pInOutBuff->nbOfRetry = pParam->nbOfRetry;
+            pInOutBuff->id = pParam->id;
+            pInOutBuff->dataType = pParam->dataType;
+            pInOutBuff->sendingWaitTime = pParam->sendingWaitTime;
+            pInOutBuff->ackTimeoutMs = pParam->ackTimeoutMs;
+        
+            if(pParam->nbOfRetry > 0)
+            {
+                pInOutBuff->nbOfRetry = pParam->nbOfRetry;
+            }
+            else
+            {
+                pInOutBuff->nbOfRetry = -1;
+            }
+            //	timeoutCallback(network_ioBuffer_t* this)
+		
+            pInOutBuff->isWaitAck = 0;
+            pInOutBuff->seqWaitAck = 0;
+            pInOutBuff->waitTimeCount = pParam->sendingWaitTime;
+            pInOutBuff->ackWaitTimeCount = pParam->ackTimeoutMs;
+            pInOutBuff->retryCount = 0;
+		
+            /** Create the RingBuffer */
+            pInOutBuff->pBuffer = newRingBufferWithOverwriting(	pParam->buffSize, pParam->buffCellSize,
+                                                                pParam->overwriting);
+															
+            if(pInOutBuff->pBuffer != NULL)
+            {
+                /** if it is a keep alive buffer, push in the data send for keep alive */ 
+                if( pInOutBuff->dataType == network_frame_t_TYPE_KEEP_ALIVE )
+                {
+                    ringBuffPushBack(pInOutBuff->pBuffer, &keepAliveData);
+                }
+            }
+            else
+            {
+                error = 1;
+            }
         }
         else
         {
-            pInOutBuff->nbOfRetry = -1;
+            error = 1;
         }
-		//	timeoutCallback(network_ioBuffer_t* this)
-		
-		pInOutBuff->isWaitAck = 0;
-		pInOutBuff->seqWaitAck = 0;
-		pInOutBuff->waitTimeCount = pParam->sendingWaitTime;
-		pInOutBuff->ackWaitTimeCount = pParam->ackTimeoutMs;
-		pInOutBuff->retryCount = 0;
-		
-		sal_mutex_init( &(pInOutBuff->mutex) );
-		
-		/** Create the RingBuffer */
-		pInOutBuff->pBuffer = newRingBufferWithOverwriting(	pParam->buffSize, pParam->buffCellSize,
-															pParam->overwriting);
-															
-		if(pInOutBuff->pBuffer != NULL)
-		{
-			/** if it is a keep alive buffer, push in the data send for keep alive */ 
-			if( pInOutBuff->dataType == network_frame_t_TYPE_KEEP_ALIVE )
-			{
-				ringBuffPushBack(pInOutBuff->pBuffer, &keepAliveData);
-			}
-		}
-		else
+        
+        if( error )
 		{
 			/** delete the inOutput buffer if an error occurred */
 			deleteInOutBuffer(&pInOutBuff);
@@ -135,6 +179,7 @@ void deleteInOutBuffer( network_ioBuffer_t** ppInOutBuff )
 			deleteRingBuffer( &(pInOutBuff->pBuffer) );
 		
 			free(pInOutBuff);
+            pInOutBuff = NULL;
 		}
 		*ppInOutBuff = NULL;
 	}	
