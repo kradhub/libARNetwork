@@ -17,7 +17,7 @@
 typedef struct network_paramNewInOutBuffer_t  
 {
     int id;						/**< Identifier used to find the InOutBuffer in a list*/
-    eAR_CMD_TYPE dataType;		/**< Type of the data stored in the buffer*/
+    eNETWOK_Frame_Type dataType;		/**< Type of the data stored in the buffer*/
     int sendingWaitTime;		/**< Time in millisecond between 2 send when the InOutBuffer is used with a libNetwork::sender*/
     int ackTimeoutMs;			/**< Timeout in millisecond before retry to send the data waiting an acknowledgement when the InOutBuffer is used with a libNetwork::sender*/
     int nbOfRetry;				/**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libNetwork::sender*/
@@ -35,7 +35,6 @@ typedef struct network_paramNewInOutBuffer_t
 **/
 void paramNewInOutBufferDefaultInit(network_paramNewInOutBuffer_t *pParam); 
 
-
 /**
  *  @brief Input buffer used by libNetwork::sender or output buffer used by libNetwork::receiver
  * 	@warning before to be used the inOutBuffer must be created through newInOutBuffer()
@@ -45,7 +44,7 @@ typedef struct network_ioBuffer_t
 {
     int id;		/**< Identifier used to find the InOutBuffer in a table*/
     network_ringBuffer_t* pBuffer;	/**< Pointer on the ringBuffer used to store the data*/
-    eAR_CMD_TYPE dataType;		/**< Type of the data stored in the buffer*/
+    eNETWOK_Frame_Type dataType;		/**< Type of the data stored in the buffer*/
     int sendingWaitTime;	/**< Time in millisecond between 2 send when the InOutBuffer if used with a libNetwork::sender*/
     int ackTimeoutMs;	/**< Timeout in millisecond after retry to send the data when the InOutBuffer is used with a libNetwork::sender*/
     int nbOfRetry;	/**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libNetwork::sender*/

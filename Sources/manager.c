@@ -50,14 +50,11 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 	network_paramNewInOutBuffer_t paramNewACK;
 	
 	/** Initialize the default parameters for the buffers of acknowledgement. */
-	// call paramDefault !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    paramNewACK.dataType = CMD_TYPE_ACK;
+	paramNewInOutBufferDefaultInit(&paramNewACK); 
+    paramNewACK.dataType = network_frame_t_TYPE_ACK;
     paramNewACK.buffSize = 1;
 	paramNewACK.buffCellSize = sizeof(int);
 	paramNewACK.overwriting = 0;
-    paramNewACK.sendingWaitTime = 0; /* not used */
-    paramNewACK.ackTimeoutMs = 0; /* not used */
-    paramNewACK.nbOfRetry = 0 ; /* not used */
     
     /** Create the Manager */
     pManager = malloc( sizeof(network_manager_t));

@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 	
 	// input ID_INT_DATA char
 	paramInputNetwork2[0].id = ID_INT_DATA;
-	paramInputNetwork2[0].dataType = CMD_TYPE_DATA;
+	paramInputNetwork2[0].dataType = network_frame_t_TYPE_DATA;
 	paramInputNetwork2[0].sendingWaitTime = 2;
 	paramInputNetwork2[0].ackTimeoutMs = 10;//not used
 	paramInputNetwork2[0].nbOfRetry = 5;//not used
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 	
 	// output ID_CHAR_DATA int
 	paramOutputNetwork2[0].id = ID_CHAR_DATA;
-	paramOutputNetwork2[0].dataType = CMD_TYPE_DATA;
+	paramOutputNetwork2[0].dataType = network_frame_t_TYPE_DATA;
 	paramOutputNetwork2[0].sendingWaitTime = 3;
 	paramOutputNetwork2[0].ackTimeoutMs = 10;//not used
 	paramOutputNetwork2[0].nbOfRetry = 5;//not used
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 	
 	// output ID_INT_DATA_WITH_ACK int
 	paramOutputNetwork2[1].id = ID_INT_DATA_WITH_ACK;
-	paramOutputNetwork2[1].dataType = CMD_TYPE_DATA_WITH_ACK;//not used
+	paramOutputNetwork2[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;//not used
 	paramOutputNetwork2[1].sendingWaitTime = 2;//not used
 	paramOutputNetwork2[1].ackTimeoutMs = 10;//not used
 	paramOutputNetwork2[1].nbOfRetry = 5;//not used

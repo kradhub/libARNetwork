@@ -13,47 +13,27 @@
 /**
  *  @brief command type know by the network
 **/
-typedef enum eAR_CMD_TYPE
+typedef enum eNETWOK_Frame_Type
 {
-    CMD_TYPE_ACK, /**< acknowledgment type*/
-    CMD_TYPE_DATA, /**< data type*/
-    CMD_TYPE_DATA_WITH_ACK, /**< data type with a waiting acknowledgment*/
-    CMD_TYPE_KEEP_ALIVE, /**< keep alive type*/
-    CMD_TYPE_DEFAULT /**< not known type*/
-}eAR_CMD_TYPE;
-
-/**
- *  @brief indexs of the data contents in a command
-**/
-typedef enum eAR_CMD_INDEX
-{
-	AR_CMD_INDEX_TYPE = 0, /**< index of the command type*/
-	AR_CMD_INDEX_ID = 4, /**< index of the identifier of the buffer where was stored the command*/
-	AR_CMD_INDEX_SEQ = 8, /**< index of the sequence number of the command*/
-	AR_CMD_INDEX_SIZE = 12, /**< index of the size of the command*/
-	AR_CMD_INDEX_DATA = 16, /**< index of the command data*/
-	AR_CMD_HEADER_SIZE = 16 /**< size of the command header*/
-}eAR_CMD_INDEX;
+    network_frame_t_TYPE_UNINITIALIZED = 0, /**< not known type*/
+    network_frame_t_TYPE_ACK, /**< acknowledgment type*/
+    network_frame_t_TYPE_DATA, /**< data type*/
+    network_frame_t_TYPE_DATA_WITH_ACK, /**< data type with a waiting acknowledgment*/
+    network_frame_t_TYPE_KEEP_ALIVE /**< keep alive type*/
+    
+}eNETWOK_Frame_Type;
 
 /**
  *  @brief 
 **/
-typedef struct AR_CMD
+typedef struct network_frame_t
 {
-	eAR_CMD_TYPE type; /**< command type */
+	eNETWOK_Frame_Type type; /**< command type */
     uint32_t id; /**< identifier of the buffer sending the command */
     uint32_t seq; /**< sequence number of the command */
     uint32_t size; /**< size of the command */
-    //void* data;  // !!! ???
-}AR_CMD;
+    uint8_t  data;  /**< data of the command */
+}network_frame_t;
 
-/**
- *  @brief 
-**/
-typedef union UNION_CMD 
-{
-	AR_CMD*		pCmd;
-    uint8_t* 	pTabUint8;
-}UNION_CMD;
 
 #endif // _NETWORK_COMMON_H_

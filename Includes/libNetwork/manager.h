@@ -20,7 +20,7 @@ typedef enum
 	NETWORK_MANAGER_OK = 0, /**< no error */
 	NETWORK_MANAGER_ERROR_ALLOC = -1000 /**< flksdqljlk */ 
 	
-} eNET_Manager_Error;
+} eNETWORK_Manager_Error;
 
 /**
  *  @brief network manager allow to send data acknowledged or not.

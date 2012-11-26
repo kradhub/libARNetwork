@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	
 	// input ID_CHAR_DATA int
 	paramNetworkL1[0].id = ID_CHAR_DATA;
-	paramNetworkL1[0].dataType = CMD_TYPE_DATA;
+	paramNetworkL1[0].dataType = network_frame_t_TYPE_DATA;
 	paramNetworkL1[0].sendingWaitTime = 3;
 	paramNetworkL1[0].ackTimeoutMs = 10;//not used
 	paramNetworkL1[0].nbOfRetry = 5;//not used
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
 	
 	// input ID_INT_DATA_WITH_ACK char
 	paramNetworkL1[1].id = ID_INT_DATA_WITH_ACK;
-	paramNetworkL1[1].dataType = CMD_TYPE_DATA_WITH_ACK;
+	paramNetworkL1[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramNetworkL1[1].sendingWaitTime = 2;
 	paramNetworkL1[1].ackTimeoutMs = 10;
 	paramNetworkL1[1].nbOfRetry = -1 /*5*/;
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 	
 	// input ID_KEEP_ALIVE char
 	paramNetworkL1[2].id = ID_KEEP_ALIVE;
-	paramNetworkL1[2].dataType = CMD_TYPE_KEEP_ALIVE;
+	paramNetworkL1[2].dataType = network_frame_t_TYPE_KEEP_ALIVE;
 	paramNetworkL1[2].sendingWaitTime = 100;
 	paramNetworkL1[2].ackTimeoutMs = 10;//not used
 	paramNetworkL1[2].nbOfRetry = 5;//not used
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 	
 	//  ID_CHAR_DATA_2 int
 	paramNetworkL2[0].id = ID_CHAR_DATA_2;
-	paramNetworkL2[0].dataType = CMD_TYPE_DATA;
+	paramNetworkL2[0].dataType = network_frame_t_TYPE_DATA;
 	paramNetworkL2[0].sendingWaitTime = 3;
 	paramNetworkL2[0].ackTimeoutMs = 10;//not used
 	paramNetworkL2[0].nbOfRetry = 5;//not used
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 	
 	//  ID_INT_DATA_WITH_ACK_2 char
 	paramNetworkL2[1].id = ID_INT_DATA_WITH_ACK_2;
-	paramNetworkL2[1].dataType = CMD_TYPE_DATA_WITH_ACK;
+	paramNetworkL2[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramNetworkL2[1].sendingWaitTime = 2;
 	paramNetworkL2[1].ackTimeoutMs = 10;
 	paramNetworkL2[1].nbOfRetry = -1 /*5*/;
@@ -153,9 +153,6 @@ int main(int argc, char *argv[])
 		switch(netType)
 		{
 			case '1':
-				//pManager1 = NETWORK_NewManagerWithVarg( 256, 256, 2, 2/*3*/,
-				//			paramNetwork1[3], paramNetwork1[4],
-				//			paramNetwork1[0], paramNetwork1[1]/*, paramNetwork1[2]*/);
 				
 				pManager1 = NETWORK_NewManager( 256, 256, 2/*3*/, paramNetworkL1, 2 ,paramNetworkL2);
 									
@@ -168,11 +165,6 @@ int main(int argc, char *argv[])
 			break;
 			
 			case '2':
-				/*
-				pManager1 = NETWORK_NewManagerWithVarg( 256, 256, 2, 2,
-							paramNetwork1[0], paramNetwork1[1],
-							paramNetwork1[3], paramNetwork1[4]);
-				*/
 				
 				pManager1 = NETWORK_NewManager( 256, 256, 2, paramNetworkL2, 2,paramNetworkL1);
 							

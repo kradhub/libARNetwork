@@ -13,6 +13,8 @@
 
 #include <stdlib.h>
 
+#include <stddef.h>
+
 #include <unistd.h>
 #include <string.h>
 
@@ -23,36 +25,13 @@
 #include <libNetwork/common.h>
 #include <libNetwork/buffer.h>
 #include <libNetwork/ioBuffer.h>
-#include <libNetwork/sender.h>
+
+#include "sender.h"
 
 #include <arpa/inet.h> // !!!!!!!!!!!!!!!!!!!!!!!!!!!pass in libsal
 
 typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;
-
-/*****************************************
- * 
- * 			private header:
- *
-******************************************/
-/**
- *  @brief send the data
- * 	@param pSender the pointer on the Sender
- *	@note only call by NETWORK_RunSendingThread()
- * 	@see NETWORK_RunSendingThread()
-**/
-void senderSend(network_sender_t* pSender);
-
-/**
- *  @brief add data to the sender buffer
- * 	@param pSender the pointer on the Sender
- *	@param pinputBuff
- * 	@param seqNum
- * 	@note only call by NETWORK_RunSendingThread()
- * 	@see NETWORK_RunSendingThread()
-**/
-int senderAddToBuffer(	network_sender_t* pSender,const network_ioBuffer_t* pinputBuff,
-						int seqNum);
 
 /*****************************************
  * 
@@ -88,7 +67,7 @@ network_sender_t* NETWORK_NewSender(	unsigned int sendingBufferSize, unsigned in
 		pSender->pptab_inputBuffer = ppTab_input;
 		
 		/** Create the Sending buffer */
-		pSender->pSendingBuffer = newBuffer(sendingBufferSize, 1);
+		pSender->pSendingBuffer = NETWORK_NewBuffer(sendingBufferSize, 1);
 			
 		if(pSender->pSendingBuffer == NULL)
 		{
@@ -118,7 +97,7 @@ void NETWORK_DeleteSender(network_sender_t** ppSender)
 		
 		if(pSender)
 		{
-			deleteBuffer( &(pSender->pSendingBuffer) );
+			NETWORK_DeleteBuffer( &(pSender->pSendingBuffer) );
 		
 			free(pSender);
 		}
@@ -175,7 +154,7 @@ void* NETWORK_RunSendingThread(void* data)
 						 *  if there is a timeout, retry to send the data 
 						 *  and decrement the number of retry still possible
 						**/
-						senderAddToBuffer(pSender, pInputTemp, pInputTemp->seqWaitAck);
+						NETWORK_SenderAddToBuffer(pSender, pInputTemp, pInputTemp->seqWaitAck);
 						pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
 						
 						if(pInputTemp->retryCount > 0 )
@@ -194,13 +173,13 @@ void* NETWORK_RunSendingThread(void* data)
 			else if( !ringBuffIsEmpty(pInputTemp->pBuffer) && !pInputTemp->waitTimeCount)
 			{
 				/** try to add the latest data of the input buffer in the sending buffer*/
-				if( !senderAddToBuffer(pSender, pInputTemp, seq) )
+				if( !NETWORK_SenderAddToBuffer(pSender, pInputTemp, seq) )
 				{				
 					pInputTemp->waitTimeCount = pInputTemp->sendingWaitTime;
 					
 					switch(pInputTemp->dataType)
 					{
-						case CMD_TYPE_DATA_WITH_ACK:
+						case network_frame_t_TYPE_DATA_WITH_ACK:
 							/** 
 							 * reinitialize the input buffer parameters,
 							 * save the sequence wait for the acknowledgement,
@@ -212,17 +191,17 @@ void* NETWORK_RunSendingThread(void* data)
 							pInputTemp->retryCount = pInputTemp->nbOfRetry;	
 						break;
 						
-						case CMD_TYPE_DATA:
+						case network_frame_t_TYPE_DATA:
 							/** pop the data sent*/
 							ringBuffPopFront(pInputTemp->pBuffer, NULL);
 						break;
 						
-						case CMD_TYPE_ACK:
+						case network_frame_t_TYPE_ACK:
 							/** pop the acknowledgement sent*/
 							ringBuffPopFront(pInputTemp->pBuffer, NULL);
 						break;
 						
-						case CMD_TYPE_KEEP_ALIVE:
+						case network_frame_t_TYPE_KEEP_ALIVE:
 						
 						break;
 						
@@ -236,7 +215,7 @@ void* NETWORK_RunSendingThread(void* data)
 				}
 			}
 		}
-		senderSend(pSender);
+		NETWORK_SenderSend(pSender);
 	}
 
 	sal_close(pSender->socket);
@@ -294,14 +273,14 @@ int NETWORK_SenderConnection(network_sender_t* pSender,const char* addr, int por
  *
 ******************************************/
 
-void senderSend(network_sender_t* pSender)
+void NETWORK_SenderSend(network_sender_t* pSender)
 {	
 	/**  -- send the data -- */
 	
 	/** local declarations */
 	int nbCharCopy = 0;
 	
-	if( !bufferIsEmpty(pSender->pSendingBuffer) )
+	if( !NETWORK_BufferIsEmpty(pSender->pSendingBuffer) )
 	{	
 		nbCharCopy = pSender->pSendingBuffer->pFront - pSender->pSendingBuffer->pStart;
 			
@@ -311,17 +290,17 @@ void senderSend(network_sender_t* pSender)
 	}
 }
 
-int senderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_t* pinputBuff,
+int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_t* pinputBuff,
 						int seqNum)
 {
 	/** -- add data to the sender buffer -- */
 	
 	/** local declarations */
 	int error = 1;
-	int sizeNeed = AR_CMD_HEADER_SIZE + pinputBuff->pBuffer->buffCellSize;
+	int sizeNeed = offsetof(network_frame_t,data) /*network_frame_t_HEADER_SIZE*/ + pinputBuff->pBuffer->buffCellSize;
 	uint32_t droneEndianInt32 = 0;
 	
-	if( bufferGetFreeCellNb(pSender->pSendingBuffer) >= sizeNeed )
+	if( NETWORK_BufferGetFreeCellNb(pSender->pSendingBuffer) >= sizeNeed )
 	{	
 		/** add type */
 		droneEndianInt32 =  htodl( (uint32_t) pinputBuff->dataType );
@@ -352,7 +331,7 @@ int senderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_t* pinpu
 		}
 		else
 		{
-			pSender->pSendingBuffer->pFront -= AR_CMD_HEADER_SIZE;
+			pSender->pSendingBuffer->pFront -= offsetof(network_frame_t,data); //network_frame_t_HEADER_SIZE;
 		}
 		
 	}

@@ -5,8 +5,8 @@
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _RINGBUFFER_H_
-#define _RINGBUFFER_H_
+#ifndef _NETWORK_RINGBUFFER_H_
+#define _NETWORK_RINGBUFFER_H_
 
 #include <libSAL/mutex.h>
 
@@ -38,7 +38,6 @@ typedef struct network_ringBuffer_t
  * 	@see deleteRingBuffer()
 **/
 network_ringBuffer_t* newRingBuffer(	unsigned int buffSize, unsigned int buffCellSize); 
-
 
 /**
  *  @brief Create a new ring buffer.
@@ -130,5 +129,5 @@ void ringBuffPrint(network_ringBuffer_t* pRingBuff);
 **/
 void ringBuffDataPrint(network_ringBuffer_t* pRingBuff);
 
-#endif // _RINGBUFFER_H_
+#endif // _NETWORK_RINGBUFFER_H_
 

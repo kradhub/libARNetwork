@@ -13,6 +13,8 @@
 
 #include <stdlib.h>
 
+#include <stddef.h>
+
 #include <string.h>
 
 #include <libSAL/print.h>
@@ -24,25 +26,13 @@
 #include <libNetwork/buffer.h>
 #include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
-#include <libNetwork/receiver.h>
+
+#include "receiver.h"
+
+
 
 typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;
-
-/*****************************************
- * 
- * 			private header:
- *
-******************************************/
-/**
- *  @brief get a command in the receiving buffer
- * 	@param pBuffsend the pointer on the receiver
- * 	@param pCmd adress of the pointer on the command
- * 	@return error 1 if buffer is empty
- *	@pre only call by NETWORK_RunSendingThread()
- * 	@see NETWORK_RunSendingThread()
-**/
-int NETWORK_GetCmd(network_receiver_t* pReceiver, uint8_t** ppCmd);
 
 /*****************************************
  * 
@@ -71,7 +61,7 @@ network_receiver_t* NETWORK_NewReceiver(	unsigned int recvBufferSize, unsigned i
 		pReceiver->numOfOutputBuff = numOfOutputBuff;
 		pReceiver->pptab_outputBuffer = pptab_output;
 		
-		pReceiver->pRecvBuffer = newBuffer(recvBufferSize,1);
+		pReceiver->pRecvBuffer = NETWORK_NewBuffer(recvBufferSize,1);
 		if(pReceiver->pRecvBuffer == NULL)
 		{
 			error = 1;
@@ -100,7 +90,7 @@ void NETWORK_DeleteReceiver(network_receiver_t** ppReceiver)
 		
 		if(pReceiver)
 		{
-			deleteBuffer( &(pReceiver->pRecvBuffer) );
+			NETWORK_DeleteBuffer( &(pReceiver->pRecvBuffer) );
 	
 			free(pReceiver);
 		}
@@ -114,12 +104,10 @@ void* NETWORK_RunReceivingThread(void* data)
 	
 	/** local declarations */
 	network_receiver_t* pReceiver = data;
-	UNION_CMD recvCmd;
+    network_frame_t* pFrame = NULL;
 	network_ioBuffer_t* pOutBufferTemp = NULL;
 	int pushError = 0;
-	
-	/** initialization local */
-	recvCmd.pTabUint8 = NULL;
+
 	
 	while( pReceiver->isAlive )
 	{	
@@ -127,39 +115,39 @@ void* NETWORK_RunReceivingThread(void* data)
 		if( NETWORK_ReceiverRead( pReceiver ) > 0)
 		{	
 			/** for each command present in the receiver buffer */		
-			while( !NETWORK_GetCmd( pReceiver, &(recvCmd.pTabUint8) ) )
+            pFrame = NETWORK_GetNextFrame(pReceiver, pFrame);
+            while( pFrame != NULL )
 			{	
 				/** management by the command type */			
-				switch (recvCmd.pCmd->type)
+				switch (pFrame->type)
 				{
-					case CMD_TYPE_ACK:
-						sal_print(PRINT_DEBUG,"	- TYPE: CMD_TYPE_ACK | SEQ:%d | ID:%d \n",
-												recvCmd.pCmd->seq, recvCmd.pCmd->id);
+					case network_frame_t_TYPE_ACK:
+						sal_print(PRINT_DEBUG,"	- TYPE: network_frame_t_TYPE_ACK | SEQ:%d | ID:%d \n",
+												pFrame->seq, pFrame->id);
 												
 						/** transmit the acknowledgement to the sender */
-						NETWORK_SenderAckReceived( pReceiver->pSender,idAckToIdInput(recvCmd.pCmd->id),
-											(int) recvCmd.pTabUint8[AR_CMD_INDEX_DATA] );
+						NETWORK_SenderAckReceived( pReceiver->pSender,idAckToIdInput(pFrame->id),
+											(int) pFrame->data );
 					break;
 					
-					case CMD_TYPE_DATA:
-						sal_print(PRINT_DEBUG," - TYPE: CMD_TYPE_DATA | SEQ:%d | ID:%d \n",
-												recvCmd.pCmd->seq, recvCmd.pCmd->id);
+					case network_frame_t_TYPE_DATA:
+						sal_print(PRINT_DEBUG," - TYPE: network_frame_t_TYPE_DATA | SEQ:%d | ID:%d \n",
+												pFrame->seq, pFrame->id);
 						
 						/** push the data received in the output buffer targeted */
 						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->numOfOutputBuff,
-															recvCmd.pCmd->id);
+															pFrame->id);
 						
 						if(pOutBufferTemp != NULL)
 						{
-							ringBuffPushBack(	pOutBufferTemp->pBuffer,
-												( recvCmd.pTabUint8 + AR_CMD_INDEX_DATA ) );
+							ringBuffPushBack(	pOutBufferTemp->pBuffer, &(pFrame->data) );
 						}							
 					break;
 					
-					case CMD_TYPE_DATA_WITH_ACK:
-						sal_print(PRINT_DEBUG," - TYPE: CMD_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
-													recvCmd.pCmd->seq, recvCmd.pCmd->id);
+					case network_frame_t_TYPE_DATA_WITH_ACK:
+						sal_print(PRINT_DEBUG," - TYPE: network_frame_t_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
+													pFrame->seq, pFrame->id);
 						
 						/** 
 						 * push the data received in the output buffer targeted, 
@@ -167,18 +155,18 @@ void* NETWORK_RunReceivingThread(void* data)
 						**/
 						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->numOfOutputBuff,
-															recvCmd.pCmd->id);
+															pFrame->id);
 						if(pOutBufferTemp != NULL)
 						{
 							/** OutBuffer->seqWaitAck used to save the last seq */
-							if( recvCmd.pCmd->seq != pOutBufferTemp->seqWaitAck )
+							if( pFrame->seq != pOutBufferTemp->seqWaitAck )
 							{
-								pushError = ringBuffPushBack(	pOutBufferTemp->pBuffer,
-														&(recvCmd.pTabUint8[AR_CMD_INDEX_DATA]));
+								pushError = ringBuffPushBack( pOutBufferTemp->pBuffer, 
+														&(pFrame->data) );
 								if( !pushError)
 								{
-									NETWORK_ReturnASK(pReceiver, recvCmd.pCmd->id, recvCmd.pCmd->seq);
-									pOutBufferTemp->seqWaitAck = recvCmd.pCmd->seq;
+									NETWORK_ReturnASK(pReceiver, pFrame->id, pFrame->seq);
+									pOutBufferTemp->seqWaitAck = pFrame->seq;
 								}
 							}
 						}	
@@ -189,8 +177,10 @@ void* NETWORK_RunReceivingThread(void* data)
 						sal_print(PRINT_WARNING," !!! command type not known !!! \n");
 					break;
 				}
+                /** get the next frame*/
+                pFrame = NETWORK_GetNextFrame(pReceiver, pFrame);
 			}
-			bufferClean(pReceiver->pRecvBuffer);
+			NETWORK_BufferClean(pReceiver->pRecvBuffer);
 		}
 	}
 
@@ -262,45 +252,29 @@ int NETWORK_ReceiverBind(network_receiver_t* pReceiver, unsigned short port, int
  *
 ******************************************/
 
-int NETWORK_GetCmd(network_receiver_t* pReceiver, uint8_t** ppCmd)
+network_frame_t* NETWORK_GetNextFrame(network_receiver_t* pReceiver, network_frame_t* prevFrame)
 {
-	/** -- get a command in the receiving buffer-- */
+    /** -- get the next Frame of the receiving buffer -- */
 	
 	/** local declarations */
-	int error = 1;
-	UNION_CMD recvCmd ;
-
-	if(*ppCmd == NULL)
-	{
-		*ppCmd = pReceiver->pRecvBuffer->pStart;
-	}
-	else
-	{
-		/** point the next command */
-		(*ppCmd) += *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_SIZE) );
-	}
-	
-	recvCmd.pTabUint8 = *ppCmd;
-	
-	/** check if the buffer stores enough data */
-	if(*ppCmd <= (uint8_t*) pReceiver->pRecvBuffer->pFront - AR_CMD_HEADER_SIZE)
-	{	
-		/** pass the command to the host endian */
-		recvCmd.pCmd->type = dtohl( *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_TYPE) ) );
-		recvCmd.pCmd->id = dtohl( *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_ID) ) );
-		recvCmd.pCmd->seq = dtohl( *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_SEQ) ) );
-		recvCmd.pCmd->size = dtohl( *( (uint32_t*) (*ppCmd + AR_CMD_INDEX_SIZE) ) );
-		
-		if(*ppCmd <= (uint8_t*) pReceiver->pRecvBuffer->pFront - recvCmd.pCmd->size)
-		{
-			error = 0;
-		}
-	}
-	
-	if( error != 0)
-	{
-		*ppCmd = NULL;
-	}
-	
-	return error;
+    network_frame_t* nextFrame = NULL;
+    
+    if (prevFrame == NULL)
+    {
+        /** if no previous frame, get the first frame of the receiving buffer */
+        nextFrame = pReceiver->pRecvBuffer->pStart;
+    }
+    else
+    {
+        /** get the next frame */
+        nextFrame = (network_frame_t*) (prevFrame + prevFrame->size) ;
+    }
+    
+    /** if the receiving buffer not contain enough data */
+    if ( (void*) nextFrame > pReceiver->pRecvBuffer->pFront - offsetof(network_frame_t, data) )
+    {
+        nextFrame = NULL;
+    }
+    
+    return nextFrame;
 }

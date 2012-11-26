@@ -64,10 +64,11 @@ AC_ARG_WITH([libSalBin],
 # Define includes directories
 ##########################################################################
 
+# Put local include directory first
+CFLAGS="$CFLAGS -I../Includes"
+
 # add the headers directory of libSal
 CFLAGS="$CFLAGS -I$libSalHeader"
-
-CFLAGS="$CFLAGS -I../Includes"
 
 CPPFLAGS="$CFLAGS"
 ##########################################################################

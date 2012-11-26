@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 	/** input ID_CHAR_DATA int */
     paramNewInOutBufferDefaultInit( &(paramInputNetwork1[0]) );
 	paramInputNetwork1[0].id = ID_CHAR_DATA;
-	paramInputNetwork1[0].dataType = CMD_TYPE_DATA;
+	paramInputNetwork1[0].dataType = network_frame_t_TYPE_DATA;
 	paramInputNetwork1[0].buffSize = 1;
 	paramInputNetwork1[0].buffCellSize = sizeof(char);
 	paramInputNetwork1[0].overwriting = 1;
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 	/** input ID_INT_DATA_WITH_ACK char */
     paramNewInOutBufferDefaultInit( &(paramInputNetwork1[1]) );
 	paramInputNetwork1[1].id = ID_INT_DATA_WITH_ACK;
-	paramInputNetwork1[1].dataType = CMD_TYPE_DATA_WITH_ACK;
+	paramInputNetwork1[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramInputNetwork1[1].sendingWaitTime = 2;
 	paramInputNetwork1[1].ackTimeoutMs = 10;
 	paramInputNetwork1[1].nbOfRetry = -1/*20*/;
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 	/** output ID_INT_DATA int */
     paramNewInOutBufferDefaultInit( &(paramOutputNetwork1[0]) );
 	paramOutputNetwork1[0].id = ID_INT_DATA;
-	paramOutputNetwork1[0].dataType = CMD_TYPE_DATA;
+	paramOutputNetwork1[0].dataType = network_frame_t_TYPE_DATA;
 	paramOutputNetwork1[0].buffSize = 10;
 	paramOutputNetwork1[0].buffCellSize = sizeof(int);
 	paramOutputNetwork1[0].overwriting = 1;
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
 	/** input ID_INT_DATA char */
     paramNewInOutBufferDefaultInit( &(paramInputNetwork2[0]) );
 	paramInputNetwork2[0].id = ID_INT_DATA;
-	paramInputNetwork2[0].dataType = CMD_TYPE_DATA;
+	paramInputNetwork2[0].dataType = network_frame_t_TYPE_DATA;
 	paramInputNetwork2[0].sendingWaitTime = 2;
 	paramInputNetwork2[0].buffSize = 2;
 	paramInputNetwork2[0].buffCellSize = sizeof(int);
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 	/**  output ID_CHAR_DATA int */
     paramNewInOutBufferDefaultInit( &(paramOutputNetwork2[0]) );
 	paramOutputNetwork2[0].id = ID_CHAR_DATA;
-	paramOutputNetwork2[0].dataType = CMD_TYPE_DATA;
+	paramOutputNetwork2[0].dataType = network_frame_t_TYPE_DATA;
 	paramOutputNetwork2[0].sendingWaitTime = 3;
 	paramOutputNetwork2[0].buffSize = 1;
 	paramOutputNetwork2[0].buffCellSize = sizeof(char);

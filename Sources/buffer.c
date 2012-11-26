@@ -25,7 +25,7 @@
  *
 ******************************************/
 
-network_buffer_t* newBuffer(unsigned int buffSize, unsigned int buffCellSize)
+network_buffer_t* NETWORK_NewBuffer(unsigned int buffSize, unsigned int buffCellSize)
 {
 	/** -- Create a new buffer -- */
 	
@@ -42,14 +42,14 @@ network_buffer_t* newBuffer(unsigned int buffSize, unsigned int buffCellSize)
 		
 		if( pBuffer->pStart == NULL)
 		{
-			deleteBuffer(&pBuffer);
+			NETWORK_DeleteBuffer(&pBuffer);
 		}
     }
     
     return pBuffer;
 }
 
-void deleteBuffer(network_buffer_t** ppBuffer)
+void NETWORK_DeleteBuffer(network_buffer_t** ppBuffer)
 {	
 	/** -- Delete the buffer -- */
 	
@@ -70,7 +70,7 @@ void deleteBuffer(network_buffer_t** ppBuffer)
 	}
 }
 
-void bufferPrint(network_buffer_t* pBuffer)
+void NETWORK_BufferPrint(network_buffer_t* pBuffer)
 {	
 	/** -- Print the state of the buffer -- */
 	
@@ -80,10 +80,10 @@ void bufferPrint(network_buffer_t* pBuffer)
 	
 	sal_print(PRINT_WARNING," data : \n");
 
-	bufferDataPrint(pBuffer);
+	NETWORK_BufferDataPrint(pBuffer);
 }
 
-void bufferDataPrint(network_buffer_t* pBuffer)
+void NETWORK_BufferDataPrint(network_buffer_t* pBuffer)
 {
 	/** -- Print the contents of the buffer --*/
 	

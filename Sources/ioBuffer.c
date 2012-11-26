@@ -25,12 +25,12 @@
 ******************************************/
 
 #define NETWORK_IOBUFFER_ID_DEFAULT -1
-#define NETWORK_IOBUFFER_DATATYPE_DEFAULT CMD_TYPE_DEFAULT
+#define NETWORK_IOBUFFER_DATATYPE_DEFAULT network_frame_t_TYPE_UNINITIALIZED
 #define NETWORK_IOBUFFER_SENDINGWAITTIME_DEFAULT 1
 #define NETWORK_IOBUFFER_ACKTILEOUTMS_DEFAULT 0
 #define NETWORK_IOBUFFER_NBOFRETRY_DEFAULT -1
-#define NETWORK_IOBUFFER_BUFFSIZE_DEFAULT 1
-#define NETWORK_IOBUFFER_BUFFCELLSIZE_DEFAULT 1
+#define NETWORK_IOBUFFER_BUFFSIZE_DEFAULT 0
+#define NETWORK_IOBUFFER_BUFFCELLSIZE_DEFAULT 0
 #define NETWORK_IOBUFFER_OVERWRITING_DEFAULT 0
 
 /*****************************************
@@ -62,17 +62,29 @@ network_ioBuffer_t* newInOutBuffer( const network_paramNewInOutBuffer_t *pParam 
 	/** local declarations */
 	network_ioBuffer_t* pInOutBuff = NULL;
 	int keepAliveData = 0x00;
+    int error = 0;
 	
 	/** Create the input or output buffer in accordance with parameters set in pParam */
 	pInOutBuff = malloc( sizeof(network_ioBuffer_t) );
 	
 	if( pInOutBuff )
 	{ 
-		pInOutBuff->id = pParam->id;
+    
+        // check parammmmmmmmmmmmmm!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        pInOutBuff->id = pParam->id;
 		pInOutBuff->dataType = pParam->dataType;
 		pInOutBuff->sendingWaitTime = pParam->sendingWaitTime;
 		pInOutBuff->ackTimeoutMs = pParam->ackTimeoutMs;
-		pInOutBuff->nbOfRetry = pParam->nbOfRetry;
+        
+        if(pParam->nbOfRetry > 0)
+        {
+            pInOutBuff->nbOfRetry = pParam->nbOfRetry;
+        }
+        else
+        {
+            pInOutBuff->nbOfRetry = -1;
+        }
 		//	timeoutCallback(network_ioBuffer_t* this)
 		
 		pInOutBuff->isWaitAck = 0;
@@ -90,7 +102,7 @@ network_ioBuffer_t* newInOutBuffer( const network_paramNewInOutBuffer_t *pParam 
 		if(pInOutBuff->pBuffer != NULL)
 		{
 			/** if it is a keep alive buffer, push in the data send for keep alive */ 
-			if( pInOutBuff->dataType == CMD_TYPE_KEEP_ALIVE )
+			if( pInOutBuff->dataType == network_frame_t_TYPE_KEEP_ALIVE )
 			{
 				ringBuffPushBack(pInOutBuff->pBuffer, &keepAliveData);
 			}
