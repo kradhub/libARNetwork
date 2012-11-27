@@ -23,7 +23,7 @@
 #include <libSAL/endianness.h>
 
 #include <libNetwork/error.h>
-#include <libNetwork/common.h>
+#include <libNetwork/frame.h>
 #include <libNetwork/buffer.h>
 #include <libNetwork/ioBuffer.h>
 
@@ -135,7 +135,7 @@ void* NETWORK_RunSendingThread(void* data)
 				--(pInputTemp->waitTimeCount);
 			}
 
-			if( inOutBuffeIsWaitAck(pInputTemp)  ) 
+			if( NETWORK_IoBuffeIsWaitAck(pInputTemp)  ) 
 			{
 				if(pInputTemp->ackWaitTimeCount == 0)
 				{
@@ -240,7 +240,7 @@ int NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum)
 	network_ioBuffer_t* pInputBuff = NULL;
 	int error = 1;
 	
-	pInputBuff = inOutBufferWithId( pSender->pptab_inputBuffer, pSender->numOfInputBuff, id );
+	pInputBuff = NETWORK_IoBufferWithId( pSender->pptab_inputBuffer, pSender->numOfInputBuff, id );
 	
 	if(pInputBuff != NULL)
 	{
@@ -248,7 +248,7 @@ int NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum)
 		 *  transmit the acknowledgment to the input buffer. 
 		 * 	if the acknowledgment is suitable the waiting data is popped
 		**/
-		error = inOutBufferAckReceived( pInputBuff, seqNum );
+		error = NETWORK_IoBufferAckReceived( pInputBuff, seqNum );
 	}
 	
 	return error;

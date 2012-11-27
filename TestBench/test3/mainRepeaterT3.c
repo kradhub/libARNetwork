@@ -10,7 +10,7 @@
 #include <libSAL/print.h>
 #include <libSAL/thread.h>
 
-#include <libNetwork/common.h>
+#include <libNetwork/frame.h>
 #include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
 #include <libNetwork/receiver.h>
@@ -102,8 +102,8 @@ int main(int argc, char *argv[])
 							
 					
 	printThread1.alive=1;		
-	printThread1.pOutBuffChar = inOutBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_CHAR_DATA);
-	printThread1.pOutBuffIntAck = inOutBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_INT_DATA_WITH_ACK);
+	printThread1.pOutBuffChar = NETWORK_IoBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_CHAR_DATA);
+	printThread1.pOutBuffIntAck = NETWORK_IoBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_INT_DATA_WITH_ACK);
 	
 	printf("\n~~ This soft receives data sent by the manager soft ~~ \n \n");
 						

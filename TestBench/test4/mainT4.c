@@ -10,7 +10,7 @@
 #include <libSAL/print.h>
 #include <libSAL/thread.h>
 
-#include <libNetwork/common.h>
+#include <libNetwork/frame.h>
 #include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
 #include <libNetwork/receiver.h>
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 	//--- network 1 ---
 	
 	// input ID_CHAR_DATA int
-    paramNewIoBufferDefaultInit( &(paramNetworkL1[0]) );
+    NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[0]) );
 	paramNetworkL1[0].id = ID_CHAR_DATA;
 	paramNetworkL1[0].dataType = network_frame_t_TYPE_DATA;
 	paramNetworkL1[0].sendingWaitTime = 3;
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 	paramNetworkL1[0].overwriting = 1;
 	
 	// input ID_INT_DATA_WITH_ACK char
-    paramNewIoBufferDefaultInit( &(paramNetworkL1[1]) );
+    NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[1]) );
 	paramNetworkL1[1].id = ID_INT_DATA_WITH_ACK;
 	paramNetworkL1[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramNetworkL1[1].sendingWaitTime = 2;
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 	paramNetworkL1[1].overwriting = 0;
 	
 	// input ID_KEEP_ALIVE char
-    paramNewIoBufferDefaultInit( &(paramNetworkL1[2]) );
+    NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[2]) );
 	paramNetworkL1[2].id = ID_KEEP_ALIVE;
 	paramNetworkL1[2].dataType = network_frame_t_TYPE_KEEP_ALIVE;
 	paramNetworkL1[2].sendingWaitTime = 100;
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 	paramNetworkL1[2].overwriting = 1;
 	
 	//  ID_CHAR_DATA_2 int
-    paramNewIoBufferDefaultInit( &(paramNetworkL2[0]) );
+    NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[0]) );
 	paramNetworkL2[0].id = ID_CHAR_DATA_2;
 	paramNetworkL2[0].dataType = network_frame_t_TYPE_DATA;
 	paramNetworkL2[0].sendingWaitTime = 3;
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 	paramNetworkL2[0].overwriting = 1;
 	
 	//  ID_INT_DATA_WITH_ACK_2 char
-    paramNewIoBufferDefaultInit( &(paramNetworkL2[1]) );
+    NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[1]) );
 	paramNetworkL2[1].id = ID_INT_DATA_WITH_ACK_2;
 	paramNetworkL2[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramNetworkL2[1].sendingWaitTime = 2;
@@ -149,11 +149,11 @@ int main(int argc, char *argv[])
     
     pManager1 = NETWORK_NewManager( 256, 256, 2/*3*/, paramNetworkL1, 2 ,paramNetworkL2);
     
-    printThread1.pOutBuffChar = inOutBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_CHAR_DATA_2);
-    printThread1.pOutBuffIntAck = inOutBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_INT_DATA_WITH_ACK_2);
+    printThread1.pOutBuffChar = NETWORK_IoBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_CHAR_DATA_2);
+    printThread1.pOutBuffIntAck = NETWORK_IoBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_INT_DATA_WITH_ACK_2);
 				
-    pInputBuffChar  = inOutBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_CHAR_DATA);
-    pInputBuffIntAck = inOutBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_INT_DATA_WITH_ACK);
+    pInputBuffChar  = NETWORK_IoBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_CHAR_DATA);
+    pInputBuffIntAck = NETWORK_IoBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_INT_DATA_WITH_ACK);
 	
 	while(netType == 0)
 	{

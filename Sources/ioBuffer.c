@@ -17,7 +17,7 @@
 
 #include <libNetwork/error.h>
 #include <libNetwork/ringBuffer.h>
-#include <libNetwork/common.h>
+#include <libNetwork/frame.h>
 #include <libNetwork/ioBuffer.h>
 
 /*****************************************
@@ -41,7 +41,7 @@
  *
 ******************************************/
 
-void paramNewIoBufferDefaultInit(network_paramNewIoBuffer_t *pParam)
+void NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t *pParam)
 {
 	/** -- initialization of the paramNewIoBuffer with default parameters -- */
 	
@@ -56,7 +56,7 @@ void paramNewIoBufferDefaultInit(network_paramNewIoBuffer_t *pParam)
     pParam->overwriting = NETWORK_IOBUFFER_OVERWRITING_DEFAULT;
 }
 
-int paramNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
+int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
 {
     /** -- check the values of the paramNewIoBuffer -- */
     
@@ -90,7 +90,7 @@ values expected: \n \
    return ok; 
 }
 
-network_ioBuffer_t* newInOutBuffer( const network_paramNewIoBuffer_t* pParam )
+network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pParam )
 {
 	/** -- Create a new input or output buffer -- */
 	
@@ -108,7 +108,7 @@ network_ioBuffer_t* newInOutBuffer( const network_paramNewIoBuffer_t* pParam )
         pInOutBuff->pBuffer = NULL;
         sal_mutex_init( &(pInOutBuff->mutex) );
         
-        if( paramNewIoBufferCheck( pParam ) )
+        if( NETWORK_ParamNewIoBufferCheck( pParam ) )
         {
             pInOutBuff->id = pParam->id;
             pInOutBuff->dataType = pParam->dataType;
@@ -157,14 +157,14 @@ network_ioBuffer_t* newInOutBuffer( const network_paramNewIoBuffer_t* pParam )
 		{
 			/** delete the inOutput buffer if an error occurred */
             sal_print(PRINT_ERROR,"error: %d occurred \n", error );
-			deleteInOutBuffer(&pInOutBuff);
+			NETWORK_DeleteIotBuffer(&pInOutBuff);
 		}
     }
     
     return pInOutBuff;
 }
 
-void deleteInOutBuffer( network_ioBuffer_t** ppInOutBuff )
+void NETWORK_DeleteIotBuffer( network_ioBuffer_t** ppInOutBuff )
 {	
 	/** -- Delete the input or output buffer -- */
 	
@@ -189,7 +189,7 @@ void deleteInOutBuffer( network_ioBuffer_t** ppInOutBuff )
 
 }
 
-int inOutBufferAckReceived( network_ioBuffer_t* pInOutBuff, int seqNum )
+int NETWORK_IoBufferAckReceived( network_ioBuffer_t* pInOutBuff, int seqNum )
 {
 	/** -- Receive an acknowledgement to a inOutBuffer -- */ 
 	
@@ -211,7 +211,7 @@ int inOutBufferAckReceived( network_ioBuffer_t* pInOutBuff, int seqNum )
 	return error;
 }
 
-network_ioBuffer_t* inOutBufferWithId( network_ioBuffer_t** pptabInOutBuff,
+network_ioBuffer_t* NETWORK_IoBufferWithId( network_ioBuffer_t** pptabInOutBuff,
 												int tabSize, int id )
 {
 	/** -- Search a inOutBuffer with its identifier, in a table -- */
@@ -235,7 +235,7 @@ network_ioBuffer_t* inOutBufferWithId( network_ioBuffer_t** pptabInOutBuff,
 	return pInOutBuffSearched;
 }
 
-int inOutBuffeIsWaitAck(	network_ioBuffer_t* pInOutBuff)
+int NETWORK_IoBuffeIsWaitAck(	network_ioBuffer_t* pInOutBuff)
 {
 	/** -- Get if the inOutBuffer is waiting an acknowledgement -- */
 	

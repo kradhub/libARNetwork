@@ -1,12 +1,12 @@
 /**
- *	@file common.h
- *  @brief define the network protocol
+ *	@file frame.h
+ *  @brief define the network frame protocol
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _NETWORK_COMMON_H_
-#define _NETWORK_COMMON_H_
+#ifndef _NETWORK_FRAME_H_
+#define _NETWORK_FRAME_H_
 
 #include <inttypes.h>
 
@@ -36,4 +36,4 @@ typedef struct network_frame_t
 }network_frame_t;
 
 
-#endif // _NETWORK_COMMON_H_
+#endif // _NETWORK_FRAME_H_

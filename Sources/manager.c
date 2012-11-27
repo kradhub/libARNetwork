@@ -20,7 +20,7 @@
 #include <libSAL/socket.h>
 
 #include <libNetwork/error.h>
-#include <libNetwork/common.h>
+#include <libNetwork/frame.h>
 #include <libNetwork/ringBuffer.h>
 #include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
@@ -51,7 +51,7 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 	network_paramNewIoBuffer_t paramNewACK;
 	
 	/** Initialize the default parameters for the buffers of acknowledgement. */
-	paramNewIoBufferDefaultInit(&paramNewACK); 
+	NETWORK_ParamNewIoBufferDefaultInit(&paramNewACK); 
     paramNewACK.dataType = network_frame_t_TYPE_ACK;
     paramNewACK.buffSize = 1;
 	paramNewACK.buffCellSize = sizeof(int);
@@ -121,7 +121,7 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
         /** Create the output buffers and the buffers of acknowledgement */
         for(ii = 0; ii < numberOfOutput; ++ii)
         {
-            pManager->ppTabOutput[ii] = newInOutBuffer( &(ptabParamOutput[ii]) );
+            pManager->ppTabOutput[ii] = NETWORK_NewIoBuffer( &(ptabParamOutput[ii]) );
             if(pManager->ppTabOutput[ii] == NULL)
             {
                 error = NETWORK_MANAGER_ERROR_NEW_IOBUFFER;
@@ -134,7 +134,7 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
             paramNewACK.id = idOutputToIdAck(ptabParamOutput[ii].id); 
             indexAckOutput = numberOfOutput + ii;
             
-            pManager->ppTabOutput[ indexAckOutput ] = newInOutBuffer(&paramNewACK);
+            pManager->ppTabOutput[ indexAckOutput ] = NETWORK_NewIoBuffer(&paramNewACK);
             if(pManager->ppTabOutput[indexAckOutput] == NULL)
             {
                 error = NETWORK_MANAGER_ERROR_NEW_IOBUFFER;
@@ -146,7 +146,7 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
         /** Create the input buffers */
         for(ii = 0; ii< numberOfInput ; ++ii)
         {
-            pManager->ppTabInput[ii] = newInOutBuffer( &(ptabParamInput[ii]) );
+            pManager->ppTabInput[ii] = NETWORK_NewIoBuffer( &(ptabParamInput[ii]) );
             if(pManager->ppTabInput[ii] == NULL)
             {
                 error = NETWORK_MANAGER_ERROR_NEW_IOBUFFER;
@@ -208,7 +208,7 @@ void NETWORK_DeleteManager(network_manager_t** ppManager)
 			/** Delete all output buffers including the the buffers of acknowledgement */
 			for(ii = 0; ii< pManager->numOfOutput ; ++ii)
 			{
-				deleteInOutBuffer( &(pManager->ppTabOutput[ii]) );
+				NETWORK_DeleteIotBuffer( &(pManager->ppTabOutput[ii]) );
 			}
             free(pManager->ppTabOutput);
             pManager->ppTabOutput = NULL;
@@ -216,7 +216,7 @@ void NETWORK_DeleteManager(network_manager_t** ppManager)
 			/** Delete the input buffers but not the buffers of acknowledgement already deleted */
 			for(ii = 0; ii< pManager->numOfInputWithoutAck ; ++ii)
 			{
-				deleteInOutBuffer( &(pManager->ppTabInput[ii]) );
+				NETWORK_DeleteIotBuffer( &(pManager->ppTabInput[ii]) );
 			}
             free(pManager->ppTabInput);
             pManager->ppTabInput = NULL;
@@ -283,7 +283,7 @@ int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, cons
 	int error = NETWORK_ERROR;
 	network_ioBuffer_t* pInputBuffer = NULL;
 	
-	pInputBuffer = inOutBufferWithId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
+	pInputBuffer = NETWORK_IoBufferWithId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
 	
 	if(pInputBuffer != NULL)
 	{
@@ -301,7 +301,7 @@ int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, voi
 	int error = 1;
 	network_ioBuffer_t* pOutputBuffer = NULL;
 	
-	pOutputBuffer = inOutBufferWithId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
+	pOutputBuffer = NETWORK_IoBufferWithId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
 	
 	if(pOutputBuffer != NULL)
 	{

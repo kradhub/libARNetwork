@@ -10,7 +10,7 @@
 #include <libSAL/print.h>
 #include <libSAL/thread.h>
 
-#include <libNetwork/common.h>
+#include <libNetwork/frame.h>
 #include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
 #include <libNetwork/receiver.h>
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 	NETWORK_StopReceiver(pManager2->pReceiver);
 	
 	printf("\n the last char transmited:\n");
-	pInOutTemp = inOutBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_CHAR_DATA);
+	pInOutTemp = NETWORK_IoBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_CHAR_DATA);
 	//ringBuffPrint(pInOutTemp->pBuffer);
 
 	
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 	}
 	
 	printf("\n the integers transmited:\n");
-	pInOutTemp = inOutBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_INT_DATA_WITH_ACK);
+	pInOutTemp = NETWORK_IoBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_INT_DATA_WITH_ACK);
 	//ringBuffPrint(pInOutTemp->pBuffer);
 	while( !ringBuffPopFront(pInOutTemp->pBuffer, &intData) )
 	{

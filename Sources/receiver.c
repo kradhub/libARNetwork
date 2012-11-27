@@ -23,7 +23,7 @@
 #include <libSAL/endianness.h>
 
 #include <libNetwork/error.h>
-#include <libNetwork/common.h>
+#include <libNetwork/frame.h>
 #include <libNetwork/buffer.h>
 #include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
@@ -138,7 +138,7 @@ void* NETWORK_RunReceivingThread(void* data)
 												pFrame->seq, pFrame->id);
 						
 						/** push the data received in the output buffer targeted */
-						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
+						pOutBufferTemp = NETWORK_IoBufferWithId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->numOfOutputBuff,
 															pFrame->id);
 						
@@ -156,7 +156,7 @@ void* NETWORK_RunReceivingThread(void* data)
 						 * push the data received in the output buffer targeted, 
 						 * save the sequence of the command and return an acknowledgement
 						**/
-						pOutBufferTemp = inOutBufferWithId(	pReceiver->pptab_outputBuffer, 
+						pOutBufferTemp = NETWORK_IoBufferWithId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->numOfOutputBuff,
 															pFrame->id);
 						if(pOutBufferTemp != NULL)
@@ -204,7 +204,7 @@ void NETWORK_ReturnASK(network_receiver_t* pReceiver, int id, int seq)
 	/** -- return an acknowledgement -- */
 	
 	/** local declarations */
-	network_ioBuffer_t* pBufferASK = inOutBufferWithId(	pReceiver->pptab_outputBuffer,
+	network_ioBuffer_t* pBufferASK = NETWORK_IoBufferWithId(	pReceiver->pptab_outputBuffer,
 																pReceiver->numOfOutputBuff,
 																idOutputToIdAck(id) );
 	if(pBufferASK != NULL)
