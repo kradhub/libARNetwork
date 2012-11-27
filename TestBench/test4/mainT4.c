@@ -13,13 +13,10 @@
 
 #include <stdio.h> 
 #include <stdlib.h> 
-#include <libSAL/print.h>
+
 #include <libSAL/thread.h>
 
 #include <libNetwork/frame.h>
-#include <libNetwork/ioBuffer.h>
-#include <libNetwork/sender.h>
-#include <libNetwork/receiver.h>
 #include <libNetwork/manager.h>
 
 #include <unistd.h>
@@ -27,7 +24,6 @@
 #include "Includes/networkDef.h"
 
 #include <signal.h>
-
 #include <termios.h>
  
 /*****************************************
@@ -41,6 +37,9 @@
 #define PORT1 5551
 #define PORT2 5552
 
+#define SEND_BUFF_SIZE 256
+#define RECV_BUFF_SIZE 256
+
 /*****************************************
  * 
  * 			header :
@@ -49,14 +48,16 @@
 
 typedef struct printThread
 {
-	network_ioBuffer_t* pOutBuffChar;
-	network_ioBuffer_t* pOutBuffIntAck;
+    network_manager_t* pManager;
+    int id_ioBuff_char;
+    int id_ioBuff_intAck;
 	int alive;
 	
 }printThread;
 
 void* printBuff(void* data);
- 
+
+/** terminal setting */
 struct termios initial_settings, new_settings;
  
 /*****************************************
@@ -67,15 +68,17 @@ struct termios initial_settings, new_settings;
  
 void setupNonBlockingTerm ()
 {
-  new_settings = initial_settings;
-  new_settings.c_lflag &= ~ICANON;
-  new_settings.c_lflag &= ~ECHO;
+    /** set the terminal on nonBloking mode */
+    new_settings = initial_settings;
+    new_settings.c_lflag &= ~ICANON;
+    new_settings.c_lflag &= ~ECHO;
  
   tcsetattr(0, TCSANOW, &new_settings);
 }
 
 void fixTerminal (int sig)
 {
+    /** reload terminal setting */
 	tcsetattr(0, TCSANOW, &initial_settings);
 	
 	exit (0);
@@ -83,9 +86,6 @@ void fixTerminal (int sig)
 
 int main(int argc, char *argv[])
 {
-	tcgetattr(0,&initial_settings);	
-	signal (SIGINT, fixTerminal);
-		
 	network_manager_t* pManager1= NULL;
 	
 	char netType = 0;
@@ -101,10 +101,10 @@ int main(int argc, char *argv[])
 	int scanfReturn = 0;
 	int connectError = -1;
 	
+    int id_ioBuff_char;
+    int id_ioBuff_intAck;
+    
 	printThread printThread1;
-	
-	network_ioBuffer_t* pInputBuffChar = NULL;
-	network_ioBuffer_t* pInputBuffIntAck = NULL;
 	
 	sal_thread_t thread_send1;
 	sal_thread_t thread_recv1;
@@ -112,6 +112,11 @@ int main(int argc, char *argv[])
 	
 	network_paramNewIoBuffer_t paramNetworkL1[3];
 	network_paramNewIoBuffer_t paramNetworkL2[2];
+    
+    /** save terminal setting */
+	tcgetattr(0,&initial_settings);	
+    /** call fixTerminal when the terminal kill the program */
+	signal (SIGINT, fixTerminal);
 
 	
 	//--- network 1 ---
@@ -166,34 +171,38 @@ int main(int argc, char *argv[])
 	paramNetworkL2[1].overwriting = 0;		
 				
 	printf("\n ~~ This soft sends data and repeater ack ~~ \n \n");
-    
-    pManager1 = NETWORK_NewManager( 256, 256, 2/*3*/, paramNetworkL1, 2 ,paramNetworkL2);
-    
-    printThread1.pOutBuffChar = NETWORK_IoBufferFromId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_CHAR_DATA_2);
-    printThread1.pOutBuffIntAck = NETWORK_IoBufferFromId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_INT_DATA_WITH_ACK_2);
-				
-    pInputBuffChar  = NETWORK_IoBufferFromId(	pManager1->ppTabInput, pManager1->numOfInput, ID_CHAR_DATA);
-    pInputBuffIntAck = NETWORK_IoBufferFromId(	pManager1->ppTabInput, pManager1->numOfInput, ID_INT_DATA_WITH_ACK);
 	
 	while(netType == 0)
 	{
-		sal_print(PRINT_WARNING,"type 1 or 2 ? : ");
+		printf("type 1 or 2 ? : ");
 		scanfReturn = scanf("%c",&netType);
 		
 		switch(netType)
 		{
 			case '1':
-
+                pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, 2/*3*/, paramNetworkL1, 2 ,paramNetworkL2);
+                
+                id_ioBuff_char = ID_CHAR_DATA;
+                id_ioBuff_intAck = ID_INT_DATA_WITH_ACK;
+                
+                printThread1.id_ioBuff_char = ID_CHAR_DATA_2;
+                printThread1.id_ioBuff_intAck = ID_INT_DATA_WITH_ACK_2;
+                
                 sendPort = PORT1;
                 recvPort = PORT2;
-				
 			break;
 			
 			case '2':
+                pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, 2, paramNetworkL2, 2 ,paramNetworkL1);
+                
+                id_ioBuff_char = ID_CHAR_DATA_2;
+                id_ioBuff_intAck = ID_INT_DATA_WITH_ACK_2;
+                
+                printThread1.id_ioBuff_char = ID_CHAR_DATA;
+                printThread1.id_ioBuff_intAck = ID_INT_DATA_WITH_ACK;
                 
                 sendPort = PORT2;
                 recvPort = PORT1;
-                
 			break;
 			
 			default:
@@ -201,10 +210,12 @@ int main(int argc, char *argv[])
 			break;
 		}
 	}	
+    
+    printThread1.pManager = pManager1;
 	
 	while(scanfReturn != 1 || connectError != 0)
 	{
-		sal_print(PRINT_WARNING,"repeater IP address ? : ");
+		printf("repeater IP address ? : ");
 		scanfReturn = scanf("%s",IpAddress);
         
         connectError = NETWORK_ManagerScoketsInit( pManager1, IpAddress, sendPort,
@@ -216,16 +227,18 @@ int main(int argc, char *argv[])
 	
 	while ( ((chData = getchar()) != '\n') && chData != EOF)
 	{
+        
 	};
 	
-	printThread1.alive=1;
+	printThread1.alive = 1;
 	
 	sal_thread_create(&thread_printBuff, (sal_thread_routine) printBuff, &printThread1 );
-	sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_RunReceivingThread, pManager1->pReceiver);
-	sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_RunSendingThread, pManager1->pSender);
+	sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager1);
+	sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager1);
 	
 	chData = 0;
 	
+    /** set the terminal on nonBloking mode */
 	setupNonBlockingTerm ();
 	
 	while(cmdType != '0')
@@ -233,8 +246,6 @@ int main(int argc, char *argv[])
 		printf("press: 	1 - send char \n \
 	2 - send int acknowledged \n \
 	0 - quit \n");
-	
-		//scanfReturn = scanf("%d",&cmdType);
 		
 		cmdType = (char) getchar();
 		
@@ -247,8 +258,11 @@ int main(int argc, char *argv[])
 			case '1' :
 				++chData;
 				printf("send char data :%d \n",chData);
-				
-				ringBuffPushBack(pInputBuffChar->pBuffer, &chData);
+            
+                if( NETWORK_ManagerSendData(pManager1, id_ioBuff_char, &chData) )
+                {
+                    printf("waaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \n");
+                }
 				
 			break;
 			
@@ -257,7 +271,7 @@ int main(int argc, char *argv[])
 				printf("int data acknowledged :%d \n",intData);
 				printf("\n");
 										
-				if( ringBuffPushBack(pInputBuffIntAck->pBuffer, &intData) )
+				if( NETWORK_ManagerSendData(pManager1, id_ioBuff_intAck, &intData) )
 				{
 					printf("buffer fulll \n");
 				}
@@ -272,8 +286,7 @@ int main(int argc, char *argv[])
 	
 	//stop all therad
 	printThread1.alive = 0;
-	NETWORK_StopSender(pManager1->pSender);
-	NETWORK_StopReceiver(pManager1->pReceiver);
+    NETWORK_ManagerStop(pManager1);
 	
 	//kill all thread
 	
@@ -302,14 +315,14 @@ void* printBuff(void* data)
 	{
 		usleep(MILLISECOND);
 
-		while( !ringBuffPopFront(pprintThread1->pOutBuffChar->pBuffer, &chData) )
+		while( ! NETWORK_ManagerReadData(pprintThread1->pManager, pprintThread1->id_ioBuff_char, &chData) )
 		{
-			printf("- char :%d \n",chData);
+			printf("- char :%d \n", chData);
 		}
 		
-		while( !ringBuffPopFront(pprintThread1->pOutBuffIntAck->pBuffer, &intData) )
+		while( ! NETWORK_ManagerReadData(pprintThread1->pManager, pprintThread1->id_ioBuff_intAck, &intData) )
 		{
-			printf("- int ack :%d \n",intData);
+			printf("- int ack :%d \n", intData);
 		}
 	}
 	
