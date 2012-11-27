@@ -10,7 +10,8 @@ HEADER_FILES	=	../Includes/libNetwork/buffer.h \
 					../Includes/libNetwork/sender.h \
 					../Includes/libNetwork/receiver.h \
 					../Includes/libNetwork/manager.h \
-					../Includes/libNetwork/common.h
+					../Includes/libNetwork/common.h \
+					../Includes/libNetwork/error.h
 
 # The sources to add to the library and to add to the source distribution
 SOURCE_FILES 	= 	$(HEADER_FILES)		\

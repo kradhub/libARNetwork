@@ -8,21 +8,10 @@
 #ifndef _NETWORK_MANGER_H_
 #define _NETWORK_MANGER_H_
 
+#include <libNetwork/error.h>
 #include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
 #include <libNetwork/receiver.h>
-
-/**
- *  @brief NETWORK_Manager errors know.
-**/
-typedef enum
-{
-	NETWORK_MANAGER_OK = 0, /**< no error */
-    NETWORK_MANAGER_ERROR_UNKNOWN = -1000, /**< error unknown */ 
-    NETWORK_MANAGER_ERROR_NEW_IOBUFFER, /**< flksdqljlk */ 
-	NETWORK_MANAGER_ERROR_ALLOC_TAB_IOBUFFER /**< flksdqljlk */ 
-	
-} eNETWORK_Manager_Error;
 
 /**
  *  @brief network manager allow to send data acknowledged or not.
@@ -78,6 +67,42 @@ void NETWORK_DeleteManager(network_manager_t** ppManager);
 **/
 int NETWORK_ManagerScoketsInit(network_manager_t* pManager,const char* addr, int sendingPort,
                                     int recvPort, int recvTimeoutSec);
+
+/**
+ *  @brief Manage the sending of the data 
+ * 	@warning This function must be called by a specific thread.
+ * 	@pre The sockets must be initialized through NETWORK_ManagerScoketsInit().
+ * 	@post Before join the thread calling this function, NETWORK_ManagerStop() must be called.
+ *  @note This function send the data stored in the input buffer through NETWORK_ManagerSendData().
+ * 	@param data thread datas of type network_manager_t*
+ *  @return NULL
+ * 	@see NETWORK_ManagerScoketsInit()
+ * 	@see NETWORK_ManagerStop()
+**/
+void* NETWORK_ManagerRunSendingThread(void* data);
+
+/**
+ *  @brief Manage the reception of the data.
+ * 	@warning This function must be called by a specific thread.
+ * 	@pre The socket of the receiver must be initialized through NETWORK_ManagerScoketsInit().
+ * 	@post Before join the thread calling this function, NETWORK_ManagerStop() must be called.
+ * 	@note This function receives the data through NETWORK_ManagerReadData() and stores them in the output buffers according to their parameters.
+ * 	@param data thread datas of type network_manager_t*
+ *  @return NULL
+ * 	@see NETWORK_ManagerScoketsInit()
+ * 	@see NETWORK_ManagerStop()
+ * 	@see NETWORK_ManagerReadData()
+**/
+void* NETWORK_ManagerRunReceivingThread(void* data);
+
+/**
+ *  @brief stop the threads of sending and reception
+ * 	@details Used to kill the threads calling NETWORK_ManagerRunSendingThread() and NETWORK_ManagerRunReceivingThread().
+ * 	@param @param pManager pointer on the Manager
+ * 	@see NETWORK_ManagerRunSendingThread()
+ *  @see NETWORK_ManagerRunReceivingThread()
+**/
+void NETWORK_ManagerStop(network_manager_t* pManager);
 
 /**
  *  @brief Add data to send

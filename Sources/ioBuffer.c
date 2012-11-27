@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
+
+#include <libNetwork/error.h>
 #include <libNetwork/ringBuffer.h>
 #include <libNetwork/common.h>
 #include <libNetwork/ioBuffer.h>
@@ -95,18 +97,18 @@ network_ioBuffer_t* newInOutBuffer( const network_paramNewIoBuffer_t* pParam )
 	/** local declarations */
 	network_ioBuffer_t* pInOutBuff = NULL;
 	int keepAliveData = 0x00;
-    int error = 0;
+    int error = NETWORK_OK;
 	
 	/** Create the input or output buffer in accordance with parameters set in pParam */
 	pInOutBuff = malloc( sizeof(network_ioBuffer_t) );
 	
 	if( pInOutBuff )
 	{ 
+        /** Initialize to default values */
+        pInOutBuff->pBuffer = NULL;
         sal_mutex_init( &(pInOutBuff->mutex) );
-        pInOutBuff->pBuffer = NULL;
-        pInOutBuff->pBuffer = NULL;
         
-        if( paramNewIoBufferCheck(pParam) )
+        if( paramNewIoBufferCheck( pParam ) )
         {
             pInOutBuff->id = pParam->id;
             pInOutBuff->dataType = pParam->dataType;
@@ -119,6 +121,7 @@ network_ioBuffer_t* newInOutBuffer( const network_paramNewIoBuffer_t* pParam )
             }
             else
             {
+                /** if nbOfRetry equal 0 disable the retry function with -1 value */
                 pInOutBuff->nbOfRetry = -1;
             }
             //	timeoutCallback(network_ioBuffer_t* this)
@@ -132,7 +135,6 @@ network_ioBuffer_t* newInOutBuffer( const network_paramNewIoBuffer_t* pParam )
             /** Create the RingBuffer */
             pInOutBuff->pBuffer = newRingBufferWithOverwriting(	pParam->buffSize, pParam->buffCellSize,
                                                                 pParam->overwriting);
-															
             if(pInOutBuff->pBuffer != NULL)
             {
                 /** if it is a keep alive buffer, push in the data send for keep alive */ 
@@ -143,17 +145,18 @@ network_ioBuffer_t* newInOutBuffer( const network_paramNewIoBuffer_t* pParam )
             }
             else
             {
-                error = 1;
+                error = NETWORK_ERROR_NEW_RINGBUFFER;
             }
         }
         else
         {
-            error = 1;
+            error = NETWORK_ERROR_BAD_PARAMETER;
         }
         
         if( error )
 		{
 			/** delete the inOutput buffer if an error occurred */
+            sal_print(PRINT_ERROR,"error: %d occurred \n", error );
 			deleteInOutBuffer(&pInOutBuff);
 		}
     }
@@ -191,7 +194,7 @@ int inOutBufferAckReceived( network_ioBuffer_t* pInOutBuff, int seqNum )
 	/** -- Receive an acknowledgement to a inOutBuffer -- */ 
 	
 	/** local declarations */
-	int error = 1;
+	int error = NETWORK_IOBUFFER_ERROR_BAD_ACK;
 	
 	sal_mutex_lock( &(pInOutBuff->mutex) );
 	
@@ -200,7 +203,7 @@ int inOutBufferAckReceived( network_ioBuffer_t* pInOutBuff, int seqNum )
 	{
 		pInOutBuff->isWaitAck = 0;
 		ringBuffPopFront( pInOutBuff->pBuffer, NULL );
-		error = 0;
+		error = NETWORK_OK;
 	}
 	
 	sal_mutex_unlock(&(pInOutBuff->mutex));

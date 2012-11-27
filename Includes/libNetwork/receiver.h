@@ -60,6 +60,7 @@ void NETWORK_DeleteReceiver(network_receiver_t** ppReceiver);
  * 	@post Before join the thread calling this function, NETWORK_StopReceiver() must be called.
  * 	@note This function receives the data through NETWORK_ReceiverRead() and stores them in the output buffers according to their parameters.
  * 	@param data thread datas of type network_Receive_t*
+ *  @return NULL
  * 	@see NETWORK_ReceiverBind()
  * 	@see NETWORK_StopReceiver()
  * 	@see NETWORK_ReceiverRead()

@@ -54,8 +54,9 @@ void NETWORK_DeleteSender(network_sender_t** ppSender);
  * 	@warning At the end of this function the socket of the sender is closed.
  * 	@pre The socket of the sender must be initialized through NETWORK_SenderConnection().
  * 	@post Before join the thread calling this function, NETWORK_StopSender() must be called.
- * 	@details This function sends the data present in the input buffers according to their parameters.
+ * 	@note This function sends the data present in the input buffers according to their parameters.
  * 	@param data thread datas of type network_sender_t*
+ *  @return NULL
  * 	@see NETWORK_SenderConnection()
  * 	@see NETWORK_StopSender()
 **/

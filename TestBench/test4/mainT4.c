@@ -27,8 +27,11 @@
  
   
 #define MILLISECOND 1000
+#define RECV_TIMEOUT_MS 10
+#define PORT1 5551
+#define PORT2 5552
 
-typedef struct printThread // pass uint32_t
+typedef struct printThread
 {
 	network_ioBuffer_t* pOutBuffChar;
 	network_ioBuffer_t* pOutBuffIntAck;
@@ -73,8 +76,9 @@ int main(int argc, char *argv[])
 	int intData = 0;
 	
 	char IpAddress[16];
+    int sendPort = 0;
+	int recvPort = 0;
 	int scanfReturn = 0;
-	int bindError = -1;
 	int connectError = -1;
 	
 	printThread printThread1;
@@ -86,7 +90,6 @@ int main(int argc, char *argv[])
 	sal_thread_t thread_recv1;
 	sal_thread_t thread_printBuff;
 	
-	//network_paramNewIoBuffer_t paramNetwork1[5];
 	network_paramNewIoBuffer_t paramNetworkL1[3];
 	network_paramNewIoBuffer_t paramNetworkL2[2];
 
@@ -94,16 +97,16 @@ int main(int argc, char *argv[])
 	//--- network 1 ---
 	
 	// input ID_CHAR_DATA int
+    paramNewIoBufferDefaultInit( &(paramNetworkL1[0]) );
 	paramNetworkL1[0].id = ID_CHAR_DATA;
 	paramNetworkL1[0].dataType = network_frame_t_TYPE_DATA;
 	paramNetworkL1[0].sendingWaitTime = 3;
-	paramNetworkL1[0].ackTimeoutMs = 10;//not used
-	paramNetworkL1[0].nbOfRetry = 5;//not used
 	paramNetworkL1[0].buffSize = 1;
 	paramNetworkL1[0].buffCellSize = sizeof(char);
 	paramNetworkL1[0].overwriting = 1;
 	
 	// input ID_INT_DATA_WITH_ACK char
+    paramNewIoBufferDefaultInit( &(paramNetworkL1[1]) );
 	paramNetworkL1[1].id = ID_INT_DATA_WITH_ACK;
 	paramNetworkL1[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramNetworkL1[1].sendingWaitTime = 2;
@@ -114,26 +117,25 @@ int main(int argc, char *argv[])
 	paramNetworkL1[1].overwriting = 0;
 	
 	// input ID_KEEP_ALIVE char
+    paramNewIoBufferDefaultInit( &(paramNetworkL1[2]) );
 	paramNetworkL1[2].id = ID_KEEP_ALIVE;
 	paramNetworkL1[2].dataType = network_frame_t_TYPE_KEEP_ALIVE;
 	paramNetworkL1[2].sendingWaitTime = 100;
-	paramNetworkL1[2].ackTimeoutMs = 10;//not used
-	paramNetworkL1[2].nbOfRetry = 5;//not used
 	paramNetworkL1[2].buffSize = 1;
 	paramNetworkL1[2].buffCellSize = sizeof(int);
 	paramNetworkL1[2].overwriting = 1;
 	
 	//  ID_CHAR_DATA_2 int
+    paramNewIoBufferDefaultInit( &(paramNetworkL2[0]) );
 	paramNetworkL2[0].id = ID_CHAR_DATA_2;
 	paramNetworkL2[0].dataType = network_frame_t_TYPE_DATA;
 	paramNetworkL2[0].sendingWaitTime = 3;
-	paramNetworkL2[0].ackTimeoutMs = 10;//not used
-	paramNetworkL2[0].nbOfRetry = 5;//not used
 	paramNetworkL2[0].buffSize = 1;
 	paramNetworkL2[0].buffCellSize = sizeof(char);
 	paramNetworkL2[0].overwriting = 1;
 	
 	//  ID_INT_DATA_WITH_ACK_2 char
+    paramNewIoBufferDefaultInit( &(paramNetworkL2[1]) );
 	paramNetworkL2[1].id = ID_INT_DATA_WITH_ACK_2;
 	paramNetworkL2[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramNetworkL2[1].sendingWaitTime = 2;
@@ -144,6 +146,14 @@ int main(int argc, char *argv[])
 	paramNetworkL2[1].overwriting = 0;		
 				
 	printf("\n ~~ This soft sends data and repeater ack ~~ \n \n");
+    
+    pManager1 = NETWORK_NewManager( 256, 256, 2/*3*/, paramNetworkL1, 2 ,paramNetworkL2);
+    
+    printThread1.pOutBuffChar = inOutBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_CHAR_DATA_2);
+    printThread1.pOutBuffIntAck = inOutBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_INT_DATA_WITH_ACK_2);
+				
+    pInputBuffChar  = inOutBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_CHAR_DATA);
+    pInputBuffIntAck = inOutBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_INT_DATA_WITH_ACK);
 	
 	while(netType == 0)
 	{
@@ -153,26 +163,17 @@ int main(int argc, char *argv[])
 		switch(netType)
 		{
 			case '1':
-				
-				pManager1 = NETWORK_NewManager( 256, 256, 2/*3*/, paramNetworkL1, 2 ,paramNetworkL2);
-									
-				printThread1.pOutBuffChar = inOutBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_CHAR_DATA_2);
-				printThread1.pOutBuffIntAck = inOutBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_INT_DATA_WITH_ACK_2);
-				
-				pInputBuffChar  = inOutBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_CHAR_DATA);
-				pInputBuffIntAck = inOutBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_INT_DATA_WITH_ACK);
+
+                sendPort = PORT1;
+                recvPort = PORT2;
 				
 			break;
 			
 			case '2':
-				
-				pManager1 = NETWORK_NewManager( 256, 256, 2, paramNetworkL2, 2,paramNetworkL1);
-							
-				printThread1.pOutBuffChar = inOutBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_CHAR_DATA);
-				printThread1.pOutBuffIntAck = inOutBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_INT_DATA_WITH_ACK);
-				
-				pInputBuffChar  = inOutBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_CHAR_DATA_2);
-				pInputBuffIntAck = inOutBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_INT_DATA_WITH_ACK_2);
+                
+                sendPort = PORT2;
+                recvPort = PORT1;
+                
 			break;
 			
 			default:
@@ -181,37 +182,15 @@ int main(int argc, char *argv[])
 		}
 	}	
 	
-	while(scanfReturn != 1 || bindError != 0 || connectError != 0)
+	while(scanfReturn != 1 || connectError != 0)
 	{
 		sal_print(PRINT_WARNING,"repeater IP address ? : ");
 		scanfReturn = scanf("%s",IpAddress);
+        
+        connectError = NETWORK_ManagerScoketsInit( pManager1, IpAddress, sendPort,
+                                                    recvPort, RECV_TIMEOUT_MS );
 		
-		if(bindError != 0)
-		{
-			if(netType == '1')
-			{
-				bindError = NETWORK_ReceiverBind(pManager1->pReceiver, 5552, 10);
-			}
-			else
-			{
-				bindError = NETWORK_ReceiverBind(pManager1->pReceiver, 5551, 10);
-			}
-		}
-		
-		if(connectError != 0)
-		{
-			if(netType == '1')
-			{
-				connectError = NETWORK_SenderConnection(pManager1->pSender,IpAddress, 5551);
-			}
-			else
-			{
-				connectError = NETWORK_SenderConnection(pManager1->pSender,IpAddress, 5552);
-			}
-		}
-		
-		printf("	- Sender connect error: %d \n", connectError );			
-		printf("	- Receiver Bind  error: %d \n", bindError );
+		printf("    - connect error: %d \n", connectError );			
 		printf("\n");
 	}
 	
@@ -248,8 +227,6 @@ int main(int argc, char *argv[])
 			case '1' :
 				++chData;
 				printf("send char data :%d \n",chData);
-				//scanfReturn = scanf("%c", &chData);
-				//printf("\n");
 				
 				ringBuffPushBack(pInputBuffChar->pBuffer, &chData);
 				
@@ -258,7 +235,6 @@ int main(int argc, char *argv[])
 			case '2' :
 				++intData;
 				printf("int data acknowledged :%d \n",intData);
-				//scanfReturn = scanf("%d", &intData);
 				printf("\n");
 										
 				if( ringBuffPushBack(pInputBuffIntAck->pBuffer, &intData) )
@@ -305,7 +281,6 @@ void* printBuff(void* data)
 	while(pprintThread1->alive)
 	{
 		usleep(MILLISECOND);
-	
 
 		while( !ringBuffPopFront(pprintThread1->pOutBuffChar->pBuffer, &chData) )
 		{

@@ -22,6 +22,7 @@
 #include <libSAL/socket.h>
 #include <libSAL/endianness.h>
 
+#include <libNetwork/error.h>
 #include <libNetwork/common.h>
 #include <libNetwork/buffer.h>
 #include <libNetwork/ioBuffer.h>
@@ -48,7 +49,7 @@ network_receiver_t* NETWORK_NewReceiver(	unsigned int recvBufferSize, unsigned i
 	
 	/** local declarations */
 	network_receiver_t* pReceiver = NULL;
-	int error = 0;
+	int error = NETWORK_OK;
 	
 	/** Create the receiver */
 	pReceiver =  malloc( sizeof(network_receiver_t) );
@@ -68,8 +69,9 @@ network_receiver_t* NETWORK_NewReceiver(	unsigned int recvBufferSize, unsigned i
 		}
 	
 		/** delete the receiver if an error occurred */
-		if(error)
+		if(error != NETWORK_OK)
 		{
+            sal_print(PRINT_ERROR,"error: %d occurred \n", error );
 			NETWORK_DeleteReceiver(&pReceiver);
 		}
 	}

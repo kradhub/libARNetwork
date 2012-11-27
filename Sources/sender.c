@@ -22,6 +22,7 @@
 #include <libSAL/socket.h>
 #include <libSAL/endianness.h>
 
+#include <libNetwork/error.h>
 #include <libNetwork/common.h>
 #include <libNetwork/buffer.h>
 #include <libNetwork/ioBuffer.h>
@@ -55,7 +56,7 @@ network_sender_t* NETWORK_NewSender(	unsigned int sendingBufferSize, unsigned in
 	
 	/** local declarations */
 	network_sender_t* pSender =  NULL;
-	int error=0;
+	int error = NETWORK_OK;
 	
 	/** Create the sender */
 	pSender =  malloc( sizeof(network_sender_t));
@@ -75,8 +76,9 @@ network_sender_t* NETWORK_NewSender(	unsigned int sendingBufferSize, unsigned in
 		}
 		
 		/** delete the sender if an error occurred */
-		if(error)
+		if(error != NETWORK_OK)
 		{
+            sal_print(PRINT_ERROR,"error: %d occurred \n", error );
 			NETWORK_DeleteSender(&pSender);
 		}
 	}
@@ -298,7 +300,7 @@ int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_
 	
 	/** local declarations */
 	int error = 1;
-	int sizeNeed = offsetof(network_frame_t,data) /*network_frame_t_HEADER_SIZE*/ + pinputBuff->pBuffer->buffCellSize;
+	int sizeNeed = offsetof(network_frame_t,data) + pinputBuff->pBuffer->buffCellSize;
 	uint32_t droneEndianInt32 = 0;
 	
 	if( NETWORK_BufferGetFreeCellNb(pSender->pSendingBuffer) >= sizeNeed )
@@ -332,7 +334,7 @@ int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_
 		}
 		else
 		{
-			pSender->pSendingBuffer->pFront -= offsetof(network_frame_t,data); //network_frame_t_HEADER_SIZE;
+			pSender->pSendingBuffer->pFront -= offsetof(network_frame_t,data);
 		}
 		
 	}

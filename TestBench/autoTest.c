@@ -19,9 +19,6 @@
 #include <string.h>
 
 #include <libNetwork/common.h>
-#include <libNetwork/ioBuffer.h>
-#include <libNetwork/sender.h>
-#include <libNetwork/receiver.h>
 #include <libNetwork/manager.h>
 #include <libSAL/socket.h>
 
@@ -39,8 +36,13 @@
 #define FIRST_CHAR_SENT 'A'
 #define FIRST_INT_ACK_SENT 100
 
-#define RING_BUFFER_SIZE 256
-#define RING_BUFFER_CELL_SIZE 10
+#define RECV_TIMEOUT_MS 10
+#define PORT1 5551
+#define PORT2 5552
+#define ADRR_IP "127.0.0.1"
+
+#define SEND_BUFF_SIZE 256
+#define RECV_BUFF_SIZE 256
 
 /** define of the ioBuuffer identifiers */
 typedef enum eID_BUFF
@@ -142,42 +144,25 @@ int main(int argc, char *argv[])
     
     /** create the Manger1 */
     
-	pManager1 = NETWORK_NewManager( 256, 256, 2, paramInputNetwork1, 1, paramOutputNetwork1);
+	pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, 2, paramInputNetwork1, 1, paramOutputNetwork1);
     
-    /*
-	printf(" -pManager1->pSender connect error: %d \n", 
-                            NETWORK_SenderConnection(pManager1->pSender,"127.0.0.1", 5551) );
-								
-	printf(" -pManager1->pReceiver Bind  error: %d \n", 
-                            NETWORK_ReceiverBind(pManager1->pReceiver, 5552, RECEIVER_TIMEOUT_SEC) );
-    */
-                            
-    error = NETWORK_ManagerScoketsInit(pManager1, "127.0.0.1", 5551, 5552, RECEIVER_TIMEOUT_SEC);
-    
-    printf("error initScoket = %d", error);
+    error = NETWORK_ManagerScoketsInit(pManager1, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
+    printf("pManager1 error initScoket = %d", error);
 
     /** create the Manger2 */
-	pManager2 = NETWORK_NewManager( 256, 256, 1, paramInputNetwork2, 2, paramOutputNetwork2);          
+	pManager2 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, 1, paramInputNetwork2, 2, paramOutputNetwork2);          
     
-    /*
-	printf(" -pManager2->pReceiver Bind  error: %d \n",
-                            NETWORK_ReceiverBind(pManager2->pReceiver, 5551, RECEIVER_TIMEOUT_SEC) );
-	printf(" -pManager2->pSender connect error: %d \n",
-                            NETWORK_SenderConnection(pManager2->pSender,"127.0.0.1", 5552) );
-    */
-                        
-    error = NETWORK_ManagerScoketsInit(pManager2, "127.0.0.1", 5552, 5551, RECEIVER_TIMEOUT_SEC);
-                            
-    printf("error initScoket = %d", error);
+    error = NETWORK_ManagerScoketsInit(pManager2, ADRR_IP, PORT2, PORT1, RECEIVER_TIMEOUT_SEC);
+    printf("pManager2 error initScoket = %d", error);
 	
 	printf("main start \n");
 	
     /** create the threads */
-	sal_thread_create(&(thread_recv2), (sal_thread_routine) NETWORK_RunReceivingThread, pManager2->pReceiver);
-	sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_RunReceivingThread, pManager1->pReceiver);
+	sal_thread_create(&(thread_recv2), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager2);
+	sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager1);
 	
-	sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_RunSendingThread, pManager1->pSender);
-	sal_thread_create(&thread_send2, (sal_thread_routine) NETWORK_RunSendingThread, pManager2->pSender);
+	sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager1);
+	sal_thread_create(&thread_send2, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager2);
 
     /** loop sending data */
     for(ii = 0; ii < NUMBER_DATA_SENT; ii++)
@@ -206,39 +191,10 @@ int main(int argc, char *argv[])
 	printf(" -- stop-- \n");
 	
 	/** stop all therad */
-	NETWORK_StopSender(pManager1->pSender);
-	NETWORK_StopSender(pManager2->pSender);
-	NETWORK_StopReceiver(pManager1->pReceiver);
-	NETWORK_StopReceiver(pManager2->pReceiver);
-	
-    /** check */
-    ii = 0;
-	printf("\n the last char transmited:\n");
-    while( ! NETWORK_ManagerReadData(pManager2, ID_CHAR_DATA, &chData) )
-    {
-        ++ii;
-        printf("- %c \n", chData);
-        /** check values */
-        error = error || ( chData != ( FIRST_CHAR_SENT + (NUMBER_DATA_SENT - 1) ) );
-    }
-    /** check nb data */
-	error = error || ( ii != 1) ;
+    NETWORK_ManagerStop(pManager1);
+	NETWORK_ManagerStop(pManager2);
     
-    
-	printf("\n the integers transmited:\n");
-    ii = 0;
-    while( ! NETWORK_ManagerReadData(pManager2, ID_INT_DATA_WITH_ACK, &intData) )
-    {
-        printf("- %d \n", intData);
-        /** check values */
-        error = error || ( intData != FIRST_INT_ACK_SENT + ii);
-        ++ii;
-    }
-    /** check nb data */
-    error = error || ( ii != 5) ;
-	
-	printf("\n");
-	printf("wait ... \n");
+    printf("wait ... \n");
 	
 	/** kill all threads */
 	if(thread_send1 != NULL)
@@ -259,10 +215,33 @@ int main(int argc, char *argv[])
 	{
 		sal_thread_join(&(thread_recv2), NULL);
 	}
-
-	/** delete */
-	NETWORK_DeleteManager( &pManager1 );
-	NETWORK_DeleteManager( &pManager2 );
+    
+    /** checking */
+    ii = 0;
+	printf("\n the last char transmited:\n");
+    while( ! NETWORK_ManagerReadData(pManager2, ID_CHAR_DATA, &chData) )
+    {
+        ++ii;
+        printf("- %c \n", chData);
+        /** check values */
+        error = error || ( chData != ( FIRST_CHAR_SENT + (NUMBER_DATA_SENT - 1) ) );
+    }
+    /** check nb data */
+	error = error || ( ii != 1) ;
+    
+	printf("\n the integers transmited:\n");
+    ii = 0;
+    while( ! NETWORK_ManagerReadData(pManager2, ID_INT_DATA_WITH_ACK, &intData) )
+    {
+        printf("- %d \n", intData);
+        /** check values */
+        error = error || ( intData != FIRST_INT_ACK_SENT + ii);
+        ++ii;
+    }
+    /** check nb data */
+    error = error || ( ii != 5) ;
+	
+	printf("\n");
 
     if(error)
     {
@@ -273,7 +252,12 @@ int main(int argc, char *argv[])
         printf("Good result of the test bench \n");
     }
 
+    printf("\n");
 	printf("end \n");
+    
+    /** delete */
+	NETWORK_DeleteManager( &pManager1 );
+	NETWORK_DeleteManager( &pManager2 );
 
 	return 0;
 }
