@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 				scanfReturn = scanf("%c", &chData);
 				printf("\n");
 				
-				pInOutTemp = NETWORK_IoBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput,
+				pInOutTemp = NETWORK_IoBufferFromId(	pManager1->ppTabInput, pManager1->numOfInput,
 												ID_CHAR_DATA);
 				ringBuffPushBack(pInOutTemp->pBuffer, &chData);
 				
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
 				scanfReturn = scanf("%d", &intData);
 				printf("\n");
 				
-				pInOutTemp = NETWORK_IoBufferWithId(	pManager1->ppTabInput,
+				pInOutTemp = NETWORK_IoBufferFromId(	pManager1->ppTabInput,
 										pManager1->numOfInput, ID_INT_DATA_WITH_ACK);
 										
 				ringBuffPushBack(pInOutTemp->pBuffer, &intData);

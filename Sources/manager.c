@@ -283,7 +283,7 @@ int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, cons
 	int error = NETWORK_ERROR;
 	network_ioBuffer_t* pInputBuffer = NULL;
 	
-	pInputBuffer = NETWORK_IoBufferWithId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
+	pInputBuffer = NETWORK_IoBufferFromId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
 	
 	if(pInputBuffer != NULL)
 	{
@@ -301,7 +301,7 @@ int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, voi
 	int error = 1;
 	network_ioBuffer_t* pOutputBuffer = NULL;
 	
-	pOutputBuffer = NETWORK_IoBufferWithId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
+	pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
 	
 	if(pOutputBuffer != NULL)
 	{

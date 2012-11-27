@@ -211,10 +211,10 @@ int NETWORK_IoBufferAckReceived( network_ioBuffer_t* pInOutBuff, int seqNum )
 	return error;
 }
 
-network_ioBuffer_t* NETWORK_IoBufferWithId( network_ioBuffer_t** pptabInOutBuff,
+network_ioBuffer_t* NETWORK_IoBufferFromId( network_ioBuffer_t** pptabInOutBuff,
 												int tabSize, int id )
 {
-	/** -- Search a inOutBuffer with its identifier, in a table -- */
+	/** -- Search a inOutBuffer from its identifier, in a table -- */
 	
 	/** local declarations */
 	network_ioBuffer_t** it = pptabInOutBuff ;

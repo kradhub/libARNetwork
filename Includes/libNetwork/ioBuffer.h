@@ -95,13 +95,13 @@ void NETWORK_DeleteIotBuffer( network_ioBuffer_t** ppInOutBuff );
 int NETWORK_IoBufferAckReceived( network_ioBuffer_t* pInOutBuff, int seqNum );
 
 /**
- *  @brief Search a inOutBuffer with its identifier, in a table
+ *  @brief Search a inOutBuffer from its identifier, in a table
  * 	@param[in] pptabInOutBuff address of the table of pointer of inOutBuffer
  * 	@param[in] tabSize size of the table of pointers of inOutBuffer
  * 	@param[in] id identifier of the inOutBuffer searched
  * 	@return address of the inOutBuffer with the identifier searched (equal to NULL if the inOutBuffer is not find)
 **/
-network_ioBuffer_t* NETWORK_IoBufferWithId( network_ioBuffer_t** pptabInOutBuff,
+network_ioBuffer_t* NETWORK_IoBufferFromId( network_ioBuffer_t** pptabInOutBuff,
 												int tabSize, int id );
 
 /**

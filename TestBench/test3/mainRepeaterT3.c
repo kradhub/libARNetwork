@@ -102,8 +102,8 @@ int main(int argc, char *argv[])
 							
 					
 	printThread1.alive=1;		
-	printThread1.pOutBuffChar = NETWORK_IoBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_CHAR_DATA);
-	printThread1.pOutBuffIntAck = NETWORK_IoBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_INT_DATA_WITH_ACK);
+	printThread1.pOutBuffChar = NETWORK_IoBufferFromId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_CHAR_DATA);
+	printThread1.pOutBuffIntAck = NETWORK_IoBufferFromId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_INT_DATA_WITH_ACK);
 	
 	printf("\n~~ This soft receives data sent by the manager soft ~~ \n \n");
 						

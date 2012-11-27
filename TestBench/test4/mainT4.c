@@ -149,11 +149,11 @@ int main(int argc, char *argv[])
     
     pManager1 = NETWORK_NewManager( 256, 256, 2/*3*/, paramNetworkL1, 2 ,paramNetworkL2);
     
-    printThread1.pOutBuffChar = NETWORK_IoBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_CHAR_DATA_2);
-    printThread1.pOutBuffIntAck = NETWORK_IoBufferWithId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_INT_DATA_WITH_ACK_2);
+    printThread1.pOutBuffChar = NETWORK_IoBufferFromId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_CHAR_DATA_2);
+    printThread1.pOutBuffIntAck = NETWORK_IoBufferFromId(	pManager1->ppTabOutput, pManager1->numOfOutput, ID_INT_DATA_WITH_ACK_2);
 				
-    pInputBuffChar  = NETWORK_IoBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_CHAR_DATA);
-    pInputBuffIntAck = NETWORK_IoBufferWithId(	pManager1->ppTabInput, pManager1->numOfInput, ID_INT_DATA_WITH_ACK);
+    pInputBuffChar  = NETWORK_IoBufferFromId(	pManager1->ppTabInput, pManager1->numOfInput, ID_CHAR_DATA);
+    pInputBuffIntAck = NETWORK_IoBufferFromId(	pManager1->ppTabInput, pManager1->numOfInput, ID_INT_DATA_WITH_ACK);
 	
 	while(netType == 0)
 	{

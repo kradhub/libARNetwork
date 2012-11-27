@@ -240,7 +240,7 @@ int NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum)
 	network_ioBuffer_t* pInputBuff = NULL;
 	int error = 1;
 	
-	pInputBuff = NETWORK_IoBufferWithId( pSender->pptab_inputBuffer, pSender->numOfInputBuff, id );
+	pInputBuff = NETWORK_IoBufferFromId( pSender->pptab_inputBuffer, pSender->numOfInputBuff, id );
 	
 	if(pInputBuff != NULL)
 	{

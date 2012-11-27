@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 	NETWORK_StopReceiver(pManager2->pReceiver);
 	
 	printf("\n the last char transmited:\n");
-	pInOutTemp = NETWORK_IoBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_CHAR_DATA);
+	pInOutTemp = NETWORK_IoBufferFromId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_CHAR_DATA);
 	//ringBuffPrint(pInOutTemp->pBuffer);
 
 	
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 	}
 	
 	printf("\n the integers transmited:\n");
-	pInOutTemp = NETWORK_IoBufferWithId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_INT_DATA_WITH_ACK);
+	pInOutTemp = NETWORK_IoBufferFromId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_INT_DATA_WITH_ACK);
 	//ringBuffPrint(pInOutTemp->pBuffer);
 	while( !ringBuffPopFront(pInOutTemp->pBuffer, &intData) )
 	{
