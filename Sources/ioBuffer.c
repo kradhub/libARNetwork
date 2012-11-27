@@ -235,7 +235,7 @@ network_ioBuffer_t* NETWORK_IoBufferFromId( network_ioBuffer_t** pptabInOutBuff,
 	return pInOutBuffSearched;
 }
 
-int NETWORK_IoBuffeIsWaitAck(	network_ioBuffer_t* pInOutBuff)
+int NETWORK_IoBufferIsWaitAck(	network_ioBuffer_t* pInOutBuff)
 {
 	/** -- Get if the inOutBuffer is waiting an acknowledgement -- */
 	

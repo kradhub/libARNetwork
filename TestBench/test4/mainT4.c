@@ -5,6 +5,12 @@
  *  @author maxime.maitre@parrot.com
 **/
 
+/*****************************************
+ * 
+ * 			include file :
+ *
+******************************************/
+
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <libSAL/print.h>
@@ -24,12 +30,22 @@
 
 #include <termios.h>
  
- 
+/*****************************************
+ * 
+ * 			define :
+ *
+******************************************/
   
 #define MILLISECOND 1000
 #define RECV_TIMEOUT_MS 10
 #define PORT1 5551
 #define PORT2 5552
+
+/*****************************************
+ * 
+ * 			header :
+ *
+******************************************/
 
 typedef struct printThread
 {
@@ -41,9 +57,13 @@ typedef struct printThread
 
 void* printBuff(void* data);
  
- 
- 
 struct termios initial_settings, new_settings;
+ 
+/*****************************************
+ * 
+ * 			implementation :
+ *
+******************************************/
  
 void setupNonBlockingTerm ()
 {

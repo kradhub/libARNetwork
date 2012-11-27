@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
     
     /** checking */
     ii = 0;
-	printf("\n the last char transmited:\n");
+	printf("\n the last char transmitted:\n");
     while( ! NETWORK_ManagerReadData(pManager2, ID_CHAR_DATA, &chData) )
     {
         ++ii;
@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
     /** check nb data */
 	error = error || ( ii != 1) ;
     
-	printf("\n the integers transmited:\n");
+	printf("\n the integers transmitted:\n");
     ii = 0;
     while( ! NETWORK_ManagerReadData(pManager2, ID_INT_DATA_WITH_ACK, &intData) )
     {

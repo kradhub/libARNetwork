@@ -57,7 +57,7 @@ typedef struct network_ioBuffer_t
     int nbOfRetry;	/**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libNetwork/sender*/
     //	timeoutCallback(network_ioBuffer_t* this)
     
-    int isWaitAck;	/**< Indicator of waiting an acknowledgement  (1 = true | 0 = false). Must be accessed through NETWORK_IoBuffeIsWaitAck()*/
+    int isWaitAck;	/**< Indicator of waiting an acknowledgement  (1 = true | 0 = false). Must be accessed through NETWORK_IoBufferIsWaitAck()*/
     int seqWaitAck; /**< Sequence number of the acknowledge waiting if used with a libNetwork/sender or of the last command stored if used with a libNetwork/reveiver*/
     int waitTimeCount;	 /**< Counter of time to wait before the next sending*/
     int ackWaitTimeCount;	/**< Counter of time to wait before to consider a timeout without receiving an acknowledgement*/
@@ -109,7 +109,7 @@ network_ioBuffer_t* NETWORK_IoBufferFromId( network_ioBuffer_t** pptabInOutBuff,
  * 	@param pInOutBuff Pointer on the input or output buffer
  * 	@return IsWaitAck equal to 1 if the inOutBuffer is waiting an acknowledgement otherwise equal to 0
 **/
-int NETWORK_IoBuffeIsWaitAck( network_ioBuffer_t* pInOutBuff );
+int NETWORK_IoBufferIsWaitAck( network_ioBuffer_t* pInOutBuff );
 
 #endif // _NETWORK_IOBUFFER_H_
 

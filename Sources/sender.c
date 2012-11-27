@@ -31,8 +31,6 @@
 
 #include <arpa/inet.h> // !!!!!!!!!!!!!!!!!!!!!!!!!!!pass in libsal
 
-typedef struct sockaddr_in SOCKADDR_IN;
-typedef struct sockaddr SOCKADDR;
 
 /*****************************************
  * 
@@ -135,7 +133,7 @@ void* NETWORK_RunSendingThread(void* data)
 				--(pInputTemp->waitTimeCount);
 			}
 
-			if( NETWORK_IoBuffeIsWaitAck(pInputTemp)  ) 
+			if( NETWORK_IoBufferIsWaitAck(pInputTemp)  ) 
 			{
 				if(pInputTemp->ackWaitTimeCount == 0)
 				{
@@ -259,7 +257,7 @@ int NETWORK_SenderConnection(network_sender_t* pSender,const char* addr, int por
 	/** -- Connect the socket in UDP to a port of an address -- */
 	
 	/** local declarations */
-	SOCKADDR_IN sendSin;
+	struct sockaddr_in sendSin;
 	
 	sendSin.sin_addr.s_addr = inet_addr(addr);
 	sendSin.sin_family = AF_INET;
@@ -267,7 +265,7 @@ int NETWORK_SenderConnection(network_sender_t* pSender,const char* addr, int por
 	
 	pSender->socket = sal_socket(  AF_INET, SOCK_DGRAM, 0);
 
-	return sal_connect( pSender->socket, (SOCKADDR*)&sendSin, sizeof(sendSin) );
+	return sal_connect( pSender->socket, (struct sockaddr*)&sendSin, sizeof(sendSin) );
 }
 
 /*****************************************
