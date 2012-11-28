@@ -19,14 +19,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		FD966342164D6AFF00C21FA3 /* test1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = test1.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FD966342164D6AFF00C21FA3 /* autoTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = autoTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD966346164D6AFF00C21FA3 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		FD966348164D6AFF00C21FA3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		FD96634A164D6AFF00C21FA3 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
-		FD96634E164D6AFF00C21FA3 /* test1-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "test1-Info.plist"; sourceTree = "<group>"; };
+		FD96634E164D6AFF00C21FA3 /* autoTest-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "autoTest-Info.plist"; sourceTree = "<group>"; };
 		FD966350164D6AFF00C21FA3 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		FD966352164D6AFF00C21FA3 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		FD966354164D6AFF00C21FA3 /* test1-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "test1-Prefix.pch"; sourceTree = "<group>"; };
+		FD966354164D6AFF00C21FA3 /* autoTest-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "autoTest-Prefix.pch"; sourceTree = "<group>"; };
 		FD966355164D6AFF00C21FA3 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		FD966356164D6AFF00C21FA3 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		FD966358164D6AFF00C21FA3 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
@@ -60,7 +60,7 @@
 		FD966343164D6AFF00C21FA3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FD966342164D6AFF00C21FA3 /* test1.app */,
+				FD966342164D6AFF00C21FA3 /* autoTest.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -88,10 +88,10 @@
 		FD96634D164D6AFF00C21FA3 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				FD96634E164D6AFF00C21FA3 /* test1-Info.plist */,
+				FD96634E164D6AFF00C21FA3 /* autoTest-Info.plist */,
 				FD96634F164D6AFF00C21FA3 /* InfoPlist.strings */,
 				FD966352164D6AFF00C21FA3 /* main.m */,
-				FD966354164D6AFF00C21FA3 /* test1-Prefix.pch */,
+				FD966354164D6AFF00C21FA3 /* autoTest-Prefix.pch */,
 				FD966358164D6AFF00C21FA3 /* Default.png */,
 				FD96635A164D6AFF00C21FA3 /* Default@2x.png */,
 				FD96635C164D6AFF00C21FA3 /* Default-568h@2x.png */,
@@ -102,9 +102,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		FD966341164D6AFF00C21FA3 /* test1 */ = {
+		FD966341164D6AFF00C21FA3 /* autoTest */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FD966360164D6AFF00C21FA3 /* Build configuration list for PBXNativeTarget "test1" */;
+			buildConfigurationList = FD966360164D6AFF00C21FA3 /* Build configuration list for PBXNativeTarget "autoTest" */;
 			buildPhases = (
 				FD96636D164D7B0700C21FA3 /* Build libSAL */,
 				FD96636A164D74E500C21FA3 /* Build libNetwork */,
@@ -116,9 +116,9 @@
 			);
 			dependencies = (
 			);
-			name = test1;
+			name = autoTest;
 			productName = test1;
-			productReference = FD966342164D6AFF00C21FA3 /* test1.app */;
+			productReference = FD966342164D6AFF00C21FA3 /* autoTest.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -130,7 +130,7 @@
 				LastUpgradeCheck = 0450;
 				ORGANIZATIONNAME = "Parrot SA";
 			};
-			buildConfigurationList = FD96633C164D6AFF00C21FA3 /* Build configuration list for PBXProject "test1" */;
+			buildConfigurationList = FD96633C164D6AFF00C21FA3 /* Build configuration list for PBXProject "autoTest" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -142,7 +142,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FD966341164D6AFF00C21FA3 /* test1 */,
+				FD966341164D6AFF00C21FA3 /* autoTest */,
 			);
 		};
 /* End PBXProject section */
@@ -280,16 +280,16 @@
 			buildSettings = {
 				ARCHS = armv7;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "test1/test1-Prefix.pch";
+				GCC_PREFIX_HEADER = "test1/autoTest-Prefix.pch";
 				HEADER_SEARCH_PATHS = Debug/include;
-				INFOPLIST_FILE = "test1/test1-Info.plist";
+				INFOPLIST_FILE = "test1/autoTest-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = Debug/lib;
 				OTHER_LDFLAGS = (
 					"-lsal_dbg",
 					"-lnetwork_dbg",
 				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = autoTest;
 				VALID_ARCHS = armv7;
 				WRAPPER_EXTENSION = app;
 			};
@@ -300,16 +300,16 @@
 			buildSettings = {
 				ARCHS = armv7;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "test1/test1-Prefix.pch";
+				GCC_PREFIX_HEADER = "test1/autoTest-Prefix.pch";
 				HEADER_SEARCH_PATHS = Release/include;
-				INFOPLIST_FILE = "test1/test1-Info.plist";
+				INFOPLIST_FILE = "test1/autoTest-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = Release/lib;
 				OTHER_LDFLAGS = (
 					"-lsal",
 					"-lnetwork",
 				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = autoTest;
 				VALID_ARCHS = armv7;
 				WRAPPER_EXTENSION = app;
 			};
@@ -318,7 +318,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		FD96633C164D6AFF00C21FA3 /* Build configuration list for PBXProject "test1" */ = {
+		FD96633C164D6AFF00C21FA3 /* Build configuration list for PBXProject "autoTest" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FD96635E164D6AFF00C21FA3 /* Debug */,
@@ -327,7 +327,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FD966360164D6AFF00C21FA3 /* Build configuration list for PBXNativeTarget "test1" */ = {
+		FD966360164D6AFF00C21FA3 /* Build configuration list for PBXNativeTarget "autoTest" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FD966361164D6AFF00C21FA3 /* Debug */,
