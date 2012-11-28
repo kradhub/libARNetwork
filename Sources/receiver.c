@@ -144,7 +144,7 @@ void* NETWORK_RunReceivingThread(void* data)
 						
 						if(pOutBufferTemp != NULL)
 						{
-							ringBuffPushBack(	pOutBufferTemp->pBuffer, &(pFrame->data) );
+							NETWORK_RingBuffPushBack(	pOutBufferTemp->pBuffer, &(pFrame->data) );
 						}							
 					break;
 					
@@ -164,7 +164,7 @@ void* NETWORK_RunReceivingThread(void* data)
 							/** OutBuffer->seqWaitAck used to save the last seq */
 							if( pFrame->seq != pOutBufferTemp->seqWaitAck )
 							{
-								pushError = ringBuffPushBack( pOutBufferTemp->pBuffer, 
+								pushError = NETWORK_RingBuffPushBack( pOutBufferTemp->pBuffer, 
 														&(pFrame->data) );
 								if( !pushError)
 								{
@@ -209,7 +209,7 @@ void NETWORK_ReturnASK(network_receiver_t* pReceiver, int id, int seq)
 																idOutputToIdAck(id) );
 	if(pBufferASK != NULL)
 	{
-		ringBuffPushBack(pBufferASK->pBuffer, &seq );
+		NETWORK_RingBuffPushBack(pBufferASK->pBuffer, &seq );
 	}
 }
 

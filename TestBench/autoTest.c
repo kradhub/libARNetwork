@@ -44,7 +44,7 @@
 #define SEND_BUFF_SIZE 256
 #define RECV_BUFF_SIZE 256
 
-/** define of the ioBuuffer identifiers */
+/** define of the ioBuffer identifiers */
 typedef enum eID_BUFF
 {
 	ID_CHAR_DATA = 5,
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
 	paramOutputNetwork2[1].buffCellSize = sizeof(int);
 	paramOutputNetwork2[1].overwriting = 0;
 	
-	//-----------------------------
+	/** ----------------------------- */
 	
     printf(" -- libNetWork TestBench auto -- \n");
     

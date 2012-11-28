@@ -171,7 +171,7 @@ void* NETWORK_RunSendingThread(void* data)
 					--(pInputTemp->ackWaitTimeCount);
 				}
 			}
-			else if( !ringBuffIsEmpty(pInputTemp->pBuffer) && !pInputTemp->waitTimeCount)
+			else if( !NETWORK_RingBuffIsEmpty(pInputTemp->pBuffer) && !pInputTemp->waitTimeCount)
 			{
 				/** try to add the latest data of the input buffer in the sending buffer*/
 				if( !NETWORK_SenderAddToBuffer(pSender, pInputTemp, seq) )
@@ -194,12 +194,12 @@ void* NETWORK_RunSendingThread(void* data)
 						
 						case network_frame_t_TYPE_DATA:
 							/** pop the data sent*/
-							ringBuffPopFront(pInputTemp->pBuffer, NULL);
+							NETWORK_RingBuffPopFront(pInputTemp->pBuffer, NULL);
 						break;
 						
 						case network_frame_t_TYPE_ACK:
 							/** pop the acknowledgement sent*/
-							ringBuffPopFront(pInputTemp->pBuffer, NULL);
+							NETWORK_RingBuffPopFront(pInputTemp->pBuffer, NULL);
 						break;
 						
 						case network_frame_t_TYPE_KEEP_ALIVE:
@@ -324,7 +324,7 @@ int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_
 		pSender->pSendingBuffer->pFront +=  sizeof(uint32_t) ;
 		
 		/** add data */						
-		error = ringBuffFront(pinputBuff->pBuffer, pSender->pSendingBuffer->pFront);
+		error = NETWORK_RingBuffFront(pinputBuff->pBuffer, pSender->pSendingBuffer->pFront);
 		
 		if(!error)
 		{

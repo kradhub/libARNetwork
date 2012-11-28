@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 				
 				pInOutTemp = NETWORK_IoBufferFromId(	pManager1->ppTabInput, pManager1->numOfInput,
 												ID_CHAR_DATA);
-				ringBuffPushBack(pInOutTemp->pBuffer, &chData);
+				NETWORK_RingBuffPushBack(pInOutTemp->pBuffer, &chData);
 				
 			break;
 			
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 				pInOutTemp = NETWORK_IoBufferFromId(	pManager1->ppTabInput,
 										pManager1->numOfInput, ID_INT_DATA_WITH_ACK);
 										
-				ringBuffPushBack(pInOutTemp->pBuffer, &intData);
+				NETWORK_RingBuffPushBack(pInOutTemp->pBuffer, &intData);
 			break;
 				
 			default:

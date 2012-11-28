@@ -12,7 +12,7 @@
 #include <libNetwork/sender.h>
 #include <libNetwork/buffer.h>
 
-#define ID_ACK_OFFSET 1000
+#define NETWORK_ID_ACK_OFFSET 1000
 
 /**
  *  @brief receiver manager
@@ -101,7 +101,7 @@ int NETWORK_ReceiverRead(network_receiver_t* pReceiver);
 **/
 static inline int idOutputToIdAck( int id)
 {
-	return id + ID_ACK_OFFSET;
+	return id + NETWORK_ID_ACK_OFFSET;
 }
 
 /**
@@ -111,7 +111,7 @@ static inline int idOutputToIdAck( int id)
 **/
 static inline int idAckToIdInput( int id)
 {
-	return id - ID_ACK_OFFSET;
+	return id - NETWORK_ID_ACK_OFFSET;
 }
 
 /**

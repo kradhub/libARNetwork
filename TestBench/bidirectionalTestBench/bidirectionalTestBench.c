@@ -119,9 +119,9 @@ int main(int argc, char *argv[])
 	signal (SIGINT, fixTerminal);
 
 	
-	//--- network 1 ---
+	/** --- network 1 --- */
 	
-	// input ID_CHAR_DATA int
+	/** input ID_CHAR_DATA int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[0]) );
 	paramNetworkL1[0].id = ID_CHAR_DATA;
 	paramNetworkL1[0].dataType = network_frame_t_TYPE_DATA;
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 	paramNetworkL1[0].buffCellSize = sizeof(char);
 	paramNetworkL1[0].overwriting = 1;
 	
-	// input ID_INT_DATA_WITH_ACK char
+	/** input ID_INT_DATA_WITH_ACK char */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[1]) );
 	paramNetworkL1[1].id = ID_INT_DATA_WITH_ACK;
 	paramNetworkL1[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 	paramNetworkL1[1].buffCellSize = sizeof(int);
 	paramNetworkL1[1].overwriting = 0;
 	
-	// input ID_KEEP_ALIVE char
+	/** input ID_KEEP_ALIVE char */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[2]) );
 	paramNetworkL1[2].id = ID_KEEP_ALIVE;
 	paramNetworkL1[2].dataType = network_frame_t_TYPE_KEEP_ALIVE;
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
 	paramNetworkL1[2].buffCellSize = sizeof(int);
 	paramNetworkL1[2].overwriting = 1;
 	
-	//  ID_CHAR_DATA_2 int
+	/**  ID_CHAR_DATA_2 int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[0]) );
 	paramNetworkL2[0].id = ID_CHAR_DATA_2;
 	paramNetworkL2[0].dataType = network_frame_t_TYPE_DATA;
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
 	paramNetworkL2[0].buffCellSize = sizeof(char);
 	paramNetworkL2[0].overwriting = 1;
 	
-	//  ID_INT_DATA_WITH_ACK_2 char
+	/**  ID_INT_DATA_WITH_ACK_2 char */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[1]) );
 	paramNetworkL2[1].id = ID_INT_DATA_WITH_ACK_2;
 	paramNetworkL2[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
@@ -261,7 +261,7 @@ int main(int argc, char *argv[])
             
                 if( NETWORK_ManagerSendData(pManager1, id_ioBuff_char, &chData) )
                 {
-                    printf("waaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \n");
+                    printf("buffer full \n");
                 }
 				
 			break;
@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
 										
 				if( NETWORK_ManagerSendData(pManager1, id_ioBuff_intAck, &intData) )
 				{
-					printf("buffer fulll \n");
+					printf("buffer full \n");
 				}
 				
 			break;
@@ -284,17 +284,17 @@ int main(int argc, char *argv[])
 		}
 	}
 	
-	//stop all therad
+	/** stop all therad */
 	printThread1.alive = 0;
     NETWORK_ManagerStop(pManager1);
 	
-	//kill all thread
+	/** kill all thread */
 	
 	sal_thread_join(&(thread_send1), NULL);
 	sal_thread_join(&(thread_recv1), NULL);
 	sal_thread_join(&(thread_printBuff), NULL);
 
-	//delete
+	/** delete */
 	NETWORK_DeleteManager( &pManager1 );
 	
 	printf("end\n");

@@ -176,12 +176,12 @@ void* printBuff(void* data)
 		usleep(MILLISECOND);
 	
 
-		while( !ringBuffPopFront(pprintThread1->pOutBuffChar->pBuffer, &chData) )
+		while( !NETWORK_RingBuffPopFront(pprintThread1->pOutBuffChar->pBuffer, &chData) )
 		{
 			printf("- char :%d \n",chData);
 		}
 		
-		while( !ringBuffPopFront(pprintThread1->pOutBuffIntAck->pBuffer, &intData) )
+		while( !NETWORK_RingBuffPopFront(pprintThread1->pOutBuffIntAck->pBuffer, &intData) )
 		{
 			printf("- int ack :%d \n",intData);
 		}

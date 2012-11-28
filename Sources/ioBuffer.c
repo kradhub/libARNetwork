@@ -133,14 +133,14 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
             pInOutBuff->retryCount = 0;
 		
             /** Create the RingBuffer */
-            pInOutBuff->pBuffer = newRingBufferWithOverwriting(	pParam->buffSize, pParam->buffCellSize,
+            pInOutBuff->pBuffer = NETWORK_NewRingBufferWithOverwriting(	pParam->buffSize, pParam->buffCellSize,
                                                                 pParam->overwriting);
             if(pInOutBuff->pBuffer != NULL)
             {
                 /** if it is a keep alive buffer, push in the data send for keep alive */ 
                 if( pInOutBuff->dataType == network_frame_t_TYPE_KEEP_ALIVE )
                 {
-                    ringBuffPushBack(pInOutBuff->pBuffer, &keepAliveData);
+                    NETWORK_RingBuffPushBack(pInOutBuff->pBuffer, &keepAliveData);
                 }
             }
             else
@@ -179,7 +179,7 @@ void NETWORK_DeleteIotBuffer( network_ioBuffer_t** ppInOutBuff )
 		{	
 			sal_mutex_destroy( &(pInOutBuff->mutex) );
 			
-			deleteRingBuffer( &(pInOutBuff->pBuffer) );
+			NETWORK_DeleteRingBuffer( &(pInOutBuff->pBuffer) );
 		
 			free(pInOutBuff);
             pInOutBuff = NULL;
@@ -202,7 +202,7 @@ int NETWORK_IoBufferAckReceived( network_ioBuffer_t* pInOutBuff, int seqNum )
 	if( pInOutBuff->isWaitAck && pInOutBuff->seqWaitAck == seqNum )
 	{
 		pInOutBuff->isWaitAck = 0;
-		ringBuffPopFront( pInOutBuff->pBuffer, NULL );
+		NETWORK_RingBuffPopFront( pInOutBuff->pBuffer, NULL );
 		error = NETWORK_OK;
 	}
 	

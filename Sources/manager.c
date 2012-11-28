@@ -25,10 +25,10 @@
 #include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
 #include <libNetwork/receiver.h>
-#include <libNetwork/manager.h>
 
-typedef struct sockaddr_in SOCKADDR_IN;
-typedef struct sockaddr SOCKADDR;
+#include "manager.h"
+
+#include <libNetwork/manager.h>
 
 /*****************************************
  * 
@@ -45,17 +45,6 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 	/** local declarations */
 	network_manager_t* pManager = NULL;
 	int error = NETWORK_OK;
-	
-	int ii = 0;
-	int indexAckOutput = 0;
-	network_paramNewIoBuffer_t paramNewACK;
-	
-	/** Initialize the default parameters for the buffers of acknowledgement. */
-	NETWORK_ParamNewIoBufferDefaultInit(&paramNewACK); 
-    paramNewACK.dataType = network_frame_t_TYPE_ACK;
-    paramNewACK.buffSize = 1;
-	paramNewACK.buffCellSize = sizeof(int);
-	paramNewACK.overwriting = 0;
     
     /** Create the Manager */
     pManager = malloc( sizeof(network_manager_t));
@@ -89,7 +78,7 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 		**/
 		pManager->numOfOutputWithoutAck = numberOfOutput;
 		pManager->numOfOutput = 2 * numberOfOutput;
-		pManager->ppTabOutput = malloc(sizeof(network_ioBuffer_t*) * pManager->numOfOutput );
+		pManager->ppTabOutput = calloc( pManager->numOfOutput, sizeof(network_ioBuffer_t*) );
         if( pManager->ppTabOutput == NULL )
         {
             error = NETWORK_ERROR_ALLOC;
@@ -107,7 +96,7 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
 		**/ 
 		pManager->numOfInputWithoutAck = numberOfInput;
 		pManager->numOfInput = numberOfInput + numberOfOutput;
-		pManager->ppTabInput = malloc( sizeof(network_ioBuffer_t*) * pManager->numOfInput );
+		pManager->ppTabInput = calloc( pManager->numOfInput, sizeof(network_ioBuffer_t*) );
         if( pManager->ppTabInput == NULL )
         {
             error = NETWORK_ERROR_ALLOC;
@@ -118,40 +107,8 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
     
     if( error == NETWORK_OK )
 	{	
-        /** Create the output buffers and the buffers of acknowledgement */
-        for(ii = 0; ii < numberOfOutput; ++ii)
-        {
-            pManager->ppTabOutput[ii] = NETWORK_NewIoBuffer( &(ptabParamOutput[ii]) );
-            if(pManager->ppTabOutput[ii] == NULL)
-            {
-                error = NETWORK_MANAGER_ERROR_NEW_IOBUFFER;
-            }
-            
-            /** 
-             * Create the buffer of acknowledgement associated with the output buffer and 
-             * store it at the end of the output and input buffer lists.
-            **/
-            paramNewACK.id = idOutputToIdAck(ptabParamOutput[ii].id); 
-            indexAckOutput = numberOfOutput + ii;
-            
-            pManager->ppTabOutput[ indexAckOutput ] = NETWORK_NewIoBuffer(&paramNewACK);
-            if(pManager->ppTabOutput[indexAckOutput] == NULL)
-            {
-                error = NETWORK_MANAGER_ERROR_NEW_IOBUFFER;
-            }
-            
-            pManager->ppTabInput[numberOfInput + ii] = pManager->ppTabOutput[ indexAckOutput ];
-        }
-        
-        /** Create the input buffers */
-        for(ii = 0; ii< numberOfInput ; ++ii)
-        {
-            pManager->ppTabInput[ii] = NETWORK_NewIoBuffer( &(ptabParamInput[ii]) );
-            if(pManager->ppTabInput[ii] == NULL)
-            {
-                error = NETWORK_MANAGER_ERROR_NEW_IOBUFFER;
-            }
-        }
+        /** Create manager's IoBuffers */
+        error = NETWORK_ManagerCreateIoBuffer(pManager, ptabParamInput, ptabParamOutput);
 	}
     
 	if( error == NETWORK_OK )
@@ -287,7 +244,7 @@ int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, cons
 	
 	if(pInputBuffer != NULL)
 	{
-		error = ringBuffPushBack(pInputBuffer->pBuffer, pData);
+		error = NETWORK_RingBuffPushBack(pInputBuffer->pBuffer, pData);
 	}
 	
 	return error;
@@ -298,15 +255,100 @@ int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, voi
 	/** -- read data received -- */
 	
 	/** local declarations */
-	int error = 1;
+	int error = NETWORK_ERROR;
 	network_ioBuffer_t* pOutputBuffer = NULL;
 	
 	pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
 	
 	if(pOutputBuffer != NULL)
 	{
-		error = ringBuffPopFront(pOutputBuffer->pBuffer, pData);
+		error = NETWORK_RingBuffPopFront(pOutputBuffer->pBuffer, pData);
 	}
 	
 	return error;
+}
+
+/*****************************************
+ * 
+ * 			private implementation:
+ *
+******************************************/
+
+int NETWORK_ManagerCreateIoBuffer(network_manager_t* pManager,
+                                    network_paramNewIoBuffer_t* ptabParamInput, 
+                                    network_paramNewIoBuffer_t* ptabParamOutput)
+{
+    /** -- Create manager's IoBuffers --*/
+    
+    /** local declarations */
+	int error = NETWORK_OK;
+    int ii = 0;
+	int indexAckOutput = 0;
+    network_paramNewIoBuffer_t paramNewACK;
+	
+	/** Initialize the default parameters for the buffers of acknowledgement. */
+	NETWORK_ParamNewIoBufferDefaultInit(&paramNewACK); 
+    paramNewACK.dataType = network_frame_t_TYPE_ACK;
+    paramNewACK.buffSize = 1;
+	paramNewACK.buffCellSize = sizeof(int);
+	paramNewACK.overwriting = 0;
+    
+    /**
+     *  For each output buffer a buffer of acknowledgement is add and referenced
+     *  in the output buffer list and the input buffer list.
+    **/
+    
+    /** Create the output buffers and the buffers of acknowledgement */
+    for(ii = 0; ii < pManager->numOfOutputWithoutAck; ++ii)
+    {
+        /** check the IoBuffer identifier */
+        if( ptabParamOutput[ii].id < NETWORK_ID_ACK_OFFSET )
+        {
+            pManager->ppTabOutput[ii] = NETWORK_NewIoBuffer( &(ptabParamOutput[ii]) );
+            if(pManager->ppTabOutput[ii] == NULL)
+            {
+                error = NETWORK_MANAGER_ERROR_NEW_IOBUFFER;
+            }
+            
+            /** 
+             * Create the buffer of acknowledgement associated with the output buffer and 
+             * store it at the end of the output and input buffer lists.
+            **/
+            paramNewACK.id = idOutputToIdAck(ptabParamOutput[ii].id); 
+            indexAckOutput = pManager->numOfOutputWithoutAck + ii;
+            
+            pManager->ppTabOutput[ indexAckOutput ] = NETWORK_NewIoBuffer(&paramNewACK);
+            if(pManager->ppTabOutput[indexAckOutput] == NULL)
+            {
+                error = NETWORK_MANAGER_ERROR_NEW_IOBUFFER;
+            }
+            
+            pManager->ppTabInput[pManager->numOfInputWithoutAck + ii] = 
+                                                            pManager->ppTabOutput[ indexAckOutput ];
+        }
+        else
+        {
+            error = NETWORK_ERROR_BAD_PARAMETER;
+        }
+    }
+    
+    /** Create the input buffers */
+    for(ii = 0; ii< pManager->numOfInputWithoutAck ; ++ii)
+    {
+        /** check the IoBuffer identifier */
+        if( ptabParamInput[ii].id < NETWORK_ID_ACK_OFFSET )
+        {
+            pManager->ppTabInput[ii] = NETWORK_NewIoBuffer( &(ptabParamInput[ii]) );
+            if(pManager->ppTabInput[ii] == NULL)
+            {
+                error = NETWORK_MANAGER_ERROR_NEW_IOBUFFER;
+            }
+        }
+        else
+        {
+            error = NETWORK_ERROR_BAD_PARAMETER;
+        }
+    }
+    
+    return error;
 }

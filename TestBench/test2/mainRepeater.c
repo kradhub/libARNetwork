@@ -116,18 +116,18 @@ int main(int argc, char *argv[])
 	
 	printf("\n the last char transmitted:\n");
 	pInOutTemp = NETWORK_IoBufferFromId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_CHAR_DATA);
-	//ringBuffPrint(pInOutTemp->pBuffer);
+	//NETWORK_RingBuffPrint(pInOutTemp->pBuffer);
 
 	
-	while( !ringBuffPopFront(pInOutTemp->pBuffer, &chData) )
+	while( !NETWORK_RingBuffPopFront(pInOutTemp->pBuffer, &chData) )
 	{
 		printf("- %c \n",chData);
 	}
 	
 	printf("\n the integers transmitted:\n");
 	pInOutTemp = NETWORK_IoBufferFromId(	pManager2->ppTabOutput, pManager2->numOfOutput, ID_INT_DATA_WITH_ACK);
-	//ringBuffPrint(pInOutTemp->pBuffer);
-	while( !ringBuffPopFront(pInOutTemp->pBuffer, &intData) )
+	//NETWORK_RingBuffPrint(pInOutTemp->pBuffer);
+	while( !NETWORK_RingBuffPopFront(pInOutTemp->pBuffer, &intData) )
 	{
 		printf("- %d \n",intData);
 	}

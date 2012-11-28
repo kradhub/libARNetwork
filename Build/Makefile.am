@@ -21,6 +21,8 @@ SOURCE_FILES 	= 	$(HEADER_FILES)		\
 					../Sources/sender.c \
 					../Sources/receiver.c \
 					../Sources/manager.c \
+					../Sources/manager.h \
+					../Sources/sender.h \
 					../Sources/receiver.h
 					
 # The library names to build (note we are building static and shared libs)

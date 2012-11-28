@@ -27,13 +27,13 @@
 ******************************************/
 
 
-network_ringBuffer_t* newRingBuffer(	unsigned int buffSize, unsigned int buffCellSize)
+network_ringBuffer_t* NETWORK_NewRingBuffer(	unsigned int buffSize, unsigned int buffCellSize)
 {
     /** -- Create a new ring buffer not overwritable -- */
-	return newRingBufferWithOverwriting(	buffSize, buffCellSize, 0 );
+	return NETWORK_NewRingBufferWithOverwriting(	buffSize, buffCellSize, 0 );
 }
 
-network_ringBuffer_t* newRingBufferWithOverwriting(	unsigned int buffSize, 
+network_ringBuffer_t* NETWORK_NewRingBufferWithOverwriting(	unsigned int buffSize, 
 														unsigned int buffCellSize, 
 														int overwriting )
 {
@@ -54,14 +54,14 @@ network_ringBuffer_t* newRingBufferWithOverwriting(	unsigned int buffSize,
 		
 		if( pRingBuff->dataBuffer == NULL)
 		{
-            deleteRingBuffer(&pRingBuff);
+            NETWORK_DeleteRingBuffer(&pRingBuff);
 		}
 	}
 	
 	return pRingBuff;
 }
 
-void deleteRingBuffer(network_ringBuffer_t** ppRingBuff)
+void NETWORK_DeleteRingBuffer(network_ringBuffer_t** ppRingBuff)
 {
     /** -- Delete the ring buffer -- */
     
@@ -85,7 +85,7 @@ void deleteRingBuffer(network_ringBuffer_t** ppRingBuff)
 	}
 }
 
-int ringBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData)
+int NETWORK_RingBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData)
 {
     /** -- Add the new data at the back of the ring buffer -- */
     
@@ -95,9 +95,9 @@ int ringBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData)
 	
 	sal_mutex_lock(&(pRingBuff->mutex));
 	
-	if( ringBuffGetFreeCellNb(pRingBuff) || pRingBuff->overwriting)
+	if( NETWORK_RingBuffGetFreeCellNb(pRingBuff) || pRingBuff->overwriting)
 	{	
-		if( !ringBuffGetFreeCellNb(pRingBuff) )
+		if( !NETWORK_RingBuffGetFreeCellNb(pRingBuff) )
 		{
 			(pRingBuff->buffIndexOutput) += pRingBuff->buffCellSize;
 		}
@@ -117,7 +117,7 @@ int ringBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData)
 	return error;
 }
 
-int ringBuffPopFront(network_ringBuffer_t* pRingBuff, void* pPopData)
+int NETWORK_RingBuffPopFront(network_ringBuffer_t* pRingBuff, void* pPopData)
 {
     /** -- Pop the oldest data -- */
     
@@ -127,7 +127,7 @@ int ringBuffPopFront(network_ringBuffer_t* pRingBuff, void* pPopData)
 	
 	sal_mutex_lock(&(pRingBuff->mutex));
 	
-	if( !ringBuffIsEmpty(pRingBuff) )
+	if( !NETWORK_RingBuffIsEmpty(pRingBuff) )
 	{
 		if(pPopData != NULL)
 		{
@@ -149,7 +149,7 @@ int ringBuffPopFront(network_ringBuffer_t* pRingBuff, void* pPopData)
 	return error;
 }
 
-int ringBuffFront(network_ringBuffer_t* pRingBuff, void* pFrontData)
+int NETWORK_RingBuffFront(network_ringBuffer_t* pRingBuff, void* pFrontData)
 {
     /** -- Return a pointer on the front data -- */
     
@@ -162,7 +162,7 @@ int ringBuffFront(network_ringBuffer_t* pRingBuff, void* pFrontData)
 	buffPointor = pRingBuff->dataBuffer + 
 					(pRingBuff->buffIndexOutput % (pRingBuff->buffSize * pRingBuff->buffCellSize) );
 	
-	if( !ringBuffIsEmpty(pRingBuff) )
+	if( !NETWORK_RingBuffIsEmpty(pRingBuff) )
 	{
 	
 		memcpy(pFrontData, buffPointor, pRingBuff->buffCellSize);
@@ -175,7 +175,7 @@ int ringBuffFront(network_ringBuffer_t* pRingBuff, void* pFrontData)
 	return error;
 }
 
-void ringBuffPrint(network_ringBuffer_t* pRingBuff)
+void NETWORK_RingBuffPrint(network_ringBuffer_t* pRingBuff)
 {
     /** -- Print the state of the ring buffer -- */
     
@@ -191,10 +191,10 @@ void ringBuffPrint(network_ringBuffer_t* pRingBuff)
 	
 	sal_mutex_unlock(&(pRingBuff->mutex));
 	
-	ringBuffDataPrint(pRingBuff);
+	NETWORK_RingBuffDataPrint(pRingBuff);
 }
 
-void ringBuffDataPrint(network_ringBuffer_t* pRingBuff)
+void NETWORK_RingBuffDataPrint(network_ringBuffer_t* pRingBuff)
 {
     /** -- Print the contents of the ring buffer -- */
     

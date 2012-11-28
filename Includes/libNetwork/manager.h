@@ -43,6 +43,7 @@ typedef struct network_manager_t
  * 	@return Pointer on the new Manager
  * 	@note This creator adds for all output, one other inOutBuffer for storing the acknowledgment to return.
  * These new buffers are added in the input and output buffer tables.
+ *  @warning The identifiers of the IoBuffer should not exceed the value 1000.
  * 	@see NETWORK_DeleteManager()
 **/
 network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int sendBuffSize,

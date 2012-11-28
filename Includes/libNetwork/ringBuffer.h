@@ -12,8 +12,8 @@
 
 /**
  *  @brief Basic ring buffer, multithread safe
- * 	@warning before to be used the ring buffer must be created through newRingBuffer() or newRingBufferWithOverwriting()
- * 	@post after its using the ring buffer must be deleted through deleteRingBuffer()
+ * 	@warning before to be used the ring buffer must be created through NETWORK_NewRingBuffer() or NETWORK_NewRingBufferWithOverwriting()
+ * 	@post after its using the ring buffer must be deleted through NETWORK_DeleteRingBuffer()
 **/
 typedef struct network_ringBuffer_t  
 {
@@ -30,27 +30,27 @@ typedef struct network_ringBuffer_t
 /**
  *  @brief Create a new ring buffer
  * 	@warning This function allocate memory
- * 	@post deleteRingBuffer() must be called to delete the ring buffer and free the memory allocated
+ * 	@post NETWORK_DeleteRingBuffer() must be called to delete the ring buffer and free the memory allocated
  * 	@param[in] buffSize Maximum number of data cell of the ring buffer
  * 	@param[in] buffCellSize size of one data cell of the ring buffer
  * 	@return Pointer on the new ring buffer
- * 	@see newRingBufferWithOverwriting()
- * 	@see deleteRingBuffer()
+ * 	@see NETWORK_NewRingBufferWithOverwriting()
+ * 	@see NETWORK_DeleteRingBuffer()
 **/
-network_ringBuffer_t* newRingBuffer(	unsigned int buffSize, unsigned int buffCellSize); 
+network_ringBuffer_t* NETWORK_NewRingBuffer(	unsigned int buffSize, unsigned int buffCellSize); 
 
 /**
  *  @brief Create a new ring buffer.
  * 	@warning This function allocate memory
- * 	@post deleteRingBuffer() must be called to delete the ring buffer and free the memory allocated
+ * 	@post NETWORK_DeleteRingBuffer() must be called to delete the ring buffer and free the memory allocated
  * 	@param[in] buffSize Maximum number of data cell of the ring buffer
  * 	@param[in] buffCellSize size of one data cell of the ring buffer
  * 	@param[in] overwriting set to 1 allow the overwriting if the buffer is full otherwise set 0
  * 	@return Pointer on the new ring buffer
- * 	@see newRingBufferWithOverwriting()
- * 	@see deleteRingBuffer()
+ * 	@see NETWORK_NewRingBufferWithOverwriting()
+ * 	@see NETWORK_DeleteRingBuffer()
 **/
-network_ringBuffer_t* newRingBufferWithOverwriting(	unsigned int buffSize, 
+network_ringBuffer_t* NETWORK_NewRingBufferWithOverwriting(	unsigned int buffSize, 
 														unsigned int buffCellSize, 
 														int overwriting ); 
 
@@ -58,10 +58,10 @@ network_ringBuffer_t* newRingBufferWithOverwriting(	unsigned int buffSize,
  *  @brief Delete the ring buffer
  * 	@warning This function free memory
  * 	@param ppRingBuff address of the pointer on the ring buffer to delete
- *	@see newRingBuffer()
- * 	@see newRingBufferWithOverwriting()
+ *	@see NETWORK_NewRingBuffer()
+ * 	@see NETWORK_NewRingBufferWithOverwriting()
 **/
-void deleteRingBuffer(network_ringBuffer_t** ppRingBuff);
+void NETWORK_DeleteRingBuffer(network_ringBuffer_t** ppRingBuff);
 
 /**
  *  @brief Add the new data at the back of the ring buffer
@@ -69,7 +69,7 @@ void deleteRingBuffer(network_ringBuffer_t** ppRingBuff);
  * 	@param[in] newData pointer on the data to add
  * 	@return error equal to 1 if the data is not correctly pushed
 **/
-int ringBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData);
+int NETWORK_RingBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData);
 
 /**
  *  @brief Pop the oldest data
@@ -77,14 +77,14 @@ int ringBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData);
  * 	@param[out] popData pointer on the data popped
  * 	@return error equal to 1 if the buffer is empty 
 **/
-int ringBuffPopFront(network_ringBuffer_t* pRingBuff, void* pPopData);
+int NETWORK_RingBuffPopFront(network_ringBuffer_t* pRingBuff, void* pPopData);
 
 /**
  *  @brief Return the number of free cell of the ring buffer
  * 	@param pRingBuff pointer on the ring buffer
  * 	@return number of free cell of the ring buffer 
 **/
-static inline int ringBuffGetFreeCellNb(const network_ringBuffer_t* pRingBuff)
+static inline int NETWORK_RingBuffGetFreeCellNb(const network_ringBuffer_t* pRingBuff)
 {
 	return pRingBuff->buffSize - ( 
 			(pRingBuff->buffIndexInput - pRingBuff->buffIndexOutput) / pRingBuff->buffCellSize );
@@ -95,7 +95,7 @@ static inline int ringBuffGetFreeCellNb(const network_ringBuffer_t* pRingBuff)
  * 	@param pRingBuff pointer on the ring buffer
  * 	@return equal to 1 if the ring buffer is empty else 0
 **/
-static inline int ringBuffIsEmpty(const network_ringBuffer_t* pRingBuff)
+static inline int NETWORK_RingBuffIsEmpty(const network_ringBuffer_t* pRingBuff)
 {
 	return pRingBuff->buffIndexInput == pRingBuff->buffIndexOutput;
 }
@@ -106,13 +106,13 @@ static inline int ringBuffIsEmpty(const network_ringBuffer_t* pRingBuff)
  * 	@param[out] pFrontData pointer on the front data
  * 	@return error equal to 1 if the ring buffer is empty 
 **/
-int ringBuffFront( network_ringBuffer_t* pRingBuff, void* pFrontData);
+int NETWORK_RingBuffFront( network_ringBuffer_t* pRingBuff, void* pFrontData);
 
 /**
  *  @brief Clean the ring buffer
  * 	@param pRingBuff pointer on the ring buffer
 **/
-static inline void ringBuffClean(network_ringBuffer_t* pRingBuff)
+static inline void NETWORK_RingBuffClean(network_ringBuffer_t* pRingBuff)
 {
 	pRingBuff->buffIndexInput = pRingBuff->buffIndexOutput;
 }
@@ -121,13 +121,13 @@ static inline void ringBuffClean(network_ringBuffer_t* pRingBuff)
  *  @brief Print the state of the ring buffer
  * 	@param pRingBuff pointer on the ring buffer
 **/
-void ringBuffPrint(network_ringBuffer_t* pRingBuff);
+void NETWORK_RingBuffPrint(network_ringBuffer_t* pRingBuff);
 
 /**
  *  @brief Print the contents of the ring buffer
  * 	@param pRingBuff pointer on the ring buffer
 **/
-void ringBuffDataPrint(network_ringBuffer_t* pRingBuff);
+void NETWORK_RingBuffDataPrint(network_ringBuffer_t* pRingBuff);
 
 #endif // _NETWORK_RINGBUFFER_H_
 
