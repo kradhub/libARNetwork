@@ -7,12 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
-#include <libNetwork/common.h>
-#include <libNetwork/inOutBuffer.h>
-#include <libNetwork/sender.h>
-#include <libNetwork/receiver.h>
 
-#include <libNetwork/network.h>
+#include <libNetwork/manager.h>
 
 #import "TextViewConsole.h"
 

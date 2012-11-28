@@ -10,39 +10,39 @@
 
 #include <libSAL/thread.h>
 
-#include <libNetwork/common.h>
-#include <libNetwork/inOutBuffer.h>
-#include <libNetwork/sender.h>
-#include <libNetwork/receiver.h>
-
-#include <libNetwork/network.h>
+#include <libNetwork/manager.h>
 
 @class ViewController;
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>{
 
-    network_t* pNetwork1;
+    network_manager_t* pManager1;
+	
+	int netType;
+	
+	char cmdType;
+	char chData;
+	
+	int intData;
+	
+	char IpAddress[16];
+    int sendPort;
+	int recvPort;
     
-    bool connected;
-    int connectError;
-    int bindError;
+	int connectError;
+	
+    int id_ioBuff_char;
+    int id_ioBuff_intAck;
     
-    
-    char chData;
-    int intData;
-    
-    int netType;
-    
-    sal_thread_t thread_send1;
+    int id_print_ioBuff_char;
+    int id_print_ioBuff_intAck;
+	
+	sal_thread_t thread_send1;
 	sal_thread_t thread_recv1;
     
-    network_inOutBuffer_t* pOutBuffChar;
-	network_inOutBuffer_t* pOutBuffIntAck;
-    
-    network_inOutBuffer_t* pInputBuffChar ;
-    network_inOutBuffer_t* pInputBuffIntAck;
-    
     NSTimer *timer;
+    
+    bool connected;
     
 }
 

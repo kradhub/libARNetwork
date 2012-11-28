@@ -7,23 +7,48 @@
 //
 
 
+/*****************************************
+ *
+ * 			include file :
+ *
+ ******************************************/
 
 #import "ViewController.h"
 
-#include <libSAL/print.h>
+#include <stdlib.h>
+
 #include <libSAL/thread.h>
 
-#include <libNetwork/common.h>
-#include <libNetwork/inOutBuffer.h>
-#include <libNetwork/sender.h>
-#include <libNetwork/receiver.h>
-#include <libNetwork/network.h>
+#include <libNetwork/frame.h>
+#include <libNetwork/manager.h>
 
 #include <unistd.h>
 
 #include "../../Includes/networkDef.h"
 
 #import "AppDelegate.h"
+
+
+/*****************************************
+ *
+ * 			define :
+ *
+ ******************************************/
+
+#define MILLISECOND 1000
+#define RECV_TIMEOUT_MS 10
+#define PORT1 5551
+#define PORT2 5552
+
+#define SEND_BUFF_SIZE 256
+#define RECV_BUFF_SIZE 256
+
+
+/*****************************************
+ *
+ * 			implementation :
+ *
+ ******************************************/
 
 @implementation AppDelegate
 
@@ -33,28 +58,28 @@
 
 - (void)netWorkConstructor
 {
-    pNetwork1 = NULL;
+    pManager1 = NULL;
     
-	//network_paramNewInOutBuffer_t paramNetwork1[5];
-	network_paramNewInOutBuffer_t paramNetworkL1[3];
-	network_paramNewInOutBuffer_t paramNetworkL2[2];
+    
+    network_paramNewIoBuffer_t paramNetworkL1[3];
+	network_paramNewIoBuffer_t paramNetworkL2[2];
     
 	
 	//--- network 1 ---
 	
 	// input ID_CHAR_DATA int
+    NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[0]) );
 	paramNetworkL1[0].id = ID_CHAR_DATA;
-	paramNetworkL1[0].dataType = CMD_TYPE_DATA;
+	paramNetworkL1[0].dataType = network_frame_t_TYPE_DATA;
 	paramNetworkL1[0].sendingWaitTime = 3;
-	paramNetworkL1[0].ackTimeoutMs = 10;//not used
-	paramNetworkL1[0].nbOfRetry = 5;//not used
 	paramNetworkL1[0].buffSize = 1;
 	paramNetworkL1[0].buffCellSize = sizeof(char);
 	paramNetworkL1[0].overwriting = 1;
 	
 	// input ID_INT_DATA_WITH_ACK char
+    NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[1]) );
 	paramNetworkL1[1].id = ID_INT_DATA_WITH_ACK;
-	paramNetworkL1[1].dataType = CMD_TYPE_DATA_WITH_ACK;
+	paramNetworkL1[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramNetworkL1[1].sendingWaitTime = 2;
 	paramNetworkL1[1].ackTimeoutMs = 10;
 	paramNetworkL1[1].nbOfRetry = -1 /*5*/;
@@ -63,68 +88,66 @@
 	paramNetworkL1[1].overwriting = 0;
 	
 	// input ID_KEEP_ALIVE char
+    NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[2]) );
 	paramNetworkL1[2].id = ID_KEEP_ALIVE;
-	paramNetworkL1[2].dataType = CMD_TYPE_KEEP_ALIVE;
+	paramNetworkL1[2].dataType = network_frame_t_TYPE_KEEP_ALIVE;
 	paramNetworkL1[2].sendingWaitTime = 100;
-	paramNetworkL1[2].ackTimeoutMs = 10;//not used
-	paramNetworkL1[2].nbOfRetry = 5;//not used
 	paramNetworkL1[2].buffSize = 1;
 	paramNetworkL1[2].buffCellSize = sizeof(int);
 	paramNetworkL1[2].overwriting = 1;
 	
 	//  ID_CHAR_DATA_2 int
+    NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[0]) );
 	paramNetworkL2[0].id = ID_CHAR_DATA_2;
-	paramNetworkL2[0].dataType = CMD_TYPE_DATA;
+	paramNetworkL2[0].dataType = network_frame_t_TYPE_DATA;
 	paramNetworkL2[0].sendingWaitTime = 3;
-	paramNetworkL2[0].ackTimeoutMs = 10;//not used
-	paramNetworkL2[0].nbOfRetry = 5;//not used
 	paramNetworkL2[0].buffSize = 1;
 	paramNetworkL2[0].buffCellSize = sizeof(char);
 	paramNetworkL2[0].overwriting = 1;
 	
 	//  ID_INT_DATA_WITH_ACK_2 char
+    NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[1]) );
 	paramNetworkL2[1].id = ID_INT_DATA_WITH_ACK_2;
-	paramNetworkL2[1].dataType = CMD_TYPE_DATA_WITH_ACK;
+	paramNetworkL2[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramNetworkL2[1].sendingWaitTime = 2;
 	paramNetworkL2[1].ackTimeoutMs = 10;
 	paramNetworkL2[1].nbOfRetry = -1 /*5*/;
 	paramNetworkL2[1].buffSize = 5;
 	paramNetworkL2[1].buffCellSize = sizeof(int);
 	paramNetworkL2[1].overwriting = 0;
+
+    
+	NSLog(@"\n ~~ This soft sends data and repeater ack ~~ \n \n");
     
     switch(netType)
     {
         case 1:
-            //pNetwork1 = newNetworkWithVarg( 256, 256, 2, 2/*3*/,
-            //			paramNetwork1[3], paramNetwork1[4],
-            //			paramNetwork1[0], paramNetwork1[1]/*, paramNetwork1[2]*/);
+            pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, 2/*3*/, paramNetworkL1, 2 ,paramNetworkL2);
             
-            pNetwork1 = newNetwork( 256, 256, 2/*3*/, paramNetworkL1, 2 ,paramNetworkL2);
+            id_ioBuff_char = ID_CHAR_DATA;
+            id_ioBuff_intAck = ID_INT_DATA_WITH_ACK;
             
-            pOutBuffChar = inOutBufferWithId(	pNetwork1->ppTabOutput, pNetwork1->numOfOutput, ID_CHAR_DATA_2);
-            pOutBuffIntAck = inOutBufferWithId(	pNetwork1->ppTabOutput, pNetwork1->numOfOutput, ID_INT_DATA_WITH_ACK_2);
+            id_print_ioBuff_char = ID_CHAR_DATA_2;
+            id_print_ioBuff_intAck = ID_INT_DATA_WITH_ACK_2;
             
-            pInputBuffChar  = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput, ID_CHAR_DATA);
-            pInputBuffIntAck = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput, ID_INT_DATA_WITH_ACK);
+            sendPort = PORT1;
+            recvPort = PORT2;
             
              NSLog(@"pNetwork1 type 1");
             
         break;
 			
         case 2:
-            /*
-             pNetwork1 = newNetworkWithVarg( 256, 256, 2, 2,
-             paramNetwork1[0], paramNetwork1[1],
-             paramNetwork1[3], paramNetwork1[4]);
-             */
+            pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, 2, paramNetworkL2, 2 ,paramNetworkL1);
             
-            pNetwork1 = newNetwork( 256, 256, 2, paramNetworkL2, 2,paramNetworkL1);
+            id_ioBuff_char = ID_CHAR_DATA_2;
+            id_ioBuff_intAck = ID_INT_DATA_WITH_ACK_2;
             
-            pOutBuffChar = inOutBufferWithId(	pNetwork1->ppTabOutput, pNetwork1->numOfOutput, ID_CHAR_DATA);
-            pOutBuffIntAck = inOutBufferWithId(	pNetwork1->ppTabOutput, pNetwork1->numOfOutput, ID_INT_DATA_WITH_ACK);
+            id_print_ioBuff_char = ID_CHAR_DATA;
+            id_print_ioBuff_intAck = ID_INT_DATA_WITH_ACK;
             
-            pInputBuffChar  = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput, ID_CHAR_DATA_2);
-            pInputBuffIntAck = inOutBufferWithId(	pNetwork1->ppTabInput, pNetwork1->numOfInput, ID_INT_DATA_WITH_ACK_2);
+            sendPort = PORT2;
+            recvPort = PORT1;
             
             NSLog(@"pNetwork1 type 2");
             
@@ -142,9 +165,8 @@
 - (void)startThreadManager
 {
     NSLog(@"startThreadManager");
-    
-	sal_thread_create(&(thread_recv1), (sal_thread_routine) runReceivingThread, pNetwork1->pReceiver);
-	sal_thread_create(&thread_send1, (sal_thread_routine) runSendingThread, pNetwork1->pSender);
+    sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager1);
+    sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager1);
     
     if (timer == nil)
     {
@@ -158,10 +180,9 @@
     NSLog(@"stopThreadManager");
     
 	//stop all therad
-    if(pNetwork1 != NULL)
+    if(pManager1 != NULL)
     {
-        stopSender(pNetwork1->pSender);
-        stopReceiver(pNetwork1->pReceiver);
+        NETWORK_ManagerStop(pManager1);
     }
 	
 	//kill all thread
@@ -197,64 +218,24 @@
     NSLog(@" ThreadManager stoped \n");
     
     //delete
-	deleteNetwork( &pNetwork1 );
+	NETWORK_DeleteManager( &pManager1 );
     
     NSLog(@" end \n");
     
     exit(0);
-    
-    //[self applicationWillTerminate:[UIApplication sharedApplication]];
-    //[[UIApplication sharedApplication] terminate];
 }
 
 - (bool) connection:(NSString  *)ip
 {
-    const char* IpAddress = [ip UTF8String /*cStringUsingEncoding:ASCIIEncoding*/];
+    const char* IpAddress = [ip UTF8String ];
     
-    /*
-     
-    if( !connected)
-    {
-        
-        if(bindError != 0)
-        {
-            bindError = receiverBind(pNetwork1->pReceiver, 5552, 10);
-        }
-    
-        if(connectError != 0)
-        {
-            connectError = senderConnection(pNetwork1->pSender,IpAddress, 5551);
-        }
-    
-        if( !connectError && !bindError )
-        {
-            connected = true;
-            NSLog(@"connected");
-        }
-        
-        
-    }
-     */
-    
-    if(netType == 1)
-    {
-        bindError = receiverBind(pNetwork1->pReceiver, 5552, 10);
-        connectError = senderConnection(pNetwork1->pSender,IpAddress, 5551);
-        NSLog(@"bind 5552");
-        NSLog(@"connected 5551");
-    }
-    else
-    {
-        bindError = receiverBind(pNetwork1->pReceiver, 5551, 10);
-        connectError = senderConnection(pNetwork1->pSender,IpAddress, 5552);
-        NSLog(@"bind 5551");
-        NSLog(@"connected 5552");
-    }
+    connectError = NETWORK_ManagerScoketsInit( pManager1, IpAddress, sendPort,
+                                              recvPort, RECV_TIMEOUT_MS );
     
     connected = true;
      
     
-    NSLog(@"bindError = %d connectError= %d", bindError, connectError);
+    NSLog(@"connectError= %d", connectError);
     
     NSLog(@"connected = %d", connected);
     
@@ -271,8 +252,7 @@
     NSLog(@"sendChar");
     [self.viewController.textViewInfo appendText:[ @"" stringByAppendingFormat: @"sendChar : %d \n", chData ] ];
     
-    //return (bool)ringBuffPushBack(pInOutTemp->pBuffer, &chData);
-    return (bool)ringBuffPushBack(pInputBuffChar->pBuffer, &chData);
+    return (bool)NETWORK_ManagerSendData(pManager1, id_ioBuff_char, &chData) ;
 }
 
 - (bool) sendIntAck:(NSString * )data
@@ -282,7 +262,7 @@
     
     [self.viewController.textViewInfo appendText: [ @"" stringByAppendingFormat: @"sendIntAck : %d \n",intData ] ];
     
-    return (bool) ringBuffPushBack(pInputBuffIntAck->pBuffer, &intData);
+    return (bool) NETWORK_ManagerSendData(pManager1, id_ioBuff_intAck, &intData);
 }
 
 - (void)print:(NSTimer *)_timer
@@ -290,11 +270,8 @@
     char chDataRecv = 0;
     int intDataRecv = 0;
     
-    //while(alive)
-	//{
-    //usleep(MILLISECOND);
     
-    while( !ringBuffPopFront(pOutBuffChar->pBuffer, &chDataRecv) )
+    while( ! NETWORK_ManagerReadData(pManager1, id_print_ioBuff_char, &chDataRecv) )
     {
         NSLog(@"- char :%d \n",chDataRecv);
         
@@ -302,7 +279,7 @@
         [self.viewController.textViewInfoRecv appendText: [@"- char" stringByAppendingFormat:@"%d \n",chDataRecv ]];
     }
     
-    while( !ringBuffPopFront(pOutBuffIntAck->pBuffer, &intDataRecv) )
+    while( ! NETWORK_ManagerReadData(pManager1, id_print_ioBuff_intAck, &intDataRecv) )
     {
         NSLog(@"- int ack :%d \n",intDataRecv);
         
@@ -323,20 +300,14 @@
     
     connected = false;
     connectError = -1;
-    bindError = -1;
-    pNetwork1 = NULL;
+    pManager1 = NULL;
     
     chData = 0;
     intData = 0;
     
     thread_send1 = NULL;
     thread_recv1 = NULL;
-    
-    pOutBuffChar = NULL;
-	pOutBuffIntAck = NULL;
-    
-    pInputBuffChar = NULL;
-    pInputBuffIntAck = NULL;
+
     
     timer = nil;
     
