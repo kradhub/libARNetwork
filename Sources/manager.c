@@ -15,6 +15,8 @@
 
 #include <inttypes.h>
 
+#include <string.h>
+
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
 #include <libSAL/socket.h>
@@ -22,6 +24,7 @@
 #include <libNetwork/error.h>
 #include <libNetwork/frame.h>
 #include <libNetwork/ringBuffer.h>
+#include <libNetwork/deportedData.h>
 #include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
 #include <libNetwork/receiver.h>
@@ -237,15 +240,63 @@ int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, cons
 	/** -- Add data to send -- */
 	
 	/** local declarations */
-	int error = NETWORK_ERROR;
+	int error = NETWORK_OK;
 	network_ioBuffer_t* pInputBuffer = NULL;
 	
 	pInputBuffer = NETWORK_IoBufferFromId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
 	
 	if(pInputBuffer != NULL)
 	{
-		error = NETWORK_RingBuffPushBack(pInputBuffer->pBuffer, pData);
+		if( pInputBuffer->deportedData )
+        {
+            error = NETWORK_ERROR_BAD_PARAMETER;
+        }
+        else
+        {
+		    error = NETWORK_RingBuffPushBack(pInputBuffer->pBuffer, pData);
+        }
 	}
+    else
+    {
+        error = NETWORK_ERROR_ID_UNKNOWN;
+    }
+	
+	return error;
+}
+
+int NETWORK_ManagerSenddeportedData( network_manager_t* pManager, int inputBufferId,
+                                     void* pData, int dataSize,
+                                     int (*callBack)(int, void*, int) )
+{
+	/** -- Add data deported to send -- */
+	
+	/** local declarations */
+	int error = NETWORK_OK;
+	network_ioBuffer_t* pInputBuffer = NULL;
+    network_DeportedData_t deportedDataTemp;
+	
+	pInputBuffer = NETWORK_IoBufferFromId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
+	
+	if(pInputBuffer != NULL)
+	{
+        if( pInputBuffer->deportedData )
+        {
+            /** initialize deportedDataTemp and push it in the InputBuffer */
+            deportedDataTemp.pData = pData;
+            deportedDataTemp.dataSize = dataSize;
+            deportedDataTemp.callBack = callBack;
+            
+            error = NETWORK_RingBuffPushBack(pInputBuffer->pBuffer, &deportedDataTemp);
+        }
+        else
+        {
+		    error = NETWORK_ERROR_BAD_PARAMETER;
+        }
+	}
+    else
+    {
+        error = NETWORK_ERROR_ID_UNKNOWN;
+    }
 	
 	return error;
 }
@@ -255,15 +306,80 @@ int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, voi
 	/** -- read data received -- */
 	
 	/** local declarations */
-	int error = NETWORK_ERROR;
+	int error = NETWORK_OK;
 	network_ioBuffer_t* pOutputBuffer = NULL;
 	
 	pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
 	
 	if(pOutputBuffer != NULL)
 	{
-		error = NETWORK_RingBuffPopFront(pOutputBuffer->pBuffer, pData);
+        if( pOutputBuffer->deportedData )
+        {
+            error = NETWORK_ERROR_BAD_PARAMETER;
+        }
+        else
+        {
+            /** push the data in the InputBuffer */
+		    error = NETWORK_RingBuffPopFront(pOutputBuffer->pBuffer, pData);
+        }
 	}
+    else
+    {
+        error = NETWORK_ERROR_ID_UNKNOWN;
+    }
+	
+	return error;
+}
+
+int NETWORK_ManagerReaddeportedData( network_manager_t* pManager, int outputBufferId,
+                                     void* pData, int dataLimitSize)
+{
+    /** -- read data deported received -- */
+	
+	/** local declarations */
+	int error = NETWORK_OK;
+	network_ioBuffer_t* pOutputBuffer = NULL;
+    network_DeportedData_t deportedDataTemp;
+	
+	pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
+	
+	if(pOutputBuffer != NULL)
+	{
+        if( pOutputBuffer->deportedData )
+        {
+            /** get data deported */
+            error = NETWORK_RingBuffPopFront(pOutputBuffer->pBuffer, &deportedDataTemp);
+            
+            if( error == NETWORK_OK )
+            {
+                /** data size check*/
+                if(deportedDataTemp.dataSize <= dataLimitSize)
+                {
+                    /** data copy */
+                    memcpy(pData, deportedDataTemp.pData, deportedDataTemp.dataSize);
+                    
+                    /** return the size of the data instead of the error */
+                    error = deportedDataTemp.dataSize;
+                    
+                    /** free the data deported*/
+                    deportedDataTemp.callBack( pOutputBuffer->id, deportedDataTemp.pData, 
+                                               NETWORK_DEPORTEDDATA_CALLBACK_FREE);
+                }
+                else
+                {
+                    error = NETWORK_ERROR_BUFFER_SIZE;
+                }
+            }
+        }
+        else
+        {
+		    error = NETWORK_ERROR_BAD_PARAMETER;
+        }
+	}
+    else
+    {
+        error = NETWORK_ERROR_ID_UNKNOWN;
+    }
 	
 	return error;
 }
@@ -333,7 +449,7 @@ int NETWORK_ManagerCreateIoBuffer(network_manager_t* pManager,
     }
     
     /** Create the input buffers */
-    for(ii = 0; ii< pManager->numOfInputWithoutAck ; ++ii)
+    for(ii = 0; ii< pManager->numOfInputWithoutAck; ++ii)
     {
         /** check the IoBuffer identifier */
         if( ptabParamInput[ii].id < NETWORK_ID_ACK_OFFSET )

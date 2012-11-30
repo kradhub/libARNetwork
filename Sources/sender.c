@@ -25,6 +25,7 @@
 #include <libNetwork/error.h>
 #include <libNetwork/frame.h>
 #include <libNetwork/buffer.h>
+#include <libNetwork/deportedData.h>
 #include <libNetwork/ioBuffer.h>
 
 #include "sender.h"
@@ -70,7 +71,7 @@ network_sender_t* NETWORK_NewSender(	unsigned int sendingBufferSize, unsigned in
 			
 		if(pSender->pSendingBuffer == NULL)
 		{
-			error = 1;
+			error = NETWORK_ERROR_NEW_BUFFER;
 		}
 		
 		/** delete the sender if an error occurred */
@@ -236,8 +237,8 @@ int NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum)
 	
 	/** local declarations */
 	network_ioBuffer_t* pInputBuff = NULL;
-	int error = 1;
-	
+	int error = NETWORK_OK;
+    
 	pInputBuff = NETWORK_IoBufferFromId( pSender->pptab_inputBuffer, pSender->numOfInputBuff, id );
 	
 	if(pInputBuff != NULL)
@@ -248,11 +249,15 @@ int NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum)
 		**/
 		error = NETWORK_IoBufferAckReceived( pInputBuff, seqNum );
 	}
+    else
+    {
+        error = NETWORK_ERROR_ID_UNKNOWN;
+    }
 	
 	return error;
 }
 
-int NETWORK_SenderConnection(network_sender_t* pSender,const char* addr, int port)
+int NETWORK_SenderConnection(network_sender_t* pSender, const char* addr, int port)
 {
 	/** -- Connect the socket in UDP to a port of an address -- */
 	
@@ -292,15 +297,32 @@ void NETWORK_SenderSend(network_sender_t* pSender)
 }
 
 int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_t* pinputBuff,
-						int seqNum)
+						        int seqNum)
 {
 	/** -- add data to the sender buffer -- */
 	
 	/** local declarations */
-	int error = 1;
-	int sizeNeed = offsetof(network_frame_t,data) + pinputBuff->pBuffer->buffCellSize;
-	uint32_t droneEndianInt32 = 0;
+	int error = NETWORK_OK;
+    uint32_t droneEndianInt32 = 0;
+	int sizeNeed = 0;
+    int dataSize = 0;
+    network_DeportedData_t deportedData;
 	
+    /** get the data size */
+    if( pinputBuff->deportedData )
+    {
+        /** if the data is deported get the size of the date pointed*/
+        NETWORK_RingBuffFront( pinputBuff->pBuffer, &deportedData);
+        dataSize = deportedData.dataSize;
+    }
+    else
+    {
+        dataSize = pinputBuff->pBuffer->buffCellSize;
+    }
+    
+    /** calculate the size needed */
+    sizeNeed = offsetof(network_frame_t, data) + dataSize;
+    
 	if( NETWORK_BufferGetFreeCellNb(pSender->pSendingBuffer) >= sizeNeed )
 	{	
 		/** add type */
@@ -323,19 +345,34 @@ int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_
 		memcpy( pSender->pSendingBuffer->pFront, &(droneEndianInt32), sizeof(uint32_t));
 		pSender->pSendingBuffer->pFront +=  sizeof(uint32_t) ;
 		
-		/** add data */						
-		error = NETWORK_RingBuffFront(pinputBuff->pBuffer, pSender->pSendingBuffer->pFront);
-		
-		if(!error)
+		/** add data */
+        if( pinputBuff->deportedData )
+        {
+            /** copy the data pointed by the deportedData*/	
+            memcpy(pSender->pSendingBuffer->pFront, deportedData.pData, dataSize);
+        }
+        else
+        {		
+            /** copy the data on the ring buffer */			
+		    error = NETWORK_RingBuffFront(pinputBuff->pBuffer, pSender->pSendingBuffer->pFront);
+		}
+        
+		if( error == NETWORK_OK )
 		{
-			pSender->pSendingBuffer->pFront += pinputBuff->pBuffer->buffCellSize;
+            /** if the adding of the data is successful, increment the front of the Sending Buffer */
+			pSender->pSendingBuffer->pFront += dataSize;
 		}
 		else
 		{
-			pSender->pSendingBuffer->pFront -= offsetof(network_frame_t,data);
+            /** if the adding of the data is failed, decrement the front of the SendingBuffer */
+			pSender->pSendingBuffer->pFront -= offsetof(network_frame_t, data);
 		}
-		
+        
 	}
+    else
+    {
+        error = NETWORK_ERROR_BUFFER_SIZE;
+    }
 	
 	return error;
 }

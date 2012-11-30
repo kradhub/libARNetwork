@@ -25,6 +25,7 @@
 #include <libNetwork/error.h>
 #include <libNetwork/frame.h>
 #include <libNetwork/buffer.h>
+#include <libNetwork/deportedData.h>
 #include <libNetwork/ioBuffer.h>
 #include <libNetwork/sender.h>
 
@@ -65,7 +66,7 @@ network_receiver_t* NETWORK_NewReceiver(	unsigned int recvBufferSize, unsigned i
 		pReceiver->pRecvBuffer = NETWORK_NewBuffer(recvBufferSize,1);
 		if(pReceiver->pRecvBuffer == NULL)
 		{
-			error = 1;
+			error = NETWORK_ERROR_NEW_BUFFER;
 		}
 	
 		/** delete the receiver if an error occurred */
@@ -109,7 +110,7 @@ void* NETWORK_RunReceivingThread(void* data)
 	network_receiver_t* pReceiver = data;
     network_frame_t* pFrame = NULL;
 	network_ioBuffer_t* pOutBufferTemp = NULL;
-	int pushError = 0;
+	int error = 0;
 
 	
 	while( pReceiver->isAlive )
@@ -118,7 +119,7 @@ void* NETWORK_RunReceivingThread(void* data)
 		if( NETWORK_ReceiverRead( pReceiver ) > 0)
 		{	
 			/** for each command present in the receiver buffer */		
-            pFrame = NETWORK_GetNextFrame(pReceiver, pFrame);
+            pFrame = NETWORK_ReceiverGetNextFrame(pReceiver, pFrame);
             while( pFrame != NULL )
 			{	
 				/** management by the command type */			
@@ -129,14 +130,20 @@ void* NETWORK_RunReceivingThread(void* data)
 												pFrame->seq, pFrame->id);
 												
 						/** transmit the acknowledgement to the sender */
-						NETWORK_SenderAckReceived( pReceiver->pSender,idAckToIdInput(pFrame->id),
-											(int) pFrame->data );
+						error = NETWORK_SenderAckReceived( pReceiver->pSender,
+                                                           idAckToIdInput(pFrame->id),
+                                                           (int) pFrame->data );
+                        if( error != NETWORK_OK )
+                        {
+                            sal_print(PRINT_ERROR,"acknowledge received, error: %d occurred \n", error);
+                        }
+                        
 					break;
 					
 					case network_frame_t_TYPE_DATA:
 						sal_print(PRINT_DEBUG," - TYPE: network_frame_t_TYPE_DATA | SEQ:%d | ID:%d \n",
 												pFrame->seq, pFrame->id);
-						
+                        
 						/** push the data received in the output buffer targeted */
 						pOutBufferTemp = NETWORK_IoBufferFromId(	pReceiver->pptab_outputBuffer, 
 															pReceiver->numOfOutputBuff,
@@ -144,7 +151,15 @@ void* NETWORK_RunReceivingThread(void* data)
 						
 						if(pOutBufferTemp != NULL)
 						{
-							NETWORK_RingBuffPushBack(	pOutBufferTemp->pBuffer, &(pFrame->data) );
+                            sal_print(PRINT_DEBUG," - deported data :%d \n", pOutBufferTemp->deportedData);
+                            
+                            error = NETWORK_ReceiverCopyDataRecv( pReceiver, pOutBufferTemp, pFrame);
+                            
+                            if( error != NETWORK_OK )
+                            {
+                                sal_print(PRINT_ERROR,"data received, error: %d occurred \n", error);
+                            }
+                            
 						}							
 					break;
 					
@@ -161,16 +176,23 @@ void* NETWORK_RunReceivingThread(void* data)
 															pFrame->id);
 						if(pOutBufferTemp != NULL)
 						{
+                            sal_print(PRINT_DEBUG," - deported data :%d \n", pOutBufferTemp->deportedData);
+                            
 							/** OutBuffer->seqWaitAck used to save the last seq */
 							if( pFrame->seq != pOutBufferTemp->seqWaitAck )
-							{
-								pushError = NETWORK_RingBuffPushBack( pOutBufferTemp->pBuffer, 
-														&(pFrame->data) );
-								if( !pushError)
+							{              
+                                error = NETWORK_ReceiverCopyDataRecv( pReceiver, pOutBufferTemp,
+                                                                          pFrame);
+								if( error == NETWORK_OK)
 								{
 									NETWORK_ReturnASK(pReceiver, pFrame->id, pFrame->seq);
+                                    
 									pOutBufferTemp->seqWaitAck = pFrame->seq;
 								}
+                                else
+                                {
+                                    sal_print(PRINT_ERROR,"data acknowledgeed received, error: %d occurred \n", error);
+                                }
 							}
 						}	
 												
@@ -181,7 +203,7 @@ void* NETWORK_RunReceivingThread(void* data)
 					break;
 				}
                 /** get the next frame*/
-                pFrame = NETWORK_GetNextFrame(pReceiver, pFrame);
+                pFrame = NETWORK_ReceiverGetNextFrame(pReceiver, pFrame);
 			}
 			NETWORK_BufferClean(pReceiver->pRecvBuffer);
 		}
@@ -255,7 +277,8 @@ int NETWORK_ReceiverBind(network_receiver_t* pReceiver, unsigned short port, int
  *
 ******************************************/
 
-network_frame_t* NETWORK_GetNextFrame(network_receiver_t* pReceiver, network_frame_t* prevFrame)
+network_frame_t* NETWORK_ReceiverGetNextFrame( network_receiver_t* pReceiver, 
+                                                 network_frame_t* prevFrame)
 {
     /** -- get the next Frame of the receiving buffer -- */
 	
@@ -280,4 +303,53 @@ network_frame_t* NETWORK_GetNextFrame(network_receiver_t* pReceiver, network_fra
     }
     
     return nextFrame;
+}
+
+int NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
+                                   network_ioBuffer_t* pOutBuffer,
+                                   network_frame_t* pFrame )
+{
+    /** -- copy the data received to the output buffer -- */
+    
+    /** local declarations */
+    int error = NETWORK_OK;
+    network_DeportedData_t deportedDataTemp;
+    
+    if( pOutBuffer->deportedData )
+    {
+        
+        if( NETWORK_RingBuffGetFreeCellNb(pOutBuffer->pBuffer) )
+        {
+            /** alloc data deported */
+            deportedDataTemp.dataSize = pFrame->size - offsetof( network_frame_t,data );
+            deportedDataTemp.pData = malloc( deportedDataTemp.dataSize );
+            deportedDataTemp.callBack = &(NETWORK_freedeportedData);
+            
+            /** copy the data received in the space allocated */
+            memcpy(deportedDataTemp.pData, &(pFrame->data), deportedDataTemp.dataSize);
+            
+            /** push the deportedDataTemp in the output buffer targeted */
+            error = NETWORK_RingBuffPushBack( pOutBuffer->pBuffer, &deportedDataTemp );
+        }
+        else
+        {
+            error = NETWORK_ERROR_BUFFER_SIZE;
+        }
+    }
+    else
+    {
+        /** push the data received in the output buffer targeted */
+        error = NETWORK_RingBuffPushBack( pOutBuffer->pBuffer, &(pFrame->data) );
+    }
+    
+    return error;
+}
+
+int NETWORK_freedeportedData(int OutBufferId, void* pData, int status)
+{
+    /** call back use to free deported data */
+    
+    free(pData);
+    
+    return NETWORK_OK;
 }

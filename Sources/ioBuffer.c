@@ -18,6 +18,7 @@
 #include <libNetwork/error.h>
 #include <libNetwork/ringBuffer.h>
 #include <libNetwork/frame.h>
+#include <libNetwork/deportedData.h>
 #include <libNetwork/ioBuffer.h>
 
 /*****************************************
@@ -34,6 +35,7 @@
 #define NETWORK_IOBUFFER_BUFFSIZE_DEFAULT 0
 #define NETWORK_IOBUFFER_BUFFCELLSIZE_DEFAULT 0
 #define NETWORK_IOBUFFER_OVERWRITING_DEFAULT 0
+#define NETWORK_IOBUFFER_deportedData_DEFAULT 0
 
 /*****************************************
  * 
@@ -54,6 +56,7 @@ void NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t *pParam)
     pParam->buffSize = NETWORK_IOBUFFER_BUFFSIZE_DEFAULT;	
     pParam->buffCellSize = NETWORK_IOBUFFER_BUFFCELLSIZE_DEFAULT;
     pParam->overwriting = NETWORK_IOBUFFER_OVERWRITING_DEFAULT;
+    pParam->deportedData = NETWORK_IOBUFFER_deportedData_DEFAULT;
 }
 
 int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
@@ -84,7 +87,7 @@ values expected: \n \
     - nbOfRetry > 0 or -1 if not used  \n \
     - buffSize > 0 \n \
     - buffCellSize > 0 \n \
-    - overwriting = 0 or 1 ");
+    - overwriting = 0 or 1 \n");
     }
     
    return ok; 
@@ -95,52 +98,53 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
 	/** -- Create a new input or output buffer -- */
 	
 	/** local declarations */
-	network_ioBuffer_t* pInOutBuff = NULL;
+	network_ioBuffer_t* pIoBuffer = NULL;
 	int keepAliveData = 0x00;
     int error = NETWORK_OK;
 	
 	/** Create the input or output buffer in accordance with parameters set in pParam */
-	pInOutBuff = malloc( sizeof(network_ioBuffer_t) );
+	pIoBuffer = malloc( sizeof(network_ioBuffer_t) );
 	
-	if( pInOutBuff )
+	if( pIoBuffer )
 	{ 
         /** Initialize to default values */
-        pInOutBuff->pBuffer = NULL;
-        sal_mutex_init( &(pInOutBuff->mutex) );
+        pIoBuffer->pBuffer = NULL;
+        sal_mutex_init( &(pIoBuffer->mutex) );
         
         if( NETWORK_ParamNewIoBufferCheck( pParam ) )
         {
-            pInOutBuff->id = pParam->id;
-            pInOutBuff->dataType = pParam->dataType;
-            pInOutBuff->sendingWaitTime = pParam->sendingWaitTime;
-            pInOutBuff->ackTimeoutMs = pParam->ackTimeoutMs;
+            pIoBuffer->id = pParam->id;
+            pIoBuffer->dataType = pParam->dataType;
+            pIoBuffer->sendingWaitTime = pParam->sendingWaitTime;
+            pIoBuffer->ackTimeoutMs = pParam->ackTimeoutMs;
+            pIoBuffer->deportedData = pParam->deportedData;
         
             if(pParam->nbOfRetry > 0)
             {
-                pInOutBuff->nbOfRetry = pParam->nbOfRetry;
+                pIoBuffer->nbOfRetry = pParam->nbOfRetry;
             }
             else
             {
                 /** if nbOfRetry equal 0 disable the retry function with -1 value */
-                pInOutBuff->nbOfRetry = -1;
+                pIoBuffer->nbOfRetry = -1;
             }
             //	timeoutCallback(network_ioBuffer_t* this)
 		
-            pInOutBuff->isWaitAck = 0;
-            pInOutBuff->seqWaitAck = 0;
-            pInOutBuff->waitTimeCount = pParam->sendingWaitTime;
-            pInOutBuff->ackWaitTimeCount = pParam->ackTimeoutMs;
-            pInOutBuff->retryCount = 0;
+            pIoBuffer->isWaitAck = 0;
+            pIoBuffer->seqWaitAck = 0;
+            pIoBuffer->waitTimeCount = pParam->sendingWaitTime;
+            pIoBuffer->ackWaitTimeCount = pParam->ackTimeoutMs;
+            pIoBuffer->retryCount = 0;
 		
             /** Create the RingBuffer */
-            pInOutBuff->pBuffer = NETWORK_NewRingBufferWithOverwriting(	pParam->buffSize, pParam->buffCellSize,
+            pIoBuffer->pBuffer = NETWORK_NewRingBufferWithOverwriting(	pParam->buffSize, pParam->buffCellSize,
                                                                 pParam->overwriting);
-            if(pInOutBuff->pBuffer != NULL)
+            if(pIoBuffer->pBuffer != NULL)
             {
                 /** if it is a keep alive buffer, push in the data send for keep alive */ 
-                if( pInOutBuff->dataType == network_frame_t_TYPE_KEEP_ALIVE )
+                if( pIoBuffer->dataType == network_frame_t_TYPE_KEEP_ALIVE )
                 {
-                    NETWORK_RingBuffPushBack(pInOutBuff->pBuffer, &keepAliveData);
+                    NETWORK_RingBuffPushBack(pIoBuffer->pBuffer, &keepAliveData);
                 }
             }
             else
@@ -157,56 +161,68 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
 		{
 			/** delete the inOutput buffer if an error occurred */
             sal_print(PRINT_ERROR,"error: %d occurred \n", error );
-			NETWORK_DeleteIotBuffer(&pInOutBuff);
+			NETWORK_DeleteIotBuffer(&pIoBuffer);
 		}
     }
     
-    return pInOutBuff;
+    return pIoBuffer;
 }
 
-void NETWORK_DeleteIotBuffer( network_ioBuffer_t** ppInOutBuff )
+void NETWORK_DeleteIotBuffer( network_ioBuffer_t** ppIoBuffer )
 {	
 	/** -- Delete the input or output buffer -- */
 	
 	/** local declarations */
-	network_ioBuffer_t* pInOutBuff = NULL;
+	network_ioBuffer_t* pIoBuffer = NULL;
 	
-	if(ppInOutBuff)
+	if(ppIoBuffer)
 	{
-		pInOutBuff = *ppInOutBuff;
+		pIoBuffer = *ppIoBuffer;
 		
-		if(pInOutBuff)
+		if(pIoBuffer)
 		{	
-			sal_mutex_destroy( &(pInOutBuff->mutex) );
+			sal_mutex_destroy( &(pIoBuffer->mutex) );
 			
-			NETWORK_DeleteRingBuffer( &(pInOutBuff->pBuffer) );
+            if(pIoBuffer->deportedData)
+            {
+                /** if it is a deportedData IoBuffer call all callback for free the data--*/
+                NETWORK_IoBufferFreeAlldeportedData(pIoBuffer);
+            }
+            
+			NETWORK_DeleteRingBuffer( &(pIoBuffer->pBuffer) );
 		
-			free(pInOutBuff);
-            pInOutBuff = NULL;
+			free(pIoBuffer);
+            pIoBuffer = NULL;
 		}
-		*ppInOutBuff = NULL;
+		*ppIoBuffer = NULL;
 	}	
 
 }
 
-int NETWORK_IoBufferAckReceived( network_ioBuffer_t* pInOutBuff, int seqNum )
+int NETWORK_IoBufferAckReceived( network_ioBuffer_t* pIoBuffer, int seqNum )
 {
 	/** -- Receive an acknowledgement to a inOutBuffer -- */ 
 	
 	/** local declarations */
-	int error = NETWORK_IOBUFFER_ERROR_BAD_ACK;
+	int error = NETWORK_OK;
 	
-	sal_mutex_lock( &(pInOutBuff->mutex) );
+	sal_mutex_lock( &(pIoBuffer->mutex) );
 	
+    sal_print(PRINT_WARNING, "NETWORK_IoBufferAckReceived id: %d | isWaitAck: %d | seqWaitAck: %d | empty: %d\n",
+    pIoBuffer->id,pIoBuffer->isWaitAck, pIoBuffer->seqWaitAck, NETWORK_RingBuffIsEmpty(pIoBuffer->pBuffer)  ); //!!!!!!!
+    
 	/** delete the data if the sequence number received is same as the sequence number expected */
-	if( pInOutBuff->isWaitAck && pInOutBuff->seqWaitAck == seqNum )
+	if( pIoBuffer->isWaitAck && pIoBuffer->seqWaitAck == seqNum )
 	{
-		pInOutBuff->isWaitAck = 0;
-		NETWORK_RingBuffPopFront( pInOutBuff->pBuffer, NULL );
-		error = NETWORK_OK;
+		pIoBuffer->isWaitAck = 0;
+        error = NETWORK_IoBufferDeleteData( pIoBuffer, NETWORK_DEPORTEDDATA_CALLBACK_SENT_WITH_ACK );
 	}
+    else
+    {
+        error = NETWORK_IOBUFFER_ERROR_BAD_ACK;
+    }
 	
-	sal_mutex_unlock(&(pInOutBuff->mutex));
+	sal_mutex_unlock(&(pIoBuffer->mutex));
 	
 	return error;
 }
@@ -219,7 +235,7 @@ network_ioBuffer_t* NETWORK_IoBufferFromId( network_ioBuffer_t** pptabInOutBuff,
 	/** local declarations */
 	network_ioBuffer_t** it = pptabInOutBuff ;
 	network_ioBuffer_t** itEnd = pptabInOutBuff + (tabSize);
-	network_ioBuffer_t* pInOutBuffSearched = NULL;
+	network_ioBuffer_t* pIoBufferSearched = NULL;
 	int find = 0;
 	
 	/** for each inoutBuffer of the table check if the ID is the same as the ID searched */
@@ -227,26 +243,79 @@ network_ioBuffer_t* NETWORK_IoBufferFromId( network_ioBuffer_t** pptabInOutBuff,
 	{
 		if( (*it)->id == id)
 		{
-			pInOutBuffSearched = *it;
+			pIoBufferSearched = *it;
 			find = 1;
 		}
 	}
 	
-	return pInOutBuffSearched;
+	return pIoBufferSearched;
 }
 
-int NETWORK_IoBufferIsWaitAck(	network_ioBuffer_t* pInOutBuff)
+int NETWORK_IoBufferIsWaitAck(	network_ioBuffer_t* pIoBuffer)
 {
 	/** -- Get if the inOutBuffer is waiting an acknowledgement -- */
 	
 	/** local declarations */
 	int isWaitAckCpy = 0;
 	
-	sal_mutex_lock(&(pInOutBuff->mutex));
+	sal_mutex_lock(&(pIoBuffer->mutex));
 	
-	isWaitAckCpy = pInOutBuff->isWaitAck;
+	isWaitAckCpy = pIoBuffer->isWaitAck;
 	
-	sal_mutex_unlock(&(pInOutBuff->mutex));
+	sal_mutex_unlock(&(pIoBuffer->mutex));
 	
 	return isWaitAckCpy;
+}
+
+int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer )
+{
+    /** -- call the callback of all deportedData with the NETWORK_DEPORTEDDATA_CALLBACK_FREE status --*/
+    
+    /** local declarations */
+    int error = NETWORK_OK;
+    int deleteError = NETWORK_OK;
+    
+    if( pIoBuffer->deportedData )
+    {
+        while( deleteError == NETWORK_OK )
+        {
+            deleteError = NETWORK_IoBufferDeleteData(pIoBuffer, NETWORK_DEPORTEDDATA_CALLBACK_FREE);
+        }
+        
+        if(deleteError != NETWORK_ERROR_BUFFER_EMPTY)
+        {
+            error = deleteError;
+        }
+    }
+    else
+    {
+        error = NETWORK_ERROR_BAD_PARAMETER;
+    }
+    
+    return error;
+}
+
+int NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callBackStatus )
+{
+    /** -- delete the later data of the IoBuffer - */
+    
+    /** local declarations */
+    int error = NETWORK_OK;
+    network_DeportedData_t deportedDataTemp;
+    
+    /** pop the data sent*/
+    if( pIoBuffer->deportedData )
+    {
+        error = NETWORK_RingBuffPopFront( pIoBuffer->pBuffer, &deportedDataTemp );
+        if( error == NETWORK_OK)
+        {
+            deportedDataTemp.callBack( pIoBuffer->id, deportedDataTemp.pData, callBackStatus);
+        }
+    }
+    else
+    {
+        error = NETWORK_RingBuffPopFront(pIoBuffer->pBuffer, NULL);
+    }
+    
+    return error;
 }

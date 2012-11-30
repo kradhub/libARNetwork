@@ -18,6 +18,8 @@
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
 
+#include <libNetwork/error.h>
+
 #include <libNetwork/ringBuffer.h>
 
 /*****************************************
@@ -90,7 +92,7 @@ int NETWORK_RingBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewDa
     /** -- Add the new data at the back of the ring buffer -- */
     
     /** local declarations */
-	int error = 1;
+	int error = NETWORK_OK;
 	void* buffPointor = NULL;
 	
 	sal_mutex_lock(&(pRingBuff->mutex));
@@ -108,9 +110,11 @@ int NETWORK_RingBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewDa
 		memcpy(buffPointor, pNewData, pRingBuff->buffCellSize);
 		
 		pRingBuff->buffIndexInput += pRingBuff->buffCellSize;
-		
-		error = 0;
 	}
+    else
+    {
+        error = NETWORK_ERROR_BUFFER_SIZE;
+    }
 	
 	sal_mutex_unlock(&(pRingBuff->mutex));
 
@@ -123,7 +127,7 @@ int NETWORK_RingBuffPopFront(network_ringBuffer_t* pRingBuff, void* pPopData)
     
     /** local declarations */
 	void* buffPointor = NULL;
-	int error = 0;
+	int error = NETWORK_OK;
 	
 	sal_mutex_lock(&(pRingBuff->mutex));
 	
@@ -141,7 +145,7 @@ int NETWORK_RingBuffPopFront(network_ringBuffer_t* pRingBuff, void* pPopData)
 	}
 	else
 	{
-		error = 1;
+		error = NETWORK_ERROR_BUFFER_EMPTY;
 	}
 	
 	sal_mutex_unlock(&(pRingBuff->mutex));
@@ -154,7 +158,7 @@ int NETWORK_RingBuffFront(network_ringBuffer_t* pRingBuff, void* pFrontData)
     /** -- Return a pointer on the front data -- */
     
     /** local declarations */
-	int error = 1;
+	int error = NETWORK_OK;
 	void* buffPointor = NULL;
 					
 	sal_mutex_lock(&(pRingBuff->mutex));
@@ -164,11 +168,12 @@ int NETWORK_RingBuffFront(network_ringBuffer_t* pRingBuff, void* pFrontData)
 	
 	if( !NETWORK_RingBuffIsEmpty(pRingBuff) )
 	{
-	
 		memcpy(pFrontData, buffPointor, pRingBuff->buffCellSize);
-		
-		error = 0;
 	}
+    else
+    {
+        error = NETWORK_ERROR_BUFFER_SIZE;
+    }
 	
 	sal_mutex_unlock(&(pRingBuff->mutex));
 	

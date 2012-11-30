@@ -76,7 +76,7 @@ void NETWORK_StopSender(network_sender_t* pSender);
  * 	@param pSender the pointer on the Sender
  * 	@param[in] id identifier of the command with network_frame_t_TYPE_ACK type received by the libNetwork/receiver
  *	@param[in] seqNum sequence number of the acknowledgment
- * 	@return error equal to 0 if the data has been correctly acknowledged otherwise equal to 1.
+ * 	@return error equal to NETWORK_OK if the data has been correctly acknowledged otherwise equal to 1.
 **/
 int NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum);
 
@@ -86,7 +86,7 @@ int NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum);
  * 	@param pSender the pointer on the Sender
  * 	@param[in] addr address of connection at which the data will be sent.
  *	@param[in] port port on which the data will be sent.
- * 	@return error equal to 0 if the connection if successful otherwise equal to 1.
+ * 	@return error equal to NETWORK_OK if the connection if successful otherwise equal to 1.
 **/
 int NETWORK_SenderConnection(network_sender_t* pSender,const char* addr, int port);
 

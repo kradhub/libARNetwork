@@ -11,6 +11,12 @@
 #include <libNetwork/frame.h>
 #include <libNetwork/ringBuffer.h>
 
+/*****************************************
+ * 
+ * 			ParamNewIoBuffer header:
+ *
+******************************************/
+
 /**
  *  @brief used to set the parameters of a new inOutBuffer
 **/
@@ -25,6 +31,7 @@ typedef struct network_paramNewIoBuffer_t
     unsigned int buffSize;		/**< Maximum number of data stored*/
     unsigned int buffCellSize;	/**< Size of one data in byte*/
     int overwriting;			/**< Indicator of overwriting possibility (1 = true | 0 = false)*/
+    int deportedData;			/**< Indicator of using data deported */
 
 }network_paramNewIoBuffer_t;
 
@@ -42,6 +49,12 @@ void NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t* pParam);
 **/
 int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam );
 
+/*****************************************
+ * 
+ * 			IoBuffer header:
+ *
+******************************************/
+
 /**
  *  @brief Input buffer used by libNetwork/sender or output buffer used by libNetwork/receiver
  * 	@warning before to be used the inOutBuffer must be created through NETWORK_NewIoBuffer()
@@ -56,6 +69,7 @@ typedef struct network_ioBuffer_t
     int ackTimeoutMs;	/**< Timeout in millisecond after retry to send the data when the InOutBuffer is used with a libNetwork/sender*/
     int nbOfRetry;	/**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libNetwork/sender*/
     //	timeoutCallback(network_ioBuffer_t* this)
+    int deportedData; /**< Indicator of using data deported*/
     
     int isWaitAck;	/**< Indicator of waiting an acknowledgement  (1 = true | 0 = false). Must be accessed through NETWORK_IoBufferIsWaitAck()*/
     int seqWaitAck; /**< Sequence number of the acknowledge waiting if used with a libNetwork/sender or of the last command stored if used with a libNetwork/reveiver*/
@@ -80,19 +94,19 @@ network_ioBuffer_t* NETWORK_NewIoBuffer(const network_paramNewIoBuffer_t* pParam
 /**
  *  @brief Delete the input or output buffer
  * 	@warning This function free memory
- * 	@param ppInOutBuff address of the pointer on the input or output buffer to delete
+ * 	@param ppIoBuffer address of the pointer on the input or output buffer to delete
  *	@see NETWORK_NewIoBuffer()
 **/
-void NETWORK_DeleteIotBuffer( network_ioBuffer_t** ppInOutBuff );
+void NETWORK_DeleteIotBuffer( network_ioBuffer_t** ppIoBuffer );
 
 /**
  *  @brief Receive an acknowledgement to a inOutBuffer.
  * 	@details If the inOutBuffer is waiting about an acknowledgement and seqNum is equal to the sequence number waited, the inOutBuffer pops the last data and delete its is waiting acknowledgement.
- * 	@param[in] pInOutBuff Pointer on the input or output buffer
+ * 	@param[in] pIoBuffer Pointer on the input or output buffer
  * 	@param[in] seqNum sequence number of the acknowledgement
- * 	@return error equal to 0 if the data has been correctly acknowledged otherwise equal to 1
+ * 	@return error equal to NETWORK_OK if the data has been correctly acknowledged otherwise equal to 1
 **/
-int NETWORK_IoBufferAckReceived( network_ioBuffer_t* pInOutBuff, int seqNum );
+int NETWORK_IoBufferAckReceived( network_ioBuffer_t* pIoBuffer, int seqNum );
 
 /**
  *  @brief Search a inOutBuffer from its identifier, in a table
@@ -106,10 +120,27 @@ network_ioBuffer_t* NETWORK_IoBufferFromId( network_ioBuffer_t** pptabInOutBuff,
 
 /**
  *  @brief Get if the inOutBuffer is waiting an acknowledgement.
- * 	@param pInOutBuff Pointer on the input or output buffer
+ * 	@param pIoBuffer Pointer on the input or output buffer
  * 	@return IsWaitAck equal to 1 if the inOutBuffer is waiting an acknowledgement otherwise equal to 0
 **/
-int NETWORK_IoBufferIsWaitAck( network_ioBuffer_t* pInOutBuff );
+int NETWORK_IoBufferIsWaitAck( network_ioBuffer_t* pIoBuffer );
+
+/**
+ *  @brief call the callback of all deportedData with the NETWORK_DEPORTEDDATA_CALLBACK_FREE status.
+ *  @warning the IoBuffer must store network_DeportedData_t
+ * 	@param pIoBuffer Pointer on the input or output buffer of deportedData type
+ *  @return error equal to NETWORK_OK if the data are correctly free otherwise see eNETWORK_Error
+**/
+int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer );
+
+/**
+ *  @brief delete the later data of the IoBuffer
+ *  @warning used only when the data is correctly sent
+ * 	@param pIoBuffer Pointer on the input or output buffer
+ *  @param[in] callBackStatus status sent py the callBack in case where the data is deported 
+ *  @return error equal to NETWORK_OK if the data are correctly deleted otherwise see eNETWORK_Error
+**/
+int NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callBackStatus );
 
 #endif // _NETWORK_IOBUFFER_H_
 

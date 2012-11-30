@@ -24,15 +24,15 @@ typedef enum eNETWOK_Frame_Type
 }eNETWOK_Frame_Type;
 
 /**
- *  @brief 
+ *  @brief frame send by the NETWORK_Manager
 **/
 typedef struct network_frame_t
 {
-	eNETWOK_Frame_Type type; /**< command type */
-    uint32_t id; /**< identifier of the buffer sending the command */
-    uint32_t seq; /**< sequence number of the command */
-    uint32_t size; /**< size of the command */
-    uint8_t  data;  /**< data of the command */
+	eNETWOK_Frame_Type type; /**< frame type */
+    uint32_t id; /**< identifier of the buffer sending the frame */
+    uint32_t seq; /**< sequence number of the frame */
+    uint32_t size; /**< size of the frame */
+    uint8_t  data;  /**< data of the frame */
 }network_frame_t;
 
 

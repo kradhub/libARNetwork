@@ -64,7 +64,7 @@ void NETWORK_DeleteManager(network_manager_t** ppManager);
  *  @param[in] addr address of connection at which the data will be sent.
  *  @param[in] recvPort port on which the data will be received.
  * 	@param[in] recvTimeoutSec timeout in seconds set on the socket to limit the time of blocking of the function NETWORK_ReceiverRead().
- *  @return error equal to 0 if the Bind if successful otherwise see eNETWORK_Manager_Error.
+ *  @return error equal to NETWORK_OK if the Bind if successful otherwise see eNETWORK_Manager_Error.
 **/
 int NETWORK_ManagerScoketsInit(network_manager_t* pManager,const char* addr, int sendingPort,
                                     int recvPort, int recvTimeoutSec);
@@ -115,13 +115,39 @@ void NETWORK_ManagerStop(network_manager_t* pManager);
 int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, const void* pData);
 
 /**
+ *  @brief Add deported data to send
+ * 	@param pManager pointer on the Manager
+ * 	@param[in] inputBufferId identifier of the input buffer in which the data must be stored
+ * 	@param[in] pData pointer on the data to send
+ *  @param[in] dataSize size of the data to send
+ *  @param[in] callBack pointer on the callback to call when the data is sent or an error occurred
+ *  @return error equal to 1 if the data is not correctly pushed in the the input buffer
+**/
+int NETWORK_ManagerSenddeportedData( network_manager_t* pManager, int inputBufferId,
+                                     void* pData, int dataSize,
+                                     int (*callBack)(int, void*, int) );
+
+/**
  *  @brief Read data received
+ *  @warning the outputBuffer should not be deportedData type
  * 	@param pManager pointer on the Manager
  * 	@param[in] outputBufferId identifier of the output buffer in which the data must be read
  * 	@param[out] pData pointer on the data read
  *  @return error equal to 1 if the buffer is empty or the ID doesn't exist
 **/
 int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, void* pData);
+
+/**
+ *  @brief Read deported data received
+ *  @warning the outputBuffer must be deportedData type
+ * 	@param pManager pointer on the Manager
+ * 	@param[in] outputBufferId identifier of the output buffer in which the data must be read
+ * 	@param[out] pData pointer on the data read
+ *  @param[in] dataLimitSize linit size of the copy
+ *  @return size of the data read or an eNETWORK_Error type
+**/
+int NETWORK_ManagerReaddeportedData( network_manager_t* pManager, int outputBufferId,
+                                     void* pData, int dataLimitSize);
 
 #endif // _NETWORK_MANGER_H_
 

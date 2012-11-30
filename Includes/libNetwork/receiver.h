@@ -119,7 +119,7 @@ static inline int idAckToIdInput( int id)
  * 	@param pReceiver the pointer on the Receiver
  * 	@param[in] port port on which the data will be received.
  * 	@param[in] timeoutSec timeout in seconds set on the socket to limit the time of blocking of the function NETWORK_ReceiverRead().
- * 	@return error equal to 0 if the Bind if successful otherwise equal to 1.
+ * 	@return error equal to NETWORK_OK if the Bind if successful otherwise equal to 1.
  *	@see NETWORK_ReceiverBind()
 **/
 int NETWORK_ReceiverBind(network_receiver_t* pReceiver, unsigned short port, int timeoutSec);

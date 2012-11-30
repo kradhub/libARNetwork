@@ -11,7 +11,8 @@ HEADER_FILES	=	../Includes/libNetwork/buffer.h \
 					../Includes/libNetwork/receiver.h \
 					../Includes/libNetwork/manager.h \
 					../Includes/libNetwork/frame.h \
-					../Includes/libNetwork/error.h
+					../Includes/libNetwork/error.h \
+					../Includes/libNetwork/deportedData.h
 
 # The sources to add to the library and to add to the source distribution
 SOURCE_FILES 	= 	$(HEADER_FILES)		\
