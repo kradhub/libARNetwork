@@ -69,42 +69,15 @@
 
 - (IBAction)clickConnection
 {
-    /*
-    if( ![pAppDelegate connected] )
-    {
-        [pAppDelegate connection:textfieldIP.text] ;
-    }
-    else
-    {
-        
-    }*/
+    [pAppDelegate connection:textfieldIP.text] ;
     
-        [pAppDelegate connection:textfieldIP.text] ;
-    
-        if( [pAppDelegate connected] )
-        {
-            //[ buttonConnection setTitle:@"Disconnect" forState:UIControlStateNormal ];
-        
-            //[textfieldChar setEnabled:YES];
-            //[textfieldIntAck setEnabled:YES];
+    if( [pAppDelegate connected] )
+    {
 
-            [buttonSendChar setEnabled:YES];
-            [buttonSendIntAck setEnabled:YES];
-            
-        
-            //[textfieldIP setEnabled:NO];
-        }
-        /* else
-         {
-         //[ buttonConnection setTitle:@"Connect" forState:UIControlStateNormal ];
-        
-            [textfieldChar setEnabled:NO];
-            [textfieldIntAck setEnabled:NO];
-        
-            [buttonSendChar setEnabled:NO];
-            [buttonSendIntAck setEnabled:NO];
-         }*/
-   
+        [buttonSendChar setEnabled:YES];
+        [buttonSendIntAck setEnabled:YES];
+        [buttonSendStrAck setEnabled:YES];
+    }
     
 }
 
@@ -131,6 +104,14 @@
 - (IBAction)clcikSendIntAck
 {
     if( [pAppDelegate sendIntAck:@""] )
+    {
+        [textViewInfo appendText:@" buffer full !!!!!!!!!!! \n"];
+    }
+}
+
+- (IBAction)clcikSendStrAck
+{
+    if( [pAppDelegate sendStrAck:@""] )
     {
         [textViewInfo appendText:@" buffer full !!!!!!!!!!! \n"];
     }

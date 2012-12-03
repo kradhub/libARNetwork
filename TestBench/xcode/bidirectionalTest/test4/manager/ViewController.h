@@ -26,6 +26,7 @@
     IBOutlet UIButton* buttonConnection;
     IBOutlet UIButton* buttonSendChar;
     IBOutlet UIButton* buttonSendIntAck;
+    IBOutlet UIButton* buttonSendStrAck;
     IBOutlet UIButton* buttonExit;
     
     IBOutlet TextViewConsole* textViewInfo;
@@ -48,6 +49,7 @@
 
 - (IBAction)clcikSendChar;
 - (IBAction)clcikSendIntAck;
+- (IBAction)clcikSendStrAck;
 
 - (IBAction)clcikExit;
 

@@ -24,6 +24,8 @@
 	char chData;
 	
 	int intData;
+    int dataDeportSize;
+    char* pDataDeported;
 	
 	char IpAddress[16];
     int sendPort;
@@ -33,9 +35,11 @@
 	
     int id_ioBuff_char;
     int id_ioBuff_intAck;
+    int id_ioBuff_deportDataAck;
     
     int id_print_ioBuff_char;
     int id_print_ioBuff_intAck;
+    int id_print_ioBuff_deportDataAck;
 	
 	sal_thread_t thread_send1;
 	sal_thread_t thread_recv1;
@@ -61,9 +65,13 @@
 
 - (bool) sendChar:(NSString * )data ;
 - (bool) sendIntAck:(NSString * )data ;
+- (bool) sendStrAck:(NSString * )data ;
 
 - (void)print:(NSTimer *)_timer;
 
 - (void) netWorkConstructor;
 
+
 @end
+
+int callBackDepotData(int OutBufferId, void* pData, int status);
