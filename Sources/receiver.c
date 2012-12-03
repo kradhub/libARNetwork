@@ -151,8 +151,6 @@ void* NETWORK_RunReceivingThread(void* data)
 						
 						if(pOutBufferTemp != NULL)
 						{
-                            sal_print(PRINT_DEBUG," - deported data :%d \n", pOutBufferTemp->deportedData);
-                            
                             error = NETWORK_ReceiverCopyDataRecv( pReceiver, pOutBufferTemp, pFrame);
                             
                             if( error != NETWORK_OK )
@@ -176,8 +174,6 @@ void* NETWORK_RunReceivingThread(void* data)
 															pFrame->id);
 						if(pOutBufferTemp != NULL)
 						{
-                            sal_print(PRINT_DEBUG," - deported data :%d \n", pOutBufferTemp->deportedData);
-                            
 							/** OutBuffer->seqWaitAck used to save the last seq */
 							if( pFrame->seq != pOutBufferTemp->seqWaitAck )
 							{              

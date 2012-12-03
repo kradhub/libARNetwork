@@ -207,9 +207,6 @@ int NETWORK_IoBufferAckReceived( network_ioBuffer_t* pIoBuffer, int seqNum )
 	int error = NETWORK_OK;
 	
 	sal_mutex_lock( &(pIoBuffer->mutex) );
-	
-    sal_print(PRINT_WARNING, "NETWORK_IoBufferAckReceived id: %d | isWaitAck: %d | seqWaitAck: %d | empty: %d\n",
-    pIoBuffer->id,pIoBuffer->isWaitAck, pIoBuffer->seqWaitAck, NETWORK_RingBuffIsEmpty(pIoBuffer->pBuffer)  ); //!!!!!!!
     
 	/** delete the data if the sequence number received is same as the sequence number expected */
 	if( pIoBuffer->isWaitAck && pIoBuffer->seqWaitAck == seqNum )

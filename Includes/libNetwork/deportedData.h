@@ -35,7 +35,7 @@ typedef struct network_DeportedData_t
 {
     void* pData; /**< Pointer on the data */
     int dataSize; /**< size of the data */
-    int (*callBack)(int, void*, int); /**
+    int (*callBack)(int IoBuffer , void* pData, int status); /**
                                          *<     @brief call back use when the data are sent or have a timeout 
                                          *      @param[in] IoBuffer identifier of the IoBuffer is calling back
                                          *      @param[in] pointer on the data
