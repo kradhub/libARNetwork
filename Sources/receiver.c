@@ -126,13 +126,13 @@ void* NETWORK_RunReceivingThread(void* data)
 				switch (pFrame->type)
 				{
 					case network_frame_t_TYPE_ACK:
-						sal_print(PRINT_DEBUG,"	- TYPE: network_frame_t_TYPE_ACK | SEQ:%d | ID:%d \n",
+						sal_print(PRINT_DEBUG," - TYPE: network_frame_t_TYPE_ACK | SEQ:%d | ID:%d \n",
 												pFrame->seq, pFrame->id);
 												
 						/** transmit the acknowledgement to the sender */
 						error = NETWORK_SenderAckReceived( pReceiver->pSender,
                                                            idAckToIdInput(pFrame->id),
-                                                           (int) pFrame->data );
+                                                           *( (int*) &pFrame->data ) );
                         if( error != NETWORK_OK )
                         {
                             sal_print(PRINT_ERROR,"acknowledge received, error: %d occurred \n", error);
@@ -174,9 +174,10 @@ void* NETWORK_RunReceivingThread(void* data)
 															pFrame->id);
 						if(pOutBufferTemp != NULL)
 						{
+                            sal_print(PRINT_WARNING," pFrame->seq : %d | pOutBufferTemp->seqWaitAck: %d \n", pFrame->seq , pOutBufferTemp->seqWaitAck );
 							/** OutBuffer->seqWaitAck used to save the last seq */
 							if( pFrame->seq != pOutBufferTemp->seqWaitAck )
-							{              
+							{        
                                 error = NETWORK_ReceiverCopyDataRecv( pReceiver, pOutBufferTemp,
                                                                           pFrame);
 								if( error == NETWORK_OK)
@@ -225,6 +226,7 @@ void NETWORK_ReturnASK(network_receiver_t* pReceiver, int id, int seq)
 	network_ioBuffer_t* pBufferASK = NETWORK_IoBufferFromId(	pReceiver->pptab_outputBuffer,
 																pReceiver->numOfOutputBuff,
 																idOutputToIdAck(id) );
+                                                                
 	if(pBufferASK != NULL)
 	{
 		NETWORK_RingBuffPushBack(pBufferASK->pBuffer, &seq );
