@@ -41,45 +41,21 @@ endif
 
 
 
-check_PROGRAMS = 	../TestBench/autoTest \
-					../TestBench/test2/manager \
-					../TestBench/test2/repeater \
-					../TestBench/test3/managerT3 \
-					../TestBench/test3/repeaterT3 \
-					../TestBench/bidirectionalTestBench/bidirectionalTestBench  
+check_PROGRAMS = 	../TestBench/autoTest/autoTest \
+					../TestBench/bidirectionalTest/bidirectionalTest  
 					
-___TestBench_autoTest_SOURCES 	= ../TestBench/autoTest.c
-___TestBench_test2_manager_SOURCES 	= ../TestBench/test2/mainManager.c
-___TestBench_test2_repeater_SOURCES = ../TestBench/test2/mainRepeater.c
-___TestBench_test3_managerT3_SOURCES 	= ../TestBench/test3/mainManagerT3.c
-___TestBench_test3_repeaterT3_SOURCES = ../TestBench/test3/mainRepeaterT3.c
-___TestBench_bidirectionalTestBench_bidirectionalTestBench_SOURCES = ../TestBench/bidirectionalTestBench/bidirectionalTestBench.c
+___TestBench_autoTest_autoTest_SOURCES 	= ../TestBench/autoTest/autoTest.c
+___TestBench_bidirectionalTest_bidirectionalTest_SOURCES = ../TestBench/bidirectionalTest/bidirectionalTest.c
 if DEBUG_MODE
-___TestBench_autoTest_LDADD = 	-lsal_dbg  \
-							libnetwork_dbg.la
-___TestBench_test2_manager_LDADD = 	-lsal_dbg  \
-									libnetwork_dbg.la
-___TestBench_test2_repeater_LDADD = -lsal_dbg  \
-									libnetwork_dbg.la
-___TestBench_test3_managerT3_LDADD = 	-lsal_dbg  \
-									libnetwork_dbg.la
-___TestBench_test3_repeaterT3_LDADD = -lsal_dbg  \
-									libnetwork_dbg.la
-___TestBench_bidirectionalTestBench_bidirectionalTestBench_LDADD = -lsal_dbg  \
-									libnetwork_dbg.la
+___TestBench_autoTest_autoTest_LDADD = 	-lsal_dbg  \
+										libnetwork_dbg.la
+___TestBench_bidirectionalTest_bidirectionalTest_LDADD = 	-lsal_dbg  \
+															libnetwork_dbg.la
 else
-___TestBench_autoTest_LDADD 	= 	-lsal \
-								libnetwork.la
-___TestBench_test2_manager_LDADD = 	-lsal  \
-									libnetwork.la
-___TestBench_test2_repeater_LDADD = -lsal  \
-									libnetwork.la
-___TestBench_test3_managerT3_LDADD = 	-lsal  \
-									libnetwork.la
-___TestBench_test3_repeaterT3_LDADD = -lsal  \
-									libnetwork.la
-___TestBench_bidirectionalTestBench_bidirectionalTestBench_LDADD = -lsal  \
-																	libnetwork.la
+___TestBench_autoTest_autoTest_LDADD = 	-lsal \
+										libnetwork.la
+___TestBench_bidirectionalTest_bidirectionalTest_LDADD = 	-lsal  \
+															libnetwork.la
 endif
 
 CLEAN_FILES = libnetwork.la libnetwork_dbg.la
