@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
 	paramNetworkL1[2].id = ID_DEPORT_DATA_ACK;
 	paramNetworkL1[2].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramNetworkL1[2].sendingWaitTime = 2;
-	paramNetworkL1[2].ackTimeoutMs = 10000;
+	paramNetworkL1[2].ackTimeoutMs = 10;
 	paramNetworkL1[2].nbOfRetry = -1 /*5*/;
 	paramNetworkL1[2].buffSize = 5;
 	paramNetworkL1[2].buffCellSize = sizeof(network_DeportedData_t);
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
 	paramNetworkL2[1].id = ID_INT_DATA_WITH_ACK_2;
 	paramNetworkL2[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramNetworkL2[1].sendingWaitTime = 2;
-	paramNetworkL2[1].ackTimeoutMs = 10000;
+	paramNetworkL2[1].ackTimeoutMs = 10;
 	paramNetworkL2[1].nbOfRetry = -1 /*5*/;
 	paramNetworkL2[1].buffSize = 5;
 	paramNetworkL2[1].buffCellSize = sizeof(int);

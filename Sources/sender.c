@@ -30,9 +30,6 @@
 
 #include "sender.h"
 
-#include <arpa/inet.h> // !!!!!!!!!!!!!!!!!!!!!!!!!!!pass in libsal
-
-
 /*****************************************
  * 
  * 			define :
@@ -143,7 +140,7 @@ void* NETWORK_RunSendingThread(void* data)
 						/** if there are timeout and too sending retry ... */
 						
 						//callBackReturn = pInputTemp->timeoutCallback();
-						sal_print(PRINT_WARNING," !!! too retry !!! \n");
+						sal_print(PRINT_DEBUG," !!! too retry !!! \n");
 						
 						if(callBackReturn)
 						{
