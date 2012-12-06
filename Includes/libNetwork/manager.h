@@ -134,11 +134,12 @@ int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, voi
  * 	@param pManager pointer on the Manager
  * 	@param[in] outputBufferId identifier of the output buffer in which the data must be read
  * 	@param[out] pData pointer on the data read
- *  @param[in] dataLimitSize linit size of the copy
- *  @return size of the data read or an eNETWORK_Error type
+ *  @param[in] dataLimitSize limit size of the copy
+ *  @param[out] pReadSize pointer to store the size of the data read
+ *  @return error eNETWORK_Error type
 **/
 int NETWORK_ManagerReaddeportedData( network_manager_t* pManager, int outputBufferId,
-                                     void* pData, int dataLimitSize);
+                                     void* pData, int dataLimitSize, int* pReadSize);
 
 #endif // _NETWORK_MANGER_H_
 

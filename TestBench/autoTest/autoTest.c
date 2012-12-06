@@ -311,7 +311,8 @@ int main(int argc, char *argv[])
     printf("\n the deported data transmitted:\n");
     ii = 0;
     dataDeportedRead = 0;
-    while( NETWORK_ManagerReaddeportedData(pManager2, ID_DEPORT_DATA, &dataDeportedRead, ii+1) > 0 )
+    
+    while( ! NETWORK_ManagerReaddeportedData(pManager2, ID_DEPORT_DATA, &dataDeportedRead, ii+1, NULL) )
     {
         dataDeportSize = ii+1;
         

@@ -354,7 +354,7 @@ int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, voi
 }
 
 int NETWORK_ManagerReaddeportedData( network_manager_t* pManager, int outputBufferId,
-                                     void* pData, int dataLimitSize)
+                                     void* pData, int dataLimitSize, int* pReadSize)
 {
     /** -- read data deported received -- */
 	
@@ -362,6 +362,7 @@ int NETWORK_ManagerReaddeportedData( network_manager_t* pManager, int outputBuff
 	int error = NETWORK_OK;
 	network_ioBuffer_t* pOutputBuffer = NULL;
     network_DeportedData_t deportedDataTemp;
+    int readSize = 0;
 	
 	pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
 	
@@ -380,8 +381,8 @@ int NETWORK_ManagerReaddeportedData( network_manager_t* pManager, int outputBuff
                     /** data copy */
                     memcpy(pData, deportedDataTemp.pData, deportedDataTemp.dataSize);
                     
-                    /** return the size of the data instead of the error */
-                    error = deportedDataTemp.dataSize;
+                    /** set data read */
+                    readSize = deportedDataTemp.dataSize;
                     
                     /** free the data deported*/
                     deportedDataTemp.callBack( pOutputBuffer->id, deportedDataTemp.pData, 
@@ -401,6 +402,12 @@ int NETWORK_ManagerReaddeportedData( network_manager_t* pManager, int outputBuff
     else
     {
         error = NETWORK_ERROR_ID_UNKNOWN;
+    }
+    
+    /** return the size of the data read */
+    if(pReadSize != NULL)
+    {
+        *pReadSize = readSize;
     }
 	
 	return error;
