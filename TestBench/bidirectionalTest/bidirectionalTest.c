@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
 		printf("repeater IP address ? : ");
 		scanfReturn = scanf("%s",IpAddress);
         
-        connectError = NETWORK_ManagerScoketsInit( pManager1, IpAddress, sendPort,
+        connectError = NETWORK_ManagerSocketsInit( pManager1, IpAddress, sendPort,
                                                     recvPort, RECV_TIMEOUT_MS );
 		
 		printf("    - connect error: %d \n", connectError );			

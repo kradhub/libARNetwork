@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
                                     NB_OF_INPUT_NET1, paramInputNetwork1,
                                     NB_OF_OUTPUT_NET1, paramOutputNetwork1);
     
-    error = NETWORK_ManagerScoketsInit(pManager1, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
+    error = NETWORK_ManagerSocketsInit(pManager1, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
     printf("pManager1 error initScoket = %d \n", error);
 
     /** create the Manger2 */
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
                                     NB_OF_INPUT_NET2, paramInputNetwork2,
                                     NB_OF_OUTPUT_NET2, paramOutputNetwork2);          
     
-    error = NETWORK_ManagerScoketsInit(pManager2, ADRR_IP, PORT2, PORT1, RECEIVER_TIMEOUT_SEC);
+    error = NETWORK_ManagerSocketsInit(pManager2, ADRR_IP, PORT2, PORT1, RECEIVER_TIMEOUT_SEC);
     printf("pManager2 error initScoket = %d \n ", error);
 	
 	printf("main start \n");

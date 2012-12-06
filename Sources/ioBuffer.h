@@ -27,7 +27,7 @@ typedef struct network_ioBuffer_t
 {
     int id;		/**< Identifier used to find the InOutBuffer in a table*/
     network_ringBuffer_t* pBuffer;	/**< Pointer on the ringBuffer used to store the data*/
-    eNETWOK_Frame_Type dataType;		/**< Type of the data stored in the buffer*/
+    eNETWORK_Frame_Type dataType;		/**< Type of the data stored in the buffer*/
     int sendingWaitTime;	/**< Time in millisecond between 2 send when the InOutBuffer if used with a libNetwork/sender*/
     int ackTimeoutMs;	/**< Timeout in millisecond after retry to send the data when the InOutBuffer is used with a libNetwork/sender*/
     int nbOfRetry;	/**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libNetwork/sender*/

@@ -211,7 +211,7 @@ void NETWORK_DeleteManager(network_manager_t** ppManager)
 	}
 }
 
-int NETWORK_ManagerScoketsInit(network_manager_t* pManager,const char* addr, int sendingPort,
+int NETWORK_ManagerSocketsInit(network_manager_t* pManager,const char* addr, int sendingPort,
                                     int recvPort, int recvTimeoutSec)
 {
     /** -- initialize UDP sockets of sending and receiving the data. -- */

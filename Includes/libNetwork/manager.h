@@ -23,7 +23,7 @@ typedef struct network_paramNewIoBuffer_t network_paramNewIoBuffer_t;
 /**
  *  @brief Create a new Manager
  * 	@warning This function allocate memory
- * 	@post NETWORK_ManagerScoketsInit() must be called to initialize the sockets, indicate on which address send the data, the sending port the receiving port and the timeout.
+ * 	@post NETWORK_ManagerSocketsInit() must be called to initialize the sockets, indicate on which address send the data, the sending port the receiving port and the timeout.
  *  @post NETWORK_DeleteManager() must be called to delete the Network and free the memory allocated.
  * 	@param[in] recvBuffSize size in byte of the receiving buffer. ideally must be equal to the sum of the sizes of one data of all output buffers
  * 	@param[in] sendBuffSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
@@ -57,18 +57,18 @@ void NETWORK_DeleteManager(network_manager_t** ppManager);
  * 	@param[in] recvTimeoutSec timeout in seconds set on the socket to limit the time of blocking of the function NETWORK_ReceiverRead().
  *  @return error equal to NETWORK_OK if the Bind if successful otherwise see eNETWORK_Manager_Error.
 **/
-int NETWORK_ManagerScoketsInit(network_manager_t* pManager,const char* addr, int sendingPort,
+int NETWORK_ManagerSocketsInit(network_manager_t* pManager,const char* addr, int sendingPort,
                                     int recvPort, int recvTimeoutSec);
 
 /**
  *  @brief Manage the sending of the data 
  * 	@warning This function must be called by a specific thread.
- * 	@pre The sockets must be initialized through NETWORK_ManagerScoketsInit().
+ * 	@pre The sockets must be initialized through NETWORK_ManagerSocketsInit().
  * 	@post Before join the thread calling this function, NETWORK_ManagerStop() must be called.
  *  @note This function send the data stored in the input buffer through NETWORK_ManagerSendData().
  * 	@param data thread datas of type network_manager_t*
  *  @return NULL
- * 	@see NETWORK_ManagerScoketsInit()
+ * 	@see NETWORK_ManagerSocketsInit()
  * 	@see NETWORK_ManagerStop()
 **/
 void* NETWORK_ManagerRunSendingThread(void* data);
@@ -76,12 +76,12 @@ void* NETWORK_ManagerRunSendingThread(void* data);
 /**
  *  @brief Manage the reception of the data.
  * 	@warning This function must be called by a specific thread.
- * 	@pre The socket of the receiver must be initialized through NETWORK_ManagerScoketsInit().
+ * 	@pre The socket of the receiver must be initialized through NETWORK_ManagerSocketsInit().
  * 	@post Before join the thread calling this function, NETWORK_ManagerStop() must be called.
  * 	@note This function receives the data through NETWORK_ManagerReadData() and stores them in the output buffers according to their parameters.
  * 	@param data thread datas of type network_manager_t*
  *  @return NULL
- * 	@see NETWORK_ManagerScoketsInit()
+ * 	@see NETWORK_ManagerSocketsInit()
  * 	@see NETWORK_ManagerStop()
  * 	@see NETWORK_ManagerReadData()
 **/
