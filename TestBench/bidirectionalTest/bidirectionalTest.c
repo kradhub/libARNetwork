@@ -368,7 +368,10 @@ int main(int argc, char *argv[])
 	sal_thread_join(&(thread_printBuff), NULL);
 
 	/** delete */
-	NETWORK_DeleteManager( &pManager1 );
+    sal_thread_destroy(&thread_send1);
+    sal_thread_destroy(&thread_recv1);
+    sal_thread_destroy(&thread_printBuff);
+    	NETWORK_DeleteManager( &pManager1 );
 	
 	printf("end\n");
 

@@ -198,8 +198,8 @@ int main(int argc, char *argv[])
 	printf("main start \n");
 	
     /** create the threads */
-	sal_thread_create(&(thread_recv2), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager2);
-	sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager1);
+	sal_thread_create(&thread_recv2, (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager2);
+	sal_thread_create(&thread_recv1, (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager1);
 	
 	sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager1);
 	sal_thread_create(&thread_send2, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager2);
@@ -347,7 +347,11 @@ int main(int argc, char *argv[])
 	printf("end \n");
     
     /** delete */
-	NETWORK_DeleteManager( &pManager1 );
+    sal_thread_destroy(&thread_send1);
+    sal_thread_destroy(&thread_send2);
+    sal_thread_destroy(&thread_recv1);
+    sal_thread_destroy(&thread_recv2);
+    NETWORK_DeleteManager( &pManager1 );
 	NETWORK_DeleteManager( &pManager2 );
 
 	return 0;
