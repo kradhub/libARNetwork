@@ -65,7 +65,7 @@ AC_ARG_WITH([libSalBin],
 ##########################################################################
 
 # Put local include directory first
-CFLAGS="$CFLAGS -I../Includes"
+CFLAGS="$CFLAGS -I../Includes -I../Sources"
 
 # add the headers directory of libSal
 CFLAGS="$CFLAGS -I$libSalHeader"

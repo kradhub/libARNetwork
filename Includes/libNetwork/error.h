@@ -8,7 +8,6 @@
 #ifndef _NETWORK_ERROR_H_
 #define _NETWORK_ERROR_H_
 
-
 /**
  *  @brief libNetwork errors known.
 **/

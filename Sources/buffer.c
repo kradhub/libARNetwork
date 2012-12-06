@@ -17,7 +17,8 @@
 
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
-#include <libNetwork/buffer.h>
+
+#include "buffer.h"
 
 /*****************************************
  * 

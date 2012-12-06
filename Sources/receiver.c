@@ -24,17 +24,52 @@
 
 #include <libNetwork/error.h>
 #include <libNetwork/frame.h>
-#include <libNetwork/buffer.h>
+#include "buffer.h"
 #include <libNetwork/deportedData.h>
-#include <libNetwork/ioBuffer.h>
-#include <libNetwork/sender.h>
+#include "ioBuffer.h"
+#include "sender.h"
 
 #include "receiver.h"
 
+/*****************************************
+ * 
+ * 			private header:
+ *
+******************************************/
 
+/**
+ *  @brief get the next Frame of the receiving buffer
+ * 	@param pReceiver the pointer on the receiver
+ * 	@param prevFrame[in] pointer on the previous frame
+ * 	@return nextFrame pointer on the next frame
+ *	@pre only call by NETWORK_RunSendingThread()
+ * 	@see NETWORK_RunSendingThread()
+**/
+network_frame_t* NETWORK_ReceiverGetNextFrame( network_receiver_t* pReceiver,
+                                                 network_frame_t* prevFrame );
 
-typedef struct sockaddr_in SOCKADDR_IN;
-typedef struct sockaddr SOCKADDR;
+/**
+ *  @brief copy the data received to the output buffer
+ * 	@param pReceiver the pointer on the receiver
+ * 	@param pOutBuffer[in] pointer on the output buffer
+ *  @param pFrame[in] pointer on the frame received
+ * 	@return error equal to NETWORK_OK if the Bind if successful otherwise equal to error of eNETWORK_Error.
+ *	@pre only call by NETWORK_RunSendingThread()
+ * 	@see NETWORK_RunSendingThread()
+**/
+int NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
+                                   network_ioBuffer_t* pOutBuffer,
+                                   network_frame_t* pFrame );
+                                   
+/**
+ *  @brief call back use to free deported data 
+ *  @param[in] OutBufferId IoBuffer identifier of the IoBuffer is calling back
+ *  @param[in] pData pointer on the data
+ *  @param[in] status status indicating the reason of the callback. eNETWORK_DEPORTEDDATA_Callback_Status type
+ *  @return   
+ *  @see eNETWORK_DEPORTEDDATA_Callback_Status
+**/
+int NETWORK_freedeportedData(int OutBufferId, void* pData, int status);
 
 /*****************************************
  * 
@@ -252,7 +287,7 @@ int NETWORK_ReceiverBind(network_receiver_t* pReceiver, unsigned short port, int
 	
 	/** local declarations */
 	struct timeval timeout;  
-	SOCKADDR_IN recvSin;
+	struct sockaddr_in recvSin;
 	
 	/** socket initialization */
 	recvSin.sin_addr.s_addr = htonl(INADDR_ANY);   
@@ -266,7 +301,7 @@ int NETWORK_ReceiverBind(network_receiver_t* pReceiver, unsigned short port, int
     timeout.tv_usec = 0; 
 	sal_setsockopt(pReceiver->socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
 	
-	return sal_bind(pReceiver->socket, (SOCKADDR*)&recvSin, sizeof(recvSin));
+	return sal_bind(pReceiver->socket, (struct sockaddr*)&recvSin, sizeof(recvSin));
 }
 
 /*****************************************

@@ -9,25 +9,16 @@
 #define _NETWORK_MANGER_H_
 
 #include <libNetwork/error.h>
-#include <libNetwork/ioBuffer.h>
-#include <libNetwork/sender.h>
-#include <libNetwork/receiver.h>
 
 /**
  *  @brief network manager allow to send data acknowledged or not.
 **/
-typedef struct network_manager_t
-{
-    network_sender_t* pSender; /**< Pointer on the sender*/
-    network_receiver_t* pReceiver; /**< Pointer on the receiver*/
-    network_ioBuffer_t** ppTabInput; /**< Address of the table storing the input buffer*/
-    network_ioBuffer_t** ppTabOutput; /**< Address of the table storing the output buffer*/
-    int numOfInput; /**< Number of input buffer*/
-    int numOfOutput; /**< Number of output buffer*/
-    int numOfInputWithoutAck; /**< Number of input buffer without the  buffers of acknowledgement*/
-    int numOfOutputWithoutAck; /**< Number of output buffer without the  buffers of acknowledgement*/
-    
-}network_manager_t;
+typedef struct network_manager_t network_manager_t;
+
+/**
+ *  @brief used to set the parameters of a new inOutBuffer
+**/
+typedef struct network_paramNewIoBuffer_t network_paramNewIoBuffer_t;
 
 /**
  *  @brief Create a new Manager

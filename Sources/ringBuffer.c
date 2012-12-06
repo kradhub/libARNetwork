@@ -20,7 +20,7 @@
 
 #include <libNetwork/error.h>
 
-#include <libNetwork/ringBuffer.h>
+#include "ringBuffer.h"
 
 /*****************************************
  * 

@@ -18,6 +18,7 @@
 
 #include <libNetwork/frame.h>
 #include <libNetwork/manager.h>
+#include <libNetwork/paramNewIoBuffer.h>
 
 #include <unistd.h>
 
