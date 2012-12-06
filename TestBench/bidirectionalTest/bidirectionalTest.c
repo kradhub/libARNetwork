@@ -16,7 +16,6 @@
 
 #include <libSAL/thread.h>
 
-#include <libNetwork/deportedData.h>
 #include <libNetwork/frame.h>
 #include <libNetwork/manager.h>
 
@@ -165,7 +164,6 @@ int main(int argc, char *argv[])
 	paramNetworkL1[2].ackTimeoutMs = 10;
 	paramNetworkL1[2].nbOfRetry = -1 /*5*/;
 	paramNetworkL1[2].buffSize = 5;
-	paramNetworkL1[2].buffCellSize = sizeof(network_DeportedData_t);
 	paramNetworkL1[2].deportedData = 1;
 	
 	/** input ID_KEEP_ALIVE char */
@@ -205,7 +203,6 @@ int main(int argc, char *argv[])
 	paramNetworkL2[2].ackTimeoutMs = 10;
 	paramNetworkL2[2].nbOfRetry = -1 /*5*/;
 	paramNetworkL2[2].buffSize = 5;
-	paramNetworkL2[2].buffCellSize = sizeof(network_DeportedData_t);
 	paramNetworkL2[2].deportedData = 1;	
 				
 	printf("\n ~~ This soft sends data and repeater ack ~~ \n \n");

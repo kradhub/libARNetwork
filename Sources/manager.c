@@ -390,9 +390,9 @@ int NETWORK_ManagerReaddeportedData( network_manager_t* pManager, int outputBuff
  *
 ******************************************/
 
-int NETWORK_ManagerCreateIoBuffer(network_manager_t* pManager,
+int NETWORK_ManagerCreateIoBuffer( network_manager_t* pManager,
                                     network_paramNewIoBuffer_t* ptabParamInput, 
-                                    network_paramNewIoBuffer_t* ptabParamOutput)
+                                    network_paramNewIoBuffer_t* ptabParamOutput )
 {
     /** -- Create manager's IoBuffers --*/
     
@@ -420,6 +420,12 @@ int NETWORK_ManagerCreateIoBuffer(network_manager_t* pManager,
         /** check the IoBuffer identifier */
         if( ptabParamOutput[ii].id < NETWORK_ID_ACK_OFFSET )
         {
+            /** set cellSize if deported data is enabled */
+            if(ptabParamOutput[ii].deportedData == 1)
+            {
+                ptabParamOutput[ii].buffCellSize = sizeof(network_DeportedData_t);
+            }
+            
             pManager->ppTabOutput[ii] = NETWORK_NewIoBuffer( &(ptabParamOutput[ii]) );
             if(pManager->ppTabOutput[ii] == NULL)
             {
@@ -454,6 +460,12 @@ int NETWORK_ManagerCreateIoBuffer(network_manager_t* pManager,
         /** check the IoBuffer identifier */
         if( ptabParamInput[ii].id < NETWORK_ID_ACK_OFFSET )
         {
+            /** set cellSize if deported data is enabled */
+            if(ptabParamInput[ii].deportedData == 1)
+            {
+                ptabParamInput[ii].buffCellSize = sizeof(network_DeportedData_t);
+            }
+            
             pManager->ppTabInput[ii] = NETWORK_NewIoBuffer( &(ptabParamInput[ii]) );
             if(pManager->ppTabInput[ii] == NULL)
             {

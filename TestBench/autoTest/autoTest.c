@@ -18,7 +18,6 @@
 
 #include <string.h>
 
-#include <libNetwork/deportedData.h>
 #include <libNetwork/frame.h>
 #include <libNetwork/manager.h>
 #include <libSAL/socket.h>
@@ -129,7 +128,6 @@ int main(int argc, char *argv[])
 	paramInputNetwork1[2].ackTimeoutMs = 5;
 	paramInputNetwork1[2].nbOfRetry = -1/*20*/;
 	paramInputNetwork1[2].buffSize = 5;
-	paramInputNetwork1[2].buffCellSize = sizeof(network_DeportedData_t);
 	paramInputNetwork1[2].deportedData = 1;
 	
 	/** output ID_INT_DATA int */
@@ -174,7 +172,6 @@ int main(int argc, char *argv[])
 	paramOutputNetwork2[2].id = ID_DEPORT_DATA;
     paramOutputNetwork2[2].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramOutputNetwork2[2].buffSize = 5;
-	paramOutputNetwork2[2].buffCellSize = sizeof(network_DeportedData_t);
     paramOutputNetwork2[2].deportedData = 1;
 	
 	/** ----------------------------- */
