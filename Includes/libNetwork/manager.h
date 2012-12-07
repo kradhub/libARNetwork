@@ -9,16 +9,12 @@
 #define _NETWORK_MANGER_H_
 
 #include <libNetwork/error.h>
+#include <libNetwork/paramNewIoBuffer.h>
 
 /**
  *  @brief network manager allow to send data acknowledged or not.
 **/
 typedef struct network_manager_t network_manager_t;
-
-/**
- *  @brief used to set the parameters of a new inOutBuffer
-**/
-typedef struct network_paramNewIoBuffer_t network_paramNewIoBuffer_t;
 
 /**
  *  @brief Create a new Manager

@@ -11,11 +11,12 @@
 #include "ioBuffer.h"
 #include "sender.h"
 #include "receiver.h"
+#include <libNetwork/manager.h>
 
 /**
  *  @brief network manager allow to send data acknowledged or not.
 **/
-typedef struct network_manager_t
+struct network_manager_t
 {
     network_sender_t* pSender; /**< Pointer on the sender*/
     network_receiver_t* pReceiver; /**< Pointer on the receiver*/
@@ -26,7 +27,7 @@ typedef struct network_manager_t
     int numOfInputWithoutAck; /**< Number of input buffer without the  buffers of acknowledgement*/
     int numOfOutputWithoutAck; /**< Number of output buffer without the  buffers of acknowledgement*/
     
-}network_manager_t;
+};
 
 
 #endif // _NETWORK_MANGER_NOEXPORTED_H_
