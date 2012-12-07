@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
         pDataDeported = malloc(dataDeportSize);
         memcpy(pDataDeported, &orgDataDeported, dataDeportSize);
         
-        error = NETWORK_ManagerSenddeportedData( pManager1, ID_DEPORT_DATA,
+        error = NETWORK_ManagerSendDeportedData( pManager1, ID_DEPORT_DATA,
                                                  pDataDeported, dataDeportSize,
                                                  &(callBackDepotData) );
                                                  

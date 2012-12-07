@@ -38,8 +38,9 @@ typedef struct network_paramNewIoBuffer_t
  *  @brief initialization of the paramNewIoBuffer with default parameters
  * 	@pre before to use the paramNewIoBuffer the paramaters useful must be set.
  * 	@param[in,out] pParam Pointer on the parameters for the new input or output buffer
+ *  @return error of eNETWORK_Error type
 **/
-void NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t* pParam); 
+int NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t* pParam); 
 
 /**
  *  @brief check the values of the paramNewIoBuffer

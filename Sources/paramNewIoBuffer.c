@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <libSAL/print.h>
 
+#include <libNetwork/error.h>
+
 #include <libNetwork/paramNewIoBuffer.h>
 
 
@@ -39,20 +41,32 @@
  *
 ******************************************/
 
-void NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t *pParam)
+int NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t *pParam)
 {
 	/** -- initialization of the paramNewIoBuffer with default parameters -- */
-	
-	pParam->id = NETWORK_IOBUFFER_ID_DEFAULT;
-    pParam->dataType = NETWORK_IOBUFFER_DATATYPE_DEFAULT;	
-    pParam->sendingWaitTime = NETWORK_IOBUFFER_SENDINGWAITTIME_DEFAULT;
-    pParam->ackTimeoutMs = NETWORK_IOBUFFER_ACKTILEOUTMS_DEFAULT;
-    pParam->nbOfRetry = NETWORK_IOBUFFER_NBOFRETRY_DEFAULT;
     
-    pParam->buffSize = NETWORK_IOBUFFER_BUFFSIZE_DEFAULT;	
-    pParam->buffCellSize = NETWORK_IOBUFFER_BUFFCELLSIZE_DEFAULT;
-    pParam->overwriting = NETWORK_IOBUFFER_OVERWRITING_DEFAULT;
-    pParam->deportedData = NETWORK_IOBUFFER_deportedData_DEFAULT;
+    /** local declarations */
+    int error = NETWORK_OK;
+    
+    if(pParam != NULL)
+    {
+        pParam->id = NETWORK_IOBUFFER_ID_DEFAULT;
+        pParam->dataType = NETWORK_IOBUFFER_DATATYPE_DEFAULT;	
+        pParam->sendingWaitTime = NETWORK_IOBUFFER_SENDINGWAITTIME_DEFAULT;
+        pParam->ackTimeoutMs = NETWORK_IOBUFFER_ACKTILEOUTMS_DEFAULT;
+        pParam->nbOfRetry = NETWORK_IOBUFFER_NBOFRETRY_DEFAULT;
+        
+        pParam->buffSize = NETWORK_IOBUFFER_BUFFSIZE_DEFAULT;	
+        pParam->buffCellSize = NETWORK_IOBUFFER_BUFFCELLSIZE_DEFAULT;
+        pParam->overwriting = NETWORK_IOBUFFER_OVERWRITING_DEFAULT;
+        pParam->deportedData = NETWORK_IOBUFFER_deportedData_DEFAULT;
+    }
+    else
+    {
+        error = NETWORK_ERROR_BAD_PARAMETER;
+    }
+    
+    return error;
 }
 
 int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
@@ -62,7 +76,9 @@ int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
     /** local declarations */
     int ok = 0;
     
-    if( pParam->id > NETWORK_IOBUFFER_ID_DEFAULT && 
+    /** check the parameters values */
+    if( pParam != NULL &&
+        pParam->id > NETWORK_IOBUFFER_ID_DEFAULT && 
         pParam->dataType != network_frame_t_TYPE_UNINITIALIZED &&
         pParam->sendingWaitTime > 0 &&
         pParam->ackTimeoutMs >= -1 &&

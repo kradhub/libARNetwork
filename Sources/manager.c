@@ -219,9 +219,18 @@ int NETWORK_ManagerSocketsInit(network_manager_t* pManager,const char* addr, int
 	/** local declarations */
     int error = NETWORK_OK;
     
-    error = NETWORK_SenderConnection( pManager->pSender,addr, sendingPort );
+    /** check paratemters*/
+    if(pManager == NULL || addr== NULL)
+    {
+        error = NETWORK_ERROR_BAD_PARAMETER;
+    }
+    
+    if( error == NETWORK_OK )
+    {
+        error = NETWORK_SenderConnection( pManager->pSender,addr, sendingPort );
+    }
 			
-    if( !error )
+    if( error == NETWORK_OK )
     {
         error = NETWORK_ReceiverBind( pManager->pReceiver, recvPort, recvTimeoutSec );
     }
@@ -235,8 +244,19 @@ void* NETWORK_ManagerRunSendingThread(void* data)
     
     /** local declarations */
     network_manager_t* pManager = data;
+    void* ret = NULL;
     
-    return NETWORK_RunSendingThread( pManager->pSender );
+    /** check paratemters */
+    if(pManager != NULL)
+    {
+        ret = NETWORK_RunSendingThread( pManager->pSender );
+    }
+    else
+    {
+        sal_print(PRINT_ERROR,"error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
+    }
+    
+    return ret;
 }
 
 void* NETWORK_ManagerRunReceivingThread(void* data)
@@ -245,16 +265,31 @@ void* NETWORK_ManagerRunReceivingThread(void* data)
     
     /** local declarations */
     network_manager_t* pManager = data;
+    void* ret = NULL;
     
-    return NETWORK_RunReceivingThread( pManager->pReceiver );
+    /** check paratemters */
+    if(pManager != NULL)
+    {
+        ret = NETWORK_RunReceivingThread( pManager->pReceiver );
+    }
+    else
+    {
+        sal_print(PRINT_ERROR,"error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
+    }
+    
+    return ret;
 }
 
 void NETWORK_ManagerStop(network_manager_t* pManager)
 {
     /** -- stop the threads of sending and reception -- */
     
-    NETWORK_StopSender( pManager->pSender );
-    NETWORK_StopReceiver( pManager->pReceiver );
+    /** check paratemters */
+    if(pManager != NULL)
+    {
+        NETWORK_StopSender( pManager->pSender );
+        NETWORK_StopReceiver( pManager->pReceiver );
+    }
 }
 
 int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, const void* pData)
@@ -265,17 +300,26 @@ int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, cons
 	int error = NETWORK_OK;
 	network_ioBuffer_t* pInputBuffer = NULL;
 	
-	pInputBuffer = NETWORK_IoBufferFromId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
+    /** check paratemters */
+    if(pManager != NULL  )
+    {
+	    pInputBuffer = NETWORK_IoBufferFromId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
+    }
+    else
+    {
+       error =  NETWORK_ERROR_BAD_PARAMETER;
+    }
 	
 	if(pInputBuffer != NULL)
 	{
-		if( pInputBuffer->deportedData )
+        /** check paratemters */
+		if( !pInputBuffer->deportedData && pData != NULL )
         {
-            error = NETWORK_ERROR_BAD_PARAMETER;
+            error = NETWORK_RingBuffPushBack(pInputBuffer->pBuffer, pData);
         }
         else
         {
-		    error = NETWORK_RingBuffPushBack(pInputBuffer->pBuffer, pData);
+            error = NETWORK_ERROR_BAD_PARAMETER;
         }
 	}
     else
@@ -286,7 +330,7 @@ int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, cons
 	return error;
 }
 
-int NETWORK_ManagerSenddeportedData( network_manager_t* pManager, int inputBufferId,
+int NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBufferId,
                                      void* pData, int dataSize,
                                      int (*callBack)(int, void*, int) )
 {
@@ -296,12 +340,21 @@ int NETWORK_ManagerSenddeportedData( network_manager_t* pManager, int inputBuffe
 	int error = NETWORK_OK;
 	network_ioBuffer_t* pInputBuffer = NULL;
     network_DeportedData_t deportedDataTemp;
-	
-	pInputBuffer = NETWORK_IoBufferFromId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
-	
+    
+    /** check paratemters */
+    if(pManager != NULL)
+    {
+	    pInputBuffer = NETWORK_IoBufferFromId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
+	}
+    else
+    {
+        error = NETWORK_ERROR_BAD_PARAMETER;
+    }
+    
 	if(pInputBuffer != NULL)
 	{
-        if( pInputBuffer->deportedData )
+        /** check paratemters */
+        if( pInputBuffer->deportedData && pData != NULL && callBack != NULL)
         {
             /** initialize deportedDataTemp and push it in the InputBuffer */
             deportedDataTemp.pData = pData;
@@ -330,19 +383,28 @@ int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, voi
 	/** local declarations */
 	int error = NETWORK_OK;
 	network_ioBuffer_t* pOutputBuffer = NULL;
-	
-	pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
+    
+    /** check paratemters */
+    if(pManager != NULL)
+    {
+	    pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
+    }
+    else
+    {
+        error = NETWORK_ERROR_BAD_PARAMETER;
+    }
 	
 	if(pOutputBuffer != NULL)
 	{
-        if( pOutputBuffer->deportedData )
-        {
-            error = NETWORK_ERROR_BAD_PARAMETER;
-        }
-        else
+        /** check paratemters */
+        if( !pOutputBuffer->deportedData )
         {
             /** push the data in the InputBuffer */
 		    error = NETWORK_RingBuffPopFront(pOutputBuffer->pBuffer, pData);
+        }
+        else
+        {
+            error = NETWORK_ERROR_BAD_PARAMETER;
         }
 	}
     else
@@ -364,10 +426,15 @@ int NETWORK_ManagerReaddeportedData( network_manager_t* pManager, int outputBuff
     network_DeportedData_t deportedDataTemp;
     int readSize = 0;
 	
-	pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
+    /** check paratemters */
+    if(pManager != NULL)
+    {
+	    pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
+    }
 	
 	if(pOutputBuffer != NULL)
 	{
+        /** check paratemters */
         if( pOutputBuffer->deportedData )
         {
             /** get data deported */

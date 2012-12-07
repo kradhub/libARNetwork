@@ -114,7 +114,7 @@ int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, cons
  *  @param[in] callBack pointer on the callback to call when the data is sent or an error occurred
  *  @return error equal to 1 if the data is not correctly pushed in the the input buffer
 **/
-int NETWORK_ManagerSenddeportedData( network_manager_t* pManager, int inputBufferId,
+int NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBufferId,
                                      void* pData, int dataSize,
                                      int (*callBack)(int, void*, int) );
 

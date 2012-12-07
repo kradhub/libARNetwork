@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
                 /** end the string */
                 pDataDeported[dataDeportSize - 1] = '\0' ;
                 
-                error = NETWORK_ManagerSenddeportedData( pManager1, id_ioBuff_deportDataAck,
+                error = NETWORK_ManagerSendDeportedData( pManager1, id_ioBuff_deportDataAck,
                                                          pDataDeported, dataDeportSize,
                                                          &(callBackDepotData) );
                 if(error != NETWORK_OK )
