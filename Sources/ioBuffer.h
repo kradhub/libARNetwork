@@ -31,7 +31,7 @@ typedef struct network_ioBuffer_t
     int sendingWaitTime;	/**< Time in millisecond between 2 send when the InOutBuffer if used with a libNetwork/sender*/
     int ackTimeoutMs;	/**< Timeout in millisecond after retry to send the data when the InOutBuffer is used with a libNetwork/sender*/
     int nbOfRetry;	/**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libNetwork/sender*/
-    //	timeoutCallback(network_ioBuffer_t* this)
+    //	timeoutcallback(network_ioBuffer_t* this)
     int deportedData; /**< Indicator of using data deported*/
     
     int isWaitAck;	/**< Indicator of waiting an acknowledgement  (1 = true | 0 = false). Must be accessed through NETWORK_IoBufferIsWaitAck()*/
@@ -89,7 +89,7 @@ network_ioBuffer_t* NETWORK_IoBufferFromId( network_ioBuffer_t** pptabInOutBuff,
 int NETWORK_IoBufferIsWaitAck( network_ioBuffer_t* pIoBuffer );
 
 /**
- *  @brief call the callback of all deportedData with the NETWORK_DEPORTEDDATA_CALLBACK_FREE status.
+ *  @brief call the callback of all deportedData with the NETWORK_DEPORTEDDATA_callback_FREE status.
  *  @warning the IoBuffer must store network_DeportedData_t
  * 	@param pIoBuffer Pointer on the input or output buffer of deportedData type
  *  @return error equal to NETWORK_OK if the data are correctly free otherwise see eNETWORK_Error
@@ -100,10 +100,10 @@ int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer );
  *  @brief delete the later data of the IoBuffer
  *  @warning used only when the data is correctly sent
  * 	@param pIoBuffer Pointer on the input or output buffer
- *  @param[in] callBackStatus status sent py the callBack in case where the data is deported 
+ *  @param[in] callbackStatus status sent py the callback in case where the data is deported 
  *  @return error equal to NETWORK_OK if the data are correctly deleted otherwise see eNETWORK_Error
 **/
-int NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callBackStatus );
+int NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callbackStatus );
 
 #endif // _NETWORK_IOBUFFER_H_
 

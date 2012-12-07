@@ -62,7 +62,7 @@ typedef enum eID_BUFF
     ID_DEPORT_DATA
 }eID_BUFF;
 
-int callBackDepotData(int OutBufferId, void* pData, int status);
+int callbackDepotData(int OutBufferId, void* pData, int status);
 
 /*****************************************
  * 
@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
         
         error = NETWORK_ManagerSendDeportedData( pManager1, ID_DEPORT_DATA,
                                                  pDataDeported, dataDeportSize,
-                                                 &(callBackDepotData) );
+                                                 &(callbackDepotData) );
                                                  
         printf(" send %d byte deportedData\n",dataDeportSize);
         if( error  )
@@ -358,12 +358,12 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-int callBackDepotData(int OutBufferId, void* pData, int status)
+int callbackDepotData(int OutBufferId, void* pData, int status)
 {
     /** local declarations */
     int error = 0;
     
-    printf(" -- callBackDepotData -- \n");
+    printf(" -- callbackDepotData -- \n");
     
     free(pData);
     

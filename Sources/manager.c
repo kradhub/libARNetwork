@@ -332,7 +332,7 @@ int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, cons
 
 int NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBufferId,
                                      void* pData, int dataSize,
-                                     int (*callBack)(int, void*, int) )
+                                     int (*callback)(int, void*, int) )
 {
 	/** -- Add data deported to send -- */
 	
@@ -354,12 +354,12 @@ int NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBuffe
 	if(pInputBuffer != NULL)
 	{
         /** check paratemters */
-        if( pInputBuffer->deportedData && pData != NULL && callBack != NULL)
+        if( pInputBuffer->deportedData && pData != NULL && callback != NULL)
         {
             /** initialize deportedDataTemp and push it in the InputBuffer */
             deportedDataTemp.pData = pData;
             deportedDataTemp.dataSize = dataSize;
-            deportedDataTemp.callBack = callBack;
+            deportedDataTemp.callback = callback;
             
             error = NETWORK_RingBuffPushBack(pInputBuffer->pBuffer, &deportedDataTemp);
         }
@@ -452,8 +452,8 @@ int NETWORK_ManagerReaddeportedData( network_manager_t* pManager, int outputBuff
                     readSize = deportedDataTemp.dataSize;
                     
                     /** free the data deported*/
-                    deportedDataTemp.callBack( pOutputBuffer->id, deportedDataTemp.pData, 
-                                               NETWORK_DEPORTEDDATA_CALLBACK_FREE);
+                    deportedDataTemp.callback( pOutputBuffer->id, deportedDataTemp.pData, 
+                                               NETWORK_DEPORTEDDATA_callback_FREE);
                 }
                 else
                 {

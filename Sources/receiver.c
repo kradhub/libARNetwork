@@ -65,9 +65,9 @@ int NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
  *  @brief call back use to free deported data 
  *  @param[in] OutBufferId IoBuffer identifier of the IoBuffer is calling back
  *  @param[in] pData pointer on the data
- *  @param[in] status status indicating the reason of the callback. eNETWORK_DEPORTEDDATA_Callback_Status type
+ *  @param[in] status status indicating the reason of the callback. eNETWORK_DEPORTEDDATA_callback_Status type
  *  @return   
- *  @see eNETWORK_DEPORTEDDATA_Callback_Status
+ *  @see eNETWORK_DEPORTEDDATA_callback_Status
 **/
 int NETWORK_freedeportedData(int OutBufferId, void* pData, int status);
 
@@ -356,7 +356,7 @@ int NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
             /** alloc data deported */
             deportedDataTemp.dataSize = pFrame->size - offsetof( network_frame_t,data );
             deportedDataTemp.pData = malloc( deportedDataTemp.dataSize );
-            deportedDataTemp.callBack = &(NETWORK_freedeportedData);
+            deportedDataTemp.callback = &(NETWORK_freedeportedData);
             
             /** copy the data received in the space allocated */
             memcpy(deportedDataTemp.pData, &(pFrame->data), deportedDataTemp.dataSize);

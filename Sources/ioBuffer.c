@@ -69,7 +69,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
                 /** if nbOfRetry equal 0 disable the retry function with -1 value */
                 pIoBuffer->nbOfRetry = -1;
             }
-            //	timeoutCallback(network_ioBuffer_t* this)
+            //	timeoutcallback(network_ioBuffer_t* this)
 		
             pIoBuffer->isWaitAck = 0;
             pIoBuffer->seqWaitAck = 0;
@@ -153,7 +153,7 @@ int NETWORK_IoBufferAckReceived( network_ioBuffer_t* pIoBuffer, int seqNum )
 	if( pIoBuffer->isWaitAck && pIoBuffer->seqWaitAck == seqNum )
 	{
 		pIoBuffer->isWaitAck = 0;
-        error = NETWORK_IoBufferDeleteData( pIoBuffer, NETWORK_DEPORTEDDATA_CALLBACK_SENT_WITH_ACK );
+        error = NETWORK_IoBufferDeleteData( pIoBuffer, NETWORK_DEPORTEDDATA_callback_SENT_WITH_ACK );
 	}
     else
     {
@@ -207,7 +207,7 @@ int NETWORK_IoBufferIsWaitAck(	network_ioBuffer_t* pIoBuffer)
 
 int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer )
 {
-    /** -- call the callback of all deportedData with the NETWORK_DEPORTEDDATA_CALLBACK_FREE status --*/
+    /** -- call the callback of all deportedData with the NETWORK_DEPORTEDDATA_callback_FREE status --*/
     
     /** local declarations */
     int error = NETWORK_OK;
@@ -217,7 +217,7 @@ int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer )
     {
         while( deleteError == NETWORK_OK )
         {
-            deleteError = NETWORK_IoBufferDeleteData(pIoBuffer, NETWORK_DEPORTEDDATA_CALLBACK_FREE);
+            deleteError = NETWORK_IoBufferDeleteData(pIoBuffer, NETWORK_DEPORTEDDATA_callback_FREE);
         }
         
         if(deleteError != NETWORK_ERROR_BUFFER_EMPTY)
@@ -233,7 +233,7 @@ int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer )
     return error;
 }
 
-int NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callBackStatus )
+int NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callbackStatus )
 {
     /** -- delete the later data of the IoBuffer - */
     
@@ -247,7 +247,7 @@ int NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callBackStatu
         error = NETWORK_RingBuffPopFront( pIoBuffer->pBuffer, &deportedDataTemp );
         if( error == NETWORK_OK)
         {
-            deportedDataTemp.callBack( pIoBuffer->id, deportedDataTemp.pData, callBackStatus);
+            deportedDataTemp.callback( pIoBuffer->id, deportedDataTemp.pData, callbackStatus);
         }
     }
     else

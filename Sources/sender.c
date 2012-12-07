@@ -136,7 +136,7 @@ void* NETWORK_RunSendingThread(void* data)
 	network_sender_t* pSender = data;
 	int seq = 1;
 	int indexInput = 0;
-	int callBackReturn = 0;
+	int callbackReturn = 0;
 	network_ioBuffer_t* pInputTemp = NULL;
 	
 	
@@ -163,10 +163,10 @@ void* NETWORK_RunSendingThread(void* data)
 					{
 						/** if there are timeout and too sending retry ... */
 						
-						//callBackReturn = pInputTemp->timeoutCallback();
+						//callbackReturn = pInputTemp->timeoutcallback();
 						sal_print(PRINT_DEBUG," !!! too retry !!! \n");
 						
-						if(callBackReturn)
+						if(callbackReturn)
 						{
 							pInputTemp->retryCount = pInputTemp->nbOfRetry;
 						}
