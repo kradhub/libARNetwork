@@ -30,13 +30,13 @@ typedef enum
 
 /**
  *  @brief call back use when the data are sent or have a timeout 
- *  @param[in] IoBuffer identifier of the IoBuffer is calling back
+ *  @param[in] IoBufferId identifier of the IoBuffer is calling back
  *  @param[in] pointer on the data
  *  @param[in] status indicating the reason of the callback. eNETWORK_DEPORTEDDATA_callback_Status type
  *  @return equal 1  
  *  @see eNETWORK_DEPORTEDDATA_callback_Status
 **/
-typedef int (*network_deportDatacallback)(int IoBuffer, void* pData, int status);
+typedef int (*network_deportDatacallback)(int IoBufferId, void* pData, int status);
 
 /**
  *  @brief deported data used to send large data or data with scalable size

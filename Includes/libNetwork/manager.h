@@ -10,6 +10,7 @@
 
 #include <libNetwork/error.h>
 #include <libNetwork/paramNewIoBuffer.h>
+#include <libNetwork/deportedData.h>
 
 /**
  *  @brief network manager allow to send data acknowledged or not.
@@ -112,7 +113,7 @@ int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, cons
 **/
 int NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBufferId,
                                      void* pData, int dataSize,
-                                     int (*callback)(int, void*, int) );
+                                     network_deportDatacallback callback );
 
 /**
  *  @brief Read data received

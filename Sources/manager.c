@@ -332,7 +332,7 @@ int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, cons
 
 int NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBufferId,
                                      void* pData, int dataSize,
-                                     int (*callback)(int, void*, int) )
+                                     network_deportDatacallback callback )
 {
 	/** -- Add data deported to send -- */
 	

@@ -348,9 +348,9 @@ int main(int argc, char *argv[])
 	printf("end \n");
     
     /** delete */
-    sal_thread_destroy(&thread_send1);
-    sal_thread_destroy(&thread_send2);
-    sal_thread_destroy(&thread_recv1);
+    sal_thread_destroy( &thread_send1 );
+    sal_thread_destroy( &thread_send2 );
+    sal_thread_destroy( &thread_recv1 );
     sal_thread_destroy(&thread_recv2);
     NETWORK_DeleteManager( &pManager1 );
 	NETWORK_DeleteManager( &pManager2 );
