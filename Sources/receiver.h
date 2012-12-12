@@ -53,7 +53,7 @@ network_receiver_t* NETWORK_NewReceiver(	unsigned int recvBufferSize, unsigned i
 void NETWORK_DeleteReceiver(network_receiver_t** ppReceiver);
 
 /**
- *  @brief Manage the reception of the data on the Receiver' scoket.
+ *  @brief Manage the reception of the data on the Receiver' socket.
  * 	@warning This function must be called by a specific thread.
  * 	@warning At the end of this function the socket of the receiver is closed.
  * 	@pre The socket of the receiver must be initialized through NETWORK_ReceiverBind().

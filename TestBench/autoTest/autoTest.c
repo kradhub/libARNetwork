@@ -182,18 +182,18 @@ int main(int argc, char *argv[])
     
 	pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
                                     NB_OF_INPUT_NET1, paramInputNetwork1,
-                                    NB_OF_OUTPUT_NET1, paramOutputNetwork1);
+                                    NB_OF_OUTPUT_NET1, paramOutputNetwork1, NULL);
     
     error = NETWORK_ManagerSocketsInit(pManager1, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
-    printf("pManager1 error initScoket = %d \n", error);
+    printf("pManager1 error initsocket = %d \n", error);
 
     /** create the Manger2 */
 	pManager2 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
                                     NB_OF_INPUT_NET2, paramInputNetwork2,
-                                    NB_OF_OUTPUT_NET2, paramOutputNetwork2);          
+                                    NB_OF_OUTPUT_NET2, paramOutputNetwork2, NULL);          
     
     error = NETWORK_ManagerSocketsInit(pManager2, ADRR_IP, PORT2, PORT1, RECEIVER_TIMEOUT_SEC);
-    printf("pManager2 error initScoket = %d \n ", error);
+    printf("pManager2 error initsocket = %d \n ", error);
 	
 	printf("main start \n");
 	
@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
     ii = 0;
     dataDeportedRead = 0;
     
-    while( ! NETWORK_ManagerReaddeportedData(pManager2, ID_DEPORT_DATA, &dataDeportedRead, ii+1, NULL) )
+    while( ! NETWORK_ManagerReadDeportedData(pManager2, ID_DEPORT_DATA, &dataDeportedRead, ii+1, NULL) )
     {
         dataDeportSize = ii+1;
         

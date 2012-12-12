@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
 		switch(netType)
 		{
 			case '1':
-                pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, NB_OF_INPUT_L1, paramNetworkL1, NB_OF_INPUT_L2,paramNetworkL2);
+                pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, NB_OF_INPUT_L1, paramNetworkL1, NB_OF_INPUT_L2,paramNetworkL2, NULL);
                 
                 id_ioBuff_char = ID_CHAR_DATA;
                 id_ioBuff_intAck = ID_INT_DATA_WITH_ACK;
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
 			break;
 			
 			case '2':
-                pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, NB_OF_INPUT_L2, paramNetworkL2, NB_OF_INPUT_L1 ,paramNetworkL1);
+                pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, NB_OF_INPUT_L2, paramNetworkL2, NB_OF_INPUT_L1 ,paramNetworkL1, NULL);
                 
                 id_ioBuff_char = ID_CHAR_DATA_2;
                 id_ioBuff_intAck = ID_INT_DATA_WITH_ACK_2;
@@ -406,7 +406,7 @@ void* printBuff(void* data)
 			printf("- int ack :%d \n", intData);
 		}
         
-        error = NETWORK_ManagerReaddeportedData(pprintThread1->pManager, 
+        error = NETWORK_ManagerReadDeportedData(pprintThread1->pManager, 
                                                     pprintThread1->id_ioBuff_deportDataAck, 
                                                     &deportData,LIMIT_SIZE_DEPORT_DATA, NULL );
         

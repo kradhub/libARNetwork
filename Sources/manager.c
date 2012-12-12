@@ -63,7 +63,8 @@ int NETWORK_ManagerCreateIoBuffer(network_manager_t* pManager,
 
 network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 				unsigned int numberOfInput, network_paramNewIoBuffer_t* ptabParamInput,
-				unsigned int numberOfOutput, network_paramNewIoBuffer_t* ptabParamOutput)
+				unsigned int numberOfOutput, network_paramNewIoBuffer_t* ptabParamOutput,
+                int* pError)
 {
 	/** -- Create a new Manager -- */
 	
@@ -166,6 +167,12 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
         SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", error );
 		NETWORK_DeleteManager(&pManager);
 	}
+
+    /** return the error */
+    if(pError != NULL)
+    {
+        *pError = error;
+    }
 
     return pManager;
 }
@@ -415,7 +422,7 @@ int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, voi
 	return error;
 }
 
-int NETWORK_ManagerReaddeportedData( network_manager_t* pManager, int outputBufferId,
+int NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int outputBufferId,
                                      void* pData, int dataLimitSize, int* pReadSize)
 {
     /** -- read data deported received -- */

@@ -19,24 +19,26 @@ typedef struct network_manager_t network_manager_t;
 
 /**
  *  @brief Create a new Manager
- * 	@warning This function allocate memory
- * 	@post NETWORK_ManagerSocketsInit() must be called to initialize the sockets, indicate on which address send the data, the sending port the receiving port and the timeout.
+ *  @warning This function allocate memory
+ *  @post NETWORK_ManagerSocketsInit() must be called to initialize the sockets, indicate on which address send the data, the sending port the receiving port and the timeout.
  *  @post NETWORK_DeleteManager() must be called to delete the Network and free the memory allocated.
- * 	@param[in] recvBuffSize size in byte of the receiving buffer. ideally must be equal to the sum of the sizes of one data of all output buffers
- * 	@param[in] sendBuffSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
- * 	@param[in] numberOfInput Number of input buffer
- * 	@param[in] ptabParamInput Table of the parameters of creation of the inputs. The table must contain as many parameters as the number of input buffer.
- * 	@param[in] numberOfOutput Number of output buffer
- * 	@param[in] ptabParamOutput Table of the parameters of creation of the outputs. The table must contain as many parameters as the number of output buffer.
- * 	@return Pointer on the new Manager
- * 	@note This creator adds for all output, one other inOutBuffer for storing the acknowledgment to return.
+ *  @param[in] recvBuffSize size in byte of the receiving buffer. ideally must be equal to the sum of the sizes of one data of all output buffers
+ *  @param[in] sendBuffSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
+ *  @param[in] numberOfInput Number of input buffer
+ *  @param[in] ptabParamInput Table of the parameters of creation of the inputs. The table must contain as many parameters as the number of input buffer.
+ *  @param[in] numberOfOutput Number of output buffer
+ *  @param[in] ptabParamOutput Table of the parameters of creation of the outputs. The table must contain as many parameters as the number of output buffer.
+ *  @param[out] pError pointor on the error output.
+ *  @return Pointer on the new Manager
+ *  @note This creator adds for all output, one other inOutBuffer for storing the acknowledgment to return.
  * These new buffers are added in the input and output buffer tables.
  *  @warning The identifiers of the IoBuffer should not exceed the value 1000.
- * 	@see NETWORK_DeleteManager()
+ *  @see NETWORK_DeleteManager()
 **/
 network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 				unsigned int numberOfInput, network_paramNewIoBuffer_t* ptabParamInput,
-				unsigned int numberOfOutput, network_paramNewIoBuffer_t* ptabParamOutput);
+				unsigned int numberOfOutput, network_paramNewIoBuffer_t* ptabParamOutput,
+                int* pError);
 
 /**
  *  @brief Delete the Manager
@@ -135,7 +137,7 @@ int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, voi
  *  @param[out] pReadSize pointer to store the size of the data read
  *  @return error eNETWORK_Error type
 **/
-int NETWORK_ManagerReaddeportedData( network_manager_t* pManager, int outputBufferId,
+int NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int outputBufferId,
                                      void* pData, int dataLimitSize, int* pReadSize);
 
 #endif // _NETWORK_MANGER_H_

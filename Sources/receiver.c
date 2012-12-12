@@ -139,7 +139,7 @@ void NETWORK_DeleteReceiver(network_receiver_t** ppReceiver)
 
 void* NETWORK_RunReceivingThread(void* data)
 {	
-	/** -- Manage the reception of the data on the Receiver' scoket. -- */
+	/** -- Manage the reception of the data on the Receiver' socket. -- */
 	
 	/** local declarations */
 	network_receiver_t* pReceiver = data;
