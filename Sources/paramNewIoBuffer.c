@@ -92,14 +92,24 @@ int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
     {
         SAL_PRINT(PRINT_ERROR," parameters for new IoBuffer are not correct. \n \
 values expected: \n \
-    - id > -1 \n \
-    - dataType != network_frame_t_TYPE_UNINITIALIZED \n \
-    - sendingWaitTime > 0 \n \
-    - ackTimeoutMs > 0 or -1 if not used \n \
-    - nbOfRetry > 0 or -1 if not used  \n \
-    - buffSize > 0 \n \
-    - buffCellSize > 0 \n \
-    - overwriting = 0 or 1 \n");
+    - id > -1 (value set: %d)\n\
+    - dataType != network_frame_t_TYPE_UNINITIALIZED (value set: %d)\n\
+    - sendingWaitTime > 0 (value set: %d)\n\
+    - ackTimeoutMs > 0 or -1 if not used (value set: %d)\n\
+    - nbOfRetry > 0 or -1 if not used  (value set: %d)\n\
+    - buffSize > 0 (value set: %d)\n\
+    - buffCellSize > 0 (value set: %d)\n\
+    - overwriting = 0 or 1 (value set: %d)\n\
+    - deportedData = 0 or 1 (value set: %d)\n", 
+    pParam->id, 
+    pParam->dataType, 
+    pParam->sendingWaitTime,
+    pParam->ackTimeoutMs,
+    pParam->nbOfRetry,
+    pParam->buffSize,
+    pParam->buffCellSize,
+    pParam->overwriting,
+    pParam->deportedData);
     }
     
    return ok; 
