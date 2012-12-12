@@ -101,7 +101,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
         if( error )
 		{
 			/** delete the inOutput buffer if an error occurred */
-            sal_print(PRINT_ERROR,"error: %d occurred \n", error );
+            SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", error );
 			NETWORK_DeleteIotBuffer(&pIoBuffer);
 		}
     }

@@ -163,7 +163,7 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
     /** delete the Manager if an error occurred */
     if( error != NETWORK_OK)
     {
-        sal_print(PRINT_ERROR,"error: %d occurred \n", error );
+        SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", error );
 		NETWORK_DeleteManager(&pManager);
 	}
 
@@ -253,7 +253,7 @@ void* NETWORK_ManagerRunSendingThread(void* data)
     }
     else
     {
-        sal_print(PRINT_ERROR,"error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
+        SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
     }
     
     return ret;
@@ -274,7 +274,7 @@ void* NETWORK_ManagerRunReceivingThread(void* data)
     }
     else
     {
-        sal_print(PRINT_ERROR,"error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
+        SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
     }
     
     return ret;

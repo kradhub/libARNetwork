@@ -90,7 +90,7 @@ int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
     }
     else
     {
-        sal_print(PRINT_ERROR," parameters for new IoBuffer are not correct. \n \
+        SAL_PRINT(PRINT_ERROR," parameters for new IoBuffer are not correct. \n \
 values expected: \n \
     - id > -1 \n \
     - dataType != network_frame_t_TYPE_UNINITIALIZED \n \

@@ -107,7 +107,7 @@ network_receiver_t* NETWORK_NewReceiver(	unsigned int recvBufferSize, unsigned i
 		/** delete the receiver if an error occurred */
 		if(error != NETWORK_OK)
 		{
-            sal_print(PRINT_ERROR,"error: %d occurred \n", error );
+            SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", error );
 			NETWORK_DeleteReceiver(&pReceiver);
 		}
 	}
@@ -161,7 +161,7 @@ void* NETWORK_RunReceivingThread(void* data)
 				switch (pFrame->type)
 				{
 					case network_frame_t_TYPE_ACK:
-						sal_print(PRINT_DEBUG," - TYPE: network_frame_t_TYPE_ACK | SEQ:%d | ID:%d \n",
+						SAL_PRINT(PRINT_DEBUG," - TYPE: network_frame_t_TYPE_ACK | SEQ:%d | ID:%d \n",
 												pFrame->seq, pFrame->id);
 												
 						/** transmit the acknowledgement to the sender */
@@ -170,13 +170,13 @@ void* NETWORK_RunReceivingThread(void* data)
                                                            *( (int*) &pFrame->data ) );
                         if( error != NETWORK_OK )
                         {
-                            sal_print(PRINT_ERROR,"acknowledge received, error: %d occurred \n", error);
+                            SAL_PRINT(PRINT_ERROR,"acknowledge received, error: %d occurred \n", error);
                         }
                         
 					break;
 					
 					case network_frame_t_TYPE_DATA:
-						sal_print(PRINT_DEBUG," - TYPE: network_frame_t_TYPE_DATA | SEQ:%d | ID:%d \n",
+						SAL_PRINT(PRINT_DEBUG," - TYPE: network_frame_t_TYPE_DATA | SEQ:%d | ID:%d \n",
 												pFrame->seq, pFrame->id);
                         
 						/** push the data received in the output buffer targeted */
@@ -190,14 +190,14 @@ void* NETWORK_RunReceivingThread(void* data)
                             
                             if( error != NETWORK_OK )
                             {
-                                sal_print(PRINT_ERROR,"data received, error: %d occurred \n", error);
+                                SAL_PRINT(PRINT_ERROR,"data received, error: %d occurred \n", error);
                             }
                             
 						}							
 					break;
 					
 					case network_frame_t_TYPE_DATA_WITH_ACK:
-						sal_print(PRINT_DEBUG," - TYPE: network_frame_t_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
+						SAL_PRINT(PRINT_DEBUG," - TYPE: network_frame_t_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
 													pFrame->seq, pFrame->id);
 						
 						/** 
@@ -209,7 +209,6 @@ void* NETWORK_RunReceivingThread(void* data)
 															pFrame->id);
 						if(pOutBufferTemp != NULL)
 						{
-                            sal_print(PRINT_WARNING," pFrame->seq : %d | pOutBufferTemp->seqWaitAck: %d \n", pFrame->seq , pOutBufferTemp->seqWaitAck );
 							/** OutBuffer->seqWaitAck used to save the last seq */
 							if( pFrame->seq != pOutBufferTemp->seqWaitAck )
 							{        
@@ -223,7 +222,7 @@ void* NETWORK_RunReceivingThread(void* data)
 								}
                                 else
                                 {
-                                    sal_print(PRINT_ERROR,"data acknowledgeed received, error: %d occurred \n", error);
+                                    SAL_PRINT(PRINT_ERROR,"data acknowledgeed received, error: %d occurred \n", error);
                                 }
 							}
 						}	
@@ -231,7 +230,7 @@ void* NETWORK_RunReceivingThread(void* data)
 					break;
 					
 					default:
-						sal_print(PRINT_WARNING," !!! command type not known !!! \n");
+						SAL_PRINT(PRINT_WARNING," !!! command type not known !!! \n");
 					break;
 				}
                 /** get the next frame*/
