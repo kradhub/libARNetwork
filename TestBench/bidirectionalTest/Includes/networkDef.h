@@ -14,7 +14,6 @@
 
 //Enumerations :
 
-
 #define RING_BUFFER_SIZE 256
 #define RING_BUFFER_CELL_SIZE 10
 

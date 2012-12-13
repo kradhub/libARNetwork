@@ -83,7 +83,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
             if(pIoBuffer->pBuffer != NULL)
             {
                 /** if it is a keep alive buffer, push in the data send for keep alive */ 
-                if( pIoBuffer->dataType == network_frame_t_TYPE_KEEP_ALIVE )
+                if( pIoBuffer->dataType == NETWORK_FRAME_TYPE_KEEP_ALIVE )
                 {
                     NETWORK_RingBuffPushBack(pIoBuffer->pBuffer, &keepAliveData);
                 }

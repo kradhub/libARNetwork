@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 #include <inttypes.h>
+#include <stddef.h>
 
 #include <string.h>
 
@@ -48,12 +49,14 @@
  *  @param pManager pointer on the Manager
  *  @param[in] ptabParamInput Table of the parameters of creation of the inputs. The table must contain as many parameters as the number of input buffer.
  * 	@param[in] ptabParamOutput Table of the parameters of creation of the outputs. The table must contain as many parameters as the number of output buffer.
+ *  @param[in] sendBuffSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
  *  @return error equal to NETWORK_OK if the IoBuffer are correctly created otherwise see eNETWORK_Manager_Error.
  *  @see NETWORK_NewManager()
 **/
 int NETWORK_ManagerCreateIoBuffer(network_manager_t* pManager,
                                     network_paramNewIoBuffer_t* ptabParamInput, 
-                                    network_paramNewIoBuffer_t* ptabParamOutput);
+                                    network_paramNewIoBuffer_t* ptabParamOutput,
+                                    unsigned int sendBuffSize);
 
 /*****************************************
  * 
@@ -134,7 +137,7 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
     if( error == NETWORK_OK )
 	{	
         /** Create manager's IoBuffers */
-        error = NETWORK_ManagerCreateIoBuffer(pManager, ptabParamInput, ptabParamOutput);
+        error = NETWORK_ManagerCreateIoBuffer(pManager, ptabParamInput, ptabParamOutput, sendBuffSize);
 	}
     
 	if( error == NETWORK_OK )
@@ -361,7 +364,10 @@ int NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBuffe
 	if(pInputBuffer != NULL)
 	{
         /** check paratemters */
-        if( pInputBuffer->deportedData && pData != NULL && callback != NULL)
+        if( pInputBuffer->deportedData && 
+            pData != NULL && 
+            callback != NULL &&  
+            dataSize < ( pManager->pSender->pSendingBuffer->buffSize - offsetof(network_frame_t, data) ) )
         {
             /** initialize deportedDataTemp and push it in the InputBuffer */
             deportedDataTemp.pData = pData;
@@ -495,7 +501,8 @@ int NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int outputBuff
 
 int NETWORK_ManagerCreateIoBuffer( network_manager_t* pManager,
                                     network_paramNewIoBuffer_t* ptabParamInput, 
-                                    network_paramNewIoBuffer_t* ptabParamOutput )
+                                    network_paramNewIoBuffer_t* ptabParamOutput,
+                                    unsigned int sendBuffSize )
 {
     /** -- Create manager's IoBuffers --*/
     
@@ -507,7 +514,7 @@ int NETWORK_ManagerCreateIoBuffer( network_manager_t* pManager,
 	
 	/** Initialize the default parameters for the buffers of acknowledgement. */
 	NETWORK_ParamNewIoBufferDefaultInit(&paramNewACK); 
-    paramNewACK.dataType = network_frame_t_TYPE_ACK;
+    paramNewACK.dataType = NETWORK_FRAME_TYPE_ACK;
     paramNewACK.buffSize = 1;
 	paramNewACK.buffCellSize = sizeof(int);
 	paramNewACK.overwriting = 0;
@@ -520,7 +527,8 @@ int NETWORK_ManagerCreateIoBuffer( network_manager_t* pManager,
     /** Create the output buffers and the buffers of acknowledgement */
     for(ii = 0; ii < pManager->numOfOutputWithoutAck; ++ii)
     {
-        /** check the IoBuffer identifier */
+        /** check parameters */
+        /**     id is smaller than the id acknowledge offset */
         if( ptabParamOutput[ii].id < NETWORK_ID_ACK_OFFSET )
         {
             /** set cellSize if deported data is enabled */
@@ -560,8 +568,11 @@ int NETWORK_ManagerCreateIoBuffer( network_manager_t* pManager,
     /** Create the input buffers */
     for(ii = 0; ii< pManager->numOfInputWithoutAck; ++ii)
     {
-        /** check the IoBuffer identifier */
-        if( ptabParamInput[ii].id < NETWORK_ID_ACK_OFFSET )
+        /** check parameters */
+        /**     id is smaller than the id acknowledge offset */
+        /**     dataSize isn't too big */
+        if( ptabParamInput[ii].id < NETWORK_ID_ACK_OFFSET && 
+            ptabParamInput[ii].buffCellSize < ( sendBuffSize - offsetof(network_frame_t, data) ))
         {
             /** set cellSize if deported data is enabled */
             if(ptabParamInput[ii].deportedData == 1)

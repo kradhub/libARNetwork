@@ -15,11 +15,11 @@
 **/
 typedef enum eNETWORK_Frame_Type
 {
-    network_frame_t_TYPE_UNINITIALIZED = 0, /**< not known type*/
-    network_frame_t_TYPE_ACK, /**< acknowledgment type*/
-    network_frame_t_TYPE_DATA, /**< data type*/
-    network_frame_t_TYPE_DATA_WITH_ACK, /**< data type with a waiting acknowledgment*/
-    network_frame_t_TYPE_KEEP_ALIVE /**< keep alive type*/
+    NETWORK_FRAME_TYPE_UNINITIALIZED = 0, /**< not known type*/
+    NETWORK_FRAME_TYPE_ACK, /**< acknowledgment type*/
+    NETWORK_FRAME_TYPE_DATA, /**< data type*/
+    NETWORK_FRAME_TYPE_DATA_WITH_ACK, /**< data type with a waiting acknowledgment*/
+    NETWORK_FRAME_TYPE_KEEP_ALIVE /**< keep alive type*/
     
 }eNETWORK_Frame_Type;
 

@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 	/** input ID_CHAR_DATA int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[0]) );
 	paramNetworkL1[0].id = ID_CHAR_DATA;
-	paramNetworkL1[0].dataType = network_frame_t_TYPE_DATA;
+	paramNetworkL1[0].dataType = NETWORK_FRAME_TYPE_DATA;
 	paramNetworkL1[0].sendingWaitTime = 3;
 	paramNetworkL1[0].buffSize = 1;
 	paramNetworkL1[0].buffCellSize = sizeof(char);
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
 	/** input ID_INT_DATA_WITH_ACK char */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[1]) );
 	paramNetworkL1[1].id = ID_INT_DATA_WITH_ACK;
-	paramNetworkL1[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
+	paramNetworkL1[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
 	paramNetworkL1[1].sendingWaitTime = 2;
 	paramNetworkL1[1].ackTimeoutMs = 10;
 	paramNetworkL1[1].nbOfRetry = -1 /*5*/;
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
     /** input ID_DEPORT_DATA_ACK char */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[2]) );
 	paramNetworkL1[2].id = ID_DEPORT_DATA_ACK;
-	paramNetworkL1[2].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
+	paramNetworkL1[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
 	paramNetworkL1[2].sendingWaitTime = 2;
 	paramNetworkL1[2].ackTimeoutMs = 10;
 	paramNetworkL1[2].nbOfRetry = -1 /*5*/;
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
 	/** input ID_KEEP_ALIVE char */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[3]) );
 	paramNetworkL1[3].id = ID_KEEP_ALIVE;
-	paramNetworkL1[3].dataType = network_frame_t_TYPE_KEEP_ALIVE;
+	paramNetworkL1[3].dataType = NETWORK_FRAME_TYPE_KEEP_ALIVE;
 	paramNetworkL1[3].sendingWaitTime = 100;
 	paramNetworkL1[3].buffSize = 1;
 	paramNetworkL1[3].buffCellSize = sizeof(int);
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
 	/**  ID_CHAR_DATA_2 int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[0]) );
 	paramNetworkL2[0].id = ID_CHAR_DATA_2;
-	paramNetworkL2[0].dataType = network_frame_t_TYPE_DATA;
+	paramNetworkL2[0].dataType = NETWORK_FRAME_TYPE_DATA;
 	paramNetworkL2[0].sendingWaitTime = 3;
 	paramNetworkL2[0].buffSize = 1;
 	paramNetworkL2[0].buffCellSize = sizeof(char);
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
 	/**  ID_INT_DATA_WITH_ACK_2 char */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[1]) );
 	paramNetworkL2[1].id = ID_INT_DATA_WITH_ACK_2;
-	paramNetworkL2[1].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
+	paramNetworkL2[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
 	paramNetworkL2[1].sendingWaitTime = 2;
 	paramNetworkL2[1].ackTimeoutMs = 10;
 	paramNetworkL2[1].nbOfRetry = -1 /*5*/;
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
     /** input ID_DEPORT_DATA_ACK_2 char */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[2]) );
 	paramNetworkL2[2].id = ID_DEPORT_DATA_ACK_2;
-	paramNetworkL2[2].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
+	paramNetworkL2[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
 	paramNetworkL2[2].sendingWaitTime = 2;
 	paramNetworkL2[2].ackTimeoutMs = 10;
 	paramNetworkL2[2].nbOfRetry = -1 /*5*/;
@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
 		switch(netType)
 		{
 			case '1':
-                pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, NB_OF_INPUT_L1, paramNetworkL1, NB_OF_INPUT_L2,paramNetworkL2, NULL);
+                pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, NB_OF_INPUT_L1, paramNetworkL1, NB_OF_INPUT_L2,paramNetworkL2, &error);
                 
                 id_ioBuff_char = ID_CHAR_DATA;
                 id_ioBuff_intAck = ID_INT_DATA_WITH_ACK;
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
 			break;
 			
 			case '2':
-                pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, NB_OF_INPUT_L2, paramNetworkL2, NB_OF_INPUT_L1 ,paramNetworkL1, NULL);
+                pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, NB_OF_INPUT_L2, paramNetworkL2, NB_OF_INPUT_L1 ,paramNetworkL1, &error);
                 
                 id_ioBuff_char = ID_CHAR_DATA_2;
                 id_ioBuff_intAck = ID_INT_DATA_WITH_ACK_2;
@@ -251,7 +251,15 @@ int main(int argc, char *argv[])
 		}
 	}	
     
-    printThread1.pManager = pManager1;
+    if(error == NETWORK_OK)
+    {
+        printThread1.pManager = pManager1;
+    }
+    else
+    {
+        printf("manager error ");
+        printThread1.pManager = NULL;
+    }
 	
 	while(scanfReturn != 1 || connectError != 0)
 	{
@@ -409,11 +417,11 @@ void* printBuff(void* data)
         error = NETWORK_ManagerReadDeportedData(pprintThread1->pManager, 
                                                     pprintThread1->id_ioBuff_deportDataAck, 
                                                     &deportData,LIMIT_SIZE_DEPORT_DATA, NULL );
-        
-        if( error > 0 )
+        if( error ==  NETWORK_OK )
 		{
 			printf("- deport string data ack :%s \n", deportData);
 		}
+
 	}
 	
 	return NULL;

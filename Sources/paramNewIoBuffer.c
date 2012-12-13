@@ -26,7 +26,7 @@
 ******************************************/
 
 #define NETWORK_IOBUFFER_ID_DEFAULT -1
-#define NETWORK_IOBUFFER_DATATYPE_DEFAULT network_frame_t_TYPE_UNINITIALIZED
+#define NETWORK_IOBUFFER_DATATYPE_DEFAULT NETWORK_FRAME_TYPE_UNINITIALIZED
 #define NETWORK_IOBUFFER_SENDINGWAITTIME_DEFAULT 1
 #define NETWORK_IOBUFFER_ACKTILEOUTMS_DEFAULT -1
 #define NETWORK_IOBUFFER_NBOFRETRY_DEFAULT -1
@@ -79,7 +79,7 @@ int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
     /** check the parameters values */
     if( pParam != NULL &&
         pParam->id > NETWORK_IOBUFFER_ID_DEFAULT && 
-        pParam->dataType != network_frame_t_TYPE_UNINITIALIZED &&
+        pParam->dataType != NETWORK_FRAME_TYPE_UNINITIALIZED &&
         pParam->sendingWaitTime > 0 &&
         pParam->ackTimeoutMs >= -1 &&
         pParam->nbOfRetry >= -1 &&
@@ -93,7 +93,7 @@ int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
         SAL_PRINT(PRINT_ERROR," parameters for new IoBuffer are not correct. \n \
 values expected: \n \
     - id > -1 (value set: %d)\n\
-    - dataType != network_frame_t_TYPE_UNINITIALIZED (value set: %d)\n\
+    - dataType != NETWORK_FRAME_TYPE_UNINITIALIZED (value set: %d)\n\
     - sendingWaitTime > 0 (value set: %d)\n\
     - ackTimeoutMs > 0 or -1 if not used (value set: %d)\n\
     - nbOfRetry > 0 or -1 if not used  (value set: %d)\n\

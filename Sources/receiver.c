@@ -160,8 +160,8 @@ void* NETWORK_RunReceivingThread(void* data)
 				/** management by the command type */			
 				switch (pFrame->type)
 				{
-					case network_frame_t_TYPE_ACK:
-						SAL_PRINT(PRINT_DEBUG," - TYPE: network_frame_t_TYPE_ACK | SEQ:%d | ID:%d \n",
+					case NETWORK_FRAME_TYPE_ACK:
+						SAL_PRINT(PRINT_DEBUG," - TYPE: NETWORK_FRAME_TYPE_ACK | SEQ:%d | ID:%d \n",
 												pFrame->seq, pFrame->id);
 												
 						/** transmit the acknowledgement to the sender */
@@ -175,8 +175,8 @@ void* NETWORK_RunReceivingThread(void* data)
                         
 					break;
 					
-					case network_frame_t_TYPE_DATA:
-						SAL_PRINT(PRINT_DEBUG," - TYPE: network_frame_t_TYPE_DATA | SEQ:%d | ID:%d \n",
+					case NETWORK_FRAME_TYPE_DATA:
+						SAL_PRINT(PRINT_DEBUG," - TYPE: NETWORK_FRAME_TYPE_DATA | SEQ:%d | ID:%d \n",
 												pFrame->seq, pFrame->id);
                         
 						/** push the data received in the output buffer targeted */
@@ -196,8 +196,8 @@ void* NETWORK_RunReceivingThread(void* data)
 						}							
 					break;
 					
-					case network_frame_t_TYPE_DATA_WITH_ACK:
-						SAL_PRINT(PRINT_DEBUG," - TYPE: network_frame_t_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
+					case NETWORK_FRAME_TYPE_DATA_WITH_ACK:
+						SAL_PRINT(PRINT_DEBUG," - TYPE: NETWORK_FRAME_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
 													pFrame->seq, pFrame->id);
 						
 						/** 
@@ -216,8 +216,6 @@ void* NETWORK_RunReceivingThread(void* data)
                                                                           pFrame);
 								if( error == NETWORK_OK)
 								{
-									NETWORK_ReturnASK(pReceiver, pFrame->id, pFrame->seq);
-                                    
 									pOutBufferTemp->seqWaitAck = pFrame->seq;
 								}
                                 else
@@ -225,6 +223,10 @@ void* NETWORK_RunReceivingThread(void* data)
                                     SAL_PRINT(PRINT_ERROR,"data acknowledgeed received, error: %d occurred \n", error);
                                 }
 							}
+                            
+                            /** sending ack even if the seq is not correct */
+                            NETWORK_ReturnACK(pReceiver, pFrame->id, pFrame->seq);
+                            
 						}	
 												
 					break;
@@ -252,7 +254,7 @@ void NETWORK_StopReceiver(network_receiver_t* pReceiver)
 }
 
 
-void NETWORK_ReturnASK(network_receiver_t* pReceiver, int id, int seq)
+void NETWORK_ReturnACK(network_receiver_t* pReceiver, int id, int seq)
 {
 	/** -- return an acknowledgement -- */
 	

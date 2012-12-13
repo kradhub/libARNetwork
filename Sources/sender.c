@@ -202,7 +202,7 @@ void* NETWORK_RunSendingThread(void* data)
 					
 					switch(pInputTemp->dataType)
 					{
-						case network_frame_t_TYPE_DATA_WITH_ACK:
+						case NETWORK_FRAME_TYPE_DATA_WITH_ACK:
 							/** 
 							 * reinitialize the input buffer parameters,
 							 * save the sequence wait for the acknowledgement,
@@ -214,17 +214,17 @@ void* NETWORK_RunSendingThread(void* data)
 							pInputTemp->retryCount = pInputTemp->nbOfRetry;	
 						break;
 						
-						case network_frame_t_TYPE_DATA:
+						case NETWORK_FRAME_TYPE_DATA:
 							/** pop the data sent*/
 							NETWORK_RingBuffPopFront(pInputTemp->pBuffer, NULL);
 						break;
 						
-						case network_frame_t_TYPE_ACK:
+						case NETWORK_FRAME_TYPE_ACK:
 							/** pop the acknowledgement sent*/
 							NETWORK_RingBuffPopFront(pInputTemp->pBuffer, NULL);
 						break;
 						
-						case network_frame_t_TYPE_KEEP_ALIVE:
+						case NETWORK_FRAME_TYPE_KEEP_ALIVE:
 						
 						break;
 						

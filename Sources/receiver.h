@@ -82,7 +82,7 @@ void NETWORK_StopReceiver(network_receiver_t* pReceiver);
  * 	@param[in] seq sequence number of the command to acknowledged
  *	@see NETWORK_NewReceiver()
 **/
-void NETWORK_ReturnASK(network_receiver_t* pReceiver, int id, int seq);
+void NETWORK_ReturnACK(network_receiver_t* pReceiver, int id, int seq);
 
 /**
  *  @brief receiving data present on the socket
