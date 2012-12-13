@@ -142,7 +142,7 @@ void* NETWORK_RunSendingThread(void* data)
 	
 	while( pSender->isAlive )
 	{		
-		usleep(MILLISECOND);
+		usleep( MILLISECOND );
 		
 		/** for each input buffer try to send the data if necessary */
 		for(indexInput = 0 ; indexInput < pSender->numOfInputBuff ; ++indexInput  )

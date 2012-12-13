@@ -327,11 +327,11 @@ network_frame_t* NETWORK_ReceiverGetNextFrame( network_receiver_t* pReceiver,
     else
     {
         /** get the next frame */
-        nextFrame = (network_frame_t*) (prevFrame + prevFrame->size) ;
+        nextFrame = (network_frame_t*) ( (uint8_t*)prevFrame + prevFrame->size ) ;
     }
     
     /** if the receiving buffer not contain enough data */
-    if ( (void*) nextFrame > pReceiver->pRecvBuffer->pFront - offsetof(network_frame_t, data) )
+    if ( (uint8_t*) nextFrame > (uint8_t*) pReceiver->pRecvBuffer->pFront - offsetof(network_frame_t, data) )
     {
         nextFrame = NULL;
     }
