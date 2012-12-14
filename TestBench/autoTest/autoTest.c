@@ -38,8 +38,8 @@
 #define BASE_DEPORTED_DATA 0xffffffffffffffffLL
 
 #define RECV_TIMEOUT_MS 10
-#define PORT1 5551
-#define PORT2 5552
+#define PORT1 12345
+#define PORT2 54321
 #define ADRR_IP "127.0.0.1"
 
 #define SEND_BUFF_SIZE 256

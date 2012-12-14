@@ -35,8 +35,8 @@
   
 #define MILLISECOND 1000
 #define RECV_TIMEOUT_MS 10
-#define PORT1 5551
-#define PORT2 5552
+#define PORT1 12345
+#define PORT2 54321
 
 #define SEND_BUFF_SIZE 256
 #define RECV_BUFF_SIZE 256
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
 	
 	/** --- network 1 --- */
 	
-	/** input ID_CHAR_DATA int */
+	/** input ID_CHAR_DATA char */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[0]) );
 	paramNetworkL1[0].id = ID_CHAR_DATA;
 	paramNetworkL1[0].dataType = NETWORK_FRAME_TYPE_DATA;
@@ -147,13 +147,13 @@ int main(int argc, char *argv[])
 	paramNetworkL1[0].buffCellSize = sizeof(char);
 	paramNetworkL1[0].overwriting = 1;
 	
-	/** input ID_INT_DATA_WITH_ACK char */
+	/** input ID_INT_DATA_WITH_ACK int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[1]) );
 	paramNetworkL1[1].id = ID_INT_DATA_WITH_ACK;
 	paramNetworkL1[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
 	paramNetworkL1[1].sendingWaitTime = 2;
 	paramNetworkL1[1].ackTimeoutMs = 10;
-	paramNetworkL1[1].nbOfRetry = -1 /*5*/;
+	paramNetworkL1[1].nbOfRetry = 5;
 	paramNetworkL1[1].buffSize = 5;
 	paramNetworkL1[1].buffCellSize = sizeof(int);
     

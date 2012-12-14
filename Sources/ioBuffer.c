@@ -60,7 +60,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
             pIoBuffer->ackTimeoutMs = pParam->ackTimeoutMs;
             pIoBuffer->deportedData = pParam->deportedData;
         
-            if(pParam->nbOfRetry > 0)
+            if(pParam->nbOfRetry >= 0)
             {
                 pIoBuffer->nbOfRetry = pParam->nbOfRetry;
             }
@@ -69,6 +69,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
                 /** if nbOfRetry equal 0 disable the retry function with -1 value */
                 pIoBuffer->nbOfRetry = -1;
             }
+            
             //	timeoutcallback(network_ioBuffer_t* this)
 		
             pIoBuffer->isWaitAck = 0;

@@ -138,6 +138,7 @@ void* NETWORK_RunSendingThread(void* data)
 	int indexInput = 0;
 	int callbackReturn = 0;
 	network_ioBuffer_t* pInputTemp = NULL;
+    int error = NETWORK_OK;
 	
 	
 	while( pSender->isAlive )
@@ -177,12 +178,12 @@ void* NETWORK_RunSendingThread(void* data)
 						 *  if there is a timeout, retry to send the data 
 						 *  and decrement the number of retry still possible
 						**/
-						NETWORK_SenderAddToBuffer(pSender, pInputTemp, pInputTemp->seqWaitAck);
-						pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
-						
-						if(pInputTemp->retryCount > 0 )
+						error = NETWORK_SenderAddToBuffer(pSender, pInputTemp, pInputTemp->seqWaitAck);
+                        
+						if(pInputTemp->retryCount > 0 && error == NETWORK_OK)
 						{
-							--(pInputTemp->retryCount);
+                            pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
+                            --(pInputTemp->retryCount);
 						}
 					}
 				}
@@ -193,7 +194,8 @@ void* NETWORK_RunSendingThread(void* data)
 					--(pInputTemp->ackWaitTimeCount);
 				}
 			}
-			else if( !NETWORK_RingBuffIsEmpty(pInputTemp->pBuffer) && !pInputTemp->waitTimeCount)
+			else if(   NETWORK_RingBuffIsEmpty(pInputTemp->pBuffer) == NETWORK_OK &&
+                        pInputTemp->waitTimeCount == 0)
 			{
 				/** try to add the latest data of the input buffer in the sending buffer*/
 				if( !NETWORK_SenderAddToBuffer(pSender, pInputTemp, seq) )
@@ -308,9 +310,9 @@ void NETWORK_SenderSend(network_sender_t* pSender)
 	int nbCharCopy = 0;
 	
 	if( !NETWORK_BufferIsEmpty(pSender->pSendingBuffer) )
-	{	
+	{	    
 		nbCharCopy = pSender->pSendingBuffer->pFront - pSender->pSendingBuffer->pStart;
-			
+		
 		sal_send(pSender->socket, pSender->pSendingBuffer->pStart, nbCharCopy, 0);
 			
 		pSender->pSendingBuffer->pFront = pSender->pSendingBuffer->pStart;

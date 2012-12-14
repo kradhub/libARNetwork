@@ -42,20 +42,26 @@ endif
 
 
 check_PROGRAMS = 	../TestBench/autoTest/autoTest \
-					../TestBench/bidirectionalTest/bidirectionalTest  
-					
+					../TestBench/bidirectionalTest/bidirectionalTest\
+					../TestBench/defaultTest/defaultTest	
+
 ___TestBench_autoTest_autoTest_SOURCES 	= ../TestBench/autoTest/autoTest.c
 ___TestBench_bidirectionalTest_bidirectionalTest_SOURCES = ../TestBench/bidirectionalTest/bidirectionalTest.c
+___TestBench_defaultTest_defaultTest_SOURCES = ../TestBench/defaultTest/defaultTest.c
 if DEBUG_MODE
 ___TestBench_autoTest_autoTest_LDADD = 	-lsal_dbg  \
 										libnetwork_dbg.la
 ___TestBench_bidirectionalTest_bidirectionalTest_LDADD = 	-lsal_dbg  \
 															libnetwork_dbg.la
+___TestBench_defaultTest_defaultTest_LDADD = 	-lsal_dbg  \
+												libnetwork_dbg.la
 else
 ___TestBench_autoTest_autoTest_LDADD = 	-lsal \
 										libnetwork.la
-___TestBench_bidirectionalTest_bidirectionalTest_LDADD = 	-lsal  \
+___TestBench_bidirectionalTest_bidirectionalTest_LDADD = 	-lsal \
 															libnetwork.la
+___TestBench_defaultTest_defaultTest_LDADD = 	-lsal  \
+												libnetwork.la
 endif
 
 CLEAN_FILES = libnetwork.la libnetwork_dbg.la

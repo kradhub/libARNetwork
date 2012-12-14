@@ -12,7 +12,7 @@
 #include "sender.h"
 #include "buffer.h"
 
-#define NETWORK_ID_ACK_OFFSET 1000
+#define NETWORK_ID_ACK_OFFSET 1024
 
 /**
  *  @brief receiver manager
