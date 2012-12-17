@@ -25,6 +25,7 @@ typedef struct network_sender_t
 	int socket; /**< sending Socket. Must be accessed through NETWORK_SenderConnection()*/
 	
 	int isAlive; /**< Indicator of aliving used for kill the thread calling the NETWORK_RunSendingThread function (1 = alive | 0 = dead). Must be accessed through NETWORK_StopSender()*/
+    int seq; /** sequence number of sending */
 }network_sender_t;
 
 /**
@@ -89,6 +90,18 @@ int NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum);
  * 	@return error equal to NETWORK_OK if the connection if successful otherwise equal to 1.
 **/
 int NETWORK_SenderConnection(network_sender_t* pSender,const char* addr, int port);
+
+/**
+ *  @brief flush all IoBuffers of the Sender
+ * 	@param pSender the pointer on the Sender
+**/
+void NETWORK_SenderFlush(network_sender_t* pSender);
+
+/**
+ *  @brief reset the Sender
+ * 	@param pSender the pointer on the Sender
+**/
+void NETWORK_SenderReset(network_sender_t* pSender);
 
 #endif // _NETWORK_SENDER_H_
 

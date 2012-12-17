@@ -22,7 +22,7 @@
 #include <libSAL/socket.h>
 #include <libSAL/endianness.h>
 
-#include <libNetwork/error.h>
+#include <libNetwork/status.h>
 #include <libNetwork/frame.h>
 #include "buffer.h"
 #include <libNetwork/deportedData.h>
@@ -37,6 +37,7 @@
 ******************************************/
 					
 #define MILLISECOND 1000
+#define FIRST_SEQ 1
 
 /*****************************************
  * 
@@ -54,20 +55,40 @@ void NETWORK_SenderSend(network_sender_t* pSender);
 /**
  *  @brief add data to the sender buffer
  * 	@param pSender the pointer on the Sender
- *	@param pinputBuff
- * 	@param seqNum
+ *	@param pInputBuffer Pointer on the input buffer
+ * 	@param seqNum sequence number
+ *  @return error
  * 	@note only call by NETWORK_RunSendingThread()
  * 	@see NETWORK_RunSendingThread()
 **/
-int NETWORK_SenderAddToBuffer(	network_sender_t* pSender,const network_ioBuffer_t* pinputBuff,
+int NETWORK_SenderAddToBuffer(	network_sender_t* pSender,const network_ioBuffer_t* pInputBuffer,
                                 int seqNum);
+
+/**
+ *  @brief call the Callback this timeout status
+ * 	@param pSender the pointer on the Sender
+ *	@param pInputBuffer Pointer on the input buffer
+ *  @return 1 to reset the retry counter or 0 to stop the InputBuffer
+ * 	@note only call by NETWORK_RunSendingThread()
+ * 	@see NETWORK_RunSendingThread()
+**/
+int NETWORK_SenderTimeOutCallback(network_sender_t* pSender,const network_ioBuffer_t* pInputBuffer);
+
+/**
+ *  @brief manager the return of the callback
+ * 	@param pSender the pointer on the Sender
+ *  @param pInputBuffer Pointer on the input buffer
+ *	@param callbackReturn 
+ * 	@note only call by NETWORK_RunSendingThread()
+ * 	@see NETWORK_RunSendingThread()
+**/
+void NETWORK_SenderManagerTimeOut(network_sender_t* pSender, network_ioBuffer_t* pInputTemp,int callbackReturn);
 
 /*****************************************
  * 
  * 			implementation :
  *
 ******************************************/
-
 
 network_sender_t* NETWORK_NewSender(	unsigned int sendingBufferSize, unsigned int numOfInputBuff,
 								network_ioBuffer_t** ppTab_input)
@@ -101,6 +122,8 @@ network_sender_t* NETWORK_NewSender(	unsigned int sendingBufferSize, unsigned in
             SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", error );
 			NETWORK_DeleteSender(&pSender);
 		}
+        
+        pSender->seq = FIRST_SEQ;
 	}
 	
 	return pSender;
@@ -134,11 +157,10 @@ void* NETWORK_RunSendingThread(void* data)
 	
 	/** local declarations */
 	network_sender_t* pSender = data;
-	int seq = 1;
 	int indexInput = 0;
-	int callbackReturn = 0;
 	network_ioBuffer_t* pInputTemp = NULL;
     int error = NETWORK_OK;
+    int callbackReturn = 0;
 	
 	
 	while( pSender->isAlive )
@@ -163,14 +185,13 @@ void* NETWORK_RunSendingThread(void* data)
 					if(pInputTemp->retryCount == 0)
 					{
 						/** if there are timeout and too sending retry ... */
-						
-						//callbackReturn = pInputTemp->timeoutcallback();
+                        
 						SAL_PRINT(PRINT_DEBUG," !!! too retry !!! \n");
-						
-						if(callbackReturn)
-						{
-							pInputTemp->retryCount = pInputTemp->nbOfRetry;
-						}
+                        
+                        callbackReturn = NETWORK_SenderTimeOutCallback(pSender, pInputTemp);
+                        
+                        NETWORK_SenderManagerTimeOut(pSender, pInputTemp, callbackReturn);
+                        
 					}
 					else
 					{
@@ -198,7 +219,7 @@ void* NETWORK_RunSendingThread(void* data)
                         pInputTemp->waitTimeCount == 0)
 			{
 				/** try to add the latest data of the input buffer in the sending buffer*/
-				if( !NETWORK_SenderAddToBuffer(pSender, pInputTemp, seq) )
+				if( !NETWORK_SenderAddToBuffer(pSender, pInputTemp, pSender->seq) )
 				{				
 					pInputTemp->waitTimeCount = pInputTemp->sendingWaitTime;
 					
@@ -211,19 +232,19 @@ void* NETWORK_RunSendingThread(void* data)
 							 * and pass on waiting acknowledgement.
 							**/
 							pInputTemp->isWaitAck = 1;
-							pInputTemp->seqWaitAck = seq;
+							pInputTemp->seqWaitAck = pSender->seq;
 							pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
 							pInputTemp->retryCount = pInputTemp->nbOfRetry;	
 						break;
 						
 						case NETWORK_FRAME_TYPE_DATA:
-							/** pop the data sent*/
-							NETWORK_RingBuffPopFront(pInputTemp->pBuffer, NULL);
+							/** delete the data sent*/
+                            NETWORK_IoBufferDeleteData( pInputTemp, NETWORK_CALLBACK_STATUS_SENT );
 						break;
 						
 						case NETWORK_FRAME_TYPE_ACK:
 							/** pop the acknowledgement sent*/
-							NETWORK_RingBuffPopFront(pInputTemp->pBuffer, NULL);
+                            NETWORK_RingBuffPopFront(pInputTemp->pBuffer, NULL);
 						break;
 						
 						case NETWORK_FRAME_TYPE_KEEP_ALIVE:
@@ -236,7 +257,7 @@ void* NETWORK_RunSendingThread(void* data)
 					}
 					
 					/** increment the sequence number */
-					++seq;
+					++(pSender->seq);
 				}
 			}
 		}
@@ -296,6 +317,37 @@ int NETWORK_SenderConnection(network_sender_t* pSender, const char* addr, int po
 	return sal_connect( pSender->socket, (struct sockaddr*)&sendSin, sizeof(sendSin) );
 }
 
+void NETWORK_SenderFlush(network_sender_t* pSender)
+{
+    /** -- Flush all IoBuffer -- */
+	
+	/** local declarations */
+    int indexInput;
+    network_ioBuffer_t* pInputTemp = NULL;
+    
+    /** for each input buffer */
+    for(indexInput = 0 ; indexInput < pSender->numOfInputBuff ; ++indexInput  )
+    {
+        pInputTemp = pSender->pptab_inputBuffer[indexInput];
+        
+        /**  flush the IoBuffer */
+        NETWORK_IoBufferFlush(pInputTemp);
+    }
+}
+
+void NETWORK_SenderReset(network_sender_t* pSender)
+{
+    /** -- Reset the Sender -- */
+	
+	/** local declarations */
+    
+    /** flush all IoBuffer */
+    NETWORK_SenderFlush(pSender);
+    
+    /** reset */
+    pSender->seq = FIRST_SEQ;
+}
+
 /*****************************************
  * 
  * 			private implementation:
@@ -319,7 +371,7 @@ void NETWORK_SenderSend(network_sender_t* pSender)
 	}
 }
 
-int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_t* pinputBuff,
+int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_t* pInputBuffer,
 						        int seqNum)
 {
 	/** -- add data to the sender buffer -- */
@@ -332,15 +384,15 @@ int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_
     network_DeportedData_t deportedData;
 	
     /** get the data size */
-    if( pinputBuff->deportedData )
+    if( pInputBuffer->deportedData )
     {
         /** if the data is deported get the size of the date pointed*/
-        NETWORK_RingBuffFront( pinputBuff->pBuffer, &deportedData);
+        NETWORK_RingBuffFront( pInputBuffer->pBuffer, &deportedData);
         dataSize = deportedData.dataSize;
     }
     else
     {
-        dataSize = pinputBuff->pBuffer->buffCellSize;
+        dataSize = pInputBuffer->pBuffer->buffCellSize;
     }
     
     /** calculate the size needed */
@@ -349,12 +401,12 @@ int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_
 	if( NETWORK_BufferGetFreeCellNb(pSender->pSendingBuffer) >= sizeNeed )
 	{	
 		/** add type */
-		droneEndianInt32 =  htodl( (uint32_t) pinputBuff->dataType );
+		droneEndianInt32 =  htodl( (uint32_t) pInputBuffer->dataType );
 		memcpy( pSender->pSendingBuffer->pFront, &(droneEndianInt32), sizeof(uint32_t));
 		pSender->pSendingBuffer->pFront +=  sizeof(uint32_t) ;
 		
 		/** add id */
-		droneEndianInt32 =  htodl(pinputBuff->id);
+		droneEndianInt32 =  htodl(pInputBuffer->id);
 		memcpy( pSender->pSendingBuffer->pFront, &(droneEndianInt32), sizeof(uint32_t));
 		pSender->pSendingBuffer->pFront +=  sizeof(uint32_t) ;
 		
@@ -369,7 +421,7 @@ int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_
 		pSender->pSendingBuffer->pFront +=  sizeof(uint32_t) ;
 		
 		/** add data */
-        if( pinputBuff->deportedData )
+        if( pInputBuffer->deportedData )
         {
             /** copy the data pointed by the deportedData*/	
             memcpy(pSender->pSendingBuffer->pFront, deportedData.pData, dataSize);
@@ -377,7 +429,7 @@ int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_
         else
         {		
             /** copy the data on the ring buffer */			
-		    error = NETWORK_RingBuffFront(pinputBuff->pBuffer, pSender->pSendingBuffer->pFront);
+		    error = NETWORK_RingBuffFront(pInputBuffer->pBuffer, pSender->pSendingBuffer->pFront);
 		}
         
 		if( error == NETWORK_OK )
@@ -400,3 +452,56 @@ int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_
 	return error;
 }
 
+int NETWORK_SenderTimeOutCallback(network_sender_t* pSender,const network_ioBuffer_t* pInputBuffer)
+{
+    /** -- callback -- */
+	
+	/** local declarations */
+    network_DeportedData_t deportedDataTemp;
+
+    int ret = 0;
+    
+    if(pInputBuffer->deportedData)
+    {
+        NETWORK_RingBuffFront( pInputBuffer->pBuffer, &deportedDataTemp);
+        
+        ret = deportedDataTemp.callback( pInputBuffer->id, 
+                                        deportedDataTemp.pData, 
+                                        NETWORK_CALLBACK_STATUS_TIMEOUT);
+    }
+    else
+    {
+        //pCallback = pSender->callback;
+    }
+    
+    return ret;
+}
+
+void NETWORK_SenderManagerTimeOut(network_sender_t* pSender, network_ioBuffer_t* pInputTemp,int callbackReturn)
+{
+	/**  -- Manager the return of the callback -- */
+    
+	/** local declarations */
+
+    switch( callbackReturn )
+    {
+        case NETWORK_CALLBACK_RETURN_RETRY :
+            /** reset the retry counter */
+            pInputTemp->retryCount = pInputTemp->nbOfRetry;
+        break;
+        
+        case NETWORK_CALLBACK_RETURN_DATA_POP :
+            NETWORK_IoBufferDeleteData( pInputTemp, NETWORK_CALLBACK_STATUS_FREE );
+        break;
+        
+        case NETWORK_CALLBACK_RETURN_FLUSH :
+            /** fluch all IoBuffer */
+            NETWORK_SenderFlush(pSender);
+        break;
+        
+        default:
+
+        break;
+    }
+    
+}

@@ -18,7 +18,7 @@
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
 
-#include <libNetwork/error.h>
+#include <libNetwork/status.h>
 
 #include "ringBuffer.h"
 

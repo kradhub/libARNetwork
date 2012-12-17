@@ -8,7 +8,7 @@
 #ifndef _NETWORK_DEPORTEDDATA_H_
 #define _NETWORK_DEPORTEDDATA_H_
 
-#include <libNetwork/error.h>
+#include <libNetwork/status.h>
 
 /*****************************************
  * 
@@ -17,24 +17,12 @@
 ******************************************/
 
 /**
- *  @brief status sent by callback.
-**/
-typedef enum
-{
-	NETWORK_DEPORTEDDATA_callback_SENT = 0, /**< data sent  */
-    NETWORK_DEPORTEDDATA_callback_SENT_WITH_ACK, /**< data acknowledged sent  */
-    NETWORK_DEPORTEDDATA_callback_TIMEOUT, /**< timeout occurred, data not received */
-    NETWORK_DEPORTEDDATA_callback_FREE /**< free the data not sent*/
-	
-} eNETWORK_DEPORTEDDATA_callback_Status;
-
-/**
  *  @brief call back use when the data are sent or have a timeout 
  *  @param[in] IoBufferId identifier of the IoBuffer is calling back
  *  @param[in] pointer on the data
- *  @param[in] status indicating the reason of the callback. eNETWORK_DEPORTEDDATA_callback_Status type
- *  @return equal 1  
- *  @see eNETWORK_DEPORTEDDATA_callback_Status
+ *  @param[in] status indicating the reason of the callback. eNETWORK_CALLBACK_STATUS type
+ *  @return 1 to reset the retry counter or 0 to stop the InputBuffer 
+ *  @see eNETWORK_CALLBACK_STATUS
 **/
 typedef int (*network_deportDatacallback)(int IoBufferId, void* pData, int status);
 

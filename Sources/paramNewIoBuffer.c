@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <libSAL/print.h>
 
-#include <libNetwork/error.h>
+#include <libNetwork/status.h>
 
 #include <libNetwork/paramNewIoBuffer.h>
 
@@ -101,15 +101,15 @@ values expected: \n \
     - buffCellSize > 0 (value set: %d)\n\
     - overwriting = 0 or 1 (value set: %d)\n\
     - deportedData = 0 or 1 (value set: %d)\n", 
-    pParam->id, 
-    pParam->dataType, 
-    pParam->sendingWaitTime,
-    pParam->ackTimeoutMs,
-    pParam->nbOfRetry,
-    pParam->buffSize,
-    pParam->buffCellSize,
-    pParam->overwriting,
-    pParam->deportedData);
+        pParam->id, 
+        pParam->dataType, 
+        pParam->sendingWaitTime,
+        pParam->ackTimeoutMs,
+        pParam->nbOfRetry,
+        pParam->buffSize,
+        pParam->buffCellSize,
+        pParam->overwriting,
+        pParam->deportedData);
     }
     
    return ok; 

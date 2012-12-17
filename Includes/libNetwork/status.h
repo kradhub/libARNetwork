@@ -1,12 +1,12 @@
 /**
- *	@file error.h
- *  @brief network errors known.
+ *	@file status.h
+ *  @brief network status known.
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _NETWORK_ERROR_H_
-#define _NETWORK_ERROR_H_
+#ifndef _NETWORK_STATUS_H_
+#define _NETWORK_STATUS_H_
 
 /**
  *  @brief libNetwork errors known.
@@ -31,5 +31,29 @@ typedef enum
 	
 } eNETWORK_Error;
 
-#endif // _NETWORK_ERROR_H_
+/**
+ *  @brief status return by the callback.
+**/
+typedef enum
+{
+	NETWORK_CALLBACK_RETURN_DEFECT = 0, /**<   */
+    NETWORK_CALLBACK_RETURN_RETRY, /**< reset the number of retry  */
+    NETWORK_CALLBACK_RETURN_DATA_POP, /**< pop the data */
+    NETWORK_CALLBACK_RETURN_FLUSH /**< FLUSH all input buffers*/
+	
+} eNETWORK_CALLBACK_RETURN;
+
+/**
+ *  @brief status sent by the callback.
+**/
+typedef enum
+{
+	NETWORK_CALLBACK_STATUS_SENT = 0, /**< data sent  */
+    NETWORK_CALLBACK_STATUS_SENT_WITH_ACK, /**< data acknowledged sent  */
+    NETWORK_CALLBACK_STATUS_TIMEOUT, /**< timeout occurred, data not received */
+    NETWORK_CALLBACK_STATUS_FREE /**< free the data not sent*/
+	
+} eNETWORK_CALLBACK_STATUS;
+
+#endif // _NETWORK_STATUS_H_
 

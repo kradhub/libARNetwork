@@ -21,7 +21,7 @@
 /**
  *  @brief Input buffer used by libNetwork/sender or output buffer used by libNetwork/receiver
  * 	@warning before to be used the inOutBuffer must be created through NETWORK_NewIoBuffer()
- * 	@post after its using the inOutBuffer must be deleted through NETWORK_DeleteIotBuffer()
+ * 	@post after its using the inOutBuffer must be deleted through NETWORK_DeleteIoBuffer()
 **/
 typedef struct network_ioBuffer_t  
 {
@@ -47,10 +47,10 @@ typedef struct network_ioBuffer_t
 /**
  *  @brief Create a new input or output buffer
  * 	@warning This function allocate memory
- *	@post NETWORK_DeleteIotBuffer() must be called to delete the input or output buffer and free the memory allocated
+ *	@post NETWORK_DeleteIoBuffer() must be called to delete the input or output buffer and free the memory allocated
  * 	@param[in] pParam Pointer on the parameters for the new input or output buffer
  * 	@return Pointer on the new input or output buffer
- * 	@see NETWORK_DeleteIotBuffer()
+ * 	@see NETWORK_DeleteIoBuffer()
 **/
 network_ioBuffer_t* NETWORK_NewIoBuffer(const network_paramNewIoBuffer_t* pParam); 
 
@@ -60,7 +60,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer(const network_paramNewIoBuffer_t* pParam
  * 	@param ppIoBuffer address of the pointer on the input or output buffer to delete
  *	@see NETWORK_NewIoBuffer()
 **/
-void NETWORK_DeleteIotBuffer( network_ioBuffer_t** ppIoBuffer );
+void NETWORK_DeleteIoBuffer( network_ioBuffer_t** ppIoBuffer );
 
 /**
  *  @brief Receive an acknowledgement to a inOutBuffer.
@@ -89,7 +89,7 @@ network_ioBuffer_t* NETWORK_IoBufferFromId( network_ioBuffer_t** pptabInOutBuff,
 int NETWORK_IoBufferIsWaitAck( network_ioBuffer_t* pIoBuffer );
 
 /**
- *  @brief call the callback of all deportedData with the NETWORK_DEPORTEDDATA_callback_FREE status.
+ *  @brief call the callback of all deportedData with the NETWORK_CALLBACK_STATUS_FREE status.
  *  @warning the IoBuffer must store network_DeportedData_t
  * 	@param pIoBuffer Pointer on the input or output buffer of deportedData type
  *  @return error equal to NETWORK_OK if the data are correctly free otherwise see eNETWORK_Error
@@ -104,6 +104,12 @@ int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer );
  *  @return error equal to NETWORK_OK if the data are correctly deleted otherwise see eNETWORK_Error
 **/
 int NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callbackStatus );
+
+/**
+ *  @brief flush the IoBuffer
+ * 	@param pIoBuffer Pointer on the input or output buffer
+**/
+void NETWORK_IoBufferFlush( network_ioBuffer_t* pIoBuffer );
 
 #endif // _NETWORK_IOBUFFER_H_
 

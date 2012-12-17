@@ -16,9 +16,7 @@
 
 #include <libSAL/thread.h>
 
-#include <libNetwork/frame.h>
 #include <libNetwork/manager.h>
-#include <libNetwork/paramNewIoBuffer.h>
 
 #include <unistd.h>
 
@@ -163,7 +161,7 @@ int main(int argc, char *argv[])
 	paramNetworkL1[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
 	paramNetworkL1[2].sendingWaitTime = 2;
 	paramNetworkL1[2].ackTimeoutMs = 10;
-	paramNetworkL1[2].nbOfRetry = -1 /*5*/;
+	paramNetworkL1[2].nbOfRetry = 5;
 	paramNetworkL1[2].buffSize = 5;
 	paramNetworkL1[2].deportedData = 1;
 	
@@ -427,15 +425,32 @@ void* printBuff(void* data)
 	return NULL;
 }
 
-
 int callbackDepotData(int OutBufferId, void* pData, int status)
 {
     /** local declarations */
-    int error = 0;
+    int retry = 0;
     
-    printf(" -- callbackDepotData -- \n");
+    printf(" -- callbackDepotData status: %d ",status);
     
-    free(pData);
+    switch(status)
+    {
+        case NETWORK_CALLBACK_STATUS_SENT :
+        case NETWORK_CALLBACK_STATUS_SENT_WITH_ACK :
+        case NETWORK_CALLBACK_STATUS_FREE :
+            retry = 0;
+            free(pData);
+            printf(" free --\n");
+        break;
+        
+        case NETWORK_CALLBACK_STATUS_TIMEOUT :
+            retry = 1;
+            printf(" retry --\n");
+        break;
+        
+        default:
+            printf(" default --\n");
+        break;
+    }
     
-    return error;
+    return retry;
 }

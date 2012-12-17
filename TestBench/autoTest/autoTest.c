@@ -361,12 +361,30 @@ int main(int argc, char *argv[])
 int callbackDepotData(int OutBufferId, void* pData, int status)
 {
     /** local declarations */
-    int error = 0;
+    int retry = 0;
     
-    printf(" -- callbackDepotData -- \n");
+    printf(" -- callbackDepotData status: %d ",status);
     
-    free(pData);
+    switch(status)
+    {
+        case NETWORK_CALLBACK_STATUS_SENT :
+        case NETWORK_CALLBACK_STATUS_SENT_WITH_ACK :
+        case NETWORK_CALLBACK_STATUS_FREE :
+            retry = 0;
+            free(pData);
+            printf(" free --\n");
+        break;
+        
+        case NETWORK_CALLBACK_STATUS_TIMEOUT :
+            retry = 1;
+            printf(" retry --\n");
+        break;
+        
+        default:
+            printf(" default --\n");
+        break;
+    }
     
-    return error;
+    return retry;
 }
 

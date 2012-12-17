@@ -15,7 +15,7 @@
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
 
-#include <libNetwork/error.h>
+#include <libNetwork/status.h>
 #include "ringBuffer.h"
 #include <libNetwork/frame.h>
 #include <libNetwork/deportedData.h>
@@ -103,14 +103,14 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
 		{
 			/** delete the inOutput buffer if an error occurred */
             SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", error );
-			NETWORK_DeleteIotBuffer(&pIoBuffer);
+			NETWORK_DeleteIoBuffer(&pIoBuffer);
 		}
     }
     
     return pIoBuffer;
 }
 
-void NETWORK_DeleteIotBuffer( network_ioBuffer_t** ppIoBuffer )
+void NETWORK_DeleteIoBuffer( network_ioBuffer_t** ppIoBuffer )
 {	
 	/** -- Delete the input or output buffer -- */
 	
@@ -154,7 +154,7 @@ int NETWORK_IoBufferAckReceived( network_ioBuffer_t* pIoBuffer, int seqNum )
 	if( pIoBuffer->isWaitAck && pIoBuffer->seqWaitAck == seqNum )
 	{
 		pIoBuffer->isWaitAck = 0;
-        error = NETWORK_IoBufferDeleteData( pIoBuffer, NETWORK_DEPORTEDDATA_callback_SENT_WITH_ACK );
+        error = NETWORK_IoBufferDeleteData( pIoBuffer, NETWORK_CALLBACK_STATUS_SENT_WITH_ACK );
 	}
     else
     {
@@ -208,7 +208,7 @@ int NETWORK_IoBufferIsWaitAck(	network_ioBuffer_t* pIoBuffer)
 
 int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer )
 {
-    /** -- call the callback of all deportedData with the NETWORK_DEPORTEDDATA_callback_FREE status --*/
+    /** -- call the callback of all deportedData with the NETWORK_CALLBACK_STATUS_FREE status --*/
     
     /** local declarations */
     int error = NETWORK_OK;
@@ -218,7 +218,7 @@ int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer )
     {
         while( deleteError == NETWORK_OK )
         {
-            deleteError = NETWORK_IoBufferDeleteData(pIoBuffer, NETWORK_DEPORTEDDATA_callback_FREE);
+            deleteError = NETWORK_IoBufferDeleteData(pIoBuffer, NETWORK_CALLBACK_STATUS_FREE);
         }
         
         if(deleteError != NETWORK_ERROR_BUFFER_EMPTY)
@@ -236,7 +236,7 @@ int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer )
 
 int NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callbackStatus )
 {
-    /** -- delete the later data of the IoBuffer - */
+    /** -- delete the later data of the IoBuffer -- */
     
     /** local declarations */
     int error = NETWORK_OK;
@@ -257,4 +257,25 @@ int NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callbackStatu
     }
     
     return error;
+}
+
+void NETWORK_IoBufferFlush( network_ioBuffer_t* pIoBuffer )
+{
+    /** -- flush the IoBuffer -- */
+    
+    /** local declarations */
+    int errorDataDel = NETWORK_OK;
+    
+    /**  delete all data */
+    while(errorDataDel == NETWORK_OK)
+    {
+        errorDataDel = NETWORK_IoBufferDeleteData(pIoBuffer, NETWORK_CALLBACK_STATUS_FREE);
+    }
+    
+    /**  reset */
+    pIoBuffer->isWaitAck = 0;
+    pIoBuffer->seqWaitAck = 0;
+    pIoBuffer->waitTimeCount = pIoBuffer->sendingWaitTime;
+    pIoBuffer->ackWaitTimeCount = pIoBuffer->ackTimeoutMs;
+    pIoBuffer->retryCount = 0;
 }

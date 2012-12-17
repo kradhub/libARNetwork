@@ -22,7 +22,7 @@
 #include <libSAL/socket.h>
 #include <libSAL/endianness.h>
 
-#include <libNetwork/error.h>
+#include <libNetwork/status.h>
 #include <libNetwork/frame.h>
 #include "buffer.h"
 #include <libNetwork/deportedData.h>
@@ -65,9 +65,9 @@ int NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
  *  @brief call back use to free deported data 
  *  @param[in] OutBufferId IoBuffer identifier of the IoBuffer is calling back
  *  @param[in] pData pointer on the data
- *  @param[in] status status indicating the reason of the callback. eNETWORK_DEPORTEDDATA_callback_Status type
+ *  @param[in] status status indicating the reason of the callback. eNETWORK_CALLBACK_STATUS_Status type
  *  @return   
- *  @see eNETWORK_DEPORTEDDATA_callback_Status
+ *  @see eNETWORK_CALLBACK_STATUS
 **/
 int NETWORK_freedeportedData(int OutBufferId, void* pData, int status);
 

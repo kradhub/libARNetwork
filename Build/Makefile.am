@@ -6,7 +6,7 @@ ACLOCAL_AMFLAGS = -I m4
 # The list of header files that belong to the library (to be installed later)
 HEADER_FILES	=	../Includes/libNetwork/manager.h \
 					../Includes/libNetwork/frame.h \
-					../Includes/libNetwork/error.h \
+					../Includes/libNetwork/status.h \
 					../Includes/libNetwork/deportedData.h \
 					../Includes/libNetwork/paramNewIoBuffer.h
 

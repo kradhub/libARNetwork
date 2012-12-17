@@ -22,7 +22,7 @@
 #include <libSAL/mutex.h>
 #include <libSAL/socket.h>
 
-#include <libNetwork/error.h>
+#include <libNetwork/status.h>
 #include <libNetwork/frame.h>
 #include "ringBuffer.h"
 #include <libNetwork/deportedData.h>
@@ -200,7 +200,7 @@ void NETWORK_DeleteManager(network_manager_t** ppManager)
 			/** Delete all output buffers including the the buffers of acknowledgement */
 			for(ii = 0; ii< pManager->numOfOutput ; ++ii)
 			{
-				NETWORK_DeleteIotBuffer( &(pManager->ppTabOutput[ii]) );
+				NETWORK_DeleteIoBuffer( &(pManager->ppTabOutput[ii]) );
 			}
             free(pManager->ppTabOutput);
             pManager->ppTabOutput = NULL;
@@ -208,7 +208,7 @@ void NETWORK_DeleteManager(network_manager_t** ppManager)
 			/** Delete the input buffers but not the buffers of acknowledgement already deleted */
 			for(ii = 0; ii< pManager->numOfInputWithoutAck ; ++ii)
 			{
-				NETWORK_DeleteIotBuffer( &(pManager->ppTabInput[ii]) );
+				NETWORK_DeleteIoBuffer( &(pManager->ppTabInput[ii]) );
 			}
             free(pManager->ppTabInput);
             pManager->ppTabInput = NULL;
@@ -466,7 +466,7 @@ int NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int outputBuff
                     
                     /** free the data deported*/
                     deportedDataTemp.callback( pOutputBuffer->id, deportedDataTemp.pData, 
-                                               NETWORK_DEPORTEDDATA_callback_FREE);
+                                               NETWORK_CALLBACK_STATUS_FREE);
                 }
                 else
                 {

@@ -8,7 +8,7 @@
 #ifndef _NETWORK_MANGER_H_
 #define _NETWORK_MANGER_H_
 
-#include <libNetwork/error.h>
+#include <libNetwork/status.h>
 #include <libNetwork/paramNewIoBuffer.h>
 #include <libNetwork/deportedData.h>
 
