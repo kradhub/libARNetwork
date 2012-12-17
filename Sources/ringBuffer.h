@@ -67,17 +67,17 @@ void NETWORK_DeleteRingBuffer(network_ringBuffer_t** ppRingBuff);
  *  @brief Add the new data at the back of the ring buffer
  * 	@param pRingBuff pointer on the ring buffer
  * 	@param[in] newData pointer on the data to add
- * 	@return error equal to 1 if the data is not correctly pushed
+ * 	@return error eNETWORK_Error
 **/
-int NETWORK_RingBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData);
+eNETWORK_Error NETWORK_RingBuffPushBack(network_ringBuffer_t* pRingBuff, const void* pNewData);
 
 /**
  *  @brief Pop the oldest data
  * 	@param pRingBuff pointer on the ring buffer
  * 	@param[out] popData pointer on the data popped
- * 	@return error equal to 1 if the buffer is empty 
+ * 	@return error eNETWORK_Error
 **/
-int NETWORK_RingBuffPopFront(network_ringBuffer_t* pRingBuff, void* pPopData);
+eNETWORK_Error NETWORK_RingBuffPopFront(network_ringBuffer_t* pRingBuff, void* pPopData);
 
 /**
  *  @brief Return the number of free cell of the ring buffer
@@ -104,9 +104,9 @@ static inline int NETWORK_RingBuffIsEmpty(const network_ringBuffer_t* pRingBuff)
  *  @brief Return a pointer on the front data
  * 	@param pRingBuff pointer on the ring buffer
  * 	@param[out] pFrontData pointer on the front data
- * 	@return error equal to 1 if the ring buffer is empty 
+ * 	@return error eNETWORK_Error
 **/
-int NETWORK_RingBuffFront( network_ringBuffer_t* pRingBuff, void* pFrontData);
+eNETWORK_Error NETWORK_RingBuffFront( network_ringBuffer_t* pRingBuff, void* pFrontData);
 
 /**
  *  @brief Clean the ring buffer

@@ -57,12 +57,13 @@ void NETWORK_SenderSend(network_sender_t* pSender);
  * 	@param pSender the pointer on the Sender
  *	@param pInputBuffer Pointer on the input buffer
  * 	@param seqNum sequence number
- *  @return error
+ *  @return error eNETWORK_Error
  * 	@note only call by NETWORK_RunSendingThread()
  * 	@see NETWORK_RunSendingThread()
 **/
-int NETWORK_SenderAddToBuffer(	network_sender_t* pSender,const network_ioBuffer_t* pInputBuffer,
-                                int seqNum);
+eNETWORK_Error NETWORK_SenderAddToBuffer(	network_sender_t* pSender,
+                                            const network_ioBuffer_t* pInputBuffer,
+                                            int seqNum);
 
 /**
  *  @brief call the Callback this timeout status
@@ -97,7 +98,7 @@ network_sender_t* NETWORK_NewSender(	unsigned int sendingBufferSize, unsigned in
 	
 	/** local declarations */
 	network_sender_t* pSender =  NULL;
-	int error = NETWORK_OK;
+	eNETWORK_Error error = NETWORK_OK;
 	
 	/** Create the sender */
 	pSender =  malloc( sizeof(network_sender_t));
@@ -159,7 +160,7 @@ void* NETWORK_RunSendingThread(void* data)
 	network_sender_t* pSender = data;
 	int indexInput = 0;
 	network_ioBuffer_t* pInputTemp = NULL;
-    int error = NETWORK_OK;
+    eNETWORK_Error error = NETWORK_OK;
     int callbackReturn = 0;
 	
 	
@@ -275,13 +276,13 @@ void NETWORK_StopSender(network_sender_t* pSender)
 	pSender->isAlive = 0;
 }
 
-int NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum)
+eNETWORK_Error NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum)
 {
 	/** -- Receive an acknowledgment fo a data -- */
 	
 	/** local declarations */
 	network_ioBuffer_t* pInputBuff = NULL;
-	int error = NETWORK_OK;
+	eNETWORK_Error error = NETWORK_OK;
     
 	pInputBuff = NETWORK_IoBufferFromId( pSender->pptab_inputBuffer, pSender->numOfInputBuff, id );
 	
@@ -371,13 +372,13 @@ void NETWORK_SenderSend(network_sender_t* pSender)
 	}
 }
 
-int NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_t* pInputBuffer,
+eNETWORK_Error NETWORK_SenderAddToBuffer( network_sender_t* pSender,const network_ioBuffer_t* pInputBuffer,
 						        int seqNum)
 {
 	/** -- add data to the sender buffer -- */
 	
 	/** local declarations */
-	int error = NETWORK_OK;
+	eNETWORK_Error error = NETWORK_OK;
     uint32_t droneEndianInt32 = 0;
 	int sizeNeed = 0;
     int dataSize = 0;

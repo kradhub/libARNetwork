@@ -35,7 +35,8 @@
 #define RECEIVER_TIMEOUT_SEC 5
 #define FIRST_CHAR_SENT 'A'
 #define FIRST_INT_ACK_SENT 100
-#define BASE_DEPORTED_DATA 0xffffffffffffffffLL
+#define BASE_DEPORTED_DATA 0x5555555555555555LL
+#define BASE_DEPORTED_DATA_ACK 0xffffffffffffffffLL
 
 #define RECV_TIMEOUT_MS 10
 #define PORT1 12345
@@ -45,10 +46,10 @@
 #define SEND_BUFF_SIZE 256
 #define RECV_BUFF_SIZE 256
 
-#define NB_OF_INPUT_NET1 3
+#define NB_OF_INPUT_NET1 4
 #define NB_OF_OUTPUT_NET1 1
 #define NB_OF_INPUT_NET2 1
-#define NB_OF_OUTPUT_NET2 3
+#define NB_OF_OUTPUT_NET2 4
 
 #define SENDDATA 1
 #define SENDDATADEPORT 1
@@ -59,7 +60,8 @@ typedef enum eID_BUFF
 	ID_CHAR_DATA = 5,
 	ID_INT_DATA_WITH_ACK,
 	ID_INT_DATA,
-    ID_DEPORT_DATA
+    ID_DEPORT_DATA,
+    ID_DEPORT_DATA_ACK
 }eID_BUFF;
 
 int callbackDepotData(int OutBufferId, void* pData, int status);
@@ -80,18 +82,22 @@ int main(int argc, char *argv[])
 	sal_thread_t thread_send2 = NULL;
 	sal_thread_t thread_recv2 = NULL;
 	int ii = 0;
-	int error = 0;
+	eNETWORK_Error error = 0;
 
-#if SENDDATA
+
 	char chData = 0;
 	int intData = 0;
-#endif
-#if SENDDATADEPORT
+    
     void* pDataDeported = NULL;
     uint64_t orgDataDeported = BASE_DEPORTED_DATA;
     uint64_t dataDeportedRead = 0;
     int dataDeportSize = 0 ;
-#endif
+    
+    void* pDataDeported_ack = NULL;
+    uint64_t orgDataDeported_ack = BASE_DEPORTED_DATA_ACK;
+    uint64_t dataDeportedRead_ack = 0;
+    int dataDeportSize_ack = 0 ;
+
 	
 	network_paramNewIoBuffer_t paramInputNetwork1[NB_OF_INPUT_NET1];
 	network_paramNewIoBuffer_t paramOutputNetwork1[NB_OF_OUTPUT_NET1];
@@ -120,15 +126,23 @@ int main(int argc, char *argv[])
 	paramInputNetwork1[1].buffSize = 5;
 	paramInputNetwork1[1].buffCellSize = sizeof(int);
     
-    /** input ID_DEPORT_DATA int */
+    /** input ID_DEPORT_DATA */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramInputNetwork1[2]) );
 	paramInputNetwork1[2].id = ID_DEPORT_DATA;
-	paramInputNetwork1[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+	paramInputNetwork1[2].dataType = NETWORK_FRAME_TYPE_DATA;
 	paramInputNetwork1[2].sendingWaitTime = 2;
-	paramInputNetwork1[2].ackTimeoutMs = 5;
-	paramInputNetwork1[2].nbOfRetry = -1/*20*/;
 	paramInputNetwork1[2].buffSize = 5;
 	paramInputNetwork1[2].deportedData = 1;
+    
+    /** input ID_DEPORT_DATA_ACK */
+    NETWORK_ParamNewIoBufferDefaultInit( &(paramInputNetwork1[3]) );
+	paramInputNetwork1[3].id = ID_DEPORT_DATA_ACK;
+	paramInputNetwork1[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+	paramInputNetwork1[3].sendingWaitTime = 2;
+	paramInputNetwork1[3].ackTimeoutMs = 5;
+	paramInputNetwork1[3].nbOfRetry = -1/*20*/;
+	paramInputNetwork1[3].buffSize = 5;
+	paramInputNetwork1[3].deportedData = 1;
 	
 	/** output ID_INT_DATA int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork1[0]) );
@@ -167,12 +181,19 @@ int main(int argc, char *argv[])
 	paramOutputNetwork2[1].buffSize = 5;
 	paramOutputNetwork2[1].buffCellSize = sizeof(int);
     
-    /** output ID_DEPORT_DATA int */
+    /** output ID_DEPORT_DATA */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork2[2]) );
 	paramOutputNetwork2[2].id = ID_DEPORT_DATA;
     paramOutputNetwork2[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
 	paramOutputNetwork2[2].buffSize = 5;
     paramOutputNetwork2[2].deportedData = 1;
+    
+    /** output ID_DEPORT_DATA_ACK */
+    NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork2[3]) );
+	paramOutputNetwork2[3].id = ID_DEPORT_DATA_ACK;
+    paramOutputNetwork2[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+	paramOutputNetwork2[3].buffSize = 5;
+    paramOutputNetwork2[3].deportedData = 1;
 	
 	/** ----------------------------- */
 	
@@ -209,7 +230,6 @@ int main(int argc, char *argv[])
     for(ii = 0; ii < NUMBER_DATA_SENT; ii++)
     {
         
-#if SENDDATA
 		chData = FIRST_CHAR_SENT + ii;
 		printf(" send char: %c \n",chData);
 		error = NETWORK_ManagerSendData(pManager1, ID_CHAR_DATA, &chData);
@@ -227,9 +247,6 @@ int main(int argc, char *argv[])
 		{
 			printf(" error send int ack :%d \n", error);
 		}
-#endif		
-        
-#if SENDDATADEPORT
       
         /** create DataDeported */
         dataDeportSize = ii+1;
@@ -246,7 +263,23 @@ int main(int argc, char *argv[])
 		{
 			printf(" error send deported data ack :%d \n", error);
 		}
-#endif
+        
+        /** create DataDeported_ack */
+        dataDeportSize_ack = ii+1;
+        
+        pDataDeported_ack = malloc(dataDeportSize_ack);
+        memcpy(pDataDeported_ack, &orgDataDeported_ack, dataDeportSize_ack);
+        
+        error = NETWORK_ManagerSendDeportedData( pManager1, ID_DEPORT_DATA_ACK,
+                                                 pDataDeported_ack, dataDeportSize_ack,
+                                                 &(callbackDepotData) );
+                                                 
+        printf(" send %d byte deportedData\n",dataDeportSize_ack);
+        if( error  )
+		{
+			printf(" error send deported data ack :%d \n", error);
+		}
+
         
         usleep(SENDING_SLEEP_TIME_US);
     }
@@ -280,7 +313,7 @@ int main(int argc, char *argv[])
 	}
     
     /** checking */
-#if SENDDATA
+
     ii = 0;
 	printf("\n the last char transmitted:\n");
     while( ! NETWORK_ManagerReadData(pManager2, ID_CHAR_DATA, &chData) )
@@ -304,13 +337,11 @@ int main(int argc, char *argv[])
     }
     /** check nb data */
     error = error || ( ii != 5) ;
-#endif
-
-#if SENDDATADEPORT
 
     printf("\n the deported data transmitted:\n");
     ii = 0;
     dataDeportedRead = 0;
+    
     
     while( ! NETWORK_ManagerReadDeportedData(pManager2, ID_DEPORT_DATA, &dataDeportedRead, ii+1, NULL) )
     {
@@ -330,8 +361,31 @@ int main(int argc, char *argv[])
     }
     /** check nb data */
     error = error || ( ii != 5) ;
+    
+    printf("\n the deported data ACK transmitted:\n");
+    ii = 0;
+    dataDeportedRead_ack = 0;
+    
+    while( ! NETWORK_ManagerReadDeportedData(pManager2, ID_DEPORT_DATA_ACK, &dataDeportedRead_ack, ii+1, NULL) )
+    {
+        dataDeportSize_ack = ii+1;
+        
+        printf("- %08x %08x \n",  (uint32_t) (dataDeportedRead_ack >> 32), (uint32_t) dataDeportedRead_ack );
+        
+        /** create DataDeported */
+        pDataDeported_ack = malloc(dataDeportSize_ack);
+        memcpy(pDataDeported_ack, &orgDataDeported_ack, dataDeportSize_ack);
+        
+        /** check values */
+        error = error || memcmp(&dataDeportedRead_ack, pDataDeported_ack ,dataDeportSize_ack);
+        ++ii;
+        free(pDataDeported_ack);
+        dataDeportedRead_ack = 0;
+    }
+    /** check nb data */
+    error = error || ( ii != 5) ;
 
-#endif
+
 
 	printf("\n");
 

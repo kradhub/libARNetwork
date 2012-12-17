@@ -41,12 +41,12 @@
  *
 ******************************************/
 
-int NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t *pParam)
+eNETWORK_Error NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t *pParam)
 {
 	/** -- initialization of the paramNewIoBuffer with default parameters -- */
     
     /** local declarations */
-    int error = NETWORK_OK;
+    eNETWORK_Error error = NETWORK_OK;
     
     if(pParam != NULL)
     {

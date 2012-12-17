@@ -79,7 +79,7 @@ void NETWORK_StopSender(network_sender_t* pSender);
  *	@param[in] seqNum sequence number of the acknowledgment
  * 	@return error equal to NETWORK_OK if the data has been correctly acknowledged otherwise equal to 1.
 **/
-int NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum);
+eNETWORK_Error NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int seqNum);
 
 /**
  *  @brief Connect the socket in UDP to a port of an address. the socket will be used to send the data.

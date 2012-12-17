@@ -38,7 +38,7 @@ typedef struct network_manager_t network_manager_t;
 network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int sendBuffSize,
 				unsigned int numberOfInput, network_paramNewIoBuffer_t* ptabParamInput,
 				unsigned int numberOfOutput, network_paramNewIoBuffer_t* ptabParamOutput,
-                int* pError);
+                eNETWORK_Error* pError);
 
 /**
  *  @brief Delete the Manager
@@ -56,8 +56,8 @@ void NETWORK_DeleteManager(network_manager_t** ppManager);
  * 	@param[in] recvTimeoutSec timeout in seconds set on the socket to limit the time of blocking of the function NETWORK_ReceiverRead().
  *  @return error equal to NETWORK_OK if the Bind if successful otherwise see eNETWORK_Manager_Error.
 **/
-int NETWORK_ManagerSocketsInit(network_manager_t* pManager,const char* addr, int sendingPort,
-                                    int recvPort, int recvTimeoutSec);
+eNETWORK_Error NETWORK_ManagerSocketsInit(network_manager_t* pManager,const char* addr,
+                                            int sendingPort,int recvPort, int recvTimeoutSec);
 
 /**
  *  @brief Manage the sending of the data 
@@ -100,9 +100,9 @@ void NETWORK_ManagerStop(network_manager_t* pManager);
  * 	@param pManager pointer on the Manager
  * 	@param[in] inputBufferId identifier of the input buffer in which the data must be stored
  * 	@param[in] pData pointer on the data to send
- *  @return error equal to 1 if the data is not correctly pushed in the the input buffer
+ *  @return error eNETWORK_Error
 **/
-int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, const void* pData);
+eNETWORK_Error NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, const void* pData);
 
 /**
  *  @brief Add deported data to send
@@ -111,11 +111,11 @@ int NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, cons
  * 	@param[in] pData pointer on the data to send
  *  @param[in] dataSize size of the data to send
  *  @param[in] callback pointer on the callback to call when the data is sent or an error occurred
- *  @return error equal to 1 if the data is not correctly pushed in the the input buffer
+ *  @return error eNETWORK_Error
 **/
-int NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBufferId,
-                                     void* pData, int dataSize,
-                                     network_deportDatacallback callback );
+eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBufferId,
+                                                  void* pData, int dataSize,
+                                                  network_deportDatacallback callback );
 
 /**
  *  @brief Read data received
@@ -123,9 +123,9 @@ int NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBuffe
  * 	@param pManager pointer on the Manager
  * 	@param[in] outputBufferId identifier of the output buffer in which the data must be read
  * 	@param[out] pData pointer on the data read
- *  @return error equal to 1 if the buffer is empty or the ID doesn't exist
+ *  @return error eNETWORK_Error
 **/
-int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, void* pData);
+eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, void* pData);
 
 /**
  *  @brief Read deported data received
@@ -137,8 +137,8 @@ int NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, voi
  *  @param[out] pReadSize pointer to store the size of the data read
  *  @return error eNETWORK_Error type
 **/
-int NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int outputBufferId,
-                                     void* pData, int dataLimitSize, int* pReadSize);
+eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int outputBufferId,
+                                                    void* pData, int dataLimitSize, int* pReadSize);
 
 #endif // _NETWORK_MANGER_H_
 

@@ -69,7 +69,7 @@ void NETWORK_DeleteIoBuffer( network_ioBuffer_t** ppIoBuffer );
  * 	@param[in] seqNum sequence number of the acknowledgement
  * 	@return error equal to NETWORK_OK if the data has been correctly acknowledged otherwise equal to 1
 **/
-int NETWORK_IoBufferAckReceived( network_ioBuffer_t* pIoBuffer, int seqNum );
+eNETWORK_Error NETWORK_IoBufferAckReceived( network_ioBuffer_t* pIoBuffer, int seqNum );
 
 /**
  *  @brief Search a inOutBuffer from its identifier, in a table
@@ -94,7 +94,7 @@ int NETWORK_IoBufferIsWaitAck( network_ioBuffer_t* pIoBuffer );
  * 	@param pIoBuffer Pointer on the input or output buffer of deportedData type
  *  @return error equal to NETWORK_OK if the data are correctly free otherwise see eNETWORK_Error
 **/
-int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer );
+eNETWORK_Error NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer );
 
 /**
  *  @brief delete the later data of the IoBuffer
@@ -103,7 +103,7 @@ int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer );
  *  @param[in] callbackStatus status sent py the callback in case where the data is deported 
  *  @return error equal to NETWORK_OK if the data are correctly deleted otherwise see eNETWORK_Error
 **/
-int NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callbackStatus );
+eNETWORK_Error NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callbackStatus );
 
 /**
  *  @brief flush the IoBuffer

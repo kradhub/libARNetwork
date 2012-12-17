@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 	int sendPort = 0;
 	int recvPort = 0;
     network_manager_t* pManager = NULL;
-    int error = NETWORK_OK;
+    eNETWORK_Error error = NETWORK_OK;
     int connectError = 1;
     char IpAddress[16];
     

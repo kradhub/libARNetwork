@@ -41,7 +41,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
 	/** local declarations */
 	network_ioBuffer_t* pIoBuffer = NULL;
 	int keepAliveData = 0x00;
-    int error = NETWORK_OK;
+    eNETWORK_Error error = NETWORK_OK;
 	
 	/** Create the input or output buffer in accordance with parameters set in pParam */
 	pIoBuffer = malloc( sizeof(network_ioBuffer_t) );
@@ -141,12 +141,12 @@ void NETWORK_DeleteIoBuffer( network_ioBuffer_t** ppIoBuffer )
 
 }
 
-int NETWORK_IoBufferAckReceived( network_ioBuffer_t* pIoBuffer, int seqNum )
+eNETWORK_Error NETWORK_IoBufferAckReceived( network_ioBuffer_t* pIoBuffer, int seqNum )
 {
 	/** -- Receive an acknowledgement to a inOutBuffer -- */ 
 	
 	/** local declarations */
-	int error = NETWORK_OK;
+	eNETWORK_Error error = NETWORK_OK;
 	
 	sal_mutex_lock( &(pIoBuffer->mutex) );
     
@@ -206,13 +206,13 @@ int NETWORK_IoBufferIsWaitAck(	network_ioBuffer_t* pIoBuffer)
 	return isWaitAckCpy;
 }
 
-int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer )
+eNETWORK_Error NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer )
 {
     /** -- call the callback of all deportedData with the NETWORK_CALLBACK_STATUS_FREE status --*/
     
     /** local declarations */
-    int error = NETWORK_OK;
-    int deleteError = NETWORK_OK;
+    eNETWORK_Error error = NETWORK_OK;
+    eNETWORK_Error deleteError = NETWORK_OK;
     
     if( pIoBuffer->deportedData )
     {
@@ -234,12 +234,12 @@ int NETWORK_IoBufferFreeAlldeportedData( network_ioBuffer_t* pIoBuffer )
     return error;
 }
 
-int NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callbackStatus )
+eNETWORK_Error NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int callbackStatus )
 {
     /** -- delete the later data of the IoBuffer -- */
     
     /** local declarations */
-    int error = NETWORK_OK;
+    eNETWORK_Error error = NETWORK_OK;
     network_DeportedData_t deportedDataTemp;
     
     /** pop the data sent*/
@@ -264,7 +264,7 @@ void NETWORK_IoBufferFlush( network_ioBuffer_t* pIoBuffer )
     /** -- flush the IoBuffer -- */
     
     /** local declarations */
-    int errorDataDel = NETWORK_OK;
+    eNETWORK_Error errorDataDel = NETWORK_OK;
     
     /**  delete all data */
     while(errorDataDel == NETWORK_OK)

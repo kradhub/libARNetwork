@@ -57,9 +57,9 @@ network_frame_t* NETWORK_ReceiverGetNextFrame( network_receiver_t* pReceiver,
  *	@pre only call by NETWORK_RunSendingThread()
  * 	@see NETWORK_RunSendingThread()
 **/
-int NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
-                                   network_ioBuffer_t* pOutBuffer,
-                                   network_frame_t* pFrame );
+eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
+                                               network_ioBuffer_t* pOutBuffer,
+                                               network_frame_t* pFrame );
                                    
 /**
  *  @brief call back use to free deported data 
@@ -85,7 +85,7 @@ network_receiver_t* NETWORK_NewReceiver(	unsigned int recvBufferSize, unsigned i
 	
 	/** local declarations */
 	network_receiver_t* pReceiver = NULL;
-	int error = NETWORK_OK;
+	eNETWORK_Error error = NETWORK_OK;
 	
 	/** Create the receiver */
 	pReceiver =  malloc( sizeof(network_receiver_t) );
@@ -145,7 +145,7 @@ void* NETWORK_RunReceivingThread(void* data)
 	network_receiver_t* pReceiver = data;
     network_frame_t* pFrame = NULL;
 	network_ioBuffer_t* pOutBufferTemp = NULL;
-	int error = 0;
+	eNETWORK_Error error = NETWORK_OK;
 
 	
 	while( pReceiver->isAlive )
@@ -339,14 +339,14 @@ network_frame_t* NETWORK_ReceiverGetNextFrame( network_receiver_t* pReceiver,
     return nextFrame;
 }
 
-int NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
-                                   network_ioBuffer_t* pOutBuffer,
-                                   network_frame_t* pFrame )
+eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
+                                               network_ioBuffer_t* pOutBuffer,
+                                               network_frame_t* pFrame )
 {
     /** -- copy the data received to the output buffer -- */
     
     /** local declarations */
-    int error = NETWORK_OK;
+    eNETWORK_Error error = NETWORK_OK;
     network_DeportedData_t deportedDataTemp;
     
     if( pOutBuffer->deportedData )
