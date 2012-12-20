@@ -483,7 +483,7 @@ void* printBuff(void* data)
                                                     &deportData,LIMIT_SIZE_DEPORT_DATA, NULL );
         if( error ==  NETWORK_OK )
 		{
-			printf("- deport string data ack :%s \n", deportData);
+			printf("- deport string data :%s \n", deportData);
 		}
 
 	}

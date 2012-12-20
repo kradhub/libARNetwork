@@ -9,6 +9,7 @@
 #define _NETWORK_PARAMNEWIOBUFFER_H_
 
 #include <libNetwork/frame.h>
+#include <libNetwork/status.h>
 
 /*****************************************
  * 
