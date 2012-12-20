@@ -206,7 +206,7 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
     
     NSLog(@" -- libNetWork Test Bench auto -- \n");
 	
-	/** create the Manger1 */
+	/** create the Manager1 */
     
 	pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
                                    NB_OF_INPUT_NET1, paramInputNetwork1,
@@ -215,7 +215,7 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
     error = NETWORK_ManagerSocketsInit(pManager1, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
    NSLog(@"pManager1 error initScoket = %d", error);
     
-    /** create the Manger2 */
+    /** create the Manager2 */
 	pManager2 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
                                    NB_OF_INPUT_NET2, paramInputNetwork2,
                                    NB_OF_OUTPUT_NET2, paramOutputNetwork2, NULL);

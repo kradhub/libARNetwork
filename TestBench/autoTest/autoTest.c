@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 	
     printf(" -- libNetWork TestBench auto -- \n");
     
-    /** create the Manger1 */
+    /** create the Manager1 */
     
 	pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
                                     NB_OF_INPUT_NET1, paramInputNetwork1,

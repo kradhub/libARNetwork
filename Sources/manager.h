@@ -5,8 +5,8 @@
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _NETWORK_MANGER_NOEXPORTED_H_
-#define _NETWORK_MANGER_NOEXPORTED_H_
+#ifndef _NETWORK_MANAGER_NOEXPORTED_H_
+#define _NETWORK_MANAGER_NOEXPORTED_H_
 
 #include "ioBuffer.h"
 #include "sender.h"
@@ -30,5 +30,5 @@ struct network_manager_t
 };
 
 
-#endif // _NETWORK_MANGER_NOEXPORTED_H_
+#endif // _NETWORK_MANAGER_NOEXPORTED_H_
 

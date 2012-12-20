@@ -5,8 +5,8 @@
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _NETWORK_MANGER_H_
-#define _NETWORK_MANGER_H_
+#ifndef _NETWORK_MANAGER_H_
+#define _NETWORK_MANAGER_H_
 
 #include <libNetwork/status.h>
 #include <libNetwork/paramNewIoBuffer.h>
@@ -140,5 +140,5 @@ eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBu
 eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int outputBufferId,
                                                     void* pData, int dataLimitSize, int* pReadSize);
 
-#endif // _NETWORK_MANGER_H_
+#endif // _NETWORK_MANAGER_H_
 
