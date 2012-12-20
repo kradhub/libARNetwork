@@ -25,7 +25,7 @@
 
 #include <string.h>
 
-#include <libNetwork/deportedData.h>
+#include <libNetwork/paramNewIoBuffer.h>
 #include <libNetwork/frame.h>
 #include <libNetwork/manager.h>
 #include <libSAL/socket.h>
@@ -135,7 +135,6 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
 	paramInputNetwork1[2].ackTimeoutMs = 5;
 	paramInputNetwork1[2].nbOfRetry = -1/*20*/;
 	paramInputNetwork1[2].buffSize = 5;
-	paramInputNetwork1[2].buffCellSize = sizeof(network_DeportedData_t);
 	paramInputNetwork1[2].deportedData = 1;
 	
 	/** output ID_INT_DATA int */
@@ -180,7 +179,6 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
 	paramOutputNetwork2[2].id = ID_DEPORT_DATA;
     paramOutputNetwork2[2].dataType = network_frame_t_TYPE_DATA_WITH_ACK;
 	paramOutputNetwork2[2].buffSize = 5;
-	paramOutputNetwork2[2].buffCellSize = sizeof(network_DeportedData_t);
     paramOutputNetwork2[2].deportedData = 1;
 	
 	/** ----------------------------- */
@@ -194,7 +192,7 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
                                    NB_OF_INPUT_NET1, paramInputNetwork1,
                                    NB_OF_OUTPUT_NET1, paramOutputNetwork1);
     
-    error = NETWORK_ManagerScoketsInit(pManager1, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
+    error = NETWORK_ManagerSocketsInit(pManager1, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
    NSLog(@"pManager1 error initScoket = %d", error);
     
     /** create the Manger2 */
@@ -202,7 +200,7 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
                                    NB_OF_INPUT_NET2, paramInputNetwork2,
                                    NB_OF_OUTPUT_NET2, paramOutputNetwork2);
     
-    error = NETWORK_ManagerScoketsInit(pManager2, ADRR_IP, PORT2, PORT1, RECEIVER_TIMEOUT_SEC);
+    error = NETWORK_ManagerSocketsInit(pManager2, ADRR_IP, PORT2, PORT1, RECEIVER_TIMEOUT_SEC);
     NSLog(@"pManager2 error initScoket = %d", error);
 	
 	NSLog(@"main start \n");
@@ -243,7 +241,7 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
         pDataDeported = malloc(dataDeportSize);
         memcpy(pDataDeported, &orgDataDeported, dataDeportSize);
         
-        error = NETWORK_ManagerSenddeportedData( pManager1, ID_DEPORT_DATA,
+        error = NETWORK_ManagerSendDeportedData( pManager1, ID_DEPORT_DATA,
                                                 pDataDeported, dataDeportSize,
                                                 &(callBackDepotData) );
         
@@ -315,7 +313,7 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
     printf("\n the deported data transmitted:\n");
     ii = 0;
     dataDeportedRead = 0;
-    while( NETWORK_ManagerReaddeportedData(pManager2, ID_DEPORT_DATA, &dataDeportedRead, ii+1) > 0 )
+    while( !NETWORK_ManagerReaddeportedData(pManager2, ID_DEPORT_DATA, &dataDeportedRead, ii+1, NULL) > 0 )
     {
         dataDeportSize = ii+1;
         
@@ -350,6 +348,10 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
 	NSLog(@"end \n");
     
     /** delete */
+    sal_thread_destroy(&thread_send1);
+    sal_thread_destroy(&thread_send2);
+    sal_thread_destroy(&thread_recv1);
+    sal_thread_destroy(&thread_recv2);
 	NETWORK_DeleteManager( &pManager1 );
 	NETWORK_DeleteManager( &pManager2 );
     

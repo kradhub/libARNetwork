@@ -251,6 +251,8 @@
     NSLog(@" ThreadManager stoped \n");
     
     //delete
+    sal_thread_destroy(&thread_send1);
+    sal_thread_destroy(&thread_recv1);
 	NETWORK_DeleteManager( &pManager1 );
     
     NSLog(@" end \n");
@@ -262,7 +264,7 @@
 {
     const char* IpAddress = [ip UTF8String ];
     
-    connectError = NETWORK_ManagerScoketsInit( pManager1, IpAddress, sendPort,
+    connectError = NETWORK_ManagerSocketsInit( pManager1, IpAddress, sendPort,
                                               recvPort, RECV_TIMEOUT_MS );
     
     connected = true;
@@ -322,9 +324,10 @@
     
     [self.viewController.textViewInfo appendText: [ @"" stringByAppendingFormat: @"send str : %s \n",pDataDeported ] ];
     
-    return (bool) NETWORK_ManagerSenddeportedData( pManager1, id_ioBuff_deportDataAck,
-                                                          pDataDeported, dataDeportSize,
-                                                          &(callBackDepotData) );
+    return (bool) NETWORK_ManagerSendDeportedData( pManager1,
+                                                  id_ioBuff_deportDataAck,
+                                                  pDataDeported, dataDeportSize,
+                                                  &(callBackDepotData) );
 }
 
 - (void)print:(NSTimer *)_timer
@@ -353,7 +356,7 @@
 	
     error = NETWORK_ManagerReaddeportedData(pManager1,
                                             id_print_ioBuff_deportDataAck,
-                                            &deportData, LIMIT_SIZE_DEPORT_DATA );
+                                            &deportData, LIMIT_SIZE_DEPORT_DATA, NULL );
     
     if( error > 0 )
     {
