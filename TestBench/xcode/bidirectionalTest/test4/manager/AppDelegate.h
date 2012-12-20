@@ -24,6 +24,9 @@
 	char chData;
 	
 	int intData;
+    int dataDeportSize_ack;
+    char* pDataDeported_ack;
+    
     int dataDeportSize;
     char* pDataDeported;
 	
@@ -36,10 +39,12 @@
     int id_ioBuff_char;
     int id_ioBuff_intAck;
     int id_ioBuff_deportDataAck;
+    int id_ioBuff_deportData;
     
     int id_print_ioBuff_char;
     int id_print_ioBuff_intAck;
     int id_print_ioBuff_deportDataAck;
+    int id_print_ioBuff_deportData;
 	
 	sal_thread_t thread_send1;
 	sal_thread_t thread_recv1;
