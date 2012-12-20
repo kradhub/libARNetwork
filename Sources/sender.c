@@ -222,7 +222,7 @@ void* NETWORK_RunSendingThread(void* data)
 				/** try to add the latest data of the input buffer in the sending buffer*/
 				if( !NETWORK_SenderAddToBuffer(pSender, pInputTemp, pSender->seq) )
 				{				
-					pInputTemp->waitTimeCount = pInputTemp->sendingWaitTime;
+					pInputTemp->waitTimeCount = pInputTemp->sendingWaitTimeMs;
 					
 					switch(pInputTemp->dataType)
 					{

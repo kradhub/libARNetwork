@@ -24,7 +24,7 @@ typedef struct network_paramNewIoBuffer_t
 {
     int id;						/**< Identifier used to find the InOutBuffer in a list*/
     eNETWORK_Frame_Type dataType;		/**< Type of the data stored in the buffer*/
-    int sendingWaitTime;		/**< Time in millisecond between 2 send when the InOutBuffer is used with a libNetwork/sender*/
+    int sendingWaitTimeMs;		/**< Time in millisecond between 2 send when the InOutBuffer is used with a libNetwork/sender*/
     int ackTimeoutMs;			/**< Timeout in millisecond before retry to send the data waiting an acknowledgement when the InOutBuffer is used with a libNetwork/sender*/
     int nbOfRetry;				/**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libNetwork/sender*/
     

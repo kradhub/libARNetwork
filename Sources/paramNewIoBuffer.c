@@ -27,11 +27,11 @@
 
 #define NETWORK_IOBUFFER_ID_DEFAULT -1
 #define NETWORK_IOBUFFER_DATATYPE_DEFAULT NETWORK_FRAME_TYPE_UNINITIALIZED
-#define NETWORK_IOBUFFER_SENDINGWAITTIME_DEFAULT 1
+#define NETWORK_IOBUFFER_SENDING_WAIT_TIME_DEFAULT 1
 #define NETWORK_IOBUFFER_ACKTILEOUTMS_DEFAULT -1
 #define NETWORK_IOBUFFER_NBOFRETRY_DEFAULT -1
-#define NETWORK_IOBUFFER_numberOfCell_DEFAULT 0
-#define NETWORK_IOBUFFER_cellSize_DEFAULT 0
+#define NETWORK_IOBUFFER_NUMBER_OF_CELL_DEFAULT 0
+#define NETWORK_IOBUFFER_CELL_SIZE_DEFAULT 0
 #define NETWORK_IOBUFFER_OVERWRITING_DEFAULT 0
 #define NETWORK_IOBUFFER_deportedData_DEFAULT 0
 
@@ -52,12 +52,12 @@ eNETWORK_Error NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t *p
     {
         pParam->id = NETWORK_IOBUFFER_ID_DEFAULT;
         pParam->dataType = NETWORK_IOBUFFER_DATATYPE_DEFAULT;	
-        pParam->sendingWaitTime = NETWORK_IOBUFFER_SENDINGWAITTIME_DEFAULT;
+        pParam->sendingWaitTimeMs = NETWORK_IOBUFFER_SENDING_WAIT_TIME_DEFAULT;
         pParam->ackTimeoutMs = NETWORK_IOBUFFER_ACKTILEOUTMS_DEFAULT;
         pParam->nbOfRetry = NETWORK_IOBUFFER_NBOFRETRY_DEFAULT;
         
-        pParam->numberOfCell = NETWORK_IOBUFFER_numberOfCell_DEFAULT;	
-        pParam->cellSize = NETWORK_IOBUFFER_cellSize_DEFAULT;
+        pParam->numberOfCell = NETWORK_IOBUFFER_NUMBER_OF_CELL_DEFAULT;	
+        pParam->cellSize = NETWORK_IOBUFFER_CELL_SIZE_DEFAULT;
         pParam->overwriting = NETWORK_IOBUFFER_OVERWRITING_DEFAULT;
         pParam->deportedData = NETWORK_IOBUFFER_deportedData_DEFAULT;
     }
@@ -80,7 +80,7 @@ int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
     if( pParam != NULL &&
         pParam->id > NETWORK_IOBUFFER_ID_DEFAULT && 
         pParam->dataType != NETWORK_FRAME_TYPE_UNINITIALIZED &&
-        pParam->sendingWaitTime > 0 &&
+        pParam->sendingWaitTimeMs > 0 &&
         pParam->ackTimeoutMs >= -1 &&
         pParam->nbOfRetry >= -1 &&
         pParam->numberOfCell > 0 &&
@@ -94,7 +94,7 @@ int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
 values expected: \n \
     - id > -1 (value set: %d)\n\
     - dataType != NETWORK_FRAME_TYPE_UNINITIALIZED (value set: %d)\n\
-    - sendingWaitTime > 0 (value set: %d)\n\
+    - sendingWaitTimeMs > 0 (value set: %d)\n\
     - ackTimeoutMs > 0 or -1 if not used (value set: %d)\n\
     - nbOfRetry > 0 or -1 if not used  (value set: %d)\n\
     - numberOfCell > 0 (value set: %d)\n\
@@ -103,7 +103,7 @@ values expected: \n \
     - deportedData = 0 or 1 (value set: %d)\n", 
         pParam->id, 
         pParam->dataType, 
-        pParam->sendingWaitTime,
+        pParam->sendingWaitTimeMs,
         pParam->ackTimeoutMs,
         pParam->nbOfRetry,
         pParam->numberOfCell,

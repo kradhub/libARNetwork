@@ -78,7 +78,7 @@
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[0]) );
 	paramNetworkL1[0].id = ID_CHAR_DATA;
 	paramNetworkL1[0].dataType = NETWORK_FRAME_TYPE_DATA;
-	paramNetworkL1[0].sendingWaitTime = 3;
+	paramNetworkL1[0].sendingWaitTimeMs = 3;
 	paramNetworkL1[0].numberOfCell = 1;
 	paramNetworkL1[0].cellSize = sizeof(char);
 	paramNetworkL1[0].overwriting = 1;
@@ -87,7 +87,7 @@
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[1]) );
 	paramNetworkL1[1].id = ID_INT_DATA_WITH_ACK;
 	paramNetworkL1[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-	paramNetworkL1[1].sendingWaitTime = 2;
+	paramNetworkL1[1].sendingWaitTimeMs = 2;
 	paramNetworkL1[1].ackTimeoutMs = 10;
 	paramNetworkL1[1].nbOfRetry = 5;
 	paramNetworkL1[1].numberOfCell = 5;
@@ -97,7 +97,7 @@
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[2]) );
 	paramNetworkL1[2].id = ID_DEPORT_DATA_ACK;
 	paramNetworkL1[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-	paramNetworkL1[2].sendingWaitTime = 2;
+	paramNetworkL1[2].sendingWaitTimeMs = 2;
 	paramNetworkL1[2].ackTimeoutMs = 10;
 	paramNetworkL1[2].nbOfRetry = 5;
 	paramNetworkL1[2].numberOfCell = 5;
@@ -107,7 +107,7 @@
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[3]) );
 	paramNetworkL1[3].id = ID_DEPORT_DATA;
 	paramNetworkL1[3].dataType = NETWORK_FRAME_TYPE_DATA;
-	paramNetworkL1[3].sendingWaitTime = 2;
+	paramNetworkL1[3].sendingWaitTimeMs = 2;
 	paramNetworkL1[3].numberOfCell = 5;
 	paramNetworkL1[3].deportedData = 1;
 	
@@ -115,7 +115,7 @@
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[4]) );
 	paramNetworkL1[4].id = ID_KEEP_ALIVE;
 	paramNetworkL1[4].dataType = NETWORK_FRAME_TYPE_KEEP_ALIVE;
-	paramNetworkL1[4].sendingWaitTime = 100;
+	paramNetworkL1[4].sendingWaitTimeMs = 100;
 	paramNetworkL1[4].numberOfCell = 1;
 	paramNetworkL1[4].cellSize = sizeof(int);
 	paramNetworkL1[4].overwriting = 1;
@@ -124,7 +124,7 @@
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[0]) );
 	paramNetworkL2[0].id = ID_CHAR_DATA_2;
 	paramNetworkL2[0].dataType = NETWORK_FRAME_TYPE_DATA;
-	paramNetworkL2[0].sendingWaitTime = 3;
+	paramNetworkL2[0].sendingWaitTimeMs = 3;
 	paramNetworkL2[0].numberOfCell = 1;
 	paramNetworkL2[0].cellSize = sizeof(char);
 	paramNetworkL2[0].overwriting = 1;
@@ -133,7 +133,7 @@
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[1]) );
 	paramNetworkL2[1].id = ID_INT_DATA_WITH_ACK_2;
 	paramNetworkL2[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-	paramNetworkL2[1].sendingWaitTime = 2;
+	paramNetworkL2[1].sendingWaitTimeMs = 2;
 	paramNetworkL2[1].ackTimeoutMs = 10;
 	paramNetworkL2[1].nbOfRetry = -1 /*5*/;
 	paramNetworkL2[1].numberOfCell = 5;
@@ -144,7 +144,7 @@
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[2]) );
 	paramNetworkL2[2].id = ID_DEPORT_DATA_ACK_2;
 	paramNetworkL2[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-	paramNetworkL2[2].sendingWaitTime = 2;
+	paramNetworkL2[2].sendingWaitTimeMs = 2;
 	paramNetworkL2[2].ackTimeoutMs = 10;
 	paramNetworkL2[2].nbOfRetry = -1 /*5*/;
 	paramNetworkL2[2].numberOfCell = 5;
@@ -154,7 +154,7 @@
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[3]) );
 	paramNetworkL2[3].id = ID_DEPORT_DATA_2;
 	paramNetworkL2[3].dataType = NETWORK_FRAME_TYPE_DATA;
-	paramNetworkL2[3].sendingWaitTime = 2;
+	paramNetworkL2[3].sendingWaitTimeMs = 2;
 	paramNetworkL2[3].numberOfCell = 5;
 	paramNetworkL2[3].deportedData = 1;
 

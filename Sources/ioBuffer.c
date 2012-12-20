@@ -56,7 +56,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
         {
             pIoBuffer->id = pParam->id;
             pIoBuffer->dataType = pParam->dataType;
-            pIoBuffer->sendingWaitTime = pParam->sendingWaitTime;
+            pIoBuffer->sendingWaitTimeMs = pParam->sendingWaitTimeMs;
             pIoBuffer->ackTimeoutMs = pParam->ackTimeoutMs;
             pIoBuffer->deportedData = pParam->deportedData;
         
@@ -74,7 +74,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
 		
             pIoBuffer->isWaitAck = 0;
             pIoBuffer->seqWaitAck = 0;
-            pIoBuffer->waitTimeCount = pParam->sendingWaitTime;
+            pIoBuffer->waitTimeCount = pParam->sendingWaitTimeMs;
             pIoBuffer->ackWaitTimeCount = pParam->ackTimeoutMs;
             pIoBuffer->retryCount = 0;
 		
@@ -275,7 +275,7 @@ void NETWORK_IoBufferFlush( network_ioBuffer_t* pIoBuffer )
     /**  reset */
     pIoBuffer->isWaitAck = 0;
     pIoBuffer->seqWaitAck = 0;
-    pIoBuffer->waitTimeCount = pIoBuffer->sendingWaitTime;
+    pIoBuffer->waitTimeCount = pIoBuffer->sendingWaitTimeMs;
     pIoBuffer->ackWaitTimeCount = pIoBuffer->ackTimeoutMs;
     pIoBuffer->retryCount = 0;
 }
