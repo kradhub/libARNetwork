@@ -1,5 +1,5 @@
 /**
- *	@file main.h
+ *	@file autoTest.c
  *  @brief libNetWork TestBench automatic
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
     error = NETWORK_ManagerSocketsInit(pManager1, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
     printf("pManager1 error initsocket = %d \n", error);
 
-    /** create the Manger2 */
+    /** create the Manager2 */
 	pManager2 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
                                     NB_OF_INPUT_NET2, paramInputNetwork2,
                                     NB_OF_OUTPUT_NET2, paramOutputNetwork2, NULL);          
