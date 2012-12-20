@@ -18,11 +18,13 @@
 typedef struct network_ringBuffer_t  
 {
     void* dataBuffer;				/**< Pointer on the data buffer*/
-    unsigned int buffIndexInput;	/**< Index of the data input*/
-    unsigned int buffIndexOutput;	/**< Index of the data output*/
     unsigned int numberOfCell;			/**< Maximum number of data stored*/
     unsigned int cellSize;		/**< Size of one data in byte*/
     unsigned int overwriting;		/**< Indicator of overwriting possibility (1 = true | 0 = false)*/
+    
+    unsigned int indexInput;	/**< Index of the data input*/
+    unsigned int indexOutput;	/**< Index of the data output*/
+    
     sal_mutex_t mutex;				/**< Mutex to take before to use the ringBuffer*/
 
 }network_ringBuffer_t;
@@ -87,7 +89,7 @@ eNETWORK_Error NETWORK_RingBuffPopFront(network_ringBuffer_t* pRingBuff, void* p
 static inline int NETWORK_RingBuffGetFreeCellNb(const network_ringBuffer_t* pRingBuff)
 {
 	return pRingBuff->numberOfCell - ( 
-			(pRingBuff->buffIndexInput - pRingBuff->buffIndexOutput) / pRingBuff->cellSize );
+			(pRingBuff->indexInput - pRingBuff->indexOutput) / pRingBuff->cellSize );
 }
 
 /**
@@ -97,7 +99,7 @@ static inline int NETWORK_RingBuffGetFreeCellNb(const network_ringBuffer_t* pRin
 **/
 static inline int NETWORK_RingBuffIsEmpty(const network_ringBuffer_t* pRingBuff)
 {
-	return pRingBuff->buffIndexInput == pRingBuff->buffIndexOutput;
+	return pRingBuff->indexInput == pRingBuff->indexOutput;
 }
 
 /**
@@ -114,7 +116,7 @@ eNETWORK_Error NETWORK_RingBuffFront( network_ringBuffer_t* pRingBuff, void* pFr
 **/
 static inline void NETWORK_RingBuffClean(network_ringBuffer_t* pRingBuff)
 {
-	pRingBuff->buffIndexInput = pRingBuff->buffIndexOutput;
+	pRingBuff->indexInput = pRingBuff->indexOutput;
 }
 
 /**
