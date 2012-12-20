@@ -1,5 +1,5 @@
 /**
- *	@file frame.h
+ *  @file frame.h
  *  @brief define the network frame protocol
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
@@ -28,7 +28,7 @@ typedef enum eNETWORK_Frame_Type
 **/
 typedef struct network_frame_t
 {
-	eNETWORK_Frame_Type type; /**< frame type */
+    eNETWORK_Frame_Type type; /**< frame type */
     uint32_t id; /**< identifier of the buffer sending the frame */
     uint32_t seq; /**< sequence number of the frame */
     uint32_t size; /**< size of the frame */

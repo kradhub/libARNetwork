@@ -1,5 +1,5 @@
 /**
- *	@file manager.c
+ *  @file manager.c
  *  @brief network manager allow to send data acknowledged or not.
  *  @date 28/09/2012
  *  @author maxime.maitre@parrot.com
@@ -7,7 +7,7 @@
 
 /*****************************************
  * 
- * 			include file :
+ *             include file :
  *
 ******************************************/
 
@@ -37,7 +37,7 @@
 
 /*****************************************
  * 
- * 			private header:
+ *             private header:
  *
 ******************************************/
 
@@ -48,37 +48,37 @@
  *  @pre pManager->numOfOutputWithoutAck, pManager->numOfOutput, pManager->numOfInputWithoutAck and pManager->numOfInput must be accurate
  *  @param pManager pointer on the Manager
  *  @param[in] ptabParamInput Table of the parameters of creation of the inputs. The table must contain as many parameters as the number of input buffer.
- * 	@param[in] ptabParamOutput Table of the parameters of creation of the outputs. The table must contain as many parameters as the number of output buffer.
+ *  @param[in] ptabParamOutput Table of the parameters of creation of the outputs. The table must contain as many parameters as the number of output buffer.
  *  @param[in] sendBufferSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
  *  @return error equal to NETWORK_OK if the IoBuffer are correctly created otherwise see eNETWORK_Manager_Error.
  *  @see NETWORK_NewManager()
 **/
-eNETWORK_Error NETWORK_ManagerCreateIoBuffer(network_manager_t* pManager,
+eNETWORK_Error NETWORK_ManagerCreateIoBuffer( network_manager_t* pManager,
                                                 network_paramNewIoBuffer_t* ptabParamInput, 
                                                 network_paramNewIoBuffer_t* ptabParamOutput,
-                                                unsigned int sendBufferSize);
+                                                unsigned int sendBufferSize );
 
 /*****************************************
  * 
- * 			implementation :
+ *             implementation :
  *
 ******************************************/
 
-network_manager_t* NETWORK_NewManager(	unsigned int recvBufferSize,unsigned int sendBufferSize,
-				unsigned int numberOfInput, network_paramNewIoBuffer_t* ptabParamInput,
-				unsigned int numberOfOutput, network_paramNewIoBuffer_t* ptabParamOutput,
+network_manager_t* NETWORK_NewManager( unsigned int recvBufferSize,unsigned int sendBufferSize,
+                unsigned int numberOfInput, network_paramNewIoBuffer_t* ptabParamInput,
+                unsigned int numberOfOutput, network_paramNewIoBuffer_t* ptabParamOutput,
                 eNETWORK_Error* pError)
 {
-	/** -- Create a new Manager -- */
-	
-	/** local declarations */
-	network_manager_t* pManager = NULL;
-	eNETWORK_Error error = NETWORK_OK;
+    /** -- Create a new Manager -- */
+    
+    /** local declarations */
+    network_manager_t* pManager = NULL;
+    eNETWORK_Error error = NETWORK_OK;
     
     /** Create the Manager */
     pManager = malloc( sizeof(network_manager_t));
-	if(pManager != NULL)
-	{
+    if(pManager != NULL)
+    {
         /** Initialize to default values */
         pManager->pSender = NULL;
         pManager->pReceiver = NULL;
@@ -91,23 +91,23 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBufferSize,unsigned int 
     }
     else
     {
-		error = NETWORK_ERROR_ALLOC;
-	}
+        error = NETWORK_ERROR_ALLOC;
+    }
     
     /**
      *  For each output buffer a buffer of acknowledgement is add and referenced
      *  in the output buffer list and the input buffer list.
     **/
 
-	if( error == NETWORK_OK )
-	{
-		/** 
-		 * Allocate the output buffer list of size of the number of output plus the number of 
-		 * buffer of acknowledgement. The size of the list is then two times the number of output.
-		**/
-		pManager->numOfOutputWithoutAck = numberOfOutput;
-		pManager->numOfOutput = 2 * numberOfOutput;
-		pManager->ppTabOutput = calloc( pManager->numOfOutput, sizeof(network_ioBuffer_t*) );
+    if( error == NETWORK_OK )
+    {
+        /** 
+         * Allocate the output buffer list of size of the number of output plus the number of 
+         * buffer of acknowledgement. The size of the list is then two times the number of output.
+        **/
+        pManager->numOfOutputWithoutAck = numberOfOutput;
+        pManager->numOfOutput = 2 * numberOfOutput;
+        pManager->ppTabOutput = calloc( pManager->numOfOutput, sizeof(network_ioBuffer_t*) );
         if( pManager->ppTabOutput == NULL )
         {
             error = NETWORK_ERROR_ALLOC;
@@ -117,15 +117,15 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBufferSize,unsigned int 
     }
     
     if( error == NETWORK_OK )
-	{	
-		/** 
-		 * Allocate the input buffer list of size of the number of input plus the number of 
-		 * buffer of acknowledgement. 
-		 * The size of the list is then number of input plus the number of output.
-		**/ 
-		pManager->numOfInputWithoutAck = numberOfInput;
-		pManager->numOfInput = numberOfInput + numberOfOutput;
-		pManager->ppTabInput = calloc( pManager->numOfInput, sizeof(network_ioBuffer_t*) );
+    {    
+        /** 
+         * Allocate the input buffer list of size of the number of input plus the number of 
+         * buffer of acknowledgement. 
+         * The size of the list is then number of input plus the number of output.
+        **/ 
+        pManager->numOfInputWithoutAck = numberOfInput;
+        pManager->numOfInput = numberOfInput + numberOfOutput;
+        pManager->ppTabInput = calloc( pManager->numOfInput, sizeof(network_ioBuffer_t*) );
         if( pManager->ppTabInput == NULL )
         {
             error = NETWORK_ERROR_ALLOC;
@@ -135,15 +135,15 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBufferSize,unsigned int 
     }
     
     if( error == NETWORK_OK )
-	{	
+    {    
         /** Create manager's IoBuffers */
         error = NETWORK_ManagerCreateIoBuffer(pManager, ptabParamInput, ptabParamOutput, sendBufferSize);
-	}
+    }
     
-	if( error == NETWORK_OK )
-	{
-		/** Create the Sender */
-		pManager->pSender = NETWORK_NewSender(sendBufferSize, pManager->numOfInput, pManager->ppTabInput);
+    if( error == NETWORK_OK )
+    {
+        /** Create the Sender */
+        pManager->pSender = NETWORK_NewSender(sendBufferSize, pManager->numOfInput, pManager->ppTabInput);
         if( pManager->pSender == NULL)
         {
             error = NETWORK_MANAGER_ERROR_NEW_SENDER;
@@ -151,25 +151,25 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBufferSize,unsigned int 
     }
     
     if( error == NETWORK_OK )
-	{
+    {
         /** Create the Receiver */
-		pManager->pReceiver = NETWORK_NewReceiver(recvBufferSize, pManager->numOfOutput, pManager->ppTabOutput);
-		if( pManager->pReceiver != NULL)
-		{
-			pManager->pReceiver->pSender = pManager->pSender;
-		}
-		else
-		{
-			error = NETWORK_MANAGER_ERROR_NEW_RECEIVER;
-		}
-	}
+        pManager->pReceiver = NETWORK_NewReceiver(recvBufferSize, pManager->numOfOutput, pManager->ppTabOutput);
+        if( pManager->pReceiver != NULL)
+        {
+            pManager->pReceiver->pSender = pManager->pSender;
+        }
+        else
+        {
+            error = NETWORK_MANAGER_ERROR_NEW_RECEIVER;
+        }
+    }
     
     /** delete the Manager if an error occurred */
     if( error != NETWORK_OK)
     {
         SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", error );
-		NETWORK_DeleteManager(&pManager);
-	}
+        NETWORK_DeleteManager(&pManager);
+    }
 
     /** return the error */
     if(pError != NULL)
@@ -181,52 +181,52 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBufferSize,unsigned int 
 }
 
 void NETWORK_DeleteManager(network_manager_t** ppManager)
-{	
-	/** -- Delete the Manager -- */
-	
-	/** local declarations */
-	network_manager_t* pManager = NULL;
-	int ii = 0;
-	
-	if(ppManager)
-	{
-		pManager = *ppManager;
-		
-		if(pManager)
-		{
-			NETWORK_DeleteSender( &(pManager->pSender) );
-			NETWORK_DeleteReceiver( &(pManager->pReceiver) );
-			
-			/** Delete all output buffers including the the buffers of acknowledgement */
-			for(ii = 0; ii< pManager->numOfOutput ; ++ii)
-			{
-				NETWORK_DeleteIoBuffer( &(pManager->ppTabOutput[ii]) );
-			}
+{    
+    /** -- Delete the Manager -- */
+    
+    /** local declarations */
+    network_manager_t* pManager = NULL;
+    int ii = 0;
+    
+    if(ppManager)
+    {
+        pManager = *ppManager;
+        
+        if(pManager)
+        {
+            NETWORK_DeleteSender( &(pManager->pSender) );
+            NETWORK_DeleteReceiver( &(pManager->pReceiver) );
+            
+            /** Delete all output buffers including the the buffers of acknowledgement */
+            for(ii = 0; ii< pManager->numOfOutput ; ++ii)
+            {
+                NETWORK_DeleteIoBuffer( &(pManager->ppTabOutput[ii]) );
+            }
             free(pManager->ppTabOutput);
             pManager->ppTabOutput = NULL;
-			
-			/** Delete the input buffers but not the buffers of acknowledgement already deleted */
-			for(ii = 0; ii< pManager->numOfInputWithoutAck ; ++ii)
-			{
-				NETWORK_DeleteIoBuffer( &(pManager->ppTabInput[ii]) );
-			}
+            
+            /** Delete the input buffers but not the buffers of acknowledgement already deleted */
+            for(ii = 0; ii< pManager->numOfInputWithoutAck ; ++ii)
+            {
+                NETWORK_DeleteIoBuffer( &(pManager->ppTabInput[ii]) );
+            }
             free(pManager->ppTabInput);
             pManager->ppTabInput = NULL;
-			
-			free(pManager);
+            
+            free(pManager);
             pManager = NULL;
-		}
-		
-		*ppManager = NULL;
-	}
+        }
+        
+        *ppManager = NULL;
+    }
 }
 
 eNETWORK_Error NETWORK_ManagerSocketsInit(network_manager_t* pManager,const char* addr, 
                                             int sendingPort,int recvPort, int recvTimeoutSec)
 {
     /** -- initialize UDP sockets of sending and receiving the data. -- */
-	
-	/** local declarations */
+    
+    /** local declarations */
     eNETWORK_Error error = NETWORK_OK;
     
     /** check paratemters*/
@@ -239,7 +239,7 @@ eNETWORK_Error NETWORK_ManagerSocketsInit(network_manager_t* pManager,const char
     {
         error = NETWORK_SenderConnection( pManager->pSender,addr, sendingPort );
     }
-			
+            
     if( error == NETWORK_OK )
     {
         error = NETWORK_ReceiverBind( pManager->pReceiver, recvPort, recvTimeoutSec );
@@ -304,26 +304,26 @@ void NETWORK_ManagerStop(network_manager_t* pManager)
 
 eNETWORK_Error NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, const void* pData)
 {
-	/** -- Add data to send -- */
-	
-	/** local declarations */
-	eNETWORK_Error error = NETWORK_OK;
-	network_ioBuffer_t* pInputBuffer = NULL;
-	
+    /** -- Add data to send -- */
+    
+    /** local declarations */
+    eNETWORK_Error error = NETWORK_OK;
+    network_ioBuffer_t* pInputBuffer = NULL;
+    
     /** check paratemters */
     if(pManager != NULL  )
     {
-	    pInputBuffer = NETWORK_IoBufferFromId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
+        pInputBuffer = NETWORK_IoBufferFromId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
     }
     else
     {
        error =  NETWORK_ERROR_BAD_PARAMETER;
     }
-	
-	if(pInputBuffer != NULL)
-	{
+    
+    if(pInputBuffer != NULL)
+    {
         /** check paratemters */
-		if( !pInputBuffer->deportedData && pData != NULL )
+        if( !pInputBuffer->deportedData && pData != NULL )
         {
             error = NETWORK_RingBuffPushBack(pInputBuffer->pBuffer, pData);
         }
@@ -331,38 +331,38 @@ eNETWORK_Error NETWORK_ManagerSendData(network_manager_t* pManager, int inputBuf
         {
             error = NETWORK_ERROR_BAD_PARAMETER;
         }
-	}
+    }
     else
     {
         error = NETWORK_ERROR_ID_UNKNOWN;
     }
-	
-	return error;
+    
+    return error;
 }
 
 eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBufferId,
-                                                 void* pData, int dataSize,
-                                                 network_deportDatacallback callback )
+                                                  void* pData, int dataSize,
+                                                  network_deportDatacallback callback )
 {
-	/** -- Add data deported to send -- */
-	
-	/** local declarations */
-	eNETWORK_Error error = NETWORK_OK;
-	network_ioBuffer_t* pInputBuffer = NULL;
+    /** -- Add data deported to send -- */
+    
+    /** local declarations */
+    eNETWORK_Error error = NETWORK_OK;
+    network_ioBuffer_t* pInputBuffer = NULL;
     network_DeportedData_t deportedDataTemp;
     
     /** check paratemters */
     if(pManager != NULL)
     {
-	    pInputBuffer = NETWORK_IoBufferFromId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
-	}
+        pInputBuffer = NETWORK_IoBufferFromId( pManager->ppTabInput, pManager->numOfInput, inputBufferId);
+    }
     else
     {
         error = NETWORK_ERROR_BAD_PARAMETER;
     }
     
-	if(pInputBuffer != NULL)
-	{
+    if(pInputBuffer != NULL)
+    {
         /** check paratemters */
         if( pInputBuffer->deportedData && 
             pData != NULL && 
@@ -378,75 +378,75 @@ eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int
         }
         else
         {
-		    error = NETWORK_ERROR_BAD_PARAMETER;
+            error = NETWORK_ERROR_BAD_PARAMETER;
         }
-	}
+    }
     else
     {
         error = NETWORK_ERROR_ID_UNKNOWN;
     }
-	
-	return error;
+    
+    return error;
 }
 
 eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, void* pData)
 {
-	/** -- read data received -- */
-	
-	/** local declarations */
-	eNETWORK_Error error = NETWORK_OK;
-	network_ioBuffer_t* pOutputBuffer = NULL;
+    /** -- read data received -- */
+    
+    /** local declarations */
+    eNETWORK_Error error = NETWORK_OK;
+    network_ioBuffer_t* pOutputBuffer = NULL;
     
     /** check paratemters */
     if(pManager != NULL)
     {
-	    pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
+        pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
     }
     else
     {
         error = NETWORK_ERROR_BAD_PARAMETER;
     }
-	
-	if(pOutputBuffer != NULL)
-	{
+    
+    if(pOutputBuffer != NULL)
+    {
         /** check paratemters */
         if( !pOutputBuffer->deportedData )
         {
             /** push the data in the InputBuffer */
-		    error = NETWORK_RingBuffPopFront(pOutputBuffer->pBuffer, pData);
+            error = NETWORK_RingBuffPopFront(pOutputBuffer->pBuffer, pData);
         }
         else
         {
             error = NETWORK_ERROR_BAD_PARAMETER;
         }
-	}
+    }
     else
     {
         error = NETWORK_ERROR_ID_UNKNOWN;
     }
-	
-	return error;
+    
+    return error;
 }
 
 eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int outputBufferId,
                                      void* pData, int dataLimitSize, int* pReadSize)
 {
     /** -- read data deported received -- */
-	
-	/** local declarations */
-	eNETWORK_Error error = NETWORK_OK;
-	network_ioBuffer_t* pOutputBuffer = NULL;
+    
+    /** local declarations */
+    eNETWORK_Error error = NETWORK_OK;
+    network_ioBuffer_t* pOutputBuffer = NULL;
     network_DeportedData_t deportedDataTemp;
     int readSize = 0;
-	
+    
     /** check paratemters */
     if(pManager != NULL)
     {
-	    pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
+        pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
     }
-	
-	if(pOutputBuffer != NULL)
-	{
+    
+    if(pOutputBuffer != NULL)
+    {
         /** check paratemters */
         if( pOutputBuffer->deportedData )
         {
@@ -476,9 +476,9 @@ eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int
         }
         else
         {
-		    error = NETWORK_ERROR_BAD_PARAMETER;
+            error = NETWORK_ERROR_BAD_PARAMETER;
         }
-	}
+    }
     else
     {
         error = NETWORK_ERROR_ID_UNKNOWN;
@@ -489,13 +489,13 @@ eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int
     {
         *pReadSize = readSize;
     }
-	
-	return error;
+    
+    return error;
 }
 
 /*****************************************
  * 
- * 			private implementation:
+ *             private implementation:
  *
 ******************************************/
 
@@ -507,17 +507,17 @@ eNETWORK_Error NETWORK_ManagerCreateIoBuffer( network_manager_t* pManager,
     /** -- Create manager's IoBuffers --*/
     
     /** local declarations */
-	eNETWORK_Error error = NETWORK_OK;
+    eNETWORK_Error error = NETWORK_OK;
     int ii = 0;
-	int indexAckOutput = 0;
+    int indexAckOutput = 0;
     network_paramNewIoBuffer_t paramNewACK;
-	
-	/** Initialize the default parameters for the buffers of acknowledgement. */
-	NETWORK_ParamNewIoBufferDefaultInit(&paramNewACK); 
+    
+    /** Initialize the default parameters for the buffers of acknowledgement. */
+    NETWORK_ParamNewIoBufferDefaultInit(&paramNewACK); 
     paramNewACK.dataType = NETWORK_FRAME_TYPE_ACK;
     paramNewACK.numberOfCell = 1;
-	paramNewACK.cellSize = sizeof(int);
-	paramNewACK.isOverwriting = 0;
+    paramNewACK.cellSize = sizeof(int);
+    paramNewACK.isOverwriting = 0;
     
     /**
      *  For each output buffer a buffer of acknowledgement is add and referenced

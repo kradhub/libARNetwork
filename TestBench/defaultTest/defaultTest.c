@@ -1,5 +1,5 @@
 /**
- *	@file main.h
+ *  @file main.h
  *  @brief libNetWork TestBench automatic
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
@@ -7,7 +7,7 @@
 
 /*****************************************
  * 
- * 			include file :
+ *             include file :
  *
 ******************************************/
 
@@ -24,7 +24,7 @@
 
 /*****************************************
  * 
- * 			define :
+ *             define :
  *
 ******************************************/
 
@@ -41,7 +41,7 @@ struct termios initial_settings, new_settings;
 
 /*****************************************
  * 
- * 			implementation :
+ *             implementation :
  *
 ******************************************/
 
@@ -58,55 +58,55 @@ void setupNonBlockingTerm ()
 void fixTerminal (int sig)
 {
     /** reload terminal setting */
-	tcsetattr(0, TCSANOW, &initial_settings);
-	
-	exit (0);
+    tcsetattr(0, TCSANOW, &initial_settings);
+    
+    exit (0);
 }
 
 int main(int argc, char *argv[])
 {
-	/** local declarations */
-	char scanChar = 0;
-	int sendPort = 0;
-	int recvPort = 0;
+    /** local declarations */
+    char scanChar = 0;
+    int sendPort = 0;
+    int recvPort = 0;
     network_manager_t* pManager = NULL;
     eNETWORK_Error error = NETWORK_OK;
     int connectError = 1;
     char IpAddress[16];
     
     sal_thread_t thread_send1;
-	sal_thread_t thread_recv1;
+    sal_thread_t thread_recv1;
     
     /** save terminal setting */
-	tcgetattr(0,&initial_settings);	
+    tcgetattr(0,&initial_settings);    
     /** call fixTerminal when the terminal kill the program */
-	signal (SIGINT, fixTerminal);
-	
-	printf(" -- libNetWork TestBench default -- \n");
-	
-	while(scanChar == 0)
-	{
-		printf("type 1 or 2 ? : ");
-		scanf("%c",&scanChar);
-		
-		switch(scanChar)
-		{
-			case '1':
+    signal (SIGINT, fixTerminal);
+    
+    printf(" -- libNetWork TestBench default -- \n");
+    
+    while(scanChar == 0)
+    {
+        printf("type 1 or 2 ? : ");
+        scanf("%c",&scanChar);
+        
+        switch(scanChar)
+        {
+            case '1':
                 sendPort = PORT1;
-	            recvPort = PORT2;
-			break;
-			
-			case '2':
-				sendPort = PORT2;
-	            recvPort = PORT1;
-			break;
-			
-			default:
-				scanChar = 0;
-			break;
-		}
-	}
-	
+                recvPort = PORT2;
+            break;
+            
+            case '2':
+                sendPort = PORT2;
+                recvPort = PORT1;
+            break;
+            
+            default:
+                scanChar = 0;
+            break;
+        }
+    }
+    
     pManager = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, 0, NULL, 0,NULL, &error);
     
     if(error == NETWORK_OK )
@@ -119,22 +119,22 @@ int main(int argc, char *argv[])
             connectError = NETWORK_ManagerSocketsInit( pManager, IpAddress, sendPort,
                                                         recvPort, RECV_TIMEOUT_MS );
             
-            printf("    - connect error: %d \n", connectError );			
+            printf("    - connect error: %d \n", connectError );            
             printf("\n");
         }
     }
     
     /** start threads */
     sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager);
-	sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager);
+    sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager);
     
-	while ( ((scanChar = getchar()) != '\n') && scanChar != EOF )
-	{
+    while ( ((scanChar = getchar()) != '\n') && scanChar != EOF )
+    {
         
-	}
-	
+    }
+    
     /** set the terminal on nonBloking mode */
-	setupNonBlockingTerm ();
+    setupNonBlockingTerm ();
     
     if(error == NETWORK_OK )
     {
@@ -145,17 +145,17 @@ int main(int argc, char *argv[])
             scanf("%c",&scanChar);
         }
     }
-	
+    
     /** stop all therad */
     NETWORK_ManagerStop(pManager);
-	
+    
     printf("wait ... \n");
     
-	/** kill all thread */
-	sal_thread_join(&(thread_send1), NULL);
-	sal_thread_join(&(thread_recv1), NULL);
+    /** kill all thread */
+    sal_thread_join(&(thread_send1), NULL);
+    sal_thread_join(&(thread_recv1), NULL);
 
-	/** delete */
+    /** delete */
     sal_thread_destroy(&thread_send1);
     sal_thread_destroy(&thread_recv1);
     NETWORK_DeleteManager( &pManager );

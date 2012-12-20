@@ -17,25 +17,25 @@
 @interface AppDelegate : UIResponder <UIApplicationDelegate>{
 
     network_manager_t* pManager1;
-	
-	int netType;
-	
-	char cmdType;
-	char chData;
-	
-	int intData;
+    
+    int netType;
+    
+    char cmdType;
+    char chData;
+    
+    int intData;
     int dataDeportSize_ack;
     char* pDataDeported_ack;
     
     int dataDeportSize;
     char* pDataDeported;
-	
-	char IpAddress[16];
-    int sendPort;
-	int recvPort;
     
-	int connectError;
-	
+    char IpAddress[16];
+    int sendPort;
+    int recvPort;
+    
+    int connectError;
+    
     int id_ioBuff_char;
     int id_ioBuff_intAck;
     int id_ioBuff_deportDataAck;
@@ -45,9 +45,9 @@
     int id_print_ioBuff_intAck;
     int id_print_ioBuff_deportDataAck;
     int id_print_ioBuff_deportData;
-	
-	sal_thread_t thread_send1;
-	sal_thread_t thread_recv1;
+    
+    sal_thread_t thread_send1;
+    sal_thread_t thread_recv1;
     
     NSTimer *timer;
     

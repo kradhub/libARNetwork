@@ -1,5 +1,5 @@
 /**
- *	@file manager.h
+ *  @file manager.h
  *  @brief network manager allow to send data acknowledged or not.
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
@@ -26,7 +26,6 @@ struct network_manager_t
     int numOfOutput; /**< Number of output buffer*/
     int numOfInputWithoutAck; /**< Number of input buffer without the  buffers of acknowledgement*/
     int numOfOutputWithoutAck; /**< Number of output buffer without the  buffers of acknowledgement*/
-    
 };
 
 

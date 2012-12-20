@@ -1,5 +1,5 @@
 /**
- *	@file manager.h
+ *  @file manager.h
  *  @brief network manager allow to send data acknowledged or not.
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
@@ -35,16 +35,16 @@ typedef struct network_manager_t network_manager_t;
  *  @warning The identifiers of the IoBuffer should not exceed the value 1000.
  *  @see NETWORK_DeleteManager()
 **/
-network_manager_t* NETWORK_NewManager(	unsigned int recvBufferSize,unsigned int sendBufferSize,
-				unsigned int numberOfInput, network_paramNewIoBuffer_t* ptabParamInput,
-				unsigned int numberOfOutput, network_paramNewIoBuffer_t* ptabParamOutput,
-                eNETWORK_Error* pError);
+network_manager_t* NETWORK_NewManager( unsigned int recvBufferSize,unsigned int sendBufferSize,
+                unsigned int numberOfInput, network_paramNewIoBuffer_t* ptabParamInput,
+                unsigned int numberOfOutput, network_paramNewIoBuffer_t* ptabParamOutput,
+                eNETWORK_Error* pError );
 
 /**
  *  @brief Delete the Manager
- * 	@warning This function free memory
- * 	@param ppManager address of the pointer on Network
- * 	@see NETWORK_NewManager()
+ *  @warning This function free memory
+ *  @param ppManager address of the pointer on Network
+ *  @see NETWORK_NewManager()
 **/
 void NETWORK_DeleteManager(network_manager_t** ppManager);
 
@@ -53,7 +53,7 @@ void NETWORK_DeleteManager(network_manager_t** ppManager);
  *  @param pManager pointer on the Manager
  *  @param[in] addr address of connection at which the data will be sent.
  *  @param[in] recvPort port on which the data will be received.
- * 	@param[in] recvTimeoutSec timeout in seconds set on the socket to limit the time of blocking of the function NETWORK_ReceiverRead().
+ *  @param[in] recvTimeoutSec timeout in seconds set on the socket to limit the time of blocking of the function NETWORK_ReceiverRead().
  *  @return error equal to NETWORK_OK if the Bind if successful otherwise see eNETWORK_Manager_Error.
 **/
 eNETWORK_Error NETWORK_ManagerSocketsInit(network_manager_t* pManager,const char* addr,
@@ -61,54 +61,54 @@ eNETWORK_Error NETWORK_ManagerSocketsInit(network_manager_t* pManager,const char
 
 /**
  *  @brief Manage the sending of the data 
- * 	@warning This function must be called by a specific thread.
- * 	@pre The sockets must be initialized through NETWORK_ManagerSocketsInit().
- * 	@post Before join the thread calling this function, NETWORK_ManagerStop() must be called.
+ *  @warning This function must be called by a specific thread.
+ *  @pre The sockets must be initialized through NETWORK_ManagerSocketsInit().
+ *  @post Before join the thread calling this function, NETWORK_ManagerStop() must be called.
  *  @note This function send the data stored in the input buffer through NETWORK_ManagerSendData().
- * 	@param data thread datas of type network_manager_t*
+ *  @param data thread datas of type network_manager_t*
  *  @return NULL
- * 	@see NETWORK_ManagerSocketsInit()
- * 	@see NETWORK_ManagerStop()
+ *  @see NETWORK_ManagerSocketsInit()
+ *  @see NETWORK_ManagerStop()
 **/
 void* NETWORK_ManagerRunSendingThread(void* data);
 
 /**
  *  @brief Manage the reception of the data.
- * 	@warning This function must be called by a specific thread.
- * 	@pre The socket of the receiver must be initialized through NETWORK_ManagerSocketsInit().
- * 	@post Before join the thread calling this function, NETWORK_ManagerStop() must be called.
- * 	@note This function receives the data through NETWORK_ManagerReadData() and stores them in the output buffers according to their parameters.
- * 	@param data thread datas of type network_manager_t*
+ *     @warning This function must be called by a specific thread.
+ *     @pre The socket of the receiver must be initialized through NETWORK_ManagerSocketsInit().
+ *     @post Before join the thread calling this function, NETWORK_ManagerStop() must be called.
+ *     @note This function receives the data through NETWORK_ManagerReadData() and stores them in the output buffers according to their parameters.
+ *  @param data thread datas of type network_manager_t*
  *  @return NULL
- * 	@see NETWORK_ManagerSocketsInit()
- * 	@see NETWORK_ManagerStop()
- * 	@see NETWORK_ManagerReadData()
+ *  @see NETWORK_ManagerSocketsInit()
+ *  @see NETWORK_ManagerStop()
+ *  @see NETWORK_ManagerReadData()
 **/
 void* NETWORK_ManagerRunReceivingThread(void* data);
 
 /**
  *  @brief stop the threads of sending and reception
- * 	@details Used to kill the threads calling NETWORK_ManagerRunSendingThread() and NETWORK_ManagerRunReceivingThread().
- * 	@param @param pManager pointer on the Manager
- * 	@see NETWORK_ManagerRunSendingThread()
+ *  @details Used to kill the threads calling NETWORK_ManagerRunSendingThread() and NETWORK_ManagerRunReceivingThread().
+ *  @param @param pManager pointer on the Manager
+ *  @see NETWORK_ManagerRunSendingThread()
  *  @see NETWORK_ManagerRunReceivingThread()
 **/
 void NETWORK_ManagerStop(network_manager_t* pManager);
 
 /**
  *  @brief Add data to send
- * 	@param pManager pointer on the Manager
- * 	@param[in] inputBufferId identifier of the input buffer in which the data must be stored
- * 	@param[in] pData pointer on the data to send
+ *  @param pManager pointer on the Manager
+ *  @param[in] inputBufferId identifier of the input buffer in which the data must be stored
+ *  @param[in] pData pointer on the data to send
  *  @return error eNETWORK_Error
 **/
 eNETWORK_Error NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, const void* pData);
 
 /**
  *  @brief Add deported data to send
- * 	@param pManager pointer on the Manager
- * 	@param[in] inputBufferId identifier of the input buffer in which the data must be stored
- * 	@param[in] pData pointer on the data to send
+ *  @param pManager pointer on the Manager
+ *  @param[in] inputBufferId identifier of the input buffer in which the data must be stored
+ *  @param[in] pData pointer on the data to send
  *  @param[in] dataSize size of the data to send
  *  @param[in] callback pointer on the callback to call when the data is sent or an error occurred
  *  @return error eNETWORK_Error
@@ -120,9 +120,9 @@ eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int
 /**
  *  @brief Read data received
  *  @warning the outputBuffer should not be deportedData type
- * 	@param pManager pointer on the Manager
- * 	@param[in] outputBufferId identifier of the output buffer in which the data must be read
- * 	@param[out] pData pointer on the data read
+ *  @param pManager pointer on the Manager
+ *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
+ *  @param[out] pData pointer on the data read
  *  @return error eNETWORK_Error
 **/
 eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, void* pData);
@@ -130,15 +130,15 @@ eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBu
 /**
  *  @brief Read deported data received
  *  @warning the outputBuffer must be deportedData type
- * 	@param pManager pointer on the Manager
- * 	@param[in] outputBufferId identifier of the output buffer in which the data must be read
- * 	@param[out] pData pointer on the data read
+ *  @param pManager pointer on the Manager
+ *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
+ *  @param[out] pData pointer on the data read
  *  @param[in] dataLimitSize limit size of the copy
  *  @param[out] pReadSize pointer to store the size of the data read
  *  @return error eNETWORK_Error type
 **/
 eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int outputBufferId,
-                                                    void* pData, int dataLimitSize, int* pReadSize);
+                                                  void* pData, int dataLimitSize, int* pReadSize );
 
 #endif // _NETWORK_MANAGER_H_
 

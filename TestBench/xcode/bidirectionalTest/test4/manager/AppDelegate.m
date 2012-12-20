@@ -9,7 +9,7 @@
 
 /*****************************************
  *
- * 			include file :
+ *             include file :
  *
  ******************************************/
 
@@ -32,7 +32,7 @@
 
 /*****************************************
  *
- * 			define :
+ *             define :
  *
  ******************************************/
 
@@ -53,7 +53,7 @@
 
 /*****************************************
  *
- * 			implementation :
+ *             implementation :
  *
  ******************************************/
 
@@ -69,97 +69,97 @@
     eNETWORK_Error error = NETWORK_OK;
     
     network_paramNewIoBuffer_t paramNetworkL1[5];
-	network_paramNewIoBuffer_t paramNetworkL2[4];
+    network_paramNewIoBuffer_t paramNetworkL2[4];
     
-	
-	/** --- network 1 --- */
-	
-	/** input ID_CHAR_DATA char */
+    
+    /** --- network 1 --- */
+    
+    /** input ID_CHAR_DATA char */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[0]) );
-	paramNetworkL1[0].id = ID_CHAR_DATA;
-	paramNetworkL1[0].dataType = NETWORK_FRAME_TYPE_DATA;
-	paramNetworkL1[0].sendingWaitTimeMs = 3;
-	paramNetworkL1[0].numberOfCell = 1;
-	paramNetworkL1[0].cellSize = sizeof(char);
-	paramNetworkL1[0].isOverwriting = 1;
-	
-	/** input ID_INT_DATA_WITH_ACK int */
+    paramNetworkL1[0].id = ID_CHAR_DATA;
+    paramNetworkL1[0].dataType = NETWORK_FRAME_TYPE_DATA;
+    paramNetworkL1[0].sendingWaitTimeMs = 3;
+    paramNetworkL1[0].numberOfCell = 1;
+    paramNetworkL1[0].cellSize = sizeof(char);
+    paramNetworkL1[0].isOverwriting = 1;
+    
+    /** input ID_INT_DATA_WITH_ACK int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[1]) );
-	paramNetworkL1[1].id = ID_INT_DATA_WITH_ACK;
-	paramNetworkL1[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-	paramNetworkL1[1].sendingWaitTimeMs = 2;
-	paramNetworkL1[1].ackTimeoutMs = 10;
-	paramNetworkL1[1].nbOfRetry = 5;
-	paramNetworkL1[1].numberOfCell = 5;
-	paramNetworkL1[1].cellSize = sizeof(int);
+    paramNetworkL1[1].id = ID_INT_DATA_WITH_ACK;
+    paramNetworkL1[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    paramNetworkL1[1].sendingWaitTimeMs = 2;
+    paramNetworkL1[1].ackTimeoutMs = 10;
+    paramNetworkL1[1].nbOfRetry = 5;
+    paramNetworkL1[1].numberOfCell = 5;
+    paramNetworkL1[1].cellSize = sizeof(int);
     
     /** input ID_DEPORT_DATA_ACK  */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[2]) );
-	paramNetworkL1[2].id = ID_DEPORT_DATA_ACK;
-	paramNetworkL1[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-	paramNetworkL1[2].sendingWaitTimeMs = 2;
-	paramNetworkL1[2].ackTimeoutMs = 10;
-	paramNetworkL1[2].nbOfRetry = 5;
-	paramNetworkL1[2].numberOfCell = 5;
-	paramNetworkL1[2].deportedData = 1;
+    paramNetworkL1[2].id = ID_DEPORT_DATA_ACK;
+    paramNetworkL1[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    paramNetworkL1[2].sendingWaitTimeMs = 2;
+    paramNetworkL1[2].ackTimeoutMs = 10;
+    paramNetworkL1[2].nbOfRetry = 5;
+    paramNetworkL1[2].numberOfCell = 5;
+    paramNetworkL1[2].deportedData = 1;
     
     /** input ID_DEPORT_DATA */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[3]) );
-	paramNetworkL1[3].id = ID_DEPORT_DATA;
-	paramNetworkL1[3].dataType = NETWORK_FRAME_TYPE_DATA;
-	paramNetworkL1[3].sendingWaitTimeMs = 2;
-	paramNetworkL1[3].numberOfCell = 5;
-	paramNetworkL1[3].deportedData = 1;
-	
-	/** input ID_KEEP_ALIVE char */
+    paramNetworkL1[3].id = ID_DEPORT_DATA;
+    paramNetworkL1[3].dataType = NETWORK_FRAME_TYPE_DATA;
+    paramNetworkL1[3].sendingWaitTimeMs = 2;
+    paramNetworkL1[3].numberOfCell = 5;
+    paramNetworkL1[3].deportedData = 1;
+    
+    /** input ID_KEEP_ALIVE char */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[4]) );
-	paramNetworkL1[4].id = ID_KEEP_ALIVE;
-	paramNetworkL1[4].dataType = NETWORK_FRAME_TYPE_KEEP_ALIVE;
-	paramNetworkL1[4].sendingWaitTimeMs = 100;
-	paramNetworkL1[4].numberOfCell = 1;
-	paramNetworkL1[4].cellSize = sizeof(int);
-	paramNetworkL1[4].isOverwriting = 1;
-	
-	/**  ID_CHAR_DATA_2 int */
+    paramNetworkL1[4].id = ID_KEEP_ALIVE;
+    paramNetworkL1[4].dataType = NETWORK_FRAME_TYPE_KEEP_ALIVE;
+    paramNetworkL1[4].sendingWaitTimeMs = 100;
+    paramNetworkL1[4].numberOfCell = 1;
+    paramNetworkL1[4].cellSize = sizeof(int);
+    paramNetworkL1[4].isOverwriting = 1;
+    
+    /**  ID_CHAR_DATA_2 int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[0]) );
-	paramNetworkL2[0].id = ID_CHAR_DATA_2;
-	paramNetworkL2[0].dataType = NETWORK_FRAME_TYPE_DATA;
-	paramNetworkL2[0].sendingWaitTimeMs = 3;
-	paramNetworkL2[0].numberOfCell = 1;
-	paramNetworkL2[0].cellSize = sizeof(char);
-	paramNetworkL2[0].isOverwriting = 1;
-	
-	/**  ID_INT_DATA_WITH_ACK_2 char */
+    paramNetworkL2[0].id = ID_CHAR_DATA_2;
+    paramNetworkL2[0].dataType = NETWORK_FRAME_TYPE_DATA;
+    paramNetworkL2[0].sendingWaitTimeMs = 3;
+    paramNetworkL2[0].numberOfCell = 1;
+    paramNetworkL2[0].cellSize = sizeof(char);
+    paramNetworkL2[0].isOverwriting = 1;
+    
+    /**  ID_INT_DATA_WITH_ACK_2 char */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[1]) );
-	paramNetworkL2[1].id = ID_INT_DATA_WITH_ACK_2;
-	paramNetworkL2[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-	paramNetworkL2[1].sendingWaitTimeMs = 2;
-	paramNetworkL2[1].ackTimeoutMs = 10;
-	paramNetworkL2[1].nbOfRetry = -1 /*5*/;
-	paramNetworkL2[1].numberOfCell = 5;
-	paramNetworkL2[1].cellSize = sizeof(int);
-	paramNetworkL2[1].isOverwriting = 0;
+    paramNetworkL2[1].id = ID_INT_DATA_WITH_ACK_2;
+    paramNetworkL2[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    paramNetworkL2[1].sendingWaitTimeMs = 2;
+    paramNetworkL2[1].ackTimeoutMs = 10;
+    paramNetworkL2[1].nbOfRetry = -1 /*5*/;
+    paramNetworkL2[1].numberOfCell = 5;
+    paramNetworkL2[1].cellSize = sizeof(int);
+    paramNetworkL2[1].isOverwriting = 0;
     
     /** input ID_DEPORT_DATA_ACK_2  */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[2]) );
-	paramNetworkL2[2].id = ID_DEPORT_DATA_ACK_2;
-	paramNetworkL2[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-	paramNetworkL2[2].sendingWaitTimeMs = 2;
-	paramNetworkL2[2].ackTimeoutMs = 10;
-	paramNetworkL2[2].nbOfRetry = -1 /*5*/;
-	paramNetworkL2[2].numberOfCell = 5;
-	paramNetworkL2[2].deportedData = 1;
+    paramNetworkL2[2].id = ID_DEPORT_DATA_ACK_2;
+    paramNetworkL2[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    paramNetworkL2[2].sendingWaitTimeMs = 2;
+    paramNetworkL2[2].ackTimeoutMs = 10;
+    paramNetworkL2[2].nbOfRetry = -1 /*5*/;
+    paramNetworkL2[2].numberOfCell = 5;
+    paramNetworkL2[2].deportedData = 1;
     
     /** input ID_DEPORT_DATA_2 */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[3]) );
-	paramNetworkL2[3].id = ID_DEPORT_DATA_2;
-	paramNetworkL2[3].dataType = NETWORK_FRAME_TYPE_DATA;
-	paramNetworkL2[3].sendingWaitTimeMs = 2;
-	paramNetworkL2[3].numberOfCell = 5;
-	paramNetworkL2[3].deportedData = 1;
+    paramNetworkL2[3].id = ID_DEPORT_DATA_2;
+    paramNetworkL2[3].dataType = NETWORK_FRAME_TYPE_DATA;
+    paramNetworkL2[3].sendingWaitTimeMs = 2;
+    paramNetworkL2[3].numberOfCell = 5;
+    paramNetworkL2[3].deportedData = 1;
 
     
-	NSLog(@"\n ~~ This soft sends data and repeater ack ~~ \n \n");
+    NSLog(@"\n ~~ This soft sends data and repeater ack ~~ \n \n");
     
     switch(netType)
     {
@@ -183,7 +183,7 @@
              NSLog(@"pNetwork1 type 1");
             
         break;
-			
+            
         case 2:
             pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, NB_OF_INPUT_L2, paramNetworkL2, NB_OF_INPUT_L1 ,paramNetworkL1, &error);
             
@@ -203,7 +203,7 @@
             NSLog(@"pNetwork1 type 2");
             
         break;
-			
+            
         default:
 
         break;
@@ -230,14 +230,14 @@
     
     NSLog(@"stopThreadManager");
     
-	//stop all therad
+    //stop all therad
     if(pManager1 != NULL)
     {
         NETWORK_ManagerStop(pManager1);
     }
-	
-	//kill all thread
-	if(thread_send1 != NULL)
+    
+    //kill all thread
+    if(thread_send1 != NULL)
     {
         sal_thread_join(&(thread_send1), NULL);
     }
@@ -254,7 +254,7 @@
         [timer invalidate];
         timer = nil;
     }
-	
+    
     
 }
 
@@ -271,7 +271,7 @@
     //delete
     sal_thread_destroy(&thread_send1);
     sal_thread_destroy(&thread_recv1);
-	NETWORK_DeleteManager( &pManager1 );
+    NETWORK_DeleteManager( &pManager1 );
     
     NSLog(@" end \n");
     
@@ -401,7 +401,7 @@
         
         [self.viewController.textViewInfoRecv  appendText: [@"- int ack: " stringByAppendingFormat:@"%d \n",intDataRecv ]];
     }
-	
+    
     error = NETWORK_ManagerReadDeportedData(pManager1,
                                             id_print_ioBuff_deportDataAck,
                                             &deportData, LIMIT_SIZE_DEPORT_DATA, NULL );

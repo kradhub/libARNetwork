@@ -1,5 +1,5 @@
 /**
- *	@file deportedData.h
+ *  @file deportedData.h
  *  @brief deported data used to send large data or data with scalable size
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
@@ -12,7 +12,7 @@
 
 /*****************************************
  * 
- * 			deportedData header:
+ *             deportedData header:
  *
 ******************************************/
 

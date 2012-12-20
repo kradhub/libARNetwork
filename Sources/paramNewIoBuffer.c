@@ -1,5 +1,5 @@
 /**
- *	@file paramNewIoBuffer.c
+ *  @file paramNewIoBuffer.c
  *  @brief prameters used to set the parameters of a new inOutBuffer
  *  @date 28/09/2012
  *  @author maxime.maitre@parrot.com
@@ -7,7 +7,7 @@
 
 /*****************************************
  * 
- * 			include file :
+ *             include file :
  *
 ******************************************/
 
@@ -21,7 +21,7 @@
 
 /*****************************************
  * 
- * 			define :
+ *             define :
  *
 ******************************************/
 
@@ -37,13 +37,13 @@
 
 /*****************************************
  * 
- * 			implementation :
+ *             implementation :
  *
 ******************************************/
 
 eNETWORK_Error NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t *pParam)
 {
-	/** -- initialization of the paramNewIoBuffer with default parameters -- */
+    /** -- initialization of the paramNewIoBuffer with default parameters -- */
     
     /** local declarations */
     eNETWORK_Error error = NETWORK_OK;
@@ -51,12 +51,12 @@ eNETWORK_Error NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t *p
     if(pParam != NULL)
     {
         pParam->id = NETWORK_IOBUFFER_ID_DEFAULT;
-        pParam->dataType = NETWORK_IOBUFFER_DATATYPE_DEFAULT;	
+        pParam->dataType = NETWORK_IOBUFFER_DATATYPE_DEFAULT;    
         pParam->sendingWaitTimeMs = NETWORK_IOBUFFER_SENDING_WAIT_TIME_DEFAULT;
         pParam->ackTimeoutMs = NETWORK_IOBUFFER_ACKTILEOUTMS_DEFAULT;
         pParam->nbOfRetry = NETWORK_IOBUFFER_NBOFRETRY_DEFAULT;
         
-        pParam->numberOfCell = NETWORK_IOBUFFER_NUMBER_OF_CELL_DEFAULT;	
+        pParam->numberOfCell = NETWORK_IOBUFFER_NUMBER_OF_CELL_DEFAULT;    
         pParam->cellSize = NETWORK_IOBUFFER_CELL_SIZE_DEFAULT;
         pParam->isOverwriting = NETWORK_IOBUFFER_OVERWRITING_DEFAULT;
         pParam->deportedData = NETWORK_IOBUFFER_deportedData_DEFAULT;
