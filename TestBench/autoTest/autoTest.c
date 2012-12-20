@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 	paramInputNetwork1[0].dataType = NETWORK_FRAME_TYPE_DATA;
 	paramInputNetwork1[0].numberOfCell = 1;
 	paramInputNetwork1[0].cellSize = sizeof(char);
-	paramInputNetwork1[0].overwriting = 1;
+	paramInputNetwork1[0].isOverwriting = 1;
 	
 	/** input ID_INT_DATA_WITH_ACK int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramInputNetwork1[1]) );
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
 	paramOutputNetwork1[0].dataType = NETWORK_FRAME_TYPE_DATA;
 	paramOutputNetwork1[0].numberOfCell = 5;
 	paramOutputNetwork1[0].cellSize = sizeof(int);
-	paramOutputNetwork1[0].overwriting = 1;
+	paramOutputNetwork1[0].isOverwriting = 1;
 	
 	/** ----------------------------- */
 	
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 	paramInputNetwork2[0].sendingWaitTimeMs = 2;
 	paramInputNetwork2[0].numberOfCell = 2;
 	paramInputNetwork2[0].cellSize = sizeof(int);
-	paramInputNetwork2[0].overwriting = 1;
+	paramInputNetwork2[0].isOverwriting = 1;
 	
 	/**  output ID_CHAR_DATA int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork2[0]) );
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 	paramOutputNetwork2[0].sendingWaitTimeMs = 3;
 	paramOutputNetwork2[0].numberOfCell = 1;
 	paramOutputNetwork2[0].cellSize = sizeof(char);
-	paramOutputNetwork2[0].overwriting = 1;
+	paramOutputNetwork2[0].isOverwriting = 1;
 	
 	/** output ID_INT_DATA_WITH_ACK int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork2[1]) );

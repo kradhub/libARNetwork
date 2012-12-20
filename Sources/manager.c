@@ -517,7 +517,7 @@ eNETWORK_Error NETWORK_ManagerCreateIoBuffer( network_manager_t* pManager,
     paramNewACK.dataType = NETWORK_FRAME_TYPE_ACK;
     paramNewACK.numberOfCell = 1;
 	paramNewACK.cellSize = sizeof(int);
-	paramNewACK.overwriting = 0;
+	paramNewACK.isOverwriting = 0;
     
     /**
      *  For each output buffer a buffer of acknowledgement is add and referenced

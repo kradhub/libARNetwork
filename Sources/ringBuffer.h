@@ -20,7 +20,7 @@ typedef struct network_ringBuffer_t
     void* dataBuffer;				/**< Pointer on the data buffer*/
     unsigned int numberOfCell;			/**< Maximum number of data stored*/
     unsigned int cellSize;		/**< Size of one data in byte*/
-    unsigned int overwriting;		/**< Indicator of overwriting possibility (1 = true | 0 = false)*/
+    unsigned int isOverwriting;		/**< Indicator of overwriting possibility (1 = true | 0 = false)*/
     
     unsigned int indexInput;	/**< Index of the data input*/
     unsigned int indexOutput;	/**< Index of the data output*/
@@ -47,14 +47,14 @@ network_ringBuffer_t* NETWORK_NewRingBuffer(	unsigned int numberOfCell, unsigned
  * 	@post NETWORK_DeleteRingBuffer() must be called to delete the ring buffer and free the memory allocated
  * 	@param[in] numberOfCell Maximum number of data cell of the ring buffer
  * 	@param[in] cellSize size of one data cell of the ring buffer
- * 	@param[in] overwriting set to 1 allow the overwriting if the buffer is full otherwise set 0
+ * 	@param[in] isOverwriting set to 1 allow the overwriting if the buffer is full otherwise set 0
  * 	@return Pointer on the new ring buffer
  * 	@see NETWORK_NewRingBufferWithOverwriting()
  * 	@see NETWORK_DeleteRingBuffer()
 **/
 network_ringBuffer_t* NETWORK_NewRingBufferWithOverwriting(	unsigned int numberOfCell, 
 														unsigned int cellSize, 
-														int overwriting ); 
+														int isOverwriting ); 
 
 /**
  *  @brief Delete the ring buffer

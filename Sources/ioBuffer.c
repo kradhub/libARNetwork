@@ -80,7 +80,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
 		
             /** Create the RingBuffer */
             pIoBuffer->pBuffer = NETWORK_NewRingBufferWithOverwriting(	pParam->numberOfCell, pParam->cellSize,
-                                                                pParam->overwriting);
+                                                                pParam->isOverwriting);
             if(pIoBuffer->pBuffer != NULL)
             {
                 /** if it is a keep alive buffer, push in the data send for keep alive */ 

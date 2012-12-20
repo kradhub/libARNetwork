@@ -38,7 +38,7 @@ typedef struct network_paramNewIoBuffer_t
     
     unsigned int numberOfCell;		/**< Maximum number of data stored*/
     unsigned int cellSize;	/**< Size of one data in byte*/
-    int overwriting;			/**< Indicator of overwriting possibility (1 = true | 0 = false)*/
+    int isOverwriting;			/**< Indicator of overwriting possibility (1 = true | 0 = false)*/
     int deportedData;			/**< Indicator of using data deported */
 
 }network_paramNewIoBuffer_t;

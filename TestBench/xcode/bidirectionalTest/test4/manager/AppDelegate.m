@@ -81,7 +81,7 @@
 	paramNetworkL1[0].sendingWaitTimeMs = 3;
 	paramNetworkL1[0].numberOfCell = 1;
 	paramNetworkL1[0].cellSize = sizeof(char);
-	paramNetworkL1[0].overwriting = 1;
+	paramNetworkL1[0].isOverwriting = 1;
 	
 	/** input ID_INT_DATA_WITH_ACK int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL1[1]) );
@@ -118,7 +118,7 @@
 	paramNetworkL1[4].sendingWaitTimeMs = 100;
 	paramNetworkL1[4].numberOfCell = 1;
 	paramNetworkL1[4].cellSize = sizeof(int);
-	paramNetworkL1[4].overwriting = 1;
+	paramNetworkL1[4].isOverwriting = 1;
 	
 	/**  ID_CHAR_DATA_2 int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[0]) );
@@ -127,7 +127,7 @@
 	paramNetworkL2[0].sendingWaitTimeMs = 3;
 	paramNetworkL2[0].numberOfCell = 1;
 	paramNetworkL2[0].cellSize = sizeof(char);
-	paramNetworkL2[0].overwriting = 1;
+	paramNetworkL2[0].isOverwriting = 1;
 	
 	/**  ID_INT_DATA_WITH_ACK_2 char */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[1]) );
@@ -138,7 +138,7 @@
 	paramNetworkL2[1].nbOfRetry = -1 /*5*/;
 	paramNetworkL2[1].numberOfCell = 5;
 	paramNetworkL2[1].cellSize = sizeof(int);
-	paramNetworkL2[1].overwriting = 0;
+	paramNetworkL2[1].isOverwriting = 0;
     
     /** input ID_DEPORT_DATA_ACK_2  */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramNetworkL2[2]) );

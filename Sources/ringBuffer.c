@@ -37,7 +37,7 @@ network_ringBuffer_t* NETWORK_NewRingBuffer(	unsigned int numberOfCell, unsigned
 
 network_ringBuffer_t* NETWORK_NewRingBufferWithOverwriting(	unsigned int numberOfCell, 
 														unsigned int cellSize, 
-														int overwriting )
+														int isOverwriting )
 {
     /** -- Create a new ring buffer -- */
     
@@ -50,7 +50,7 @@ network_ringBuffer_t* NETWORK_NewRingBufferWithOverwriting(	unsigned int numberO
 		pRingBuff->cellSize = cellSize;
 		pRingBuff->indexInput = 0;
 		pRingBuff->indexOutput = 0;
-		pRingBuff->overwriting = overwriting;
+		pRingBuff->isOverwriting = isOverwriting;
 		sal_mutex_init( &(pRingBuff->mutex) );
 		pRingBuff->dataBuffer = malloc( cellSize * numberOfCell );
 		
@@ -97,7 +97,7 @@ eNETWORK_Error NETWORK_RingBuffPushBack(network_ringBuffer_t* pRingBuff, const v
 	
 	sal_mutex_lock(&(pRingBuff->mutex));
 	
-	if( NETWORK_RingBuffGetFreeCellNb(pRingBuff) || pRingBuff->overwriting)
+	if( NETWORK_RingBuffGetFreeCellNb(pRingBuff) || pRingBuff->isOverwriting)
 	{	
 		if( !NETWORK_RingBuffGetFreeCellNb(pRingBuff) )
 		{
@@ -191,8 +191,8 @@ void NETWORK_RingBuffPrint(network_ringBuffer_t* pRingBuff)
 	SAL_PRINT(PRINT_WARNING," cellSize :%d \n",pRingBuff->cellSize);
 	SAL_PRINT(PRINT_WARNING," indexOutput :%d \n",pRingBuff->indexOutput);
 	SAL_PRINT(PRINT_WARNING," indexInput :%d \n",pRingBuff->indexInput);
-	SAL_PRINT(PRINT_WARNING," overwriting :%d \n",pRingBuff->overwriting);
-	SAL_PRINT(PRINT_WARNING," data : \n",pRingBuff->overwriting);
+	SAL_PRINT(PRINT_WARNING," overwriting :%d \n",pRingBuff->isOverwriting);
+	SAL_PRINT(PRINT_WARNING," data : \n");
 	
 	sal_mutex_unlock(&(pRingBuff->mutex));
 	

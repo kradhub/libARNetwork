@@ -58,7 +58,7 @@ eNETWORK_Error NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t *p
         
         pParam->numberOfCell = NETWORK_IOBUFFER_NUMBER_OF_CELL_DEFAULT;	
         pParam->cellSize = NETWORK_IOBUFFER_CELL_SIZE_DEFAULT;
-        pParam->overwriting = NETWORK_IOBUFFER_OVERWRITING_DEFAULT;
+        pParam->isOverwriting = NETWORK_IOBUFFER_OVERWRITING_DEFAULT;
         pParam->deportedData = NETWORK_IOBUFFER_deportedData_DEFAULT;
     }
     else
@@ -99,7 +99,7 @@ values expected: \n \
     - nbOfRetry > 0 or -1 if not used  (value set: %d)\n\
     - numberOfCell > 0 (value set: %d)\n\
     - cellSize > 0 (value set: %d)\n\
-    - overwriting = 0 or 1 (value set: %d)\n\
+    - isOverwriting = 0 or 1 (value set: %d)\n\
     - deportedData = 0 or 1 (value set: %d)\n", 
         pParam->id, 
         pParam->dataType, 
@@ -108,7 +108,7 @@ values expected: \n \
         pParam->nbOfRetry,
         pParam->numberOfCell,
         pParam->cellSize,
-        pParam->overwriting,
+        pParam->isOverwriting,
         pParam->deportedData);
     }
     
