@@ -118,8 +118,8 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
     NETWORK_ParamNewIoBufferDefaultInit( &(paramInputNetwork1[0]) );
 	paramInputNetwork1[0].id = ID_CHAR_DATA;
 	paramInputNetwork1[0].dataType = NETWORK_FRAME_TYPE_DATA;
-	paramInputNetwork1[0].buffSize = 1;
-	paramInputNetwork1[0].buffCellSize = sizeof(char);
+	paramInputNetwork1[0].numberOfCell = 1;
+	paramInputNetwork1[0].cellSize = sizeof(char);
 	paramInputNetwork1[0].overwriting = 1;
 	
 	/** input ID_INT_DATA_WITH_ACK int */
@@ -129,15 +129,15 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
 	paramInputNetwork1[1].sendingWaitTime = 2;
 	paramInputNetwork1[1].ackTimeoutMs = 5;
 	paramInputNetwork1[1].nbOfRetry = -1/*20*/;
-	paramInputNetwork1[1].buffSize = 5;
-	paramInputNetwork1[1].buffCellSize = sizeof(int);
+	paramInputNetwork1[1].numberOfCell = 5;
+	paramInputNetwork1[1].cellSize = sizeof(int);
     
     /** input ID_DEPORT_DATA */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramInputNetwork1[2]) );
 	paramInputNetwork1[2].id = ID_DEPORT_DATA;
 	paramInputNetwork1[2].dataType = NETWORK_FRAME_TYPE_DATA;
 	paramInputNetwork1[2].sendingWaitTime = 2;
-	paramInputNetwork1[2].buffSize = 5;
+	paramInputNetwork1[2].numberOfCell = 5;
 	paramInputNetwork1[2].deportedData = 1;
     
     /** input ID_DEPORT_DATA_ACK */
@@ -147,15 +147,15 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
 	paramInputNetwork1[3].sendingWaitTime = 2;
 	paramInputNetwork1[3].ackTimeoutMs = 5;
 	paramInputNetwork1[3].nbOfRetry = -1/*20*/;
-	paramInputNetwork1[3].buffSize = 5;
+	paramInputNetwork1[3].numberOfCell = 5;
 	paramInputNetwork1[3].deportedData = 1;
 	
 	/** output ID_INT_DATA int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork1[0]) );
 	paramOutputNetwork1[0].id = ID_INT_DATA;
 	paramOutputNetwork1[0].dataType = NETWORK_FRAME_TYPE_DATA;
-	paramOutputNetwork1[0].buffSize = 5;
-	paramOutputNetwork1[0].buffCellSize = sizeof(int);
+	paramOutputNetwork1[0].numberOfCell = 5;
+	paramOutputNetwork1[0].cellSize = sizeof(int);
 	paramOutputNetwork1[0].overwriting = 1;
 	
 	/** ----------------------------- */
@@ -167,8 +167,8 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
 	paramInputNetwork2[0].id = ID_INT_DATA;
 	paramInputNetwork2[0].dataType = NETWORK_FRAME_TYPE_DATA;
 	paramInputNetwork2[0].sendingWaitTime = 2;
-	paramInputNetwork2[0].buffSize = 2;
-	paramInputNetwork2[0].buffCellSize = sizeof(int);
+	paramInputNetwork2[0].numberOfCell = 2;
+	paramInputNetwork2[0].cellSize = sizeof(int);
 	paramInputNetwork2[0].overwriting = 1;
 	
 	/**  output ID_CHAR_DATA int */
@@ -176,29 +176,29 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
 	paramOutputNetwork2[0].id = ID_CHAR_DATA;
 	paramOutputNetwork2[0].dataType = NETWORK_FRAME_TYPE_DATA;
 	paramOutputNetwork2[0].sendingWaitTime = 3;
-	paramOutputNetwork2[0].buffSize = 1;
-	paramOutputNetwork2[0].buffCellSize = sizeof(char);
+	paramOutputNetwork2[0].numberOfCell = 1;
+	paramOutputNetwork2[0].cellSize = sizeof(char);
 	paramOutputNetwork2[0].overwriting = 1;
 	
 	/** output ID_INT_DATA_WITH_ACK int */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork2[1]) );
 	paramOutputNetwork2[1].id = ID_INT_DATA_WITH_ACK;
     paramOutputNetwork2[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-	paramOutputNetwork2[1].buffSize = 5;
-	paramOutputNetwork2[1].buffCellSize = sizeof(int);
+	paramOutputNetwork2[1].numberOfCell = 5;
+	paramOutputNetwork2[1].cellSize = sizeof(int);
     
     /** output ID_DEPORT_DATA */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork2[2]) );
 	paramOutputNetwork2[2].id = ID_DEPORT_DATA;
     paramOutputNetwork2[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-	paramOutputNetwork2[2].buffSize = 5;
+	paramOutputNetwork2[2].numberOfCell = 5;
     paramOutputNetwork2[2].deportedData = 1;
     
     /** output ID_DEPORT_DATA_ACK */
     NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork2[3]) );
 	paramOutputNetwork2[3].id = ID_DEPORT_DATA_ACK;
     paramOutputNetwork2[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-	paramOutputNetwork2[3].buffSize = 5;
+	paramOutputNetwork2[3].numberOfCell = 5;
     paramOutputNetwork2[3].deportedData = 1;
 	
 	/** ----------------------------- */

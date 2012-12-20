@@ -26,7 +26,7 @@
  *
 ******************************************/
 
-network_buffer_t* NETWORK_NewBuffer(unsigned int buffSize, unsigned int buffCellSize)
+network_buffer_t* NETWORK_NewBuffer(unsigned int numberOfCell, unsigned int cellSize)
 {
 	/** -- Create a new buffer -- */
 	
@@ -35,10 +35,10 @@ network_buffer_t* NETWORK_NewBuffer(unsigned int buffSize, unsigned int buffCell
 	
 	if(pBuffer)
 	{
-		pBuffer->buffSize = buffSize;
-		pBuffer->buffCellSize = buffCellSize;
-		pBuffer->pStart = malloc( buffCellSize * buffSize );
-		pBuffer->pEnd = pBuffer->pStart + ( buffCellSize * buffSize );
+		pBuffer->numberOfCell = numberOfCell;
+		pBuffer->cellSize = cellSize;
+		pBuffer->pStart = malloc( cellSize * numberOfCell );
+		pBuffer->pEnd = pBuffer->pStart + ( cellSize * numberOfCell );
 		pBuffer->pFront = pBuffer->pStart;
 		
 		if( pBuffer->pStart == NULL)
@@ -78,8 +78,8 @@ void NETWORK_BufferPrint(network_buffer_t* pBuffer)
 	/** -- Print the state of the buffer -- */
 	
 	SAL_PRINT(PRINT_WARNING," pointer dataBuffer :%d \n",pBuffer->pStart);
-	SAL_PRINT(PRINT_WARNING," buffSize :%d \n",pBuffer->buffSize);
-	SAL_PRINT(PRINT_WARNING," buffCellSize :%d \n",pBuffer->buffCellSize);
+	SAL_PRINT(PRINT_WARNING," numberOfCell :%d \n",pBuffer->numberOfCell);
+	SAL_PRINT(PRINT_WARNING," cellSize :%d \n",pBuffer->cellSize);
 	
 	SAL_PRINT(PRINT_WARNING," data : \n");
 
@@ -98,7 +98,7 @@ void NETWORK_BufferDataPrint(network_buffer_t* pBuffer)
 	while( it < itEnd )
 	{
 		SAL_PRINT(PRINT_WARNING,"	- 0x: ");
-		for(ii = 0 ; ii < pBuffer->buffCellSize ; ++ii)
+		for(ii = 0 ; ii < pBuffer->cellSize ; ++ii)
 		{
 			SAL_PRINT(PRINT_WARNING,"%2x | ",*((uint8_t*)it));
 			++it;

@@ -28,8 +28,8 @@ typedef struct network_paramNewIoBuffer_t
     int ackTimeoutMs;			/**< Timeout in millisecond before retry to send the data waiting an acknowledgement when the InOutBuffer is used with a libNetwork/sender*/
     int nbOfRetry;				/**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libNetwork/sender*/
     
-    unsigned int buffSize;		/**< Maximum number of data stored*/
-    unsigned int buffCellSize;	/**< Size of one data in byte*/
+    unsigned int numberOfCell;		/**< Maximum number of data stored*/
+    unsigned int cellSize;	/**< Size of one data in byte*/
     int overwriting;			/**< Indicator of overwriting possibility (1 = true | 0 = false)*/
     int deportedData;			/**< Indicator of using data deported */
 

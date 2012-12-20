@@ -18,20 +18,20 @@ typedef struct network_buffer_t
     void* 	pStart;					/**< Pointer on the first data*/
 	void* 	pFront;					/**< Pointer on the last data*/
 	void* 	pEnd;					/**< Pointer on the end of the buffer*/
-	unsigned int buffSize;			/**< Maximum number of data stored*/
-    unsigned int buffCellSize;		/**< Size of one data in byte*/
+	unsigned int numberOfCell;			/**< Maximum number of data stored*/
+    unsigned int cellSize;		/**< Size of one data in byte*/
 }network_buffer_t;
 
 /**
  *  @brief Create a new buffer
  * 	@warning This function allocate memory
- * 	@param[in] buffSize Maximum number of data cell of the buffer
- * 	@param[in] buffCellSize size of one data cell of the buffe
+ * 	@param[in] numberOfCell Maximum number of data cell of the buffer
+ * 	@param[in] cellSize size of one data cell of the buffe
  *	@post NETWORK_DeleteBuffer() must be called to delete the ring buffer and free the memory allocated
  * 	@return Pointer on the new buffer
  * 	@see NETWORK_DeleteBuffer()
 **/
-network_buffer_t* NETWORK_NewBuffer(unsigned int buffSize, unsigned int buffCellSize);
+network_buffer_t* NETWORK_NewBuffer(unsigned int numberOfCell, unsigned int cellSize);
 
 /**
  *  @brief Delete the buffer
@@ -48,7 +48,7 @@ void NETWORK_DeleteBuffer(network_buffer_t** ppBuffer);
 **/
 static inline unsigned int NETWORK_BufferGetFreeCellNb(const network_buffer_t* pBuffer)
 {
-	return (pBuffer->pEnd - pBuffer->pFront) / pBuffer->buffCellSize;
+	return (pBuffer->pEnd - pBuffer->pFront) / pBuffer->cellSize;
 }
 
 /**

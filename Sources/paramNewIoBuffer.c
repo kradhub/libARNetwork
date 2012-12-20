@@ -30,8 +30,8 @@
 #define NETWORK_IOBUFFER_SENDINGWAITTIME_DEFAULT 1
 #define NETWORK_IOBUFFER_ACKTILEOUTMS_DEFAULT -1
 #define NETWORK_IOBUFFER_NBOFRETRY_DEFAULT -1
-#define NETWORK_IOBUFFER_BUFFSIZE_DEFAULT 0
-#define NETWORK_IOBUFFER_BUFFCELLSIZE_DEFAULT 0
+#define NETWORK_IOBUFFER_numberOfCell_DEFAULT 0
+#define NETWORK_IOBUFFER_cellSize_DEFAULT 0
 #define NETWORK_IOBUFFER_OVERWRITING_DEFAULT 0
 #define NETWORK_IOBUFFER_deportedData_DEFAULT 0
 
@@ -56,8 +56,8 @@ eNETWORK_Error NETWORK_ParamNewIoBufferDefaultInit(network_paramNewIoBuffer_t *p
         pParam->ackTimeoutMs = NETWORK_IOBUFFER_ACKTILEOUTMS_DEFAULT;
         pParam->nbOfRetry = NETWORK_IOBUFFER_NBOFRETRY_DEFAULT;
         
-        pParam->buffSize = NETWORK_IOBUFFER_BUFFSIZE_DEFAULT;	
-        pParam->buffCellSize = NETWORK_IOBUFFER_BUFFCELLSIZE_DEFAULT;
+        pParam->numberOfCell = NETWORK_IOBUFFER_numberOfCell_DEFAULT;	
+        pParam->cellSize = NETWORK_IOBUFFER_cellSize_DEFAULT;
         pParam->overwriting = NETWORK_IOBUFFER_OVERWRITING_DEFAULT;
         pParam->deportedData = NETWORK_IOBUFFER_deportedData_DEFAULT;
     }
@@ -83,8 +83,8 @@ int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
         pParam->sendingWaitTime > 0 &&
         pParam->ackTimeoutMs >= -1 &&
         pParam->nbOfRetry >= -1 &&
-        pParam->buffSize > 0 &&
-        pParam->buffCellSize > 0)
+        pParam->numberOfCell > 0 &&
+        pParam->cellSize > 0)
     {
         ok = 1;
     }
@@ -97,8 +97,8 @@ values expected: \n \
     - sendingWaitTime > 0 (value set: %d)\n\
     - ackTimeoutMs > 0 or -1 if not used (value set: %d)\n\
     - nbOfRetry > 0 or -1 if not used  (value set: %d)\n\
-    - buffSize > 0 (value set: %d)\n\
-    - buffCellSize > 0 (value set: %d)\n\
+    - numberOfCell > 0 (value set: %d)\n\
+    - cellSize > 0 (value set: %d)\n\
     - overwriting = 0 or 1 (value set: %d)\n\
     - deportedData = 0 or 1 (value set: %d)\n", 
         pParam->id, 
@@ -106,8 +106,8 @@ values expected: \n \
         pParam->sendingWaitTime,
         pParam->ackTimeoutMs,
         pParam->nbOfRetry,
-        pParam->buffSize,
-        pParam->buffCellSize,
+        pParam->numberOfCell,
+        pParam->cellSize,
         pParam->overwriting,
         pParam->deportedData);
     }

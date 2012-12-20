@@ -20,8 +20,8 @@ typedef struct network_ringBuffer_t
     void* dataBuffer;				/**< Pointer on the data buffer*/
     unsigned int buffIndexInput;	/**< Index of the data input*/
     unsigned int buffIndexOutput;	/**< Index of the data output*/
-    unsigned int buffSize;			/**< Maximum number of data stored*/
-    unsigned int buffCellSize;		/**< Size of one data in byte*/
+    unsigned int numberOfCell;			/**< Maximum number of data stored*/
+    unsigned int cellSize;		/**< Size of one data in byte*/
     unsigned int overwriting;		/**< Indicator of overwriting possibility (1 = true | 0 = false)*/
     sal_mutex_t mutex;				/**< Mutex to take before to use the ringBuffer*/
 
@@ -31,27 +31,27 @@ typedef struct network_ringBuffer_t
  *  @brief Create a new ring buffer
  * 	@warning This function allocate memory
  * 	@post NETWORK_DeleteRingBuffer() must be called to delete the ring buffer and free the memory allocated
- * 	@param[in] buffSize Maximum number of data cell of the ring buffer
- * 	@param[in] buffCellSize size of one data cell of the ring buffer
+ * 	@param[in] numberOfCell Maximum number of data cell of the ring buffer
+ * 	@param[in] cellSize size of one data cell of the ring buffer
  * 	@return Pointer on the new ring buffer
  * 	@see NETWORK_NewRingBufferWithOverwriting()
  * 	@see NETWORK_DeleteRingBuffer()
 **/
-network_ringBuffer_t* NETWORK_NewRingBuffer(	unsigned int buffSize, unsigned int buffCellSize); 
+network_ringBuffer_t* NETWORK_NewRingBuffer(	unsigned int numberOfCell, unsigned int cellSize); 
 
 /**
  *  @brief Create a new ring buffer.
  * 	@warning This function allocate memory
  * 	@post NETWORK_DeleteRingBuffer() must be called to delete the ring buffer and free the memory allocated
- * 	@param[in] buffSize Maximum number of data cell of the ring buffer
- * 	@param[in] buffCellSize size of one data cell of the ring buffer
+ * 	@param[in] numberOfCell Maximum number of data cell of the ring buffer
+ * 	@param[in] cellSize size of one data cell of the ring buffer
  * 	@param[in] overwriting set to 1 allow the overwriting if the buffer is full otherwise set 0
  * 	@return Pointer on the new ring buffer
  * 	@see NETWORK_NewRingBufferWithOverwriting()
  * 	@see NETWORK_DeleteRingBuffer()
 **/
-network_ringBuffer_t* NETWORK_NewRingBufferWithOverwriting(	unsigned int buffSize, 
-														unsigned int buffCellSize, 
+network_ringBuffer_t* NETWORK_NewRingBufferWithOverwriting(	unsigned int numberOfCell, 
+														unsigned int cellSize, 
 														int overwriting ); 
 
 /**
@@ -86,8 +86,8 @@ eNETWORK_Error NETWORK_RingBuffPopFront(network_ringBuffer_t* pRingBuff, void* p
 **/
 static inline int NETWORK_RingBuffGetFreeCellNb(const network_ringBuffer_t* pRingBuff)
 {
-	return pRingBuff->buffSize - ( 
-			(pRingBuff->buffIndexInput - pRingBuff->buffIndexOutput) / pRingBuff->buffCellSize );
+	return pRingBuff->numberOfCell - ( 
+			(pRingBuff->buffIndexInput - pRingBuff->buffIndexOutput) / pRingBuff->cellSize );
 }
 
 /**

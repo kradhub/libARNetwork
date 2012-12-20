@@ -29,14 +29,14 @@
 ******************************************/
 
 
-network_ringBuffer_t* NETWORK_NewRingBuffer(	unsigned int buffSize, unsigned int buffCellSize)
+network_ringBuffer_t* NETWORK_NewRingBuffer(	unsigned int numberOfCell, unsigned int cellSize)
 {
     /** -- Create a new ring buffer not overwritable -- */
-	return NETWORK_NewRingBufferWithOverwriting(	buffSize, buffCellSize, 0 );
+	return NETWORK_NewRingBufferWithOverwriting(	numberOfCell, cellSize, 0 );
 }
 
-network_ringBuffer_t* NETWORK_NewRingBufferWithOverwriting(	unsigned int buffSize, 
-														unsigned int buffCellSize, 
+network_ringBuffer_t* NETWORK_NewRingBufferWithOverwriting(	unsigned int numberOfCell, 
+														unsigned int cellSize, 
 														int overwriting )
 {
     /** -- Create a new ring buffer -- */
@@ -46,13 +46,13 @@ network_ringBuffer_t* NETWORK_NewRingBufferWithOverwriting(	unsigned int buffSiz
 	
 	if(pRingBuff)
 	{
-		pRingBuff->buffSize = buffSize;
-		pRingBuff->buffCellSize = buffCellSize;
+		pRingBuff->numberOfCell = numberOfCell;
+		pRingBuff->cellSize = cellSize;
 		pRingBuff->buffIndexInput = 0;
 		pRingBuff->buffIndexOutput = 0;
 		pRingBuff->overwriting = overwriting;
 		sal_mutex_init( &(pRingBuff->mutex) );
-		pRingBuff->dataBuffer = malloc( buffCellSize * buffSize );
+		pRingBuff->dataBuffer = malloc( cellSize * numberOfCell );
 		
 		if( pRingBuff->dataBuffer == NULL)
 		{
@@ -101,15 +101,15 @@ eNETWORK_Error NETWORK_RingBuffPushBack(network_ringBuffer_t* pRingBuff, const v
 	{	
 		if( !NETWORK_RingBuffGetFreeCellNb(pRingBuff) )
 		{
-			(pRingBuff->buffIndexOutput) += pRingBuff->buffCellSize;
+			(pRingBuff->buffIndexOutput) += pRingBuff->cellSize;
 		}
 		
 		buffPointor = pRingBuff->dataBuffer + 
-					( pRingBuff->buffIndexInput % (pRingBuff->buffSize * pRingBuff->buffCellSize) );
+					( pRingBuff->buffIndexInput % (pRingBuff->numberOfCell * pRingBuff->cellSize) );
 		
-		memcpy(buffPointor, pNewData, pRingBuff->buffCellSize);
+		memcpy(buffPointor, pNewData, pRingBuff->cellSize);
 		
-		pRingBuff->buffIndexInput += pRingBuff->buffCellSize;
+		pRingBuff->buffIndexInput += pRingBuff->cellSize;
 	}
     else
     {
@@ -136,12 +136,12 @@ eNETWORK_Error NETWORK_RingBuffPopFront(network_ringBuffer_t* pRingBuff, void* p
 		if(pPopData != NULL)
 		{
 			buffPointor = 	pRingBuff->dataBuffer + 
-					(pRingBuff->buffIndexOutput % (pRingBuff->buffSize * pRingBuff->buffCellSize) );
+					(pRingBuff->buffIndexOutput % (pRingBuff->numberOfCell * pRingBuff->cellSize) );
 					
-			memcpy(pPopData, buffPointor, pRingBuff->buffCellSize);
+			memcpy(pPopData, buffPointor, pRingBuff->cellSize);
 		}
 		
-		(pRingBuff->buffIndexOutput) += pRingBuff->buffCellSize;
+		(pRingBuff->buffIndexOutput) += pRingBuff->cellSize;
 	}
 	else
 	{
@@ -164,11 +164,11 @@ eNETWORK_Error NETWORK_RingBuffFront(network_ringBuffer_t* pRingBuff, void* pFro
 	sal_mutex_lock(&(pRingBuff->mutex));
 	
 	buffPointor = pRingBuff->dataBuffer + 
-					(pRingBuff->buffIndexOutput % (pRingBuff->buffSize * pRingBuff->buffCellSize) );
+					(pRingBuff->buffIndexOutput % (pRingBuff->numberOfCell * pRingBuff->cellSize) );
 	
 	if( !NETWORK_RingBuffIsEmpty(pRingBuff) )
 	{
-		memcpy(pFrontData, buffPointor, pRingBuff->buffCellSize);
+		memcpy(pFrontData, buffPointor, pRingBuff->cellSize);
 	}
     else
     {
@@ -187,8 +187,8 @@ void NETWORK_RingBuffPrint(network_ringBuffer_t* pRingBuff)
 	sal_mutex_lock(&(pRingBuff->mutex));
 	
 	SAL_PRINT(PRINT_WARNING," pointer dataBuffer :%d \n",pRingBuff->dataBuffer);
-	SAL_PRINT(PRINT_WARNING," buffSize :%d \n",pRingBuff->buffSize);
-	SAL_PRINT(PRINT_WARNING," buffCellSize :%d \n",pRingBuff->buffCellSize);
+	SAL_PRINT(PRINT_WARNING," numberOfCell :%d \n",pRingBuff->numberOfCell);
+	SAL_PRINT(PRINT_WARNING," cellSize :%d \n",pRingBuff->cellSize);
 	SAL_PRINT(PRINT_WARNING," buffIndexOutput :%d \n",pRingBuff->buffIndexOutput);
 	SAL_PRINT(PRINT_WARNING," buffIndexInput :%d \n",pRingBuff->buffIndexInput);
 	SAL_PRINT(PRINT_WARNING," overwriting :%d \n",pRingBuff->overwriting);
@@ -212,12 +212,12 @@ void NETWORK_RingBuffDataPrint(network_ringBuffer_t* pRingBuff)
 	
 	for( 	iindex = pRingBuff->buffIndexOutput ; 
 			iindex < pRingBuff->buffIndexInput ;
-			iindex += pRingBuff->buffCellSize )
+			iindex += pRingBuff->cellSize )
 	{
-		it = pRingBuff->dataBuffer + (iindex % (pRingBuff->buffSize * pRingBuff->buffCellSize) );
+		it = pRingBuff->dataBuffer + (iindex % (pRingBuff->numberOfCell * pRingBuff->cellSize) );
 		
 		SAL_PRINT(PRINT_WARNING,"	- 0x: ");
-		for(ii = 0 ; ii < pRingBuff->buffCellSize ; ++ii)
+		for(ii = 0 ; ii < pRingBuff->cellSize ; ++ii)
 		{
 			SAL_PRINT(PRINT_WARNING,"%2x | ",*((uint8_t*)it));
 			++it;

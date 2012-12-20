@@ -79,7 +79,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
             pIoBuffer->retryCount = 0;
 		
             /** Create the RingBuffer */
-            pIoBuffer->pBuffer = NETWORK_NewRingBufferWithOverwriting(	pParam->buffSize, pParam->buffCellSize,
+            pIoBuffer->pBuffer = NETWORK_NewRingBufferWithOverwriting(	pParam->numberOfCell, pParam->cellSize,
                                                                 pParam->overwriting);
             if(pIoBuffer->pBuffer != NULL)
             {

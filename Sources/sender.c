@@ -393,7 +393,7 @@ eNETWORK_Error NETWORK_SenderAddToBuffer( network_sender_t* pSender,const networ
     }
     else
     {
-        dataSize = pInputBuffer->pBuffer->buffCellSize;
+        dataSize = pInputBuffer->pBuffer->cellSize;
     }
     
     /** calculate the size needed */

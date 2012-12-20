@@ -49,14 +49,14 @@
  *  @param pManager pointer on the Manager
  *  @param[in] ptabParamInput Table of the parameters of creation of the inputs. The table must contain as many parameters as the number of input buffer.
  * 	@param[in] ptabParamOutput Table of the parameters of creation of the outputs. The table must contain as many parameters as the number of output buffer.
- *  @param[in] sendBuffSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
+ *  @param[in] sendBufferSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
  *  @return error equal to NETWORK_OK if the IoBuffer are correctly created otherwise see eNETWORK_Manager_Error.
  *  @see NETWORK_NewManager()
 **/
 eNETWORK_Error NETWORK_ManagerCreateIoBuffer(network_manager_t* pManager,
                                                 network_paramNewIoBuffer_t* ptabParamInput, 
                                                 network_paramNewIoBuffer_t* ptabParamOutput,
-                                                unsigned int sendBuffSize);
+                                                unsigned int sendBufferSize);
 
 /*****************************************
  * 
@@ -64,7 +64,7 @@ eNETWORK_Error NETWORK_ManagerCreateIoBuffer(network_manager_t* pManager,
  *
 ******************************************/
 
-network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int sendBuffSize,
+network_manager_t* NETWORK_NewManager(	unsigned int recvBufferSize,unsigned int sendBufferSize,
 				unsigned int numberOfInput, network_paramNewIoBuffer_t* ptabParamInput,
 				unsigned int numberOfOutput, network_paramNewIoBuffer_t* ptabParamOutput,
                 eNETWORK_Error* pError)
@@ -137,13 +137,13 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
     if( error == NETWORK_OK )
 	{	
         /** Create manager's IoBuffers */
-        error = NETWORK_ManagerCreateIoBuffer(pManager, ptabParamInput, ptabParamOutput, sendBuffSize);
+        error = NETWORK_ManagerCreateIoBuffer(pManager, ptabParamInput, ptabParamOutput, sendBufferSize);
 	}
     
 	if( error == NETWORK_OK )
 	{
 		/** Create the Sender */
-		pManager->pSender = NETWORK_NewSender(sendBuffSize, pManager->numOfInput, pManager->ppTabInput);
+		pManager->pSender = NETWORK_NewSender(sendBufferSize, pManager->numOfInput, pManager->ppTabInput);
         if( pManager->pSender == NULL)
         {
             error = NETWORK_MANAGER_ERROR_NEW_SENDER;
@@ -153,7 +153,7 @@ network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int se
     if( error == NETWORK_OK )
 	{
         /** Create the Receiver */
-		pManager->pReceiver = NETWORK_NewReceiver(recvBuffSize, pManager->numOfOutput, pManager->ppTabOutput);
+		pManager->pReceiver = NETWORK_NewReceiver(recvBufferSize, pManager->numOfOutput, pManager->ppTabOutput);
 		if( pManager->pReceiver != NULL)
 		{
 			pManager->pReceiver->pSender = pManager->pSender;
@@ -367,7 +367,7 @@ eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int
         if( pInputBuffer->deportedData && 
             pData != NULL && 
             callback != NULL &&  
-            dataSize < ( pManager->pSender->pSendingBuffer->buffSize - offsetof(network_frame_t, data) ) )
+            dataSize < ( pManager->pSender->pSendingBuffer->numberOfCell - offsetof(network_frame_t, data) ) )
         {
             /** initialize deportedDataTemp and push it in the InputBuffer */
             deportedDataTemp.pData = pData;
@@ -502,7 +502,7 @@ eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int
 eNETWORK_Error NETWORK_ManagerCreateIoBuffer( network_manager_t* pManager,
                                                 network_paramNewIoBuffer_t* ptabParamInput, 
                                                 network_paramNewIoBuffer_t* ptabParamOutput,
-                                                unsigned int sendBuffSize )
+                                                unsigned int sendBufferSize )
 {
     /** -- Create manager's IoBuffers --*/
     
@@ -515,8 +515,8 @@ eNETWORK_Error NETWORK_ManagerCreateIoBuffer( network_manager_t* pManager,
 	/** Initialize the default parameters for the buffers of acknowledgement. */
 	NETWORK_ParamNewIoBufferDefaultInit(&paramNewACK); 
     paramNewACK.dataType = NETWORK_FRAME_TYPE_ACK;
-    paramNewACK.buffSize = 1;
-	paramNewACK.buffCellSize = sizeof(int);
+    paramNewACK.numberOfCell = 1;
+	paramNewACK.cellSize = sizeof(int);
 	paramNewACK.overwriting = 0;
     
     /**
@@ -534,7 +534,7 @@ eNETWORK_Error NETWORK_ManagerCreateIoBuffer( network_manager_t* pManager,
             /** set cellSize if deported data is enabled */
             if(ptabParamOutput[ii].deportedData == 1)
             {
-                ptabParamOutput[ii].buffCellSize = sizeof(network_DeportedData_t);
+                ptabParamOutput[ii].cellSize = sizeof(network_DeportedData_t);
             }
             
             pManager->ppTabOutput[ii] = NETWORK_NewIoBuffer( &(ptabParamOutput[ii]) );
@@ -572,12 +572,12 @@ eNETWORK_Error NETWORK_ManagerCreateIoBuffer( network_manager_t* pManager,
         /**     id is smaller than the id acknowledge offset */
         /**     dataSize isn't too big */
         if( ptabParamInput[ii].id < NETWORK_ID_ACK_OFFSET && 
-            ptabParamInput[ii].buffCellSize < ( sendBuffSize - offsetof(network_frame_t, data) ))
+            ptabParamInput[ii].cellSize < ( sendBufferSize - offsetof(network_frame_t, data) ))
         {
             /** set cellSize if deported data is enabled */
             if(ptabParamInput[ii].deportedData == 1)
             {
-                ptabParamInput[ii].buffCellSize = sizeof(network_DeportedData_t);
+                ptabParamInput[ii].cellSize = sizeof(network_DeportedData_t);
             }
             
             pManager->ppTabInput[ii] = NETWORK_NewIoBuffer( &(ptabParamInput[ii]) );

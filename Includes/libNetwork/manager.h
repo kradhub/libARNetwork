@@ -22,8 +22,8 @@ typedef struct network_manager_t network_manager_t;
  *  @warning This function allocate memory
  *  @post NETWORK_ManagerSocketsInit() must be called to initialize the sockets, indicate on which address send the data, the sending port the receiving port and the timeout.
  *  @post NETWORK_DeleteManager() must be called to delete the Network and free the memory allocated.
- *  @param[in] recvBuffSize size in byte of the receiving buffer. ideally must be equal to the sum of the sizes of one data of all output buffers
- *  @param[in] sendBuffSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
+ *  @param[in] recvBufferSize size in byte of the receiving buffer. ideally must be equal to the sum of the sizes of one data of all output buffers
+ *  @param[in] sendBufferSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
  *  @param[in] numberOfInput Number of input buffer
  *  @param[in] ptabParamInput Table of the parameters of creation of the inputs. The table must contain as many parameters as the number of input buffer.
  *  @param[in] numberOfOutput Number of output buffer
@@ -35,7 +35,7 @@ typedef struct network_manager_t network_manager_t;
  *  @warning The identifiers of the IoBuffer should not exceed the value 1000.
  *  @see NETWORK_DeleteManager()
 **/
-network_manager_t* NETWORK_NewManager(	unsigned int recvBuffSize,unsigned int sendBuffSize,
+network_manager_t* NETWORK_NewManager(	unsigned int recvBufferSize,unsigned int sendBufferSize,
 				unsigned int numberOfInput, network_paramNewIoBuffer_t* ptabParamInput,
 				unsigned int numberOfOutput, network_paramNewIoBuffer_t* ptabParamOutput,
                 eNETWORK_Error* pError);
