@@ -91,8 +91,8 @@ void NETWORK_BufferDataPrint(network_buffer_t* pBuffer)
     /** -- Print the contents of the buffer --*/
     
     /** local declarations */
-    void* it = pBuffer->pStart;
-    void* itEnd = pBuffer->pFront;
+    uint8_t* it = pBuffer->pStart;
+    uint8_t* itEnd = pBuffer->pFront;
     int  ii = 0;
     
     while( it < itEnd )

@@ -86,7 +86,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
                 /** if it is a keep alive buffer, push in the data send for keep alive */ 
                 if( pIoBuffer->dataType == NETWORK_FRAME_TYPE_KEEP_ALIVE )
                 {
-                    NETWORK_RingBuffPushBack(pIoBuffer->pBuffer, &keepAliveData);
+                    NETWORK_RingBuffPushBack(pIoBuffer->pBuffer, (uint8_t*) &keepAliveData);
                 }
             }
             else
@@ -245,7 +245,7 @@ eNETWORK_Error NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int ca
     /** pop the data sent*/
     if( pIoBuffer->deportedData )
     {
-        error = NETWORK_RingBuffPopFront( pIoBuffer->pBuffer, &deportedDataTemp );
+        error = NETWORK_RingBuffPopFront( pIoBuffer->pBuffer, (uint8_t*) &deportedDataTemp );
         if( error == NETWORK_OK)
         {
             deportedDataTemp.callback( pIoBuffer->id, deportedDataTemp.pData, callbackStatus);

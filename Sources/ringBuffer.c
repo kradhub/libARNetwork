@@ -87,13 +87,13 @@ void NETWORK_DeleteRingBuffer( network_ringBuffer_t** ppRingBuff )
     }
 }
 
-eNETWORK_Error NETWORK_RingBuffPushBack( network_ringBuffer_t* pRingBuff, const void* pNewData )
+eNETWORK_Error NETWORK_RingBuffPushBack( network_ringBuffer_t* pRingBuff, const uint8_t* pNewData )
 {
     /** -- Add the new data at the back of the ring buffer -- */
     
     /** local declarations */
     int error = NETWORK_OK;
-    void* buffPointor = NULL;
+    uint8_t* buffPointor = NULL;
     
     sal_mutex_lock(&(pRingBuff->mutex));
     
@@ -121,12 +121,12 @@ eNETWORK_Error NETWORK_RingBuffPushBack( network_ringBuffer_t* pRingBuff, const 
     return error;
 }
 
-eNETWORK_Error NETWORK_RingBuffPopFront( network_ringBuffer_t* pRingBuff, void* pPopData )
+eNETWORK_Error NETWORK_RingBuffPopFront( network_ringBuffer_t* pRingBuff, uint8_t* pPopData )
 {
     /** -- Pop the oldest data -- */
     
     /** local declarations */
-    void* buffPointor = NULL;
+    uint8_t* buffPointor = NULL;
     eNETWORK_Error error = NETWORK_OK;
     
     sal_mutex_lock(&(pRingBuff->mutex));
@@ -153,13 +153,13 @@ eNETWORK_Error NETWORK_RingBuffPopFront( network_ringBuffer_t* pRingBuff, void* 
     return error;
 }
 
-eNETWORK_Error NETWORK_RingBuffFront(network_ringBuffer_t* pRingBuff, void* pFrontData)
+eNETWORK_Error NETWORK_RingBuffFront(network_ringBuffer_t* pRingBuff, uint8_t* pFrontData)
 {
     /** -- Return a pointer on the front data -- */
     
     /** local declarations */
     eNETWORK_Error error = NETWORK_OK;
-    void* buffPointor = NULL;
+    uint8_t* buffPointor = NULL;
                     
     sal_mutex_lock(&(pRingBuff->mutex));
     
@@ -204,7 +204,7 @@ void NETWORK_RingBuffDataPrint(network_ringBuffer_t* pRingBuff)
     /** -- Print the contents of the ring buffer -- */
     
     /** local declarations */
-    void* it = NULL;
+    uint8_t* it = NULL;
     int  iindex = 0;
     int  ii = 0;
     

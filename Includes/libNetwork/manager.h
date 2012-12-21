@@ -102,7 +102,7 @@ void NETWORK_ManagerStop(network_manager_t* pManager);
  *  @param[in] pData pointer on the data to send
  *  @return error eNETWORK_Error
 **/
-eNETWORK_Error NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, const void* pData);
+eNETWORK_Error NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, const uint8_t* pData);
 
 /**
  *  @brief Add deported data to send
@@ -114,7 +114,7 @@ eNETWORK_Error NETWORK_ManagerSendData(network_manager_t* pManager, int inputBuf
  *  @return error eNETWORK_Error
 **/
 eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBufferId,
-                                                  void* pData, int dataSize,
+                                                  uint8_t* pData, int dataSize,
                                                   network_deportDatacallback callback );
 
 /**
@@ -125,7 +125,7 @@ eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int
  *  @param[out] pData pointer on the data read
  *  @return error eNETWORK_Error
 **/
-eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, void* pData);
+eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, uint8_t* pData);
 
 /**
  *  @brief Read deported data received
@@ -138,7 +138,7 @@ eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBu
  *  @return error eNETWORK_Error type
 **/
 eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int outputBufferId,
-                                                  void* pData, int dataLimitSize, int* pReadSize );
+                                                  uint8_t* pData, int dataLimitSize, int* pReadSize );
 
 #endif // _NETWORK_MANAGER_H_
 

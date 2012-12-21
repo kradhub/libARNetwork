@@ -69,7 +69,7 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
  *  @return   
  *  @see eNETWORK_CALLBACK_STATUS
 **/
-int NETWORK_freedeportedData(int OutBufferId, void* pData, int status);
+int NETWORK_freedeportedData(int OutBufferId, uint8_t* pData, int status);
 
 /*****************************************
  * 
@@ -180,13 +180,13 @@ void* NETWORK_RunReceivingThread(void* data)
                                                 pFrame->seq, pFrame->id);
                         
                         /** push the data received in the output buffer targeted */
-                        pOutBufferTemp = NETWORK_IoBufferFromId(    pReceiver->pptab_outputBuffer, 
-                                                            pReceiver->numOfOutputBuff,
-                                                            pFrame->id);
+                        pOutBufferTemp = NETWORK_IoBufferFromId( pReceiver->pptab_outputBuffer, 
+                                                                 pReceiver->numOfOutputBuff,
+                                                                 pFrame->id);
                         
                         if(pOutBufferTemp != NULL)
                         {
-                            error = NETWORK_ReceiverCopyDataRecv( pReceiver, pOutBufferTemp, pFrame);
+                            error = NETWORK_ReceiverCopyDataRecv( pReceiver, pOutBufferTemp, pFrame );
                             
                             if( error != NETWORK_OK )
                             {
@@ -265,7 +265,7 @@ void NETWORK_ReturnACK(network_receiver_t* pReceiver, int id, int seq)
                                                                 
     if(pBufferASK != NULL)
     {
-        NETWORK_RingBuffPushBack( pBufferASK->pBuffer, &seq );
+        NETWORK_RingBuffPushBack( pBufferASK->pBuffer, (uint8_t*) &seq );
     }
 }
 
@@ -322,7 +322,7 @@ network_frame_t* NETWORK_ReceiverGetNextFrame( network_receiver_t* pReceiver,
     if (prevFrame == NULL)
     {
         /** if no previous frame, get the first frame of the receiving buffer */
-        nextFrame = pReceiver->pRecvBuffer->pStart;
+        nextFrame = (network_frame_t*) pReceiver->pRecvBuffer->pStart;
     }
     else
     {
@@ -363,7 +363,7 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
             memcpy(deportedDataTemp.pData, &(pFrame->data), deportedDataTemp.dataSize);
             
             /** push the deportedDataTemp in the output buffer targeted */
-            error = NETWORK_RingBuffPushBack( pOutBuffer->pBuffer, &deportedDataTemp );
+            error = NETWORK_RingBuffPushBack( pOutBuffer->pBuffer, (uint8_t*) &deportedDataTemp );
         }
         else
         {
@@ -379,7 +379,7 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
     return error;
 }
 
-int NETWORK_freedeportedData(int OutBufferId, void* pData, int status)
+int NETWORK_freedeportedData(int OutBufferId, uint8_t* pData, int status)
 {
     /** call back use to free deported data */
     

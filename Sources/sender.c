@@ -196,16 +196,20 @@ void* NETWORK_RunSendingThread(void* data)
                     }
                     else
                     {
-                        /**
-                         *  if there is a timeout, retry to send the data 
-                         *  and decrement the number of retry still possible
-                        **/
+                        /** if there is a timeout, retry to send the data */
+                       
                         error = NETWORK_SenderAddToBuffer(pSender, pInputTemp, pInputTemp->seqWaitAck);
                         
-                        if(pInputTemp->retryCount > 0 && error == NETWORK_OK)
+                        if( error == NETWORK_OK)
                         {
+                            /** reset the timeout counter*/
                             pInputTemp->ackWaitTimeCount = pInputTemp->ackTimeoutMs;
-                            --(pInputTemp->retryCount);
+                
+                            /** decrement the number of retry still possible is retryCount isn't -1 */
+                            if(pInputTemp->retryCount > 0)
+                            {
+                                --(pInputTemp->retryCount);
+                            }
                         }
                     }
                 }
@@ -370,6 +374,7 @@ void NETWORK_SenderSend(network_sender_t* pSender)
             
         pSender->pSendingBuffer->pFront = pSender->pSendingBuffer->pStart;
     }
+
 }
 
 eNETWORK_Error NETWORK_SenderAddToBuffer( network_sender_t* pSender,
@@ -389,18 +394,30 @@ eNETWORK_Error NETWORK_SenderAddToBuffer( network_sender_t* pSender,
     if( pInputBuffer->deportedData )
     {
         /** if the data is deported get the size of the date pointed*/
-        NETWORK_RingBuffFront( pInputBuffer->pBuffer, &deportedData);
-        dataSize = deportedData.dataSize;
+        error = NETWORK_RingBuffFront( pInputBuffer->pBuffer, (uint8_t*) &deportedData);
+        if( error == NETWORK_OK )
+        {
+            dataSize = deportedData.dataSize;
+        }
     }
     else
     {
         dataSize = pInputBuffer->pBuffer->cellSize;
     }
     
-    /** calculate the size needed */
-    sizeNeed = offsetof(network_frame_t, data) + dataSize;
+    if( error == NETWORK_OK )
+    {
+        /** calculate the size needed */
+        sizeNeed = offsetof(network_frame_t, data) + dataSize;
+        
+        /** check the size free */
+        if( NETWORK_BufferGetFreeCellNb(pSender->pSendingBuffer) < sizeNeed )
+        {
+            error = NETWORK_ERROR_BUFFER_SIZE;
+        }
+    }
     
-    if( NETWORK_BufferGetFreeCellNb(pSender->pSendingBuffer) >= sizeNeed )
+    if( error == NETWORK_OK )
     {    
         /** add type */
         droneEndianInt32 =  htodl( (uint32_t) pInputBuffer->dataType );
@@ -446,10 +463,6 @@ eNETWORK_Error NETWORK_SenderAddToBuffer( network_sender_t* pSender,
         }
         
     }
-    else
-    {
-        error = NETWORK_ERROR_BUFFER_SIZE;
-    }
     
     return error;
 }
@@ -465,7 +478,7 @@ int NETWORK_SenderTimeOutCallback(network_sender_t* pSender,const network_ioBuff
     
     if(pInputBuffer->deportedData)
     {
-        NETWORK_RingBuffFront( pInputBuffer->pBuffer, &deportedDataTemp);
+        NETWORK_RingBuffFront( pInputBuffer->pBuffer, (uint8_t*) &deportedDataTemp);
         
         ret = deportedDataTemp.callback( pInputBuffer->id, 
                                         deportedDataTemp.pData, 

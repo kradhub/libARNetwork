@@ -9,6 +9,7 @@
 #define _NETWORK_RINGBUFFER_H_
 
 #include <libSAL/mutex.h>
+#include <inttypes.h>
 
 /**
  *  @brief Basic ring buffer, multithread safe
@@ -17,7 +18,7 @@
 **/
 typedef struct network_ringBuffer_t  
 {
-    void* dataBuffer; /**< Pointer on the data buffer*/
+    uint8_t* dataBuffer; /**< Pointer on the data buffer*/
     unsigned int numberOfCell; /**< Maximum number of data stored*/
     unsigned int cellSize; /**< Size of one data in byte*/
     unsigned int isOverwriting; /**< Indicator of overwriting possibility (1 = true | 0 = false)*/
@@ -71,7 +72,7 @@ void NETWORK_DeleteRingBuffer(network_ringBuffer_t** ppRingBuff);
  *  @param[in] newData pointer on the data to add
  *  @return error eNETWORK_Error
 **/
-eNETWORK_Error NETWORK_RingBuffPushBack( network_ringBuffer_t* pRingBuff, const void* pNewData );
+eNETWORK_Error NETWORK_RingBuffPushBack( network_ringBuffer_t* pRingBuff, const uint8_t* pNewData );
 
 /**
  *  @brief Pop the oldest data
@@ -79,7 +80,7 @@ eNETWORK_Error NETWORK_RingBuffPushBack( network_ringBuffer_t* pRingBuff, const 
  *  @param[out] popData pointer on the data popped
  *  @return error eNETWORK_Error
 **/
-eNETWORK_Error NETWORK_RingBuffPopFront( network_ringBuffer_t* pRingBuff, void* pPopData );
+eNETWORK_Error NETWORK_RingBuffPopFront( network_ringBuffer_t* pRingBuff, uint8_t* pPopData );
 
 /**
  *  @brief Return the number of free cell of the ring buffer
@@ -108,7 +109,7 @@ static inline int NETWORK_RingBuffIsEmpty( const network_ringBuffer_t* pRingBuff
  *  @param[out] pFrontData pointer on the front data
  *  @return error eNETWORK_Error
 **/
-eNETWORK_Error NETWORK_RingBuffFront( network_ringBuffer_t* pRingBuff, void* pFrontData );
+eNETWORK_Error NETWORK_RingBuffFront( network_ringBuffer_t* pRingBuff, uint8_t* pFrontData );
 
 /**
  *  @brief Clean the ring buffer

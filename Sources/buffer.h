@@ -15,9 +15,9 @@
 **/
 typedef struct network_buffer_t
 {
-    void* pStart; /**< Pointer on the first data*/
-    void* pFront; /**< Pointer on the last data*/
-    void* pEnd; /**< Pointer on the end of the buffer*/
+    uint8_t* pStart; /**< Pointer on the first data*/
+    uint8_t* pFront; /**< Pointer on the last data*/
+    uint8_t* pEnd; /**< Pointer on the end of the buffer*/
     unsigned int numberOfCell; /**< Maximum number of data stored*/
     unsigned int cellSize; /**< Size of one data in byte*/
 }network_buffer_t;

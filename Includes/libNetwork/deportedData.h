@@ -24,14 +24,14 @@
  *  @return 1 to reset the retry counter or 0 to stop the InputBuffer 
  *  @see eNETWORK_CALLBACK_STATUS
 **/
-typedef int (*network_deportDatacallback)(int IoBufferId, void* pData, int status);
+typedef int (*network_deportDatacallback)(int IoBufferId, uint8_t* pData, int status);
 
 /**
  *  @brief deported data used to send large data or data with scalable size
 **/
 typedef struct network_DeportedData_t  
 {
-    void* pData; /**< Pointer on the data */
+    uint8_t* pData; /**< Pointer on the data */
     int dataSize; /**< size of the data */
     network_deportDatacallback callback; /**< call back use when the data are sent or have a timeout */
                                       

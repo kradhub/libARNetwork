@@ -302,7 +302,7 @@ void NETWORK_ManagerStop(network_manager_t* pManager)
     }
 }
 
-eNETWORK_Error NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, const void* pData)
+eNETWORK_Error NETWORK_ManagerSendData(network_manager_t* pManager, int inputBufferId, const uint8_t* pData)
 {
     /** -- Add data to send -- */
     
@@ -341,7 +341,7 @@ eNETWORK_Error NETWORK_ManagerSendData(network_manager_t* pManager, int inputBuf
 }
 
 eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBufferId,
-                                                  void* pData, int dataSize,
+                                                  uint8_t* pData, int dataSize,
                                                   network_deportDatacallback callback )
 {
     /** -- Add data deported to send -- */
@@ -374,7 +374,7 @@ eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int
             deportedDataTemp.dataSize = dataSize;
             deportedDataTemp.callback = callback;
             
-            error = NETWORK_RingBuffPushBack(pInputBuffer->pBuffer, &deportedDataTemp);
+            error = NETWORK_RingBuffPushBack(pInputBuffer->pBuffer, (uint8_t*) &deportedDataTemp);
         }
         else
         {
@@ -389,7 +389,7 @@ eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int
     return error;
 }
 
-eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, void* pData)
+eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBufferId, uint8_t* pData)
 {
     /** -- read data received -- */
     
@@ -429,7 +429,7 @@ eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBu
 }
 
 eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int outputBufferId,
-                                     void* pData, int dataLimitSize, int* pReadSize)
+                                     uint8_t* pData, int dataLimitSize, int* pReadSize)
 {
     /** -- read data deported received -- */
     
@@ -451,7 +451,7 @@ eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int
         if( pOutputBuffer->deportedData )
         {
             /** get data deported */
-            error = NETWORK_RingBuffPopFront(pOutputBuffer->pBuffer, &deportedDataTemp);
+            error = NETWORK_RingBuffPopFront(pOutputBuffer->pBuffer, (uint8_t*) &deportedDataTemp);
             
             if( error == NETWORK_OK )
             {
