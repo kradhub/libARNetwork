@@ -65,7 +65,7 @@ AC_ARG_WITH([libSalBin],
 ##########################################################################
 
 # Put local include directory first
-CFLAGS="$CFLAGS -I../Includes -I../Sources"
+CFLAGS="$CFLAGS -I$srcdir/../Includes -I$srcdir/../Sources"
 
 # add the headers directory of libSal
 CFLAGS="$CFLAGS -I$libSalHeader"
@@ -103,7 +103,7 @@ DX_RTF_FEATURE(OFF)
 DX_XML_FEATURE(OFF)
 DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)
-DX_INIT_DOXYGEN([libNetwork], [doxygen.cfg], [../Doc])
+DX_INIT_DOXYGEN([libNetwork], [doxygen.cfg], [$srcdir/../Doc])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
 # Checks for header files.
