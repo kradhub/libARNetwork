@@ -140,5 +140,39 @@ eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBu
 eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int outputBufferId,
                                                   uint8_t* pData, int dataLimitSize, int* pReadSize );
 
+
+/**
+ *  @brief Read data received
+ *  @details This function is blocking
+ *  @warning the outputBuffer should not be deportedData type
+ *  @param pManager pointer on the Manager
+ *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
+ *  @param[out] pData pointer on the data read
+ *  @param[in] timeoutMs maximum time in millisecond to wait if there is no data to read
+ *  @return error eNETWORK_Error
+**/
+eNETWORK_Error NETWORK_ManagerReadDataWithTimeout( network_manager_t* pManager, 
+                                                     int outputBufferId, 
+                                                     uint8_t* pData,
+                                                     int timeoutMs );
+
+/**
+ *  @brief Read deported data received
+ *  @warning the outputBuffer must be deportedData type
+ *  @param pManager pointer on the Manager
+ *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
+ *  @param[out] pData pointer on the data read
+ *  @param[in] dataLimitSize limit size of the copy
+ *  @param[out] pReadSize pointer to store the size of the data read
+ *  @param[in] timeoutMs maximum time in millisecond to wait if there is no data to read
+ *  @return error eNETWORK_Error type
+**/
+eNETWORK_Error NETWORK_ManagerReadDeportedDataWithTimeout( network_manager_t* pManager, 
+                                                             int outputBufferId,
+                                                             uint8_t* pData, 
+                                                             int dataLimitSize, 
+                                                             int* pReadSize,
+                                                             int timeoutMs );
+
 #endif // _NETWORK_MANAGER_H_
 

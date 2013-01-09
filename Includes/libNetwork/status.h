@@ -20,6 +20,7 @@ typedef enum
     NETWORK_ERROR_ID_UNKNOWN, /**< IoBuffer identifier unknown */ 
     NETWORK_ERROR_BUFFER_SIZE, /**< free space of the buffer is insuffisante */
     NETWORK_ERROR_BUFFER_EMPTY, /**< try to read a buffer empty */
+    NETWORK_ERROR_SEMAPHORE, /**< error during the using of a semaphore */
     NETWORK_MANAGER_ERROR = -2000, /**< manager error unknown */ 
     NETWORK_MANAGER_ERROR_NEW_IOBUFFER, /**< error during the IoBuffer creation */ 
     NETWORK_MANAGER_ERROR_NEW_SENDER, /**< error during the Sender creation */ 

@@ -11,6 +11,8 @@
 #include <libNetwork/frame.h>
 #include "ringBuffer.h"
 #include <libNetwork/paramNewIoBuffer.h>
+#include <libSAL/mutex.h>
+#include <libSAL/sem.h>
 
 /*****************************************
  * 
@@ -41,6 +43,7 @@ typedef struct network_ioBuffer_t
     int retryCount; /**< Counter of sending retry remaining before to consider a failure*/
     
     sal_mutex_t mutex;  /**< Mutex to take before to use the ringBuffer*/
+    sal_sem_t outputSem; /**< Semaphore used, by the outputs, to know when a data is ready to be read */
 
 }network_ioBuffer_t;
 

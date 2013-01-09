@@ -18,6 +18,8 @@
 
 #include <string.h>
 
+#include <errno.h>
+
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
 #include <libSAL/socket.h>
@@ -396,23 +398,50 @@ eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBu
     /** local declarations */
     eNETWORK_Error error = NETWORK_OK;
     network_ioBuffer_t* pOutputBuffer = NULL;
+    int semError = 0;
     
     /** check paratemters */
     if(pManager != NULL)
     {
         pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
+        
+        /** check pOutputBuffer */
+        if(pOutputBuffer == NULL)
+        {
+            error = NETWORK_ERROR_ID_UNKNOWN;
+        }
     }
     else
     {
         error = NETWORK_ERROR_BAD_PARAMETER;
     }
     
-    if(pOutputBuffer != NULL)
+    if( error == NETWORK_OK )
+    {
+        /** try to take the semaphore */
+        semError = sal_sem_trywait( &(pOutputBuffer->outputSem) );
+        
+        if(semError)
+        {
+            switch( errno )
+            {
+                case EAGAIN : /** no semaphore */ 
+                    error = NETWORK_ERROR_BUFFER_EMPTY;
+                break;
+                
+                default:
+                    error = NETWORK_ERROR_SEMAPHORE;
+                break;
+            }
+        }
+    }
+    
+    if( error == NETWORK_OK )
     {
         /** check paratemters */
         if( !pOutputBuffer->deportedData )
         {
-            /** push the data in the InputBuffer */
+            /** pop the data in the OutputBuffer */
             error = NETWORK_RingBuffPopFront(pOutputBuffer->pBuffer, pData);
         }
         else
@@ -438,14 +467,45 @@ eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int
     network_ioBuffer_t* pOutputBuffer = NULL;
     network_DeportedData_t deportedDataTemp;
     int readSize = 0;
+    int semError = 0;
     
     /** check paratemters */
     if(pManager != NULL)
     {
         pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
+        
+        /** check pOutputBuffer */
+        if(pOutputBuffer == NULL)
+        {
+            error = NETWORK_ERROR_ID_UNKNOWN;
+        }
+    }
+    else
+    {
+        error = NETWORK_ERROR_BAD_PARAMETER;
     }
     
-    if(pOutputBuffer != NULL)
+    if( error == NETWORK_OK )
+    {
+        /** try to take the semaphore */
+        semError = sal_sem_trywait( &(pOutputBuffer->outputSem) );
+        
+        if(semError)
+        {
+            switch( errno )
+            {
+                case EAGAIN : /** no semaphore */ 
+                    error = NETWORK_ERROR_BUFFER_EMPTY;
+                break;
+                
+                default:
+                    error = NETWORK_ERROR_SEMAPHORE;
+                break;
+            }
+        }
+    }
+    
+    if( error == NETWORK_OK )
     {
         /** check paratemters */
         if( pOutputBuffer->deportedData )
@@ -492,6 +552,186 @@ eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int
     
     return error;
 }
+
+eNETWORK_Error NETWORK_ManagerReadDataWithTimeout( network_manager_t* pManager, 
+                                                     int outputBufferId, 
+                                                     uint8_t* pData,
+                                                     int timeoutMs )
+{
+    /** -- read data received with timeout -- */
+    
+    /** local declarations */
+    eNETWORK_Error error = NETWORK_OK;
+    network_ioBuffer_t* pOutputBuffer = NULL;
+    int semError = 0;
+    struct timespec semTimeout;
+    
+    /** check paratemters */
+    if(pManager != NULL)
+    {
+        pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
+        
+        /** check pOutputBuffer */
+        if(pOutputBuffer == NULL)
+        {
+            error = NETWORK_ERROR_ID_UNKNOWN;
+        }
+    }
+    else
+    {
+        error = NETWORK_ERROR_BAD_PARAMETER;
+    }
+    
+    if( error == NETWORK_OK )
+    {
+        /** convert timeoutMs in timespec */
+        semTimeout.tv_sec = timeoutMs / 1000;
+        semTimeout.tv_nsec = (timeoutMs % 1000) * 1000000;
+        
+        /** try to take the semaphore with timeout*/
+        semError = sal_sem_timedwait( &(pOutputBuffer->outputSem), &semTimeout);
+        
+        if(semError)
+        {
+            switch( errno )
+            {
+                case ETIMEDOUT : /** semaphore time out */ 
+                    error = NETWORK_ERROR_BUFFER_EMPTY;
+                break;
+                
+                default:
+                    error = NETWORK_ERROR_SEMAPHORE;
+                break;
+            }
+        }
+    }
+    
+    if( error == NETWORK_OK )
+    {
+        /** check paratemters */
+        if( !pOutputBuffer->deportedData )
+        {
+            /** pop the data in the OutputBuffer */
+            error = NETWORK_RingBuffPopFront(pOutputBuffer->pBuffer, pData);
+        }
+        else
+        {
+            error = NETWORK_ERROR_BAD_PARAMETER;
+        }
+    }
+    else
+    {
+        error = NETWORK_ERROR_ID_UNKNOWN;
+    }
+    
+    return error;
+}
+
+eNETWORK_Error NETWORK_ManagerReadDeportedDataWithTimeout( network_manager_t* pManager, 
+                                                             int outputBufferId,
+                                                             uint8_t* pData, 
+                                                             int dataLimitSize, 
+                                                             int* pReadSize,
+                                                             int timeoutMs )
+{
+    /** -- read data deported received with timeout -- */
+    
+    /** local declarations */
+    eNETWORK_Error error = NETWORK_OK;
+    network_ioBuffer_t* pOutputBuffer = NULL;
+    network_DeportedData_t deportedDataTemp;
+    int readSize = 0;
+    int semError = 0;
+    struct timespec semTimeout;
+    
+    /** check paratemters */
+    if(pManager != NULL)
+    {
+        pOutputBuffer = NETWORK_IoBufferFromId( pManager->ppTabOutput, pManager->numOfOutput, outputBufferId);
+        
+        /** check pOutputBuffer */
+        if(pOutputBuffer == NULL)
+        {
+            error = NETWORK_ERROR_ID_UNKNOWN;
+        }
+    }
+    else
+    {
+        error = NETWORK_ERROR_BAD_PARAMETER;
+    }
+    
+    if( error == NETWORK_OK )
+    {
+        /** convert timeoutMs in timespec */
+        semTimeout.tv_sec = timeoutMs / 1000;
+        semTimeout.tv_nsec = (timeoutMs % 1000) * 1000000;
+        
+        /** try to take the semaphore with timeout*/
+        semError = sal_sem_timedwait( &(pOutputBuffer->outputSem), &semTimeout);
+        
+        if(semError)
+        {
+            switch( errno )
+            {
+                case ETIMEDOUT : /** semaphore time out */ 
+                    error = NETWORK_ERROR_BUFFER_EMPTY;
+                break;
+                
+                default:
+                    error = NETWORK_ERROR_SEMAPHORE;
+                break;
+            }
+        }
+    }
+    
+    if( error == NETWORK_OK )
+    {
+        /** check paratemters */
+        if( pOutputBuffer->deportedData )
+        {
+            /** get data deported */
+            error = NETWORK_RingBuffPopFront(pOutputBuffer->pBuffer, (uint8_t*) &deportedDataTemp);
+            
+            if( error == NETWORK_OK )
+            {
+                /** data size check*/
+                if(deportedDataTemp.dataSize <= dataLimitSize)
+                {
+                    /** data copy */
+                    memcpy(pData, deportedDataTemp.pData, deportedDataTemp.dataSize);
+                    
+                    /** set data read */
+                    readSize = deportedDataTemp.dataSize;
+                    
+                    /** free the data deported*/
+                    deportedDataTemp.callback( pOutputBuffer->id, deportedDataTemp.pData, 
+                                               NETWORK_CALLBACK_STATUS_FREE);
+                }
+                else
+                {
+                    error = NETWORK_ERROR_BUFFER_SIZE;
+                }
+            }
+        }
+        else
+        {
+            error = NETWORK_ERROR_BAD_PARAMETER;
+        }
+    }
+    else
+    {
+        error = NETWORK_ERROR_ID_UNKNOWN;
+    }
+    
+    /** return the size of the data read */
+    if(pReadSize != NULL)
+    {
+        *pReadSize = readSize;
+    }
+    
+    return error;
+}
+
 
 /*****************************************
  * 

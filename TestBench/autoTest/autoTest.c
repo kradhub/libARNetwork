@@ -13,6 +13,9 @@
 
 #include <stdio.h> 
 #include <stdlib.h> 
+
+#include <time.h>
+
 #include <libSAL/print.h>
 #include <libSAL/thread.h>
 
@@ -30,13 +33,16 @@
  *
 ******************************************/
 
-#define NUMBER_DATA_SENT 5
-#define SENDING_SLEEP_TIME_US 50000
+#define NUMBER_DATA_SENT 20
+#define SENDING_SLEEP_TIME_US 5000
+#define READING_SLEEP_TIME_US 1000
+
 #define RECEIVER_TIMEOUT_SEC 5
 #define FIRST_CHAR_SENT 'A'
 #define FIRST_INT_ACK_SENT 100
-#define BASE_DEPORTED_DATA 0x5555555555555555LL
-#define BASE_DEPORTED_DATA_ACK 0xffffffffffffffffLL
+
+#define FIRST_DEPORTED_DATA 'a'
+#define STR_SIZE_OFFSET 2 /** offset add to the send number for calculate the size of the string to send */
 
 #define RECV_TIMEOUT_MS 10
 #define PORT1 12345
@@ -47,8 +53,8 @@
 #define RECV_BUFF_SIZE 256
 
 #define NB_OF_INPUT_NET1 4
-#define NB_OF_OUTPUT_NET1 1
-#define NB_OF_INPUT_NET2 1
+#define NB_OF_OUTPUT_NET1 4
+#define NB_OF_INPUT_NET2 4
 #define NB_OF_OUTPUT_NET2 4
 
 #define SENDDATA 1
@@ -62,9 +68,64 @@ typedef enum eID_BUFF
     ID_INT_DATA,
     ID_DEPORT_DATA,
     ID_DEPORT_DATA_ACK
+    
 }eID_BUFF;
 
-int callbackDepotData(int OutBufferId, void* pData, int status);
+typedef struct managerCheck_t
+{
+    network_manager_t* pManager;
+    
+    sal_thread_t thread_managerSend;
+    sal_thread_t thread_managerRecv;
+    
+    int thRecvCreckAlive; /** life flag of the reading thread */
+    
+    sal_thread_t thread_checkSend;
+    sal_thread_t thread_checkRecv;
+    sal_thread_t thread_checkRecvDeported;
+    
+    int sentDataNumber; /**< number of the data not acknowledged sent */
+    int sentDataAckNumber; /**< number of the data acknowledged sent */
+    int sentDataDeportedNumber; /**< number of the data deported not acknowledged sent */
+    int sentDataDeportedAckNumber; /**< number of the data deported acknowledged sent */
+    
+    int recvDataNumber; /**< number of the data not acknowledged receved */
+    int recvDataAckNumber; /**< number of the data acknowledged receved */
+    int recvDataDeportedNumber; /**< number of the data deported not acknowledged receved */
+    int recvDataDeportedAckNumber; /**< number of the data deported acknowledged receved */
+    
+    char lastDataRecv; /**< last date not acknowledged receved */
+    int lastDataDeportedSize; /**< last size of the date deported not acknowledged receved */
+    
+    int numberOfError; /**< number of cheking error */
+    
+}managerCheck_t;
+
+void initManagerCheck(managerCheck_t* pManagerCheck);
+
+void initParamIoBuffer( network_paramNewIoBuffer_t* pTabInput1, 
+                        network_paramNewIoBuffer_t* pTabOutput1,
+                        network_paramNewIoBuffer_t* pTabInput2, 
+                        network_paramNewIoBuffer_t* pTabOutput2 );
+                        
+int callbackDepotData(int OutBufferId, uint8_t* pData, int status);
+                        
+void* runCheckSendData(void*);
+void* runCheckReadData(void*);
+void* runCheckReadDataDeported(void* data);
+
+eNETWORK_Error sendData(managerCheck_t* pManagerCheck);
+eNETWORK_Error sendDataAck(managerCheck_t* pManagerCheck);
+eNETWORK_Error sendDataDeported(managerCheck_t* pManagerCheck);
+eNETWORK_Error sendDataDeportedAck(managerCheck_t* pManagerCheck);
+
+char* allocInitStr(  int size );
+
+int checkData( managerCheck_t* pManagerCheck, char data );
+int checkDataACK( managerCheck_t* pManagerCheck, int dataAck );
+int checkDeportedData( managerCheck_t* pManagerCheck, int dataSize );
+int checkDeportedDataACK( managerCheck_t* pManagerCheck, char* pDataDeportedAck, int dataSizeAck );
+
 
 /*****************************************
  * 
@@ -75,344 +136,533 @@ int callbackDepotData(int OutBufferId, void* pData, int status);
 int main(int argc, char *argv[])
 {
     /** local declarations */
-    network_manager_t* pManager1= NULL;
-    network_manager_t* pManager2= NULL;
-    sal_thread_t thread_send1 = NULL;
-    sal_thread_t thread_recv1 = NULL;
-    sal_thread_t thread_send2 = NULL;
-    sal_thread_t thread_recv2 = NULL;
-    int ii = 0;
-    eNETWORK_Error error = 0;
-
-
-    char chData = 0;
-    int intData = 0;
+    managerCheck_t managerCheck1;
+    managerCheck_t managerCheck2;
     
-    void* pDataDeported = NULL;
-    uint64_t orgDataDeported = BASE_DEPORTED_DATA;
-    uint64_t dataDeportedRead = 0;
-    int dataDeportSize = 0 ;
-    
-    void* pDataDeported_ack = NULL;
-    uint64_t orgDataDeported_ack = BASE_DEPORTED_DATA_ACK;
-    uint64_t dataDeportedRead_ack = 0;
-    int dataDeportSize_ack = 0 ;
+    eNETWORK_Error error = NETWORK_OK;
+    int ackTransM1toM2Dif = 0;
+    int ackDepTransM1toM2Dif = 0;
+    int ackTransM2toM1Dif = 0;
+    int ackDepTransM2toM1Dif = 0;
 
-    
     network_paramNewIoBuffer_t paramInputNetwork1[NB_OF_INPUT_NET1];
     network_paramNewIoBuffer_t paramOutputNetwork1[NB_OF_OUTPUT_NET1];
     
     network_paramNewIoBuffer_t paramInputNetwork2[NB_OF_INPUT_NET2];
     network_paramNewIoBuffer_t paramOutputNetwork2[NB_OF_OUTPUT_NET2];
     
-    /** initialization of the buffer parameters */
-    /** --- network 1 --- */
-    
-    /** input ID_CHAR_DATA char */
-    NETWORK_ParamNewIoBufferDefaultInit( &(paramInputNetwork1[0]) );
-    paramInputNetwork1[0].id = ID_CHAR_DATA;
-    paramInputNetwork1[0].dataType = NETWORK_FRAME_TYPE_DATA;
-    paramInputNetwork1[0].numberOfCell = 1;
-    paramInputNetwork1[0].cellSize = sizeof(char);
-    paramInputNetwork1[0].isOverwriting = 1;
-    
-    /** input ID_INT_DATA_WITH_ACK int */
-    NETWORK_ParamNewIoBufferDefaultInit( &(paramInputNetwork1[1]) );
-    paramInputNetwork1[1].id = ID_INT_DATA_WITH_ACK;
-    paramInputNetwork1[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    paramInputNetwork1[1].sendingWaitTimeMs = 2;
-    paramInputNetwork1[1].ackTimeoutMs = 5;
-    paramInputNetwork1[1].nbOfRetry = -1/*20*/;
-    paramInputNetwork1[1].numberOfCell = 5;
-    paramInputNetwork1[1].cellSize = sizeof(int);
-    
-    /** input ID_DEPORT_DATA */
-    NETWORK_ParamNewIoBufferDefaultInit( &(paramInputNetwork1[2]) );
-    paramInputNetwork1[2].id = ID_DEPORT_DATA;
-    paramInputNetwork1[2].dataType = NETWORK_FRAME_TYPE_DATA;
-    paramInputNetwork1[2].sendingWaitTimeMs = 2;
-    paramInputNetwork1[2].numberOfCell = 5;
-    paramInputNetwork1[2].deportedData = 1;
-    
-    /** input ID_DEPORT_DATA_ACK */
-    NETWORK_ParamNewIoBufferDefaultInit( &(paramInputNetwork1[3]) );
-    paramInputNetwork1[3].id = ID_DEPORT_DATA_ACK;
-    paramInputNetwork1[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    paramInputNetwork1[3].sendingWaitTimeMs = 2;
-    paramInputNetwork1[3].ackTimeoutMs = 5;
-    paramInputNetwork1[3].nbOfRetry = -1/*20*/;
-    paramInputNetwork1[3].numberOfCell = 5;
-    paramInputNetwork1[3].deportedData = 1;
-    
-    /** output ID_INT_DATA int */
-    NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork1[0]) );
-    paramOutputNetwork1[0].id = ID_INT_DATA;
-    paramOutputNetwork1[0].dataType = NETWORK_FRAME_TYPE_DATA;
-    paramOutputNetwork1[0].numberOfCell = 5;
-    paramOutputNetwork1[0].cellSize = sizeof(int);
-    paramOutputNetwork1[0].isOverwriting = 1;
-    
-    /** ----------------------------- */
-    
-    /**--- network 2 --- */
-    
-    /** input ID_INT_DATA char */
-    NETWORK_ParamNewIoBufferDefaultInit( &(paramInputNetwork2[0]) );
-    paramInputNetwork2[0].id = ID_INT_DATA;
-    paramInputNetwork2[0].dataType = NETWORK_FRAME_TYPE_DATA;
-    paramInputNetwork2[0].sendingWaitTimeMs = 2;
-    paramInputNetwork2[0].numberOfCell = 2;
-    paramInputNetwork2[0].cellSize = sizeof(int);
-    paramInputNetwork2[0].isOverwriting = 1;
-    
-    /**  output ID_CHAR_DATA int */
-    NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork2[0]) );
-    paramOutputNetwork2[0].id = ID_CHAR_DATA;
-    paramOutputNetwork2[0].dataType = NETWORK_FRAME_TYPE_DATA;
-    paramOutputNetwork2[0].sendingWaitTimeMs = 3;
-    paramOutputNetwork2[0].numberOfCell = 1;
-    paramOutputNetwork2[0].cellSize = sizeof(char);
-    paramOutputNetwork2[0].isOverwriting = 1;
-    
-    /** output ID_INT_DATA_WITH_ACK int */
-    NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork2[1]) );
-    paramOutputNetwork2[1].id = ID_INT_DATA_WITH_ACK;
-    paramOutputNetwork2[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    paramOutputNetwork2[1].numberOfCell = 5;
-    paramOutputNetwork2[1].cellSize = sizeof(int);
-    
-    /** output ID_DEPORT_DATA */
-    NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork2[2]) );
-    paramOutputNetwork2[2].id = ID_DEPORT_DATA;
-    paramOutputNetwork2[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    paramOutputNetwork2[2].numberOfCell = 5;
-    paramOutputNetwork2[2].deportedData = 1;
-    
-    /** output ID_DEPORT_DATA_ACK */
-    NETWORK_ParamNewIoBufferDefaultInit( &(paramOutputNetwork2[3]) );
-    paramOutputNetwork2[3].id = ID_DEPORT_DATA_ACK;
-    paramOutputNetwork2[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    paramOutputNetwork2[3].numberOfCell = 5;
-    paramOutputNetwork2[3].deportedData = 1;
-    
-    /** ----------------------------- */
+    /** default init */
+    initManagerCheck( &managerCheck1 );
+    initManagerCheck( &managerCheck2 );
+    initParamIoBuffer( paramInputNetwork1, paramOutputNetwork1, paramInputNetwork2, paramOutputNetwork2 );
+    /** initialize random seed: */
+    srand ( time(NULL) );
     
     printf(" -- libNetWork TestBench auto -- \n");
     
     /** create the Manager1 */
+    managerCheck1.pManager = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
+                                                NB_OF_INPUT_NET1, paramInputNetwork1,
+                                                NB_OF_OUTPUT_NET1, paramOutputNetwork1, NULL);
     
-    pManager1 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
-                                    NB_OF_INPUT_NET1, paramInputNetwork1,
-                                    NB_OF_OUTPUT_NET1, paramOutputNetwork1, NULL);
-    
-    error = NETWORK_ManagerSocketsInit(pManager1, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
-    printf("pManager1 error initsocket = %d \n", error);
+    error = NETWORK_ManagerSocketsInit(managerCheck1.pManager, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
+    printf("managerCheck1.pManager error initsocket = %d \n", error);
 
     /** create the Manager2 */
-    pManager2 = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
-                                    NB_OF_INPUT_NET2, paramInputNetwork2,
-                                    NB_OF_OUTPUT_NET2, paramOutputNetwork2, NULL);          
+    managerCheck2.pManager = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
+                                                NB_OF_INPUT_NET2, paramInputNetwork2,
+                                                NB_OF_OUTPUT_NET2, paramOutputNetwork2, NULL);          
     
-    error = NETWORK_ManagerSocketsInit(pManager2, ADRR_IP, PORT2, PORT1, RECEIVER_TIMEOUT_SEC);
-    printf("pManager2 error initsocket = %d \n ", error);
+    error = NETWORK_ManagerSocketsInit(managerCheck2.pManager, ADRR_IP, PORT2, PORT1, RECEIVER_TIMEOUT_SEC);
+    printf("managerCheck2.pManager error initsocket = %d \n ", error);
     
     printf("main start \n");
     
     /** create the threads */
-    sal_thread_create(&thread_recv2, (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager2);
-    sal_thread_create(&thread_recv1, (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager1);
+    sal_thread_create( &(managerCheck2.thread_managerRecv), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, managerCheck2.pManager );
+    sal_thread_create( &(managerCheck1.thread_managerRecv), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, managerCheck1.pManager );
     
-    sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager1);
-    sal_thread_create(&thread_send2, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager2);
+    sal_thread_create( &(managerCheck1.thread_managerSend), (sal_thread_routine) NETWORK_ManagerRunSendingThread, managerCheck1.pManager );
+    sal_thread_create( &(managerCheck2.thread_managerSend), (sal_thread_routine) NETWORK_ManagerRunSendingThread, managerCheck2.pManager );
     
-
-    /** loop sending data */
-    for(ii = 0; ii < NUMBER_DATA_SENT; ii++)
-    {
-        
-        chData = FIRST_CHAR_SENT + ii;
-        printf(" send char: %c \n",chData);
-        error = NETWORK_ManagerSendData(pManager1, ID_CHAR_DATA, &chData);
-        
-        if( error )
-        {
-            printf(" error send char :%d \n", error);
-        }
-
-        intData = FIRST_INT_ACK_SENT + ii;
-        printf(" send int: %d \n",intData);        
-        error = NETWORK_ManagerSendData(pManager1, ID_INT_DATA_WITH_ACK, &intData);
-        
-        if( error  )
-        {
-            printf(" error send int ack :%d \n", error);
-        }
-      
-        /** create DataDeported */
-        dataDeportSize = ii+1;
-        
-        pDataDeported = malloc(dataDeportSize);
-        memcpy(pDataDeported, &orgDataDeported, dataDeportSize);
-        
-        error = NETWORK_ManagerSendDeportedData( pManager1, ID_DEPORT_DATA,
-                                                 pDataDeported, dataDeportSize,
-                                                 &(callbackDepotData) );
-                                                 
-        printf(" send %d byte deportedData\n",dataDeportSize);
-        if( error  )
-        {
-            printf(" error send deported data ack :%d \n", error);
-        }
-        
-        /** create DataDeported_ack */
-        dataDeportSize_ack = ii+1;
-        
-        pDataDeported_ack = malloc(dataDeportSize_ack);
-        memcpy(pDataDeported_ack, &orgDataDeported_ack, dataDeportSize_ack);
-        
-        error = NETWORK_ManagerSendDeportedData( pManager1, ID_DEPORT_DATA_ACK,
-                                                 pDataDeported_ack, dataDeportSize_ack,
-                                                 &(callbackDepotData) );
-                                                 
-        printf(" send %d byte deportedData\n",dataDeportSize_ack);
-        if( error  )
-        {
-            printf(" error send deported data ack :%d \n", error);
-        }
-
-        
-        usleep(SENDING_SLEEP_TIME_US);
-    }
+    /** manager 1 to manager 2 */
+    sal_thread_create( &(managerCheck1.thread_checkSend), (sal_thread_routine) runCheckSendData, &managerCheck1 );
+    sal_thread_create( &(managerCheck2.thread_checkRecv), (sal_thread_routine) runCheckReadData, &managerCheck2 );
+    sal_thread_create( &(managerCheck2.thread_checkRecvDeported) , (sal_thread_routine) runCheckReadDataDeported, &managerCheck2 );
     
-    printf(" -- stop-- \n");
+    /** manager 2 to manager 1 */
+    sal_thread_create( &(managerCheck2.thread_checkSend), (sal_thread_routine) runCheckSendData, &managerCheck2 );
+    sal_thread_create( &(managerCheck1.thread_checkRecv), (sal_thread_routine) runCheckReadData, &managerCheck1 );
+    sal_thread_create( &(managerCheck1.thread_checkRecvDeported) , (sal_thread_routine) runCheckReadDataDeported, &managerCheck1 );
+
+    /** wait the end of the sending */
+    sal_thread_join( managerCheck1.thread_checkSend, NULL );
+    
+    sal_thread_join( managerCheck2.thread_checkSend, NULL );
+
+    usleep(SENDING_SLEEP_TIME_US);
+    
+    /** stop the reading */
+    managerCheck2.thRecvCreckAlive = 0;
+    sal_thread_join( managerCheck2.thread_checkRecv, NULL );
+    sal_thread_join( managerCheck2.thread_checkRecvDeported, NULL );
+    
+    managerCheck1.thRecvCreckAlive = 0;
+    sal_thread_join( managerCheck1.thread_checkRecv, NULL );
+    sal_thread_join( managerCheck1.thread_checkRecvDeported, NULL );
+
+
+    printf(" -- stop -- \n");
     
     /** stop all therad */
-    NETWORK_ManagerStop(pManager1);
-    NETWORK_ManagerStop(pManager2);
+    NETWORK_ManagerStop(managerCheck1.pManager);
+    NETWORK_ManagerStop(managerCheck2.pManager);
     
     printf("wait ... \n");
     
     /** kill all threads */
-    if(thread_send1 != NULL)
+    if(managerCheck1.thread_managerSend != NULL)
     {
-        sal_thread_join(&(thread_send1), NULL);
+        sal_thread_join( managerCheck1.thread_managerSend, NULL );
     }
-    if(thread_send2 != NULL)
+    if(managerCheck2.thread_managerSend != NULL)
     {
-        sal_thread_join(&(thread_send2), NULL);
-    }
-    
-    if(thread_recv1 != NULL)
-    {
-        sal_thread_join(&(thread_recv1), NULL);
+        sal_thread_join( managerCheck2.thread_managerSend, NULL );
     }
     
-    if(thread_recv2 != NULL)
+    if(managerCheck1.thread_managerRecv != NULL)
     {
-        sal_thread_join(&(thread_recv2), NULL);
+        sal_thread_join( managerCheck1.thread_managerRecv, NULL );
     }
     
-    /** checking */
+    if(managerCheck2.thread_managerRecv != NULL)
+    {
+        sal_thread_join( managerCheck2.thread_managerRecv, NULL );
+    }
 
-    ii = 0;
-    printf("\n the last char transmitted:\n");
-    while( ! NETWORK_ManagerReadData(pManager2, ID_CHAR_DATA, &chData) )
-    {
-        ++ii;
-        printf("- %c \n", chData);
-        /** check values */
-        error = error || ( chData != ( FIRST_CHAR_SENT + (NUMBER_DATA_SENT - 1) ) );
-    }
-    /** check nb data */
-    error = error || ( ii != 1) ;
-    
-    printf("\n the integers transmitted:\n");
-    ii = 0;
-    while( ! NETWORK_ManagerReadData(pManager2, ID_INT_DATA_WITH_ACK, &intData) )
-    {
-        printf("- %d \n", intData);
-        /** check values */
-        error = error || ( intData != FIRST_INT_ACK_SENT + ii);
-        ++ii;
-    }
-    /** check nb data */
-    error = error || ( ii != 5) ;
+    /** print result */
 
-    printf("\n the deported data transmitted:\n");
-    ii = 0;
-    dataDeportedRead = 0;
+    printf("\n");
     
+    printf(" -- managerCheck1 to managerCheck2 -- \n " );
+    printf(" %d data sent | %d data receved \n ", managerCheck1.sentDataNumber, managerCheck2.recvDataNumber );
+    printf(" %d dataACK sent | %d data receved \n ", managerCheck1.sentDataAckNumber, managerCheck2.recvDataAckNumber );
+    printf(" %d dataDeported sent | %d dataDeported receved \n ", managerCheck1.sentDataDeportedNumber, managerCheck2.recvDataDeportedNumber );
+    printf(" %d dataDeportedAck sent | %d dataDeportedAck receved \n ", managerCheck1.sentDataDeportedAckNumber, managerCheck2.recvDataDeportedAckNumber );
+    printf(" number of transmission error: %d \n", managerCheck2.numberOfError);
     
-    while( ! NETWORK_ManagerReadDeportedData(pManager2, ID_DEPORT_DATA, &dataDeportedRead, ii+1, NULL) )
-    {
-        dataDeportSize = ii+1;
-        
-        printf("- %08x %08x \n",  (uint32_t) (dataDeportedRead >> 32), (uint32_t) dataDeportedRead );
-        
-        /** create DataDeported */
-        pDataDeported = malloc(dataDeportSize);
-        memcpy(pDataDeported, &orgDataDeported, dataDeportSize);
-        
-        /** check values */
-        error = error || memcmp(&dataDeportedRead, pDataDeported ,dataDeportSize);
-        ++ii;
-        free(pDataDeported);
-        dataDeportedRead = 0;
-    }
-    /** check nb data */
-    error = error || ( ii != 5) ;
+    printf("\n");
     
-    printf("\n the deported data ACK transmitted:\n");
-    ii = 0;
-    dataDeportedRead_ack = 0;
-    
-    while( ! NETWORK_ManagerReadDeportedData(pManager2, ID_DEPORT_DATA_ACK, &dataDeportedRead_ack, ii+1, NULL) )
-    {
-        dataDeportSize_ack = ii+1;
-        
-        printf("- %08x %08x \n",  (uint32_t) (dataDeportedRead_ack >> 32), (uint32_t) dataDeportedRead_ack );
-        
-        /** create DataDeported */
-        pDataDeported_ack = malloc(dataDeportSize_ack);
-        memcpy(pDataDeported_ack, &orgDataDeported_ack, dataDeportSize_ack);
-        
-        /** check values */
-        error = error || memcmp(&dataDeportedRead_ack, pDataDeported_ack ,dataDeportSize_ack);
-        ++ii;
-        free(pDataDeported_ack);
-        dataDeportedRead_ack = 0;
-    }
-    /** check nb data */
-    error = error || ( ii != 5) ;
-
-
+    printf(" -- managerCheck2 to managerCheck1 -- \n " );
+    printf(" %d data sent | %d data receved \n ", managerCheck2.sentDataNumber, managerCheck1.recvDataNumber );
+    printf(" %d dataACK sent | %d data receved \n ", managerCheck2.sentDataAckNumber, managerCheck1.recvDataAckNumber );
+    printf(" %d dataDeported sent | %d dataDeported receved \n ", managerCheck2.sentDataDeportedNumber, managerCheck1.recvDataDeportedNumber );
+    printf(" %d dataDeportedAck sent | %d dataDeportedAck receved \n ", managerCheck2.sentDataDeportedAckNumber, managerCheck1.recvDataDeportedAckNumber );
+    printf(" number of transmission error: %d \n", managerCheck1.numberOfError);
 
     printf("\n");
 
-    if(error)
+    /** global cheking */
+
+    ackTransM1toM2Dif = managerCheck1.sentDataAckNumber - managerCheck2.recvDataAckNumber;
+    ackDepTransM1toM2Dif = managerCheck1.sentDataDeportedAckNumber - managerCheck2.recvDataDeportedAckNumber;
+    ackTransM2toM1Dif = managerCheck2.sentDataAckNumber - managerCheck1.recvDataAckNumber;
+    ackDepTransM2toM1Dif = managerCheck2.sentDataDeportedAckNumber - managerCheck1.recvDataDeportedAckNumber;
+
+    if( error == NETWORK_OK &&
+        managerCheck1.numberOfError == 0 &&
+        managerCheck2.numberOfError == 0 &&
+        ackTransM1toM2Dif == 0 &&
+        ackDepTransM1toM2Dif == 0 &&
+        ackTransM2toM1Dif == 0 &&
+        ackDepTransM2toM1Dif == 0 )
     {
-        printf("Bad result of the test bench \n");
+        printf(" # -- Good result of the test bench -- # \n");
     }
     else
     {
-        printf("Good result of the test bench \n");
+        printf(" # -- Bad result of the test bench -- # \n");
     }
 
     printf("\n");
     printf("end \n");
     
     /** delete */
-    sal_thread_destroy( &thread_send1 );
-    sal_thread_destroy( &thread_send2 );
-    sal_thread_destroy( &thread_recv1 );
-    sal_thread_destroy(&thread_recv2);
-    NETWORK_DeleteManager( &pManager1 );
-    NETWORK_DeleteManager( &pManager2 );
+    sal_thread_destroy( &(managerCheck1.thread_managerSend) );
+    sal_thread_destroy( &(managerCheck2.thread_managerSend) );
+    sal_thread_destroy( &(managerCheck1.thread_managerRecv) );
+    sal_thread_destroy( &(managerCheck2.thread_managerRecv) );
+    
+    sal_thread_destroy( &(managerCheck1.thread_checkSend) );
+    sal_thread_destroy( &(managerCheck2.thread_checkRecv) );
+    sal_thread_destroy( &(managerCheck2.thread_checkRecvDeported) );
+    
+    sal_thread_destroy( &(managerCheck2.thread_checkSend) );
+    sal_thread_destroy( &(managerCheck1.thread_checkRecv) );
+    sal_thread_destroy( &(managerCheck1.thread_checkRecvDeported) );
+    
+    NETWORK_DeleteManager( &(managerCheck1.pManager) );
+    NETWORK_DeleteManager( &(managerCheck2.pManager) );
 
     return 0;
 }
 
-int callbackDepotData(int OutBufferId, void* pData, int status)
+void initParamIoBuffer( network_paramNewIoBuffer_t* pTabInput1, 
+                        network_paramNewIoBuffer_t* pTabOutput1,
+                        network_paramNewIoBuffer_t* pTabInput2, 
+                        network_paramNewIoBuffer_t* pTabOutput2)
+{
+    /** initialization of the buffer parameters */
+    /** --- network 1 --- */
+    
+    /** input ID_CHAR_DATA char */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput1[0]) );
+    pTabInput1[0].id = ID_CHAR_DATA;
+    pTabInput1[0].dataType = NETWORK_FRAME_TYPE_DATA;
+    pTabInput1[0].numberOfCell = 1;
+    pTabInput1[0].cellSize = sizeof(char);
+    pTabInput1[0].isOverwriting = 1;
+    
+    /** input ID_INT_DATA_WITH_ACK int */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput1[1]) );
+    pTabInput1[1].id = ID_INT_DATA_WITH_ACK;
+    pTabInput1[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    pTabInput1[1].sendingWaitTimeMs = 2;
+    pTabInput1[1].ackTimeoutMs = 5;
+    pTabInput1[1].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER/*20*/;
+    pTabInput1[1].numberOfCell = 5;
+    pTabInput1[1].cellSize = sizeof(int);
+    
+    /** input ID_DEPORT_DATA */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput1[2]) );
+    pTabInput1[2].id = ID_DEPORT_DATA;
+    pTabInput1[2].dataType = NETWORK_FRAME_TYPE_DATA;
+    pTabInput1[2].sendingWaitTimeMs = 2;
+    pTabInput1[2].numberOfCell = 5;
+    pTabInput1[2].deportedData = 1;
+    
+    /** input ID_DEPORT_DATA_ACK */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput1[3]) );
+    pTabInput1[3].id = ID_DEPORT_DATA_ACK;
+    pTabInput1[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    pTabInput1[3].sendingWaitTimeMs = 2;
+    pTabInput1[3].ackTimeoutMs = 5;
+    pTabInput1[3].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER/*20*/;
+    pTabInput1[3].numberOfCell = 5;
+    pTabInput1[3].deportedData = 1;
+
+    /** outputs: */
+    
+    /** output ID_CHAR_DATA char */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput1[0]) );
+    pTabOutput1[0].id = ID_CHAR_DATA;
+    pTabOutput1[0].dataType = NETWORK_FRAME_TYPE_DATA;
+    pTabOutput1[0].numberOfCell = 1;
+    pTabOutput1[0].cellSize = sizeof(char);
+    pTabOutput1[0].isOverwriting = 1;
+    
+    /** output ID_INT_DATA_WITH_ACK int */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput1[1]) );
+    pTabOutput1[1].id = ID_INT_DATA_WITH_ACK;
+    pTabOutput1[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    pTabOutput1[1].sendingWaitTimeMs = 2;
+    pTabOutput1[1].ackTimeoutMs = 5;
+    pTabOutput1[1].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER/*20*/;
+    pTabOutput1[1].numberOfCell = 5;
+    pTabOutput1[1].cellSize = sizeof(int);
+    
+    /** output ID_DEPORT_DATA */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput1[2]) );
+    pTabOutput1[2].id = ID_DEPORT_DATA;
+    pTabOutput1[2].dataType = NETWORK_FRAME_TYPE_DATA;
+    pTabOutput1[2].sendingWaitTimeMs = 2;
+    pTabOutput1[2].numberOfCell = 5;
+    pTabOutput1[2].deportedData = 1;
+    
+    /** output ID_DEPORT_DATA_ACK */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput1[3]) );
+    pTabOutput1[3].id = ID_DEPORT_DATA_ACK;
+    pTabOutput1[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    pTabOutput1[3].sendingWaitTimeMs = 2;
+    pTabOutput1[3].ackTimeoutMs = 5;
+    pTabOutput1[3].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER/*20*/;
+    pTabOutput1[3].numberOfCell = 5;
+    pTabOutput1[3].deportedData = 1;
+    
+    /** ----------------------------- */
+    
+    /**--- network 2 --- */
+    
+    /** input ID_CHAR_DATA char */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput2[0]) );
+    pTabInput2[0].id = ID_CHAR_DATA;
+    pTabInput2[0].dataType = NETWORK_FRAME_TYPE_DATA;
+    pTabInput2[0].numberOfCell = 1;
+    pTabInput2[0].cellSize = sizeof(char);
+    pTabInput2[0].isOverwriting = 1;
+    
+    /** input ID_INT_DATA_WITH_ACK int */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput2[1]) );
+    pTabInput2[1].id = ID_INT_DATA_WITH_ACK;
+    pTabInput2[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    pTabInput2[1].sendingWaitTimeMs = 2;
+    pTabInput2[1].ackTimeoutMs = 5;
+    pTabInput2[1].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER/*20*/;
+    pTabInput2[1].numberOfCell = 5;
+    pTabInput2[1].cellSize = sizeof(int);
+    
+    /** input ID_DEPORT_DATA */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput2[2]) );
+    pTabInput2[2].id = ID_DEPORT_DATA;
+    pTabInput2[2].dataType = NETWORK_FRAME_TYPE_DATA;
+    pTabInput2[2].sendingWaitTimeMs = 2;
+    pTabInput2[2].numberOfCell = 5;
+    pTabInput2[2].deportedData = 1;
+    
+    /** input ID_DEPORT_DATA_ACK */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput2[3]) );
+    pTabInput2[3].id = ID_DEPORT_DATA_ACK;
+    pTabInput2[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    pTabInput2[3].sendingWaitTimeMs = 2;
+    pTabInput2[3].ackTimeoutMs = 5;
+    pTabInput2[3].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER/*20*/;
+    pTabInput2[3].numberOfCell = 5;
+    pTabInput2[3].deportedData = 1;
+    
+    /** outputs: */
+    
+    /**  output ID_CHAR_DATA int */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput2[0]) );
+    pTabOutput2[0].id = ID_CHAR_DATA;
+    pTabOutput2[0].dataType = NETWORK_FRAME_TYPE_DATA;
+    pTabOutput2[0].sendingWaitTimeMs = 3;
+    pTabOutput2[0].numberOfCell = 1;
+    pTabOutput2[0].cellSize = sizeof(char);
+    pTabOutput2[0].isOverwriting = 1;
+    
+    /** output ID_INT_DATA_WITH_ACK int */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput2[1]) );
+    pTabOutput2[1].id = ID_INT_DATA_WITH_ACK;
+    pTabOutput2[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    pTabOutput2[1].numberOfCell = 5;
+    pTabOutput2[1].cellSize = sizeof(int);
+    
+    /** output ID_DEPORT_DATA */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput2[2]) );
+    pTabOutput2[2].id = ID_DEPORT_DATA;
+    pTabOutput2[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    pTabOutput2[2].numberOfCell = 5;
+    pTabOutput2[2].deportedData = 1;
+    
+    /** output ID_DEPORT_DATA_ACK */
+    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput2[3]) );
+    pTabOutput2[3].id = ID_DEPORT_DATA_ACK;
+    pTabOutput2[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    pTabOutput2[3].numberOfCell = 5;
+    pTabOutput2[3].deportedData = 1;
+    
+    /** ----------------------------- */
+}
+
+void initManagerCheck( managerCheck_t* pManagerCheck )
+{
+    /** -- intitialize the managerCheck -- */
+    
+    pManagerCheck->pManager = NULL;
+    pManagerCheck->thread_managerSend = NULL;
+    pManagerCheck->thread_managerRecv = NULL;
+    
+    pManagerCheck->thRecvCreckAlive  = 1;
+    
+    pManagerCheck->thread_checkSend = NULL;
+    pManagerCheck->thread_checkRecv = NULL ;
+    pManagerCheck->thread_checkRecvDeported = NULL;
+    
+    pManagerCheck->sentDataNumber = 0; 
+    pManagerCheck->sentDataAckNumber = 0;
+    pManagerCheck->sentDataDeportedNumber = 0;
+    pManagerCheck->sentDataDeportedAckNumber = 0;
+    
+    pManagerCheck->recvDataNumber = 0;
+    pManagerCheck->recvDataAckNumber = 0;
+    pManagerCheck->recvDataDeportedNumber = 0;
+    pManagerCheck->recvDataDeportedAckNumber = 0;
+    
+    pManagerCheck->lastDataRecv = FIRST_CHAR_SENT - 1;
+    pManagerCheck->lastDataDeportedSize = -1;
+    
+    pManagerCheck->numberOfError = 0;
+}
+
+void* runCheckSendData(void* data)
+{
+    /** -- thread run send data -- */
+    
+    /** local declarations */
+    managerCheck_t* pManagerCheck = (managerCheck_t*)data;
+    int alive = 1;
+    
+    /** send while all data are sent */
+    while( alive )
+    {
+        alive = 0;
+        
+        /** for all data type, if not all data are sent, try to send with fifty-fifty chance */
+        
+        if( pManagerCheck->sentDataNumber < NUMBER_DATA_SENT )
+        {
+            alive = 1;
+            if( rand() % 2 )
+            {
+                sendData( pManagerCheck );
+            }
+        }
+        
+        if( pManagerCheck->sentDataAckNumber < NUMBER_DATA_SENT )
+        {
+            alive = 1;
+            if( rand() % 2 )
+            {
+                sendDataAck( pManagerCheck );
+            }
+        }
+        
+        if( pManagerCheck->sentDataDeportedNumber < NUMBER_DATA_SENT )
+        {
+            alive = 1;
+            if( rand() % 2 )
+            {
+                sendDataDeported( pManagerCheck );
+            }
+        }
+        
+        if( pManagerCheck->sentDataDeportedAckNumber < NUMBER_DATA_SENT )
+        {
+            alive = 1;
+            if( rand() % 2 )
+            {
+                sendDataDeportedAck( pManagerCheck );
+            }
+        }
+        
+        usleep(SENDING_SLEEP_TIME_US);
+    }
+    
+    return NULL;
+}
+
+void* runCheckReadData(void* data)
+{
+    /** -- thread run read and check data -- */
+    
+    /** local declarations */
+    managerCheck_t* pManagerCheck = (managerCheck_t*)data;
+    
+    char chData = 0;
+    int intData = 0;
+    
+    while(pManagerCheck->thRecvCreckAlive)
+    {
+        /** checking */
+        if( ! NETWORK_ManagerReadData(pManagerCheck->pManager, ID_CHAR_DATA, (uint8_t*) &chData) )
+        {
+            printf("- charData: %c \n", chData);
+            if( checkData(pManagerCheck, chData) )
+            {
+                printf("error \n");
+            }
+        }
+        
+        if( ! NETWORK_ManagerReadData(pManagerCheck->pManager, ID_INT_DATA_WITH_ACK, (uint8_t*) &intData) )
+        {
+            printf("- ackInt: %d \n", intData);
+            if( checkDataACK( pManagerCheck, intData ) )
+            {
+                printf("error \n");
+            }
+        }
+        
+        usleep(READING_SLEEP_TIME_US);
+    }
+    
+    return NULL;
+}
+
+void* runCheckReadDataDeported(void* data)
+{
+    /** -- thread run read and check data deported -- */
+    
+    /** local declarations */
+    managerCheck_t* pManagerCheck = (managerCheck_t*)data;
+    
+    int readSize = 0;
+    char dataDeportedRead[ NUMBER_DATA_SENT + STR_SIZE_OFFSET ];
+    char dataDeportedReadAck[ NUMBER_DATA_SENT + STR_SIZE_OFFSET ];
+    
+    while(pManagerCheck->thRecvCreckAlive)
+    {
+        /** checking */
+        
+        if( ! NETWORK_ManagerReadDeportedData( pManagerCheck->pManager,
+                                               ID_DEPORT_DATA, 
+                                               (uint8_t*) dataDeportedRead, 
+                                               NUMBER_DATA_SENT + STR_SIZE_OFFSET,
+                                               &readSize ) )
+        {
+            printf("- depData: %s \n",  dataDeportedRead );
+            
+            if( checkDeportedData( pManagerCheck, readSize) )
+            {
+                printf("error \n");
+            }
+        }
+        
+        if( ! NETWORK_ManagerReadDeportedData( pManagerCheck->pManager, 
+                                               ID_DEPORT_DATA_ACK, 
+                                               (uint8_t*) dataDeportedReadAck, 
+                                               NUMBER_DATA_SENT + STR_SIZE_OFFSET,
+                                               &readSize ) )
+        {
+            
+            printf("- depDataACK: %s \n",  dataDeportedReadAck );
+            
+            if( checkDeportedDataACK( pManagerCheck, dataDeportedReadAck, readSize) )
+            {
+                printf("error \n");
+            } 
+        }
+        
+        usleep(READING_SLEEP_TIME_US);
+    }
+    
+    return NULL;
+}
+
+char* allocInitStr( int size )
+{
+    /** allocate and initialize the string to send */
+    
+    /** local declarations */
+    int ii = 0;
+    char* pStr = NULL;
+    
+    /** allocate the string */
+    pStr = malloc(size);
+    
+    /** write data */
+    for(ii = 0; ii < size - 1 ; ++ii)
+    {
+        pStr[ii] = ( FIRST_DEPORTED_DATA + ii );
+    }
+    
+    /** end the string */
+    pStr[size-1] = '\0' ;
+    
+
+    return pStr;
+}
+
+int callbackDepotData(int OutBufferId, uint8_t* pData, int status)
 {
     /** local declarations */
     int retry = 0;
@@ -442,3 +692,223 @@ int callbackDepotData(int OutBufferId, void* pData, int status)
     return retry;
 }
 
+eNETWORK_Error sendData(managerCheck_t* pManagerCheck)
+{
+    /** -- send data not acknowledged -- */
+    
+    /** local declarations */
+    eNETWORK_Error error = NETWORK_OK;
+    char chData = FIRST_CHAR_SENT + pManagerCheck->sentDataNumber;
+    
+    printf(" send char: %c \n",chData);
+    error = NETWORK_ManagerSendData( pManagerCheck->pManager, ID_CHAR_DATA, (uint8_t*) &chData);
+        
+    if( error == NETWORK_OK)
+    {
+        /** increment Number of data sent*/
+        ++( pManagerCheck->sentDataNumber );
+    }
+    else
+    {
+        printf(" error send char :%d \n", error);
+    }
+    
+    return error;
+}
+
+eNETWORK_Error sendDataAck(managerCheck_t* pManagerCheck)
+{
+    /** -- send data acknowledged -- */
+    
+    /** local declarations */
+    eNETWORK_Error error = NETWORK_OK;
+    int intData = FIRST_INT_ACK_SENT + pManagerCheck->sentDataAckNumber;
+    
+    printf(" send int: %d \n",intData);        
+    error = NETWORK_ManagerSendData( pManagerCheck->pManager, ID_INT_DATA_WITH_ACK, (uint8_t*) &intData );
+    
+    if( error == NETWORK_OK)
+    {
+        /** increment Number of data acknowledged sent*/
+        ++( pManagerCheck->sentDataAckNumber ); 
+    }
+    else
+    {
+        printf(" error send int ack :%d \n", error);
+    }
+    
+    return error;
+}
+
+eNETWORK_Error sendDataDeported(managerCheck_t* pManagerCheck)
+{
+    /** -- send data deported not acknowledged -- */
+    
+    /** local declarations */
+    eNETWORK_Error error = NETWORK_OK;
+    char* pStrDataDeported = NULL;
+    int dataDeportSize = pManagerCheck->sentDataDeportedNumber + STR_SIZE_OFFSET;
+    
+    /** create DataDeported */
+    pStrDataDeported = allocInitStr( dataDeportSize );
+    
+    printf(" send str: %s size: %d \n", pStrDataDeported, dataDeportSize);  
+    error = NETWORK_ManagerSendDeportedData( pManagerCheck->pManager, ID_DEPORT_DATA,
+                                             (uint8_t*) pStrDataDeported, 
+                                             dataDeportSize,
+                                             &(callbackDepotData) );
+                                             
+    if( error == NETWORK_OK)
+    {
+        /** increment Number of data deported not acknowledged sent*/
+        ++( pManagerCheck->sentDataDeportedNumber );
+    }
+    else
+    {
+        printf(" error send deported data ack :%d \n", error);
+    }
+    
+    return error;
+}
+
+eNETWORK_Error sendDataDeportedAck(managerCheck_t* pManagerCheck)
+{
+    /** -- send data deported acknowledged -- */
+    
+    /** local declarations */
+    eNETWORK_Error error = NETWORK_OK;
+    char* pStrDataDeportedAck = NULL;
+    int dataDeportSizeAck = pManagerCheck->sentDataDeportedAckNumber + STR_SIZE_OFFSET;
+    
+    /** create DataDeported */
+    pStrDataDeportedAck = allocInitStr( dataDeportSizeAck );
+    
+    printf(" send str: %s size: %d \n", pStrDataDeportedAck, dataDeportSizeAck);
+    
+    error = NETWORK_ManagerSendDeportedData( pManagerCheck->pManager, ID_DEPORT_DATA_ACK,
+                                             (uint8_t*) pStrDataDeportedAck, dataDeportSizeAck,
+                                             &(callbackDepotData) );
+    
+    if( error == NETWORK_OK)
+    {
+        /** increment Number of data deported acknowledged sent*/
+        ++( pManagerCheck->sentDataDeportedAckNumber );
+    }
+    else
+    {
+        printf(" error send deported data ack :%d \n", error);
+    }
+    
+    return error;
+}
+
+
+int checkData( managerCheck_t* pManagerCheck, char data )
+{
+    /** -- check the data receved -- */
+    
+    /** local declarations */
+    int error = 0;
+    
+    if( data > pManagerCheck->lastDataRecv )
+    {
+        pManagerCheck->lastDataRecv = data;
+    }
+    else
+    {
+        error = 1;
+        /** increment the cheking error */
+        ++(pManagerCheck->numberOfError);
+    }
+    
+    /** increment data not acknowledged receved*/
+    ++( pManagerCheck->recvDataNumber );
+    
+    return error;
+}
+
+int checkDataACK( managerCheck_t* pManagerCheck, int dataAck )
+{
+    /** -- check the data acknowledged receved -- */
+    
+    /** local declarations */
+    int error = 0;
+    int dataAckCheck = FIRST_INT_ACK_SENT + pManagerCheck->recvDataAckNumber;
+    
+    if( dataAckCheck != dataAck )
+    {
+        error = 1;
+        /** increment the cheking error */
+        ++(pManagerCheck->numberOfError);
+    }
+    
+    /** increment data acknowledged receved*/
+    ++( pManagerCheck->recvDataAckNumber );
+    
+    return error;
+}
+
+int checkDeportedData( managerCheck_t* pManagerCheck, int dataSize)
+{
+    /** -- check the data deported not acknowledged receved -- */
+    
+    /** local declarations */
+    int error = 0;
+    
+    if( dataSize > pManagerCheck->lastDataDeportedSize )
+    {
+        pManagerCheck->lastDataDeportedSize = dataSize;
+    }
+    else
+    {
+        error = 1;
+        /** increment the cheking error */
+        ++(pManagerCheck->numberOfError);
+    }
+    
+    /** increment data deported not acknowledged receved*/
+    ++( pManagerCheck->recvDataDeportedNumber );
+    
+    return error;
+}
+
+int checkDeportedDataACK( managerCheck_t* pManagerCheck, char* pDataDeportedAck, int dataSizeAck )
+{
+    /** -- check the data deported acknowledged receved -- */
+    
+    /** local declarations */
+    int error = 0;
+    char* pCheckStr = NULL;
+    int checkStrSize = pManagerCheck->recvDataDeportedAckNumber + 2;
+
+    /** check the size of the data */
+    if( dataSizeAck != checkStrSize )
+    {
+        error = 1;
+        /** increment the cheking error */
+        ++(pManagerCheck->numberOfError);
+    }
+    
+    if(error == 0)
+    {
+        /** create DataDeportedAck check */
+        pCheckStr = allocInitStr( checkStrSize );
+        
+        /** compare the data with the string expected */
+        error = memcmp(pDataDeportedAck, pCheckStr, checkStrSize);
+        
+        /** free the checking string */
+        free(pCheckStr);
+    }
+    
+    if(error != 0)
+    {
+        /** increment the cheking error */
+        ++(pManagerCheck->numberOfError);
+    }
+    
+    /** increment data deported acknowledged receved*/
+    ++( pManagerCheck->recvDataDeportedAckNumber );
+    
+    return error;
+}

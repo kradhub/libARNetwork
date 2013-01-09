@@ -51,6 +51,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
         /** Initialize to default values */
         pIoBuffer->pBuffer = NULL;
         sal_mutex_init( &(pIoBuffer->mutex) );
+        sal_sem_init( &(pIoBuffer->outputSem), 1, 0);
         
         if( NETWORK_ParamNewIoBufferCheck( pParam ) )
         {
@@ -124,6 +125,7 @@ void NETWORK_DeleteIoBuffer( network_ioBuffer_t** ppIoBuffer )
         if(pIoBuffer)
         {    
             sal_mutex_destroy( &(pIoBuffer->mutex) );
+            sal_sem_destroy( &(pIoBuffer->outputSem) );
             
             if(pIoBuffer->deportedData)
             {
@@ -278,4 +280,10 @@ void NETWORK_IoBufferFlush( network_ioBuffer_t* pIoBuffer )
     pIoBuffer->waitTimeCount = pIoBuffer->sendingWaitTimeMs;
     pIoBuffer->ackWaitTimeCount = pIoBuffer->ackTimeoutMs;
     pIoBuffer->retryCount = 0;
+    
+    /** reset semaphore */
+    sal_sem_destroy( &(pIoBuffer->outputSem) );
+    sal_sem_init( &(pIoBuffer->outputSem), 1, 0);
+    
 }
+

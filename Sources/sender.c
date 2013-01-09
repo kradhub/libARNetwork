@@ -506,7 +506,12 @@ void NETWORK_SenderManagerTimeOut(network_sender_t* pSender, network_ioBuffer_t*
         break;
         
         case NETWORK_CALLBACK_RETURN_DATA_POP :
+            /** pop the data*/
             NETWORK_IoBufferDeleteData( pInputTemp, NETWORK_CALLBACK_STATUS_FREE );
+            
+            /** force the waiting acknowledge at 0 */
+            pInputTemp->isWaitAck = 0;
+            
         break;
         
         case NETWORK_CALLBACK_RETURN_FLUSH :

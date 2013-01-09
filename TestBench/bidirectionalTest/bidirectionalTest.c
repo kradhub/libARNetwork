@@ -65,7 +65,7 @@ typedef struct printThread
 
 void* printBuff(void* data);
 
-int callbackDepotData(int OutBufferId, void* pData, int status);
+int callbackDepotData(int OutBufferId, uint8_t* pData, int status);
 
 /** terminal setting */
 struct termios initial_settings, new_settings;
@@ -339,7 +339,7 @@ int main(int argc, char *argv[])
                 ++chData;
                 printf("send char data :%d \n",chData);
             
-                error = NETWORK_ManagerSendData(pManager1, id_ioBuff_char, &chData);
+                error = NETWORK_ManagerSendData(pManager1, id_ioBuff_char, (uint8_t*) &chData);
                 if(error != NETWORK_OK )
                 {
                     printf("buffer full \n");
@@ -352,7 +352,7 @@ int main(int argc, char *argv[])
                 printf("int data acknowledged :%d \n",intData);
                 printf("\n");
                                         
-                error = NETWORK_ManagerSendData(pManager1, id_ioBuff_intAck, &intData) ;
+                error = NETWORK_ManagerSendData(pManager1, id_ioBuff_intAck, (uint8_t*) &intData) ;
                 if(error != NETWORK_OK )
                 {
                     printf("buffer full \n");
@@ -382,7 +382,7 @@ int main(int argc, char *argv[])
                 pDataDeported_ack[dataDeportSize_ack - 1] = '\0' ;
                 
                 error = NETWORK_ManagerSendDeportedData( pManager1, id_ioBuff_deportDataAck,
-                                                         pDataDeported_ack, dataDeportSize_ack,
+                                                         (uint8_t*) pDataDeported_ack, dataDeportSize_ack,
                                                          &(callbackDepotData) );
                 if(error != NETWORK_OK )
                 {
@@ -413,7 +413,7 @@ int main(int argc, char *argv[])
                 pDataDeported[dataDeportSize - 1] = '\0' ;
                 
                 error = NETWORK_ManagerSendDeportedData( pManager1, id_ioBuff_deportData,
-                                                         pDataDeported, dataDeportSize,
+                                                         (uint8_t*) pDataDeported, dataDeportSize,
                                                          &(callbackDepotData) );
                 if(error != NETWORK_OK )
                 {
@@ -433,10 +433,9 @@ int main(int argc, char *argv[])
     NETWORK_ManagerStop(pManager1);
     
     /** kill all thread */
-    
-    sal_thread_join(&(thread_send1), NULL);
-    sal_thread_join(&(thread_recv1), NULL);
-    sal_thread_join(&(thread_printBuff), NULL);
+    sal_thread_join(thread_send1, NULL);
+    sal_thread_join(thread_recv1, NULL);
+    sal_thread_join(thread_printBuff, NULL);
 
     /** delete */
     sal_thread_destroy(&thread_send1);
@@ -464,13 +463,13 @@ void* printBuff(void* data)
     {
         usleep(MILLISECOND);
 
-        error = NETWORK_ManagerReadData( pprintThread1->pManager, pprintThread1->id_ioBuff_char, &chData ) ;
+        error = NETWORK_ManagerReadData( pprintThread1->pManager, pprintThread1->id_ioBuff_char, (uint8_t*) &chData ) ;
         if( error ==  NETWORK_OK )
         {
             printf("- char :%d \n", chData);
         }
         
-        error = NETWORK_ManagerReadData( pprintThread1->pManager, pprintThread1->id_ioBuff_intAck, &intData );
+        error = NETWORK_ManagerReadData( pprintThread1->pManager, pprintThread1->id_ioBuff_intAck, (uint8_t*) &intData );
         if( error ==  NETWORK_OK )
         {
             printf("- int ack :%d \n", intData);
@@ -478,7 +477,7 @@ void* printBuff(void* data)
         
         error = NETWORK_ManagerReadDeportedData( pprintThread1->pManager, 
                                                  pprintThread1->id_ioBuff_deportDataAck, 
-                                                 &deportData,LIMIT_SIZE_DEPORT_DATA, NULL );
+                                                 (uint8_t*) &deportData,LIMIT_SIZE_DEPORT_DATA, NULL );
         if( error ==  NETWORK_OK )
         {
             printf("- deport string data ack :%s \n", deportData);
@@ -486,7 +485,7 @@ void* printBuff(void* data)
         
         error = NETWORK_ManagerReadDeportedData( pprintThread1->pManager, 
                                                  pprintThread1->id_ioBuff_deportData, 
-                                                 &deportData,LIMIT_SIZE_DEPORT_DATA, NULL );
+                                                 (uint8_t*) &deportData,LIMIT_SIZE_DEPORT_DATA, NULL );
         if( error ==  NETWORK_OK )
         {
             printf("- deport string data :%s \n", deportData);
@@ -497,7 +496,7 @@ void* printBuff(void* data)
     return NULL;
 }
 
-int callbackDepotData(int OutBufferId, void* pData, int status)
+int callbackDepotData(int OutBufferId, uint8_t* pData, int status)
 {
     /** local declarations */
     int retry = 0;

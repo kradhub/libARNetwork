@@ -19,6 +19,7 @@
 
 #include <libSAL/print.h>
 #include <libSAL/mutex.h>
+#include <libSAL/sem.h>
 #include <libSAL/socket.h>
 #include <libSAL/endianness.h>
 
@@ -348,10 +349,10 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
     /** local declarations */
     eNETWORK_Error error = NETWORK_OK;
     network_DeportedData_t deportedDataTemp;
+    int semError = 0;
     
     if( pOutBuffer->deportedData )
     {
-        
         if( NETWORK_RingBuffGetFreeCellNb(pOutBuffer->pBuffer) )
         {
             /** alloc data deported */
@@ -374,6 +375,17 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
     {
         /** push the data received in the output buffer targeted */
         error = NETWORK_RingBuffPushBack( pOutBuffer->pBuffer, &(pFrame->data) );
+    }
+    
+    if(error == NETWORK_OK)
+    {
+        /** post a semaphore to indicate data ready to be read */
+        semError = sal_sem_post( &(pOutBuffer->outputSem) );
+        
+        if( semError )
+        {
+            error = NETWORK_ERROR_SEMAPHORE;
+        }
     }
     
     return error;
