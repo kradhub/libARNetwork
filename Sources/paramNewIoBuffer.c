@@ -24,6 +24,7 @@
  *             define :
  *
 ******************************************/
+#define TAG "RingBuffer"
 
 #define NETWORK_IOBUFFER_ID_DEFAULT -1
 #define NETWORK_IOBUFFER_DATATYPE_DEFAULT NETWORK_FRAME_TYPE_UNINITIALIZED
@@ -90,7 +91,7 @@ int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
     }
     else
     {
-        SAL_PRINT(PRINT_ERROR," parameters for new IoBuffer are not correct. \n \
+        SAL_PRINT(PRINT_ERROR, TAG," parameters for new IoBuffer are not correct. \n \
 values expected: \n \
     - id > -1 (value set: %d)\n\
     - dataType != NETWORK_FRAME_TYPE_UNINITIALIZED (value set: %d)\n\

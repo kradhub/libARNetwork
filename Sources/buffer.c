@@ -22,6 +22,13 @@
 
 /*****************************************
  * 
+ *             define :
+ *
+******************************************/
+#define TAG "Buffer"
+
+/*****************************************
+ * 
  *             implementation :
  *
 ******************************************/
@@ -77,11 +84,11 @@ void NETWORK_BufferPrint(network_buffer_t* pBuffer)
 {    
     /** -- Print the state of the buffer -- */
     
-    SAL_PRINT(PRINT_WARNING," pointer dataBuffer :%d \n",pBuffer->pStart);
-    SAL_PRINT(PRINT_WARNING," numberOfCell :%d \n",pBuffer->numberOfCell);
-    SAL_PRINT(PRINT_WARNING," cellSize :%d \n",pBuffer->cellSize);
+    SAL_PRINT(PRINT_WARNING, TAG," pointer dataBuffer :%d \n",pBuffer->pStart);
+    SAL_PRINT(PRINT_WARNING, TAG," numberOfCell :%d \n",pBuffer->numberOfCell);
+    SAL_PRINT(PRINT_WARNING, TAG," cellSize :%d \n",pBuffer->cellSize);
     
-    SAL_PRINT(PRINT_WARNING," data : \n");
+    SAL_PRINT(PRINT_WARNING, TAG," data : \n");
 
     NETWORK_BufferDataPrint(pBuffer);
 }
@@ -97,12 +104,12 @@ void NETWORK_BufferDataPrint(network_buffer_t* pBuffer)
     
     while( it < itEnd )
     {
-        SAL_PRINT(PRINT_WARNING,"    - 0x: ");
+        SAL_PRINT(PRINT_WARNING, TAG,"    - 0x: ");
         for(ii = 0 ; ii < pBuffer->cellSize ; ++ii)
         {
-            SAL_PRINT(PRINT_WARNING,"%2x | ",*((uint8_t*)it));
+            SAL_PRINT(PRINT_WARNING, TAG,"%2x | ",*((uint8_t*)it));
             ++it;
         }
-        SAL_PRINT(PRINT_WARNING,"\n");
+        SAL_PRINT(PRINT_WARNING, TAG,"\n");
     }
 }

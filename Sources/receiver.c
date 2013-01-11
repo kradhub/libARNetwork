@@ -34,6 +34,13 @@
 
 /*****************************************
  * 
+ *             define :
+ *
+******************************************/
+#define TAG "Receiver"
+
+/*****************************************
+ * 
  *             private header:
  *
 ******************************************/
@@ -108,7 +115,7 @@ network_receiver_t* NETWORK_NewReceiver( unsigned int recvBufferSize, unsigned i
         /** delete the receiver if an error occurred */
         if(error != NETWORK_OK)
         {
-            SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", error );
+            SAL_PRINT(PRINT_ERROR, TAG,"error: %d occurred \n", error );
             NETWORK_DeleteReceiver(&pReceiver);
         }
     }
@@ -162,7 +169,7 @@ void* NETWORK_RunReceivingThread(void* data)
                 switch (pFrame->type)
                 {
                     case NETWORK_FRAME_TYPE_ACK:
-                        SAL_PRINT(PRINT_DEBUG," - TYPE: NETWORK_FRAME_TYPE_ACK | SEQ:%d | ID:%d \n",
+                        SAL_PRINT(PRINT_DEBUG, TAG," - TYPE: NETWORK_FRAME_TYPE_ACK | SEQ:%d | ID:%d \n",
                                                 pFrame->seq, pFrame->id);
                                                 
                         /** transmit the acknowledgement to the sender */
@@ -171,13 +178,13 @@ void* NETWORK_RunReceivingThread(void* data)
                                                            *( (int*) &pFrame->data ) );
                         if( error != NETWORK_OK )
                         {
-                            SAL_PRINT(PRINT_ERROR,"acknowledge received, error: %d occurred \n", error);
+                            SAL_PRINT(PRINT_ERROR, TAG,"acknowledge received, error: %d occurred \n", error);
                         }
                         
                     break;
                     
                     case NETWORK_FRAME_TYPE_DATA:
-                        SAL_PRINT(PRINT_DEBUG," - TYPE: NETWORK_FRAME_TYPE_DATA | SEQ:%d | ID:%d \n",
+                        SAL_PRINT(PRINT_DEBUG, TAG," - TYPE: NETWORK_FRAME_TYPE_DATA | SEQ:%d | ID:%d \n",
                                                 pFrame->seq, pFrame->id);
                         
                         /** push the data received in the output buffer targeted */
@@ -191,14 +198,14 @@ void* NETWORK_RunReceivingThread(void* data)
                             
                             if( error != NETWORK_OK )
                             {
-                                SAL_PRINT(PRINT_ERROR,"data received, error: %d occurred \n", error);
+                                SAL_PRINT(PRINT_ERROR, TAG,"data received, error: %d occurred \n", error);
                             }
                             
                         }                            
                     break;
                     
                     case NETWORK_FRAME_TYPE_DATA_WITH_ACK:
-                        SAL_PRINT(PRINT_DEBUG," - TYPE: NETWORK_FRAME_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
+                        SAL_PRINT(PRINT_DEBUG, TAG," - TYPE: NETWORK_FRAME_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
                                                     pFrame->seq, pFrame->id);
                         
                         /** 
@@ -221,7 +228,7 @@ void* NETWORK_RunReceivingThread(void* data)
                                 }
                                 else
                                 {
-                                    SAL_PRINT(PRINT_ERROR,"data acknowledgeed received, error: %d occurred \n", error);
+                                    SAL_PRINT(PRINT_ERROR, TAG,"data acknowledgeed received, error: %d occurred \n", error);
                                 }
                             }
                             
@@ -233,7 +240,7 @@ void* NETWORK_RunReceivingThread(void* data)
                     break;
                     
                     default:
-                        SAL_PRINT(PRINT_WARNING," !!! command type not known !!! \n");
+                        SAL_PRINT(PRINT_WARNING, TAG," !!! command type not known !!! \n");
                     break;
                 }
                 /** get the next frame*/

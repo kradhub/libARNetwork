@@ -39,6 +39,13 @@
 
 /*****************************************
  * 
+ *             define :
+ *
+******************************************/
+#define TAG "Manager"
+
+/*****************************************
+ * 
  *             private header:
  *
 ******************************************/
@@ -169,7 +176,7 @@ network_manager_t* NETWORK_NewManager( unsigned int recvBufferSize,unsigned int 
     /** delete the Manager if an error occurred */
     if( error != NETWORK_OK)
     {
-        SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", error );
+        SAL_PRINT(PRINT_ERROR, TAG, "error: %d occurred \n", error );
         NETWORK_DeleteManager(&pManager);
     }
 
@@ -265,7 +272,7 @@ void* NETWORK_ManagerRunSendingThread(void* data)
     }
     else
     {
-        SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
+        SAL_PRINT(PRINT_ERROR, TAG, "error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
     }
     
     return ret;
@@ -286,7 +293,7 @@ void* NETWORK_ManagerRunReceivingThread(void* data)
     }
     else
     {
-        SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
+        SAL_PRINT(PRINT_ERROR, TAG,"error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
     }
     
     return ret;
@@ -399,7 +406,7 @@ eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBu
     eNETWORK_Error error = NETWORK_OK;
     network_ioBuffer_t* pOutputBuffer = NULL;
     int semError = 0;
-    
+
     /** check paratemters */
     if(pManager != NULL)
     {
@@ -448,10 +455,6 @@ eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBu
         {
             error = NETWORK_ERROR_BAD_PARAMETER;
         }
-    }
-    else
-    {
-        error = NETWORK_ERROR_ID_UNKNOWN;
     }
     
     return error;

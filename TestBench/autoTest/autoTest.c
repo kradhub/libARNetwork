@@ -33,7 +33,7 @@
  *
 ******************************************/
 
-#define NUMBER_DATA_SENT 20
+#define NUMBER_DATA_SENT 26
 #define SENDING_SLEEP_TIME_US 5000
 #define READING_SLEEP_TIME_US 1000
 
@@ -78,7 +78,7 @@ typedef struct managerCheck_t
     sal_thread_t thread_managerSend;
     sal_thread_t thread_managerRecv;
     
-    int thRecvCreckAlive; /** life flag of the reading thread */
+    int thRecvCheckAlive; /** life flag of the reading thread */
     
     sal_thread_t thread_checkSend;
     sal_thread_t thread_checkRecv;
@@ -144,6 +144,8 @@ int main(int argc, char *argv[])
     int ackDepTransM1toM2Dif = 0;
     int ackTransM2toM1Dif = 0;
     int ackDepTransM2toM1Dif = 0;
+    
+    int ret = 0;
 
     network_paramNewIoBuffer_t paramInputNetwork1[NB_OF_INPUT_NET1];
     network_paramNewIoBuffer_t paramOutputNetwork1[NB_OF_OUTPUT_NET1];
@@ -162,82 +164,118 @@ int main(int argc, char *argv[])
     
     /** create the Manager1 */
     managerCheck1.pManager = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
-                                                NB_OF_INPUT_NET1, paramInputNetwork1,
-                                                NB_OF_OUTPUT_NET1, paramOutputNetwork1, NULL);
+                                                 NB_OF_INPUT_NET1, paramInputNetwork1,
+                                                 NB_OF_OUTPUT_NET1, paramOutputNetwork1, &error );
     
-    error = NETWORK_ManagerSocketsInit(managerCheck1.pManager, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
-    printf("managerCheck1.pManager error initsocket = %d \n", error);
+    if( error == NETWORK_OK )
+    {
+        error = NETWORK_ManagerSocketsInit(managerCheck1.pManager, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
+        if(error != NETWORK_OK)
+        {
+            printf("managerCheck1.pManager error initsocket = %d \n", error);
+        }
+    }
 
     /** create the Manager2 */
-    managerCheck2.pManager = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
-                                                NB_OF_INPUT_NET2, paramInputNetwork2,
-                                                NB_OF_OUTPUT_NET2, paramOutputNetwork2, NULL);          
-    
-    error = NETWORK_ManagerSocketsInit(managerCheck2.pManager, ADRR_IP, PORT2, PORT1, RECEIVER_TIMEOUT_SEC);
-    printf("managerCheck2.pManager error initsocket = %d \n ", error);
-    
-    printf("main start \n");
-    
-    /** create the threads */
-    sal_thread_create( &(managerCheck2.thread_managerRecv), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, managerCheck2.pManager );
-    sal_thread_create( &(managerCheck1.thread_managerRecv), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, managerCheck1.pManager );
-    
-    sal_thread_create( &(managerCheck1.thread_managerSend), (sal_thread_routine) NETWORK_ManagerRunSendingThread, managerCheck1.pManager );
-    sal_thread_create( &(managerCheck2.thread_managerSend), (sal_thread_routine) NETWORK_ManagerRunSendingThread, managerCheck2.pManager );
-    
-    /** manager 1 to manager 2 */
-    sal_thread_create( &(managerCheck1.thread_checkSend), (sal_thread_routine) runCheckSendData, &managerCheck1 );
-    sal_thread_create( &(managerCheck2.thread_checkRecv), (sal_thread_routine) runCheckReadData, &managerCheck2 );
-    sal_thread_create( &(managerCheck2.thread_checkRecvDeported) , (sal_thread_routine) runCheckReadDataDeported, &managerCheck2 );
-    
-    /** manager 2 to manager 1 */
-    sal_thread_create( &(managerCheck2.thread_checkSend), (sal_thread_routine) runCheckSendData, &managerCheck2 );
-    sal_thread_create( &(managerCheck1.thread_checkRecv), (sal_thread_routine) runCheckReadData, &managerCheck1 );
-    sal_thread_create( &(managerCheck1.thread_checkRecvDeported) , (sal_thread_routine) runCheckReadDataDeported, &managerCheck1 );
-
-    /** wait the end of the sending */
-    sal_thread_join( managerCheck1.thread_checkSend, NULL );
-    
-    sal_thread_join( managerCheck2.thread_checkSend, NULL );
-
-    usleep(SENDING_SLEEP_TIME_US);
-    
-    /** stop the reading */
-    managerCheck2.thRecvCreckAlive = 0;
-    sal_thread_join( managerCheck2.thread_checkRecv, NULL );
-    sal_thread_join( managerCheck2.thread_checkRecvDeported, NULL );
-    
-    managerCheck1.thRecvCreckAlive = 0;
-    sal_thread_join( managerCheck1.thread_checkRecv, NULL );
-    sal_thread_join( managerCheck1.thread_checkRecvDeported, NULL );
-
-
-    printf(" -- stop -- \n");
-    
-    /** stop all therad */
-    NETWORK_ManagerStop(managerCheck1.pManager);
-    NETWORK_ManagerStop(managerCheck2.pManager);
-    
-    printf("wait ... \n");
-    
-    /** kill all threads */
-    if(managerCheck1.thread_managerSend != NULL)
+    if( error == NETWORK_OK )
     {
-        sal_thread_join( managerCheck1.thread_managerSend, NULL );
-    }
-    if(managerCheck2.thread_managerSend != NULL)
-    {
-        sal_thread_join( managerCheck2.thread_managerSend, NULL );
+        managerCheck2.pManager = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
+                                                     NB_OF_INPUT_NET2, paramInputNetwork2,
+                                                     NB_OF_OUTPUT_NET2, paramOutputNetwork2, &error );  
     }
     
-    if(managerCheck1.thread_managerRecv != NULL)
+    if( error == NETWORK_OK )
     {
-        sal_thread_join( managerCheck1.thread_managerRecv, NULL );
+        error = NETWORK_ManagerSocketsInit(managerCheck2.pManager, ADRR_IP, PORT2, PORT1, RECEIVER_TIMEOUT_SEC);
+        if(error != NETWORK_OK)
+        {
+            printf("managerCheck2.pManager error initsocket = %d \n ", error);
+        }
     }
     
-    if(managerCheck2.thread_managerRecv != NULL)
+    if( error == NETWORK_OK )
     {
-        sal_thread_join( managerCheck2.thread_managerRecv, NULL );
+        printf("check start \n");
+        
+        /** create the threads */
+        sal_thread_create( &(managerCheck2.thread_managerRecv), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, managerCheck2.pManager );
+        sal_thread_create( &(managerCheck1.thread_managerRecv), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, managerCheck1.pManager );
+        
+        sal_thread_create( &(managerCheck1.thread_managerSend), (sal_thread_routine) NETWORK_ManagerRunSendingThread, managerCheck1.pManager );
+        sal_thread_create( &(managerCheck2.thread_managerSend), (sal_thread_routine) NETWORK_ManagerRunSendingThread, managerCheck2.pManager );
+        
+        /** manager 1 to manager 2 */
+        sal_thread_create( &(managerCheck1.thread_checkSend), (sal_thread_routine) runCheckSendData, &managerCheck1 );
+        sal_thread_create( &(managerCheck2.thread_checkRecv), (sal_thread_routine) runCheckReadData, &managerCheck2 );
+        sal_thread_create( &(managerCheck2.thread_checkRecvDeported) , (sal_thread_routine) runCheckReadDataDeported, &managerCheck2 );
+        
+        /** manager 2 to manager 1 */
+        sal_thread_create( &(managerCheck2.thread_checkSend), (sal_thread_routine) runCheckSendData, &managerCheck2 );
+        sal_thread_create( &(managerCheck1.thread_checkRecv), (sal_thread_routine) runCheckReadData, &managerCheck1 );
+        sal_thread_create( &(managerCheck1.thread_checkRecvDeported) , (sal_thread_routine) runCheckReadDataDeported, &managerCheck1 );
+
+        /** wait the end of the sending */
+        if(managerCheck1.thread_checkSend != NULL)
+        {
+            sal_thread_join( managerCheck1.thread_checkSend, NULL );
+        }
+        
+        if(managerCheck2.thread_checkSend != NULL)
+        {
+            sal_thread_join( managerCheck2.thread_checkSend, NULL );
+        }
+
+        /** wait for receiving the last data sent */
+        usleep(SENDING_SLEEP_TIME_US);
+        
+        /** stop the reading */
+        managerCheck2.thRecvCheckAlive = 0;
+        if(managerCheck2.thread_checkRecv != NULL)
+        {
+            sal_thread_join( managerCheck2.thread_checkRecv, NULL );
+        }
+        if(managerCheck2.thread_checkRecvDeported != NULL)
+        {
+            sal_thread_join( managerCheck2.thread_checkRecvDeported, NULL );
+        }
+        
+        managerCheck1.thRecvCheckAlive = 0;
+        if(managerCheck1.thread_checkRecv != NULL)
+        {
+            sal_thread_join( managerCheck1.thread_checkRecv, NULL );
+        }
+        if(managerCheck1.thread_checkRecvDeported != NULL)
+        {
+            sal_thread_join( managerCheck1.thread_checkRecvDeported, NULL );
+        }
+
+        printf(" -- stop -- \n");
+        
+        /** stop all therad */
+        NETWORK_ManagerStop(managerCheck1.pManager);
+        NETWORK_ManagerStop(managerCheck2.pManager);
+        
+        printf("wait ... \n");
+        
+        /** kill all threads */
+        if(managerCheck1.thread_managerSend != NULL)
+        {
+            sal_thread_join( managerCheck1.thread_managerSend, NULL );
+        }
+        if(managerCheck2.thread_managerSend != NULL)
+        {
+            sal_thread_join( managerCheck2.thread_managerSend, NULL );
+        }
+        
+        if(managerCheck1.thread_managerRecv != NULL)
+        {
+            sal_thread_join( managerCheck1.thread_managerRecv, NULL );
+        }
+        
+        if(managerCheck2.thread_managerRecv != NULL)
+        {
+            sal_thread_join( managerCheck2.thread_managerRecv, NULL );
+        }
     }
 
     /** print result */
@@ -281,7 +319,17 @@ int main(int argc, char *argv[])
     }
     else
     {
-        printf(" # -- Bad result of the test bench -- # \n");
+        printf(" # -- Bad result of the test bench -- # \n\n");
+        
+        printf("    libNetWork error : %d \n", error);
+        printf("    %d data acknowledged lost of manager 1 to manager 2 \n", ackTransM1toM2Dif);
+        printf("    %d data deported acknowledged lost of manager 1 to manager 2 \n", ackDepTransM1toM2Dif);
+        printf("    %d data acknowledged lost of manager 2 to manager 1 \n", ackTransM2toM1Dif);
+        printf("    %d data deported acknowledged lost of manager 2 to manager 1 \n", ackDepTransM2toM1Dif);
+        printf("    %d data corrupted of manager 1 to manager 2 \n", managerCheck2.numberOfError);
+        printf("    %d data corrupted of manager 2 to manager 1 \n", managerCheck1.numberOfError);
+        
+        ret = -1;
     }
 
     printf("\n");
@@ -304,7 +352,7 @@ int main(int argc, char *argv[])
     NETWORK_DeleteManager( &(managerCheck1.pManager) );
     NETWORK_DeleteManager( &(managerCheck2.pManager) );
 
-    return 0;
+    return ret;
 }
 
 void initParamIoBuffer( network_paramNewIoBuffer_t* pTabInput1, 
@@ -329,7 +377,7 @@ void initParamIoBuffer( network_paramNewIoBuffer_t* pTabInput1,
     pTabInput1[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
     pTabInput1[1].sendingWaitTimeMs = 2;
     pTabInput1[1].ackTimeoutMs = 5;
-    pTabInput1[1].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER/*20*/;
+    pTabInput1[1].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER /*20*/;
     pTabInput1[1].numberOfCell = 5;
     pTabInput1[1].cellSize = sizeof(int);
     
@@ -347,7 +395,7 @@ void initParamIoBuffer( network_paramNewIoBuffer_t* pTabInput1,
     pTabInput1[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
     pTabInput1[3].sendingWaitTimeMs = 2;
     pTabInput1[3].ackTimeoutMs = 5;
-    pTabInput1[3].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER/*20*/;
+    pTabInput1[3].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER /*20*/;
     pTabInput1[3].numberOfCell = 5;
     pTabInput1[3].deportedData = 1;
 
@@ -472,7 +520,7 @@ void initManagerCheck( managerCheck_t* pManagerCheck )
     pManagerCheck->thread_managerSend = NULL;
     pManagerCheck->thread_managerRecv = NULL;
     
-    pManagerCheck->thRecvCreckAlive  = 1;
+    pManagerCheck->thRecvCheckAlive  = 1;
     
     pManagerCheck->thread_checkSend = NULL;
     pManagerCheck->thread_checkRecv = NULL ;
@@ -561,7 +609,7 @@ void* runCheckReadData(void* data)
     char chData = 0;
     int intData = 0;
     
-    while(pManagerCheck->thRecvCreckAlive)
+    while(pManagerCheck->thRecvCheckAlive)
     {
         /** checking */
         if( ! NETWORK_ManagerReadData(pManagerCheck->pManager, ID_CHAR_DATA, (uint8_t*) &chData) )
@@ -599,7 +647,7 @@ void* runCheckReadDataDeported(void* data)
     char dataDeportedRead[ NUMBER_DATA_SENT + STR_SIZE_OFFSET ];
     char dataDeportedReadAck[ NUMBER_DATA_SENT + STR_SIZE_OFFSET ];
     
-    while(pManagerCheck->thRecvCreckAlive)
+    while(pManagerCheck->thRecvCheckAlive)
     {
         /** checking */
         

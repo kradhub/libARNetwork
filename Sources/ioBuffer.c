@@ -26,6 +26,7 @@
  *             define :
  *
 ******************************************/
+#define TAG "IoBuffer"
 
 /*****************************************
  * 
@@ -103,7 +104,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
         if( error )
         {
             /** delete the inOutput buffer if an error occurred */
-            SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", error );
+            SAL_PRINT(PRINT_ERROR, TAG,"error: %d occurred \n", error );
             NETWORK_DeleteIoBuffer(&pIoBuffer);
         }
     }

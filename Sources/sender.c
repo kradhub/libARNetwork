@@ -35,7 +35,7 @@
  *             define :
  *
 ******************************************/
-                    
+#define TAG "Sender"
 #define MILLISECOND 1000
 #define FIRST_SEQ 1
 
@@ -120,7 +120,7 @@ network_sender_t* NETWORK_NewSender( unsigned int sendingBufferSize, unsigned in
         /** delete the sender if an error occurred */
         if(error != NETWORK_OK)
         {
-            SAL_PRINT(PRINT_ERROR,"error: %d occurred \n", error );
+            SAL_PRINT(PRINT_ERROR, TAG,"error: %d occurred \n", error );
             NETWORK_DeleteSender(&pSender);
         }
         
@@ -187,7 +187,7 @@ void* NETWORK_RunSendingThread(void* data)
                     {
                         /** if there are timeout and too sending retry ... */
                         
-                        SAL_PRINT(PRINT_DEBUG," !!! too retry !!! \n");
+                        SAL_PRINT(PRINT_DEBUG, TAG," !!! too retry !!! \n");
                         
                         callbackReturn = NETWORK_SenderTimeOutCallback(pSender, pInputTemp);
                         

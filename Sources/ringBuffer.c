@@ -24,6 +24,13 @@
 
 /*****************************************
  * 
+ *             define :
+ *
+******************************************/
+#define TAG "RingBuffer"
+
+/*****************************************
+ * 
  *             implementation :
  *
 ******************************************/
@@ -186,13 +193,13 @@ void NETWORK_RingBuffPrint(network_ringBuffer_t* pRingBuff)
     
     sal_mutex_lock(&(pRingBuff->mutex));
     
-    SAL_PRINT(PRINT_WARNING," pointer dataBuffer :%d \n",pRingBuff->dataBuffer);
-    SAL_PRINT(PRINT_WARNING," numberOfCell :%d \n",pRingBuff->numberOfCell);
-    SAL_PRINT(PRINT_WARNING," cellSize :%d \n",pRingBuff->cellSize);
-    SAL_PRINT(PRINT_WARNING," indexOutput :%d \n",pRingBuff->indexOutput);
-    SAL_PRINT(PRINT_WARNING," indexInput :%d \n",pRingBuff->indexInput);
-    SAL_PRINT(PRINT_WARNING," overwriting :%d \n",pRingBuff->isOverwriting);
-    SAL_PRINT(PRINT_WARNING," data : \n");
+    SAL_PRINT(PRINT_WARNING, TAG," pointer dataBuffer :%d \n",pRingBuff->dataBuffer);
+    SAL_PRINT(PRINT_WARNING, TAG," numberOfCell :%d \n",pRingBuff->numberOfCell);
+    SAL_PRINT(PRINT_WARNING, TAG," cellSize :%d \n",pRingBuff->cellSize);
+    SAL_PRINT(PRINT_WARNING, TAG," indexOutput :%d \n",pRingBuff->indexOutput);
+    SAL_PRINT(PRINT_WARNING, TAG," indexInput :%d \n",pRingBuff->indexInput);
+    SAL_PRINT(PRINT_WARNING, TAG," overwriting :%d \n",pRingBuff->isOverwriting);
+    SAL_PRINT(PRINT_WARNING, TAG," data : \n");
     
     sal_mutex_unlock(&(pRingBuff->mutex));
     
@@ -216,13 +223,13 @@ void NETWORK_RingBuffDataPrint(network_ringBuffer_t* pRingBuff)
     {
         it = pRingBuff->dataBuffer + (iindex % (pRingBuff->numberOfCell * pRingBuff->cellSize) );
         
-        SAL_PRINT(PRINT_WARNING,"    - 0x: ");
+        SAL_PRINT(PRINT_WARNING, TAG,"    - 0x: ");
         for(ii = 0 ; ii < pRingBuff->cellSize ; ++ii)
         {
-            SAL_PRINT(PRINT_WARNING,"%2x | ",*((uint8_t*)it));
+            SAL_PRINT(PRINT_WARNING, TAG,"%2x | ",*((uint8_t*)it));
             ++it;
         }
-        SAL_PRINT(PRINT_WARNING,"\n");
+        SAL_PRINT(PRINT_WARNING, TAG,"\n");
     }
     
     sal_mutex_unlock(&(pRingBuff->mutex));
