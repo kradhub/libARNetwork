@@ -15,6 +15,8 @@
 
 #include <stddef.h>
 
+#include <errno.h>
+
 #include <string.h>
 
 #include <libSAL/print.h>
@@ -77,7 +79,7 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
  *  @return   
  *  @see eNETWORK_CALLBACK_STATUS
 **/
-int NETWORK_freedeportedData(int OutBufferId, uint8_t* pData, int status);
+int NETWORK_freedeportedData(int OutBufferId, uint8_t* pData, void* pCustomData, int status);
 
 /*****************************************
  * 
@@ -154,7 +156,6 @@ void* NETWORK_RunReceivingThread(void* data)
     network_frame_t* pFrame = NULL;
     network_ioBuffer_t* pOutBufferTemp = NULL;
     eNETWORK_Error error = NETWORK_OK;
-
     
     while( pReceiver->isAlive )
     {    
@@ -290,13 +291,15 @@ int NETWORK_ReceiverRead(network_receiver_t* pReceiver)
     return readDataSize;
 }
 
-int NETWORK_ReceiverBind( network_receiver_t* pReceiver, unsigned short port, int timeoutSec )
+eNETWORK_Error NETWORK_ReceiverBind( network_receiver_t* pReceiver, unsigned short port, int timeoutSec )
 {
     /** -- receiving data present on the socket -- */
     
     /** local declarations */
     struct timeval timeout;  
     struct sockaddr_in recvSin;
+    eNETWORK_Error error = NETWORK_OK;
+    int errorBind = 0;
     
     /** socket initialization */
     recvSin.sin_addr.s_addr = htonl(INADDR_ANY);   
@@ -310,7 +313,23 @@ int NETWORK_ReceiverBind( network_receiver_t* pReceiver, unsigned short port, in
     timeout.tv_usec = 0; 
     sal_setsockopt(pReceiver->socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
     
-    return sal_bind(pReceiver->socket, (struct sockaddr*)&recvSin, sizeof(recvSin));
+    errorBind = sal_bind(pReceiver->socket, (struct sockaddr*)&recvSin, sizeof(recvSin));
+    
+    if( errorBind !=0 )
+    {
+        switch( errno )
+        {
+            case EACCES:
+                error = NETWORK_SCOCKET_ERROR_PERMISSION_DENIED;
+            break;
+            
+            default:
+                error = NETWORK_SCOCKET_ERROR;
+            break;
+        }
+    }
+    
+    return error;
 }
 
 /*****************************************
@@ -356,11 +375,17 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
     /** local declarations */
     eNETWORK_Error error = NETWORK_OK;
     network_DeportedData_t deportedDataTemp;
+    network_DeportedData_t deportedDataOverwritten;
     int semError = 0;
+    int bufferFreeCellNb = 0;
     
     if( pOutBuffer->deportedData )
     {
-        if( NETWORK_RingBuffGetFreeCellNb(pOutBuffer->pBuffer) )
+        bufferFreeCellNb = NETWORK_RingBuffGetFreeCellNb(pOutBuffer->pBuffer);
+        
+        /** if the buffer is not full or it is overwriting*/
+        if( pOutBuffer->pBuffer->isOverwriting == 1 ||
+            bufferFreeCellNb > 0 )
         {
             /** alloc data deported */
             deportedDataTemp.dataSize = pFrame->size - offsetof( network_frame_t,data );
@@ -370,8 +395,24 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
             /** copy the data received in the space allocated */
             memcpy(deportedDataTemp.pData, &(pFrame->data), deportedDataTemp.dataSize);
             
-            /** push the deportedDataTemp in the output buffer targeted */
-            error = NETWORK_RingBuffPushBack( pOutBuffer->pBuffer, (uint8_t*) &deportedDataTemp );
+            if( bufferFreeCellNb == 0)
+            {
+                /** if the buffer is full, free the data deported lost by the overwriting */
+                
+                /** get the deported Data Overwritten */
+                error = NETWORK_RingBuffPopFront( pOutBuffer->pBuffer, (uint8_t*) &deportedDataOverwritten );
+                /** free the deported Data Overwritten*/
+                deportedDataOverwritten.callback( pOutBuffer->id, 
+                                                  deportedDataOverwritten.pData,
+                                                  deportedDataOverwritten.pCustomData, 
+                                                  NETWORK_CALLBACK_STATUS_FREE);
+            }
+            
+            if(error == NETWORK_OK)
+            {
+                /** push the deportedDataTemp in the output buffer targeted */
+                error = NETWORK_RingBuffPushBack( pOutBuffer->pBuffer, (uint8_t*) &deportedDataTemp );
+            }
         }
         else
         {
@@ -398,7 +439,7 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
     return error;
 }
 
-int NETWORK_freedeportedData(int OutBufferId, uint8_t* pData, int status)
+int NETWORK_freedeportedData(int OutBufferId, uint8_t* pData, void* pCustomData, int status)
 {
     /** call back use to free deported data */
     

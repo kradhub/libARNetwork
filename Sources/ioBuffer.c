@@ -251,7 +251,7 @@ eNETWORK_Error NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int ca
         error = NETWORK_RingBuffPopFront( pIoBuffer->pBuffer, (uint8_t*) &deportedDataTemp );
         if( error == NETWORK_OK)
         {
-            deportedDataTemp.callback( pIoBuffer->id, deportedDataTemp.pData, callbackStatus);
+            deportedDataTemp.callback( pIoBuffer->id, deportedDataTemp.pData, deportedDataTemp.pCustomData, callbackStatus);
         }
     }
     else

@@ -122,7 +122,7 @@ static inline int idAckToIdInput( int id)
  *  @return error equal to NETWORK_OK if the Bind if successful otherwise equal to 1.
  *  @see NETWORK_ReceiverBind()
 **/
-int NETWORK_ReceiverBind(network_receiver_t* pReceiver, unsigned short port, int timeoutSec);
+eNETWORK_Error NETWORK_ReceiverBind(network_receiver_t* pReceiver, unsigned short port, int timeoutSec);
 
 #endif // _NETWORK_RECEIVER_H_
 

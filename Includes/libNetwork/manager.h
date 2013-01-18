@@ -110,11 +110,12 @@ eNETWORK_Error NETWORK_ManagerSendData(network_manager_t* pManager, int inputBuf
  *  @param[in] inputBufferId identifier of the input buffer in which the data must be stored
  *  @param[in] pData pointer on the data to send
  *  @param[in] dataSize size of the data to send
+ *  @param[in] void* pCustomData Pointer on a custom data 
  *  @param[in] callback pointer on the callback to call when the data is sent or an error occurred
  *  @return error eNETWORK_Error
 **/
 eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBufferId,
-                                                  uint8_t* pData, int dataSize,
+                                                  uint8_t* pData, int dataSize, void* pCustomData,
                                                   network_deportDatacallback callback );
 
 /**

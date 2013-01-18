@@ -108,7 +108,7 @@ void initParamIoBuffer( network_paramNewIoBuffer_t* pTabInput1,
                         network_paramNewIoBuffer_t* pTabInput2, 
                         network_paramNewIoBuffer_t* pTabOutput2 );
                         
-int callbackDepotData(int OutBufferId, uint8_t* pData, int status);
+int callbackDepotData(int OutBufferId, uint8_t* pData, void* customData, int status);
                         
 void* runCheckSendData(void*);
 void* runCheckReadData(void*);
@@ -710,7 +710,7 @@ char* allocInitStr( int size )
     return pStr;
 }
 
-int callbackDepotData(int OutBufferId, uint8_t* pData, int status)
+int callbackDepotData(int OutBufferId, uint8_t* pData, void* customData, int status)
 {
     /** local declarations */
     int retry = 0;
@@ -804,6 +804,7 @@ eNETWORK_Error sendDataDeported(managerCheck_t* pManagerCheck)
     error = NETWORK_ManagerSendDeportedData( pManagerCheck->pManager, ID_DEPORT_DATA,
                                              (uint8_t*) pStrDataDeported, 
                                              dataDeportSize,
+                                             NULL,
                                              &(callbackDepotData) );
                                              
     if( error == NETWORK_OK)
@@ -835,7 +836,7 @@ eNETWORK_Error sendDataDeportedAck(managerCheck_t* pManagerCheck)
     
     error = NETWORK_ManagerSendDeportedData( pManagerCheck->pManager, ID_DEPORT_DATA_ACK,
                                              (uint8_t*) pStrDataDeportedAck, dataDeportSizeAck,
-                                             &(callbackDepotData) );
+                                             NULL, &(callbackDepotData) );
     
     if( error == NETWORK_OK)
     {

@@ -15,6 +15,8 @@
 
 #include <stddef.h>
 
+#include <errno.h>
+
 #include <unistd.h>
 #include <string.h>
 
@@ -163,9 +165,9 @@ void* NETWORK_RunSendingThread(void* data)
     eNETWORK_Error error = NETWORK_OK;
     int callbackReturn = 0;
     
-    
     while( pSender->isAlive )
     {        
+        
         usleep( MILLISECOND );
         
         /** for each input buffer try to send the data if necessary */
@@ -306,12 +308,14 @@ eNETWORK_Error NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int 
     return error;
 }
 
-int NETWORK_SenderConnection(network_sender_t* pSender, const char* addr, int port)
+eNETWORK_Error NETWORK_SenderConnection(network_sender_t* pSender, const char* addr, int port)
 {
     /** -- Connect the socket in UDP to a port of an address -- */
     
     /** local declarations */
     struct sockaddr_in sendSin;
+    eNETWORK_Error error = NETWORK_OK;
+    int connectError;
     
     sendSin.sin_addr.s_addr = inet_addr(addr);
     sendSin.sin_family = AF_INET;
@@ -319,7 +323,23 @@ int NETWORK_SenderConnection(network_sender_t* pSender, const char* addr, int po
     
     pSender->socket = sal_socket(  AF_INET, SOCK_DGRAM, 0);
 
-    return sal_connect( pSender->socket, (struct sockaddr*)&sendSin, sizeof(sendSin) );
+    connectError = sal_connect( pSender->socket, (struct sockaddr*)&sendSin, sizeof(sendSin) );
+    
+    if(connectError != 0)
+    {
+        switch( errno )
+        {
+            case EACCES:
+                error = NETWORK_SCOCKET_ERROR_PERMISSION_DENIED;
+            break;
+            
+            default:
+                error = NETWORK_SCOCKET_ERROR;
+            break;
+        }
+    }
+    
+    return error;
 }
 
 void NETWORK_SenderFlush(network_sender_t* pSender)
@@ -367,7 +387,8 @@ void NETWORK_SenderSend(network_sender_t* pSender)
     int nbCharCopy = 0;
     
     if( !NETWORK_BufferIsEmpty(pSender->pSendingBuffer) )
-    {        
+    { 
+               
         nbCharCopy = pSender->pSendingBuffer->pFront - pSender->pSendingBuffer->pStart;
         
         sal_send(pSender->socket, pSender->pSendingBuffer->pStart, nbCharCopy, 0);
@@ -481,8 +502,9 @@ int NETWORK_SenderTimeOutCallback(network_sender_t* pSender,const network_ioBuff
         NETWORK_RingBuffFront( pInputBuffer->pBuffer, (uint8_t*) &deportedDataTemp);
         
         ret = deportedDataTemp.callback( pInputBuffer->id, 
-                                        deportedDataTemp.pData, 
-                                        NETWORK_CALLBACK_STATUS_TIMEOUT);
+                                         deportedDataTemp.pData,
+                                         deportedDataTemp.pCustomData,
+                                         NETWORK_CALLBACK_STATUS_TIMEOUT);
     }
     else
     {

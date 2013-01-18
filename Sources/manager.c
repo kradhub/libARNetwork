@@ -254,6 +254,8 @@ eNETWORK_Error NETWORK_ManagerSocketsInit(network_manager_t* pManager,const char
         error = NETWORK_ReceiverBind( pManager->pReceiver, recvPort, recvTimeoutSec );
     }
     
+    SAL_PRINT(PRINT_DEBUG, TAG," error: %d occurred \n", error );
+    
     return error;
 }
 
@@ -350,7 +352,7 @@ eNETWORK_Error NETWORK_ManagerSendData(network_manager_t* pManager, int inputBuf
 }
 
 eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int inputBufferId,
-                                                  uint8_t* pData, int dataSize,
+                                                  uint8_t* pData, int dataSize, void* pCustomData, 
                                                   network_deportDatacallback callback )
 {
     /** -- Add data deported to send -- */
@@ -359,6 +361,7 @@ eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int
     eNETWORK_Error error = NETWORK_OK;
     network_ioBuffer_t* pInputBuffer = NULL;
     network_DeportedData_t deportedDataTemp;
+    network_DeportedData_t deportedDataOverwritten;
     
     /** check paratemters */
     if(pManager != NULL)
@@ -381,9 +384,26 @@ eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int
             /** initialize deportedDataTemp and push it in the InputBuffer */
             deportedDataTemp.pData = pData;
             deportedDataTemp.dataSize = dataSize;
+            deportedDataTemp.pCustomData = pCustomData;
             deportedDataTemp.callback = callback;
             
-            error = NETWORK_RingBuffPushBack(pInputBuffer->pBuffer, (uint8_t*) &deportedDataTemp);
+            /** if the buffer is overwriting and it is full */
+            if( pInputBuffer->pBuffer->isOverwriting == 1 &&
+                NETWORK_RingBuffGetFreeCellNb(pInputBuffer->pBuffer) == 0 )
+            {
+                /** get the deported Data Overwritten */
+                error = NETWORK_RingBuffPopFront( pInputBuffer->pBuffer, (uint8_t*) &deportedDataOverwritten );
+                /** free the deported Data Overwritten */
+                deportedDataOverwritten.callback( pInputBuffer->id, 
+                                                  deportedDataOverwritten.pData,
+                                                  deportedDataOverwritten.pCustomData, 
+                                                  NETWORK_CALLBACK_STATUS_FREE);
+            }
+            
+            if(error == NETWORK_OK)
+            {
+                error = NETWORK_RingBuffPushBack(pInputBuffer->pBuffer, (uint8_t*) &deportedDataTemp);
+            }
         }
         else
         {
@@ -528,7 +548,9 @@ eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int
                     readSize = deportedDataTemp.dataSize;
                     
                     /** free the data deported*/
-                    deportedDataTemp.callback( pOutputBuffer->id, deportedDataTemp.pData, 
+                    deportedDataTemp.callback( pOutputBuffer->id, 
+                                               deportedDataTemp.pData,
+                                               deportedDataTemp.pCustomData, 
                                                NETWORK_CALLBACK_STATUS_FREE);
                 }
                 else
@@ -541,10 +563,6 @@ eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int
         {
             error = NETWORK_ERROR_BAD_PARAMETER;
         }
-    }
-    else
-    {
-        error = NETWORK_ERROR_ID_UNKNOWN;
     }
     
     /** return the size of the data read */
@@ -622,10 +640,7 @@ eNETWORK_Error NETWORK_ManagerReadDataWithTimeout( network_manager_t* pManager,
             error = NETWORK_ERROR_BAD_PARAMETER;
         }
     }
-    else
-    {
-        error = NETWORK_ERROR_ID_UNKNOWN;
-    }
+
     
     return error;
 }
@@ -707,8 +722,10 @@ eNETWORK_Error NETWORK_ManagerReadDeportedDataWithTimeout( network_manager_t* pM
                     readSize = deportedDataTemp.dataSize;
                     
                     /** free the data deported*/
-                    deportedDataTemp.callback( pOutputBuffer->id, deportedDataTemp.pData, 
-                                               NETWORK_CALLBACK_STATUS_FREE);
+                    deportedDataTemp.callback( pOutputBuffer->id, 
+                                               deportedDataTemp.pData,
+                                               deportedDataTemp.pCustomData,
+                                               NETWORK_CALLBACK_STATUS_FREE );
                 }
                 else
                 {
@@ -721,10 +738,7 @@ eNETWORK_Error NETWORK_ManagerReadDeportedDataWithTimeout( network_manager_t* pM
             error = NETWORK_ERROR_BAD_PARAMETER;
         }
     }
-    else
-    {
-        error = NETWORK_ERROR_ID_UNKNOWN;
-    }
+
     
     /** return the size of the data read */
     if(pReadSize != NULL)

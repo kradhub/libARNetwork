@@ -65,7 +65,7 @@ typedef struct printThread
 
 void* printBuff(void* data);
 
-int callbackDepotData(int OutBufferId, uint8_t* pData, int status);
+int callbackDepotData(int OutBufferId, uint8_t* pData, void* customData, int status);
 
 /** terminal setting */
 struct termios initial_settings, new_settings;
@@ -383,6 +383,7 @@ int main(int argc, char *argv[])
                 
                 error = NETWORK_ManagerSendDeportedData( pManager1, id_ioBuff_deportDataAck,
                                                          (uint8_t*) pDataDeported_ack, dataDeportSize_ack,
+                                                         NULL,
                                                          &(callbackDepotData) );
                 if(error != NETWORK_OK )
                 {
@@ -414,7 +415,7 @@ int main(int argc, char *argv[])
                 
                 error = NETWORK_ManagerSendDeportedData( pManager1, id_ioBuff_deportData,
                                                          (uint8_t*) pDataDeported, dataDeportSize,
-                                                         &(callbackDepotData) );
+                                                         NULL, &(callbackDepotData) );
                 if(error != NETWORK_OK )
                 {
                     printf("buffer full \n");
@@ -496,7 +497,7 @@ void* printBuff(void* data)
     return NULL;
 }
 
-int callbackDepotData(int OutBufferId, uint8_t* pData, int status)
+int callbackDepotData(int OutBufferId, uint8_t* pData, void* customData, int status)
 {
     /** local declarations */
     int retry = 0;

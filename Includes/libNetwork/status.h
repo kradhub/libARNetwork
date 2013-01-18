@@ -29,6 +29,8 @@ typedef enum
     NETWORK_ERROR_NEW_RINGBUFFER, /**< error during the RingBuffer creation */
     NETWORK_IOBUFFER_ERROR = -3000, /**< IoBuffer error unknown */ 
     NETWORK_IOBUFFER_ERROR_BAD_ACK,  /**< the sequence number isn't same as that waiting */
+    NETWORK_SCOCKET_ERROR = -4000,  /**< socket error unknown */
+    NETWORK_SCOCKET_ERROR_PERMISSION_DENIED, /**< Permission denied */
     
 } eNETWORK_Error;
 

@@ -89,7 +89,7 @@ eNETWORK_Error NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int 
  *  @param[in] port port on which the data will be sent.
  *  @return error equal to NETWORK_OK if the connection if successful otherwise equal to 1.
 **/
-int NETWORK_SenderConnection(network_sender_t* pSender,const char* addr, int port);
+eNETWORK_Error NETWORK_SenderConnection(network_sender_t* pSender,const char* addr, int port);
 
 /**
  *  @brief flush all IoBuffers of the Sender
