@@ -1,0 +1,84 @@
+package com.parrot.ardrone.libauto;
+
+public class CommandsSet {
+	private float roll, pitch, yaw, gaz;
+	private float heading, accuracy;
+	private boolean _isNew;
+
+	public CommandsSet () {
+		this.roll = (float) 0.0;
+		this.pitch = (float) 0.0;
+		this.yaw = (float) 0.0;
+		this.gaz = (float) 0.0;
+		this.heading = (float) 0.0;
+		this.accuracy = (float) 0.0;
+		this._isNew = false;
+	}
+
+	public CommandsSet (float roll, float pitch, float yaw, float gaz, float heading, float accuracy, boolean isNew) {
+		this.roll = roll;
+		this.pitch = pitch;
+		this.yaw = yaw;
+		this.gaz = gaz;
+		this.heading = heading;
+		this.accuracy = accuracy;
+		this._isNew = isNew;
+	}
+			
+
+	public float getRoll () {
+		return this.roll;
+	}
+
+	public void setRoll (float roll) {
+		this.roll = roll;
+	}
+
+	public float getPitch () {
+		return this.pitch;
+	}
+
+	public void setPitch (float pitch) {
+		this.pitch = pitch;
+	}
+
+	public float getYaw () {
+		return this.yaw;
+	}
+
+	public void setYaw (float yaw) {
+		this.yaw = yaw;
+	}
+
+	public float getGaz () {
+		return this.gaz;
+	}
+
+	public void setGaz (float gaz) {
+		this.gaz = gaz;
+	}
+
+	public float getHeading () {
+		return this.heading;
+	}
+
+	public void setHeading (float heading) {
+		this.heading = heading;
+	}
+
+	public float getAccuracy () {
+		return this.accuracy;
+	}
+
+	public void setAccuracy (float accuracy) {
+		this.accuracy = accuracy;
+	}
+
+	public boolean isNew () {
+		return this._isNew;
+	}
+
+	public void setNew (boolean isNew) {
+		this._isNew = isNew;
+	}
+}

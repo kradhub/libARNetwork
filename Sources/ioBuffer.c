@@ -26,6 +26,7 @@
  *             define :
  *
 ******************************************/
+
 #define TAG "IoBuffer"
 
 /*****************************************
@@ -33,7 +34,6 @@
  *             implementation :
  *
 ******************************************/
-
 
 network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pParam )
 {
