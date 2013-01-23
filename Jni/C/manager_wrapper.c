@@ -19,8 +19,6 @@
 
 #include <libSAL/print.h>
 
-#include <android/log.h> // !!!!!!!!!!!!!!!!!!
-
 /*****************************************
  * 
  *             implementation :
@@ -33,12 +31,12 @@
 typedef struct network_JNI_callbackData_t
 {
     jobject jManager; /**< manager sent the data */
-    jobject jDataObj; /**< data object*/
+    jobject jSALData; /**< java native data*/
 }network_JNI_callbackData_t;
 
 int JNI_network_deportDatacallback (int IoBufferId, uint8_t* pData, void* pCustomData, int status);
 
-void freeCallbackData(JNIEnv* env, network_JNI_callbackData_t* pCallbackData, uint8_t* pData);
+void freeCallbackData(JNIEnv* env, network_JNI_callbackData_t* pCallbackData);
 
 
 static const char* TAG = "APP";
@@ -149,7 +147,7 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeNewManager ( JNIEnv *env, 
     }
     
     /** return error */
-    jError = error; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    jError = error;
     
     return (long) pManager;
 }
@@ -235,7 +233,7 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSendData( JNIEnv *e
     }
     else
     {
-        error = -1; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        error = NETWORK_ERROR_BAD_PARAMETER;
     }
     
     return error;
@@ -243,13 +241,14 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSendData( JNIEnv *e
 
 JNIEXPORT int JNICALL
 Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSendDeportedData( JNIEnv *env, jobject obj, jlong jpManager,
-                                                                          jint inputBufferId, jbyteArray jData, jint dataSize)
+                                                                          jint inputBufferId, jobject SALData, 
+                                                                          jlong jpData, jint dataSize)
 {
     /** -- Add data deported to send -- */
     
     /** local declarations */
     jobject dataObj = NULL;
-    uint8_t* pData = NULL;
+    uint8_t* pData = (uint8_t*) (intptr_t) jpData;
     network_JNI_callbackData_t* pCallbackData = NULL;
     eNETWORK_Error error = NETWORK_OK;
     network_manager_t* pManager = (network_manager_t*) (intptr_t) jpManager;
@@ -266,11 +265,8 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSendDeportedData( J
         /** create a global reference of the java manager object delete by the callback */
         pCallbackData->jManager = (*env)->NewGlobalRef(env, obj);
         
-        /** create a global reference of the data object delete by the callback */
-        pCallbackData->jDataObj = (*env)->NewGlobalRef(env, jData);
-        
-        /** get the data byte array relese by the callback*/
-        pData = (*env)->GetByteArrayElements (env, jData, NULL);
+        /** create a global reference of the java SALnativeData object delete by the callback */
+        pCallbackData->jSALData = (*env)->NewGlobalRef(env, SALData);
         
         /** send the data */
         error = NETWORK_ManagerSendDeportedData( pManager, inputBufferId, pData, dataSize, pCallbackData,
@@ -298,7 +294,7 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadData(JNIEnv *en
     }
     else
     {
-        error = -1;  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        error = NETWORK_ERROR_BAD_PARAMETER;
     }
     
     return error;
@@ -387,12 +383,11 @@ int JNI_network_deportDatacallback (int IoBufferId, uint8_t* pData, void* pCusto
     /** local declarations */
     JNIEnv* env = NULL;
     eNETWORK_Error error = NETWORK_OK;
+    eNETWORK_CALLBACK_RETURN callbackReturn = 0;
     int retry = 0;
     jclass manager_cls =  NULL;
     jmethodID jmCallback = 0;
     network_JNI_callbackData_t* pCallbackData = (network_JNI_callbackData_t*) pCustomData;
-
-    SAL_PRINT(PRINT_DEBUG, TAG, "JNI_network_deportDatacallback" );
 
     /** get the environment */
 	if (g_vm != NULL)
@@ -402,19 +397,18 @@ int JNI_network_deportDatacallback (int IoBufferId, uint8_t* pData, void* pCusto
 
 	if (env != NULL && 
         pCallbackData != NULL &&
-        pCallbackData->jDataObj != NULL &&
         pCallbackData->jManager != NULL ) 
     {
         /** send the callback java of the java manager */
         
         /** get the manager class reference */
         manager_cls = (*env)->GetObjectClass(env, pCallbackData->jManager);
-        jmCallback = (*env)->GetMethodID(env, manager_cls, "callback", "(I[BI)I" );
+        jmCallback = (*env)->GetMethodID(env, manager_cls, "callback", "(ILcom/parrot/arsdk/libsal/SALNativeData;I)I" );
         
         /** free the local reference on the class manager */
         (*env)->DeleteLocalRef(env, manager_cls);
         
-        retry = (*env)->CallIntMethod(env, pCallbackData->jManager, jmCallback, IoBufferId, pCallbackData->jDataObj, status); 
+        callbackReturn = (*env)->CallIntMethod(env, pCallbackData->jManager, jmCallback, IoBufferId, pCallbackData->jSALData, status); 
 
         switch(status)
         {
@@ -422,39 +416,43 @@ int JNI_network_deportDatacallback (int IoBufferId, uint8_t* pData, void* pCusto
             case NETWORK_CALLBACK_STATUS_SENT_WITH_ACK :
             case NETWORK_CALLBACK_STATUS_FREE :
             
-                freeCallbackData (env, pCallbackData, pData);
+                freeCallbackData (env, pCallbackData);
+                
+            break;
+            
+            
+            case NETWORK_CALLBACK_STATUS_TIMEOUT :
+            
                 
             break;
             
             default:
             
-                if(retry == 0)
-                {
-                    freeCallbackData (env, pCallbackData, pData);
-                }
-                
             break;
         }
 	}
     else
     {
-        error = -1; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        error = NETWORK_ERROR_BAD_PARAMETER; 
     }
     
-    return retry;
+    return callbackReturn;
 }
 
-void freeCallbackData (JNIEnv* env, network_JNI_callbackData_t* pCallbackData, uint8_t* pData)
+void freeCallbackData (JNIEnv* env, network_JNI_callbackData_t* pCallbackData/*, uint8_t* pData*/)
 {
     /** -- free the global references of the callback -- */
     
     /** Release the data[] */
-    (*env)->ReleaseByteArrayElements(env, pCallbackData->jDataObj, pData, 0);
+    //(*env)->ReleaseByteArrayElements(env, pCallbackData->jDataObj, pData, 0);
     
     /** delete the data object reference */
-    (*env)->DeleteGlobalRef( env, pCallbackData->jDataObj );
+    //(*env)->DeleteGlobalRef( env, pCallbackData->jDataObj );
+        
+    /** delete the java SALnativeData object reference */
+    (*env)->DeleteGlobalRef( env, pCallbackData->jSALData );
     
-    /** delete the jabva manager object reference */
+    /** delete the java manager object reference */
     (*env)->DeleteGlobalRef( env, pCallbackData->jManager );
     
     /** the callback data */

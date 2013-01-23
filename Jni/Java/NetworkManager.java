@@ -1,10 +1,13 @@
 package com.parrot.arsdk.libnetwork;
 
 import android.util.Log;
+import com.parrot.arsdk.libsal.SALNativeData;
 
 
 public class NetworkManager 
 {
+    private static final String tag = "NetworkManager";
+    
     protected enum eNETWORK_CALLBACK_STATUS
     {
         NETWORK_CALLBACK_STATUS_SENT, /**< data sent  */
@@ -22,8 +25,6 @@ public class NetworkManager
         
     }
     
-    private int NETWORK_ERROR_BAD_PARAMETER =-998; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    
     private native long nativeNewManager (int recvBufferSize, int sendBufferSize,
                                             int numberOfInput, Object[] inputArray, 
                                             int numberOfOutput, Object[] outputArray,
@@ -38,7 +39,7 @@ public class NetworkManager
     private native int nativeManagerReadData(long jpManager, int outputBufferId, byte[] data);
     
     private native int nativeManagerSendDeportedData( long jpManager,int inputBufferId, 
-                                                        byte[] jData, int dataSize );
+                                                        SALNativeData SALData, long pData, int dataSize );
                                                                 
     private native int nativeManagerReadDeportedData( long jpManager, int outputBufferId, NetworkDataRecv data);
     
@@ -52,7 +53,7 @@ public class NetworkManager
                              NetworkParamNewIoBuffer inputArray[], 
                              NetworkParamNewIoBuffer outputArray[]) 
     {
-        int error = 0;
+        int error = eNETWORK_Error.NETWORK_OK.ordinal();
         m_initOk = false;
         mp_manager = nativeNewManager( recvBufferSize, sendBufferSize, inputArray.length,
                                         inputArray, outputArray.length, outputArray, error );
@@ -83,15 +84,17 @@ public class NetworkManager
         close();
     }
     
-    public int socketsInit (String addr, int sendingPort, int recvPort, int recvTimeoutSec)
+    public eNETWORK_Error socketsInit (String addr, int sendingPort, int recvPort, int recvTimeoutSec)
     {
-        int ret = -1; // !!!!
+        eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
+        
         if(addr != null)
         {
-            ret = nativeManagerSocketsInit( mp_manager, addr, sendingPort, recvPort, recvTimeoutSec);  
+            int intError = nativeManagerSocketsInit( mp_manager, addr, sendingPort, recvPort, recvTimeoutSec);
+            error =  eNETWORK_Error.getErrorName(intError); 
         }
         
-        return ret;
+        return error;
     }
     
     /*
@@ -116,63 +119,69 @@ public class NetworkManager
         }
     }
     
-    public int SendData( int inputBufferId, byte[] data)
+    public eNETWORK_Error SendData( int inputBufferId, byte[] data)
     {
-        int error = 0;
+        eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
         if(m_initOk == true)
         {
-            error = nativeManagerSendData(mp_manager, inputBufferId, data);
+            int intError = nativeManagerSendData(mp_manager, inputBufferId, data);
+            error =  eNETWORK_Error.getErrorName(intError); 
         }
         else
         {
-            error = NETWORK_ERROR_BAD_PARAMETER;
+            error = eNETWORK_Error.NETWORK_ERROR_BAD_PARAMETER;
         }
         
         return error;
     }
     
     
-    public int readData( int outputBufferId, byte[] data)
+    public eNETWORK_Error readData( int outputBufferId, byte[] data)
     {
-        int error = 0;
+        eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
         if(m_initOk == true)
         {
-            error = nativeManagerReadData(mp_manager, outputBufferId, data);
+            int intError = nativeManagerReadData(mp_manager, outputBufferId, data);
+            error =  eNETWORK_Error.getErrorName(intError);  
         }
         else
         {
-            error = NETWORK_ERROR_BAD_PARAMETER;
+            error = eNETWORK_Error.NETWORK_ERROR_BAD_PARAMETER;
         }
         
         return error;
     }
     
-    public int sendDataDeported( int inputBufferId, byte[] data)
+    public eNETWORK_Error sendDataDeported( int inputBufferId, SALNativeData salData)
     {
-        int error = 0;
+        eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
         if(m_initOk == true)
         {
-            error = nativeManagerSendDeportedData( mp_manager, inputBufferId, data, data.length );
+            long pData =  salData.getData();
+            int dataSize =  salData.getDataSize();
+            int intError = nativeManagerSendDeportedData( mp_manager, inputBufferId, salData, pData, dataSize );
+            error =  eNETWORK_Error.getErrorName(intError);  
         }
         else
         {
-            error = NETWORK_ERROR_BAD_PARAMETER;
+            error = eNETWORK_Error.NETWORK_ERROR_BAD_PARAMETER;
         }
         
         return error;
     }
     
     
-    public int readDataDeported( int outputBufferId, NetworkDataRecv data)
+    public eNETWORK_Error readDataDeported( int outputBufferId, NetworkDataRecv data)
     {
-        int error = 0;
+        eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
         if(m_initOk == true)
         {
-            error = nativeManagerReadDeportedData( mp_manager, outputBufferId, data);
+            int intError = nativeManagerReadDeportedData( mp_manager, outputBufferId, data);
+            error =  eNETWORK_Error.getErrorName(intError);  
         }
         else
         {
-            error = NETWORK_ERROR_BAD_PARAMETER;
+            error = eNETWORK_Error.NETWORK_ERROR_BAD_PARAMETER;
         }
         
         return error;
@@ -188,7 +197,7 @@ public class NetworkManager
         return m_initOk;
     }
     
-    public int callback (int IoBuffer, byte[] data, int status) 
+    public int callback (int IoBuffer, SALNativeData data, int status) 
     {
         /** -- callback -- */
         
@@ -202,15 +211,15 @@ public class NetworkManager
             case NETWORK_CALLBACK_STATUS_SENT :
             case NETWORK_CALLBACK_STATUS_SENT_WITH_ACK :
             case NETWORK_CALLBACK_STATUS_FREE :
-                retry = 0;
+                retry = eNETWORK_CALLBACK_RETURN.NETWORK_CALLBACK_RETURN_DATA_POP.ordinal();
             break;
             
             case NETWORK_CALLBACK_STATUS_TIMEOUT :
-                retry = 1;
+                retry = eNETWORK_CALLBACK_RETURN.NETWORK_CALLBACK_RETURN_RETRY.ordinal();
             break;
             
             default:
-
+                Log.e(tag, "default case status:" + jStatus);
             break;
         }
         

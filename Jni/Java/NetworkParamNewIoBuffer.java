@@ -2,6 +2,15 @@ package com.parrot.arsdk.libnetwork;
 
 public class NetworkParamNewIoBuffer 
 {
+    static public enum eNETWORK_Frame_Type
+    {
+        UNINITIALIZED, /**< not known type*/
+        ACK, /**< acknowledgment type*/
+        DATA, /**< data type*/
+        DATA_WITH_ACK, /**< data type with a waiting acknowledgment*/
+        KEEP_ALIVE; /**< keep alive type*/
+    }
+    
     //private static final String TAG = new ParamNewIoBuffer().getClass().getName();
     public static final int INFINITE_NUMBER = -1;
     
@@ -23,7 +32,7 @@ public class NetworkParamNewIoBuffer
     private int m_isOverwriting;    /**< Indicator of overwriting possibility (1 = true | 0 = false)*/
     private int m_deportedData;   /**< Indicator of using data deported */
     
-    public NetworkParamNewIoBuffer( int id, NETWORK_Frame_Type dataType, int numberOfCell )
+    public NetworkParamNewIoBuffer( int id, eNETWORK_Frame_Type dataType, int numberOfCell )
     {
         mp_paramNewIoBuffer = nativeNewParamNewIoBuffer();
         
@@ -42,7 +51,7 @@ public class NetworkParamNewIoBuffer
                                m_nbOfRetry, m_numberOfCell, m_cellSize, m_isOverwriting, m_deportedData );
     }
     
-    public NetworkParamNewIoBuffer( int id, NETWORK_Frame_Type dataType, int numberOfCell, int isOverwriting )
+    public NetworkParamNewIoBuffer( int id, eNETWORK_Frame_Type dataType, int numberOfCell, int isOverwriting )
     {
         mp_paramNewIoBuffer = nativeNewParamNewIoBuffer();
         
