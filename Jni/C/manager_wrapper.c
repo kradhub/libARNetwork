@@ -19,12 +19,6 @@
 
 #include <libSAL/print.h>
 
-/*****************************************
- * 
- *             implementation :
- *
-******************************************/
-
 /**
  *  @brief data sent to the callbak 
 **/
@@ -34,10 +28,27 @@ typedef struct network_JNI_callbackData_t
     jobject jSALData; /**< java native data*/
 }network_JNI_callbackData_t;
 
+/*****************************************
+ * 
+ *             private header:
+ *
+******************************************/
+
 int JNI_network_deportDatacallback (int IoBufferId, uint8_t* pData, void* pCustomData, int status);
 
-void freeCallbackData(JNIEnv* env, network_JNI_callbackData_t* pCallbackData);
+/**
+ *  @brief free the global references used by the callback
+ *  @param[in] env java environment
+ *  @param[in] ppCallbackData address of the pointer on the callbackData storing the global references
+ *  @warning this funtion free the callbackData and set ppCallbackData to NULL
+**/
+void freeCallbackData (JNIEnv* env, network_JNI_callbackData_t** ppCallbackData);
 
+/*****************************************
+ * 
+ *             implementation :
+ *
+******************************************/
 
 static const char* TAG = "APP";
 JavaVM* g_vm = NULL;
@@ -303,7 +314,7 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadData(JNIEnv *en
 JNIEXPORT int JNICALL
 Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDeportedData( JNIEnv *env, jobject obj, jlong jpManager, jint outputBufferId, jobject jData)
 {
-    /** -- read data received-- */
+    /** -- read data received -- */
     
     /** local declarations */
     jbyteArray jbyteArrayData = NULL;
@@ -314,7 +325,7 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDeportedData( J
     eNETWORK_Error error = NETWORK_OK;
     network_manager_t* pManager = (network_manager_t*) (intptr_t) jpManager;
     
-    /** get the dataRecv class ref */
+    /** get the dataRecv class reference */
     jclass dataRecv_cls = (*env)->GetObjectClass(env, jData);
     
     if(dataRecv_cls != NULL)
@@ -357,23 +368,84 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDataWithTimeout
                                                                                  jbyteArray jData,
                                                                                  jint timeoutMs )
 {
-    network_manager_t* pManager = (network_manager_t*) (intptr_t) jpManager;
+    /** -- read data received-- */
     
-    return 0 ;
+    /** local declarations */
+    network_manager_t* pManager = (network_manager_t*) (intptr_t) jpManager;
+    eNETWORK_Error error = NETWORK_OK;
+    uint8_t* pData = (*env)->GetByteArrayElements (env, jData, NULL);
+    
+    if (NULL != jData)
+    {
+        error = NETWORK_ManagerReadDataWithTimeout( pManager, outputBufferId, pData, timeoutMs );
+        
+        (*env)->ReleaseByteArrayElements(env, jData, pData, 0);
+    }
+    else
+    {
+        error = NETWORK_ERROR_BAD_PARAMETER;
+    }
+    
+    return error;
 }
 
 
 JNIEXPORT int JNICALL
-Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDeportedDataWithTimeout( JNIEnv *env, jobject obj, jlong jpManager, 
-                                                                                         jint outputBufferId,
-                                                                                         jbyteArray jData, 
-                                                                                         jint dataLimitSize, 
-                                                                                         jint* pReadSize,
-                                                                                         jint timeoutMs )
+Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDeportedDataWithTimeout( JNIEnv *env,
+                                                                                          jobject obj,
+                                                                                          jlong jpManager, 
+                                                                                          jint outputBufferId,
+                                                                                          jobject jData,
+                                                                                          jint timeoutMs )
 {
+    /** -- read data received-- */
+    
+    /** local declarations */
+    jbyteArray jbyteArrayData = NULL;
+    jfieldID fid = 0;
+    int limitSize = 0;
+    uint8_t* pData = NULL;
+    int readSize = 0;
+    eNETWORK_Error error = NETWORK_OK;
     network_manager_t* pManager = (network_manager_t*) (intptr_t) jpManager;
     
-    return 0 ;
+    /** get the dataRecv class reference */
+    jclass dataRecv_cls = (*env)->GetObjectClass(env, jData);
+    
+    if(dataRecv_cls != NULL)
+    {
+        /** get m_data */
+        fid = (*env)->GetFieldID( env, dataRecv_cls, "m_data", "[B" );
+        jbyteArrayData = (*env)->GetObjectField(env, jData, fid);
+        
+        if(jbyteArrayData == NULL)
+        {
+            SAL_PRINT(PRINT_ERROR, TAG, "error jbyteArrayData" );
+            error = NETWORK_ERROR_BAD_PARAMETER; 
+        }
+    }
+
+    if(error == NETWORK_OK)
+    {
+        fid = (*env)->GetFieldID(env, dataRecv_cls, "m_limitSize", "I" );
+        limitSize = (*env)->GetIntField(env, jData, fid);
+   
+        pData = (*env)->GetByteArrayElements (env, jbyteArrayData, NULL);
+        
+        error = NETWORK_ManagerReadDeportedDataWithTimeout( pManager, outputBufferId, 
+                                                            pData, limitSize, 
+                                                            &readSize, timeoutMs );
+        
+        fid = (*env)->GetFieldID(env, dataRecv_cls, "m_readSize", "I" );
+        (*env)->SetIntField(env, jData, fid, readSize);
+        
+        (*env)->ReleaseByteArrayElements( env, jbyteArrayData, pData, 0 );
+    }
+    
+    /** delete class ref */
+    (*env)->DeleteLocalRef (env, dataRecv_cls);
+    
+    return error;
 }
 
 int JNI_network_deportDatacallback (int IoBufferId, uint8_t* pData, void* pCustomData, int status)
@@ -416,7 +488,7 @@ int JNI_network_deportDatacallback (int IoBufferId, uint8_t* pData, void* pCusto
             case NETWORK_CALLBACK_STATUS_SENT_WITH_ACK :
             case NETWORK_CALLBACK_STATUS_FREE :
             
-                freeCallbackData (env, pCallbackData);
+                freeCallbackData (env, &pCallbackData);
                 
             break;
             
@@ -439,22 +511,29 @@ int JNI_network_deportDatacallback (int IoBufferId, uint8_t* pData, void* pCusto
     return callbackReturn;
 }
 
-void freeCallbackData (JNIEnv* env, network_JNI_callbackData_t* pCallbackData/*, uint8_t* pData*/)
+void freeCallbackData (JNIEnv* env, network_JNI_callbackData_t** ppCallbackData)
 {
     /** -- free the global references of the callback -- */
     
-    /** Release the data[] */
-    //(*env)->ReleaseByteArrayElements(env, pCallbackData->jDataObj, pData, 0);
+    /** local declarations */
+    network_JNI_callbackData_t* pCallbackData = NULL;
     
-    /** delete the data object reference */
-    //(*env)->DeleteGlobalRef( env, pCallbackData->jDataObj );
+    if(ppCallbackData != NULL)
+    {
+        pCallbackData = *ppCallbackData;
         
-    /** delete the java SALnativeData object reference */
-    (*env)->DeleteGlobalRef( env, pCallbackData->jSALData );
-    
-    /** delete the java manager object reference */
-    (*env)->DeleteGlobalRef( env, pCallbackData->jManager );
-    
-    /** the callback data */
-    free(pCallbackData);
+        if(pCallbackData != NULL)
+        {
+            /** delete the java SALnativeData object reference */
+            (*env)->DeleteGlobalRef( env, pCallbackData->jSALData );
+            
+            /** delete the java manager object reference */
+            (*env)->DeleteGlobalRef( env, pCallbackData->jManager );
+            
+            /** the callback data */
+            free(pCallbackData);
+            pCallbackData = NULL;
+        }
+        *ppCallbackData = NULL;
+    }
 }

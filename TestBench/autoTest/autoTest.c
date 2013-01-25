@@ -198,21 +198,41 @@ int main(int argc, char *argv[])
         printf("check start \n");
         
         /** create the threads */
-        sal_thread_create( &(managerCheck2.thread_managerRecv), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, managerCheck2.pManager );
-        sal_thread_create( &(managerCheck1.thread_managerRecv), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, managerCheck1.pManager );
+        sal_thread_create( &(managerCheck2.thread_managerRecv), 
+                           (sal_thread_routine) NETWORK_ManagerRunReceivingThread, 
+                           managerCheck2.pManager );
+        sal_thread_create( &(managerCheck1.thread_managerRecv), 
+                           (sal_thread_routine) NETWORK_ManagerRunReceivingThread, 
+                           managerCheck1.pManager );
         
-        sal_thread_create( &(managerCheck1.thread_managerSend), (sal_thread_routine) NETWORK_ManagerRunSendingThread, managerCheck1.pManager );
-        sal_thread_create( &(managerCheck2.thread_managerSend), (sal_thread_routine) NETWORK_ManagerRunSendingThread, managerCheck2.pManager );
+        sal_thread_create( &(managerCheck1.thread_managerSend), 
+                           (sal_thread_routine) NETWORK_ManagerRunSendingThread, 
+                           managerCheck1.pManager );
+        sal_thread_create( &(managerCheck2.thread_managerSend), 
+                           (sal_thread_routine) NETWORK_ManagerRunSendingThread, 
+                           managerCheck2.pManager );
         
         /** manager 1 to manager 2 */
-        sal_thread_create( &(managerCheck1.thread_checkSend), (sal_thread_routine) runCheckSendData, &managerCheck1 );
-        sal_thread_create( &(managerCheck2.thread_checkRecv), (sal_thread_routine) runCheckReadData, &managerCheck2 );
-        sal_thread_create( &(managerCheck2.thread_checkRecvDeported) , (sal_thread_routine) runCheckReadDataDeported, &managerCheck2 );
+        sal_thread_create( &(managerCheck1.thread_checkSend), 
+                           (sal_thread_routine) runCheckSendData, 
+                           &managerCheck1 );
+        sal_thread_create( &(managerCheck2.thread_checkRecv), 
+                           (sal_thread_routine) runCheckReadData, 
+                           &managerCheck2 );
+        sal_thread_create( &(managerCheck2.thread_checkRecvDeported), 
+                           (sal_thread_routine) runCheckReadDataDeported, 
+                           &managerCheck2 );
         
         /** manager 2 to manager 1 */
-        sal_thread_create( &(managerCheck2.thread_checkSend), (sal_thread_routine) runCheckSendData, &managerCheck2 );
-        sal_thread_create( &(managerCheck1.thread_checkRecv), (sal_thread_routine) runCheckReadData, &managerCheck1 );
-        sal_thread_create( &(managerCheck1.thread_checkRecvDeported) , (sal_thread_routine) runCheckReadDataDeported, &managerCheck1 );
+        sal_thread_create( &(managerCheck2.thread_checkSend), 
+                           (sal_thread_routine) runCheckSendData, 
+                           &managerCheck2 );
+        sal_thread_create( &(managerCheck1.thread_checkRecv), 
+                           (sal_thread_routine) runCheckReadData, 
+                           &managerCheck1 );
+        sal_thread_create( &(managerCheck1.thread_checkRecvDeported), 
+                           (sal_thread_routine) runCheckReadDataDeported, 
+                           &managerCheck1 );
 
         /** wait the end of the sending */
         if(managerCheck1.thread_checkSend != NULL)

@@ -37,11 +37,15 @@ public class NetworkManager
     private native void nativeManagerStop( long jpManager);
     private native int nativeManagerSendData(long jpManager, int inputBufferId, byte[] data);
     private native int nativeManagerReadData(long jpManager, int outputBufferId, byte[] data);
+    private native int nativeManagerReadDataWithTimeout(long jpManager, int outputBufferId, byte[] data, int timeoutMs);
     
     private native int nativeManagerSendDeportedData( long jpManager,int inputBufferId, 
-                                                        SALNativeData SALData, long pData, int dataSize );
-                                                                
+                                                        SALNativeData SALData, long pData, int dataSize);
     private native int nativeManagerReadDeportedData( long jpManager, int outputBufferId, NetworkDataRecv data);
+    private native int nativeManagerReadDeportedDataWithTimeout( long jpManager, 
+                                                                   int outputBufferId, 
+                                                                   NetworkDataRecv data, 
+                                                                   int timeoutMs);
     
     private long mp_manager;
     private boolean m_initOk;
@@ -69,7 +73,7 @@ public class NetworkManager
 
     }
     
-    public void close () 
+    public void dispose() 
     {
         if(m_initOk == true)
         {
@@ -81,7 +85,7 @@ public class NetworkManager
     
     public void finalize () 
     {
-        close();
+        dispose();
     }
     
     public eNETWORK_Error socketsInit (String addr, int sendingPort, int recvPort, int recvTimeoutSec)
@@ -96,20 +100,6 @@ public class NetworkManager
         
         return error;
     }
-    
-    /*
-    public int runSendingThread()
-    {
-        return nativeManagerRunSendingThread(mp_manager);
-    }
-    */
-    
-    /*
-    public int runReceivingThread()
-    {
-        return nativeManagerRunReceivingThread(mp_manager);
-    }
-    */
     
     public void stop()
     {
@@ -152,7 +142,23 @@ public class NetworkManager
         return error;
     }
     
-    public eNETWORK_Error sendDataDeported( int inputBufferId, SALNativeData salData)
+    public eNETWORK_Error readDataWithTimeout( int outputBufferId, byte[] data, int timeoutMs)
+    {
+        eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
+        if(m_initOk == true)
+        {
+            int intError = nativeManagerReadDataWithTimeout(mp_manager, outputBufferId, data, timeoutMs);
+            error =  eNETWORK_Error.getErrorName(intError);  
+        }
+        else
+        {
+            error = eNETWORK_Error.NETWORK_ERROR_BAD_PARAMETER;
+        }
+        
+        return error;
+    }
+    
+    public eNETWORK_Error sendDeportedData( int inputBufferId, SALNativeData salData)
     {
         eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
         if(m_initOk == true)
@@ -170,13 +176,28 @@ public class NetworkManager
         return error;
     }
     
-    
-    public eNETWORK_Error readDataDeported( int outputBufferId, NetworkDataRecv data)
+    public eNETWORK_Error readDeportedData( int outputBufferId, NetworkDataRecv data)
     {
         eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
         if(m_initOk == true)
         {
             int intError = nativeManagerReadDeportedData( mp_manager, outputBufferId, data);
+            error =  eNETWORK_Error.getErrorName(intError);  
+        }
+        else
+        {
+            error = eNETWORK_Error.NETWORK_ERROR_BAD_PARAMETER;
+        }
+        
+        return error;
+    }
+    
+    public eNETWORK_Error readDeportedDataWithTimeout( int outputBufferId, NetworkDataRecv data, int timeoutMs)
+    {
+        eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
+        if(m_initOk == true)
+        {
+            int intError = nativeManagerReadDeportedDataWithTimeout( mp_manager, outputBufferId, data, timeoutMs);
             error =  eNETWORK_Error.getErrorName(intError);  
         }
         else

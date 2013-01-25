@@ -1,5 +1,7 @@
 package com.parrot.arsdk.libnetwork;
 
+import android.util.SparseArray;
+
 public enum eNETWORK_Error
 {
     NETWORK_OK (0), /**< no error */
@@ -7,7 +9,7 @@ public enum eNETWORK_Error
     NETWORK_ERROR_ALLOC (-999), /**< allocation error */
     NETWORK_ERROR_BAD_PARAMETER (-998), /**< parameter incorrect */ 
     NETWORK_ERROR_ID_UNKNOWN (-997), /**< IoBuffer identifier unknown */ 
-    NETWORK_ERROR_BUFFER_SIZE (-996), /**< free space of the buffer is insuffisante */
+    NETWORK_ERROR_BUFFER_SIZE (-996), /**< free space of the buffer is insufficient */
     NETWORK_ERROR_BUFFER_EMPTY (-995), /**< try to read a buffer empty */
     NETWORK_ERROR_SEMAPHORE (-994), /**< error during the using of a semaphore */
     NETWORK_MANAGER_ERROR (-2000), /**< manager error unknown */ 
@@ -22,6 +24,8 @@ public enum eNETWORK_Error
     NETWORK_SCOCKET_ERROR_PERMISSION_DENIED (-3999); /**< Permission denied */
     
     private final int m_val;
+    
+    static SparseArray<eNETWORK_Error> errList;
     
     eNETWORK_Error(int val)
     {
@@ -40,6 +44,17 @@ public enum eNETWORK_Error
     
     public static eNETWORK_Error getErrorName(int val)
     {
+    	if (null == errList)
+    	{
+        	eNETWORK_Error[] errorList = eNETWORK_Error.values();
+    		errList = new SparseArray<eNETWORK_Error> (errorList.length);
+    		for (eNETWORK_Error err : errorList) {
+    			errList.append(err.getValue(), err);
+    		}
+    	}
+    	return errList.get(val);
+        
+    	/*
     	eNETWORK_Error[] errorList = eNETWORK_Error.values();
         for(int i = 0; i < errorList.length; i++)
         {
@@ -47,6 +62,7 @@ public enum eNETWORK_Error
                 return errorList[i];
         }
         return eNETWORK_Error.NETWORK_ERROR;
+        */
     }
     
 }
