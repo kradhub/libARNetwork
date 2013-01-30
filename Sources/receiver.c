@@ -370,11 +370,15 @@ network_frame_t* NETWORK_ReceiverGetNextFrame( network_receiver_t* pReceiver,
         nextFrame = (network_frame_t*) ( (uint8_t*)prevFrame + prevFrame->size ) ;
     }
     
-    /** if the receiving buffer not contain enough data */
-    if ( (uint8_t*) nextFrame > (uint8_t*) pReceiver->pRecvBuffer->pFront - offsetof(network_frame_t, data) )
+    /** if the receiving buffer not contain enough data for the frame head*/
+    /** or not contain enough data for the full frame*/
+    if ( (uint8_t*) nextFrame > (uint8_t*) pReceiver->pRecvBuffer->pFront - 
+                                                            offsetof(network_frame_t, data) ||
+         (uint8_t*) nextFrame > (uint8_t*) pReceiver->pRecvBuffer->pFront - nextFrame->size    )
     {
         nextFrame = NULL;
     }
+
     
     return nextFrame;
 }
