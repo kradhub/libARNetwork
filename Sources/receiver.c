@@ -296,8 +296,10 @@ int NETWORK_ReceiverRead(network_receiver_t* pReceiver)
     /** local declarations */
     int readDataSize =  sal_recv( pReceiver->socket, pReceiver->pRecvBuffer->pStart,
                                   pReceiver->pRecvBuffer->numberOfCell, 0);
-
-    pReceiver->pRecvBuffer->pFront = pReceiver->pRecvBuffer->pStart + readDataSize;
+    if(readDataSize > 0)
+    {
+        pReceiver->pRecvBuffer->pFront = pReceiver->pRecvBuffer->pStart + readDataSize;
+    }
     
     return readDataSize;
 }
