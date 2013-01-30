@@ -11,7 +11,7 @@ public class NetworkDataRecv
     
     /**
      *  Constructor
-     *  @param[in] limitSize maximum size of the data read
+     *  @param limitSize maximum size of the data read
     **/
     public NetworkDataRecv(int limitSize) 
     {

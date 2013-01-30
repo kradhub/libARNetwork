@@ -62,10 +62,10 @@ public class NetworkManager
     
     /**
      *  Constructor
-     *  @param[in] recvBufferSize Size of the reception buffer
-     *  @param[in] sendBufferSize Size of the sending buffer
-     *  @param[in] inputArray array of the parameters of the input buffers
-     *  @param[in] outputArray array of the parameters of the output buffers
+     *  @param recvBufferSize Size of the reception buffer
+     *  @param sendBufferSize Size of the sending buffer
+     *  @param inputArray array of the parameters of the input buffers
+     *  @param outputArray array of the parameters of the output buffers
     **/
     public NetworkManager(int recvBufferSize ,int sendBufferSize, 
                              NetworkParamNewIoBuffer inputArray[], 
@@ -111,10 +111,10 @@ public class NetworkManager
     
     /**
      *  Initialize UDP sockets of sending and receiving the data.
-     *  @param[in] addr address of connection at which the data will be sent.
-     *  @param[in] sendingPort port on which the data will be sent.
-     *  @param[in] recvPort port on which the data will be received.
-     *  @param[in] recvTimeoutSec timeout in seconds set on the socket to limit the time of blocking of the function NETWORK_ReceiverRead().
+     *  @param addr address of connection at which the data will be sent.
+     *  @param sendingPort port on which the data will be sent.
+     *  @param recvPort port on which the data will be received.
+     *  @param recvTimeoutSec timeout in seconds set on the socket to limit the time of blocking of the function NETWORK_ReceiverRead().
      *  @return error equal to NETWORK_OK if the initialization if successful otherwise see eNETWORK_Manager_Error.
     **/
     public eNETWORK_Error socketsInit (String addr, int sendingPort, int recvPort, int recvTimeoutSec)
@@ -166,8 +166,8 @@ public class NetworkManager
     
     /**
      *  Add data to send
-     *  @param[in] inputBufferId identifier of the input buffer in which the data must be stored
-     *  @param[in] data pointer on the data to send
+     *  @param inputBufferId identifier of the input buffer in which the data must be stored
+     *  @param data pointer on the data to send
      *  @return error eNETWORK_Error
     **/
     public eNETWORK_Error SendData( int inputBufferId, byte[] data)
@@ -188,8 +188,8 @@ public class NetworkManager
     
     /**
      *  Add deported data to send
-     *  @param[in] inputBufferId identifier of the input buffer in which the data must be stored
-     *  @param[in] salData data to send
+     *  @param inputBufferId identifier of the input buffer in which the data must be stored
+     *  @param salData data to send
      *  @return error eNETWORK_Error
     **/
     public eNETWORK_Error sendDeportedData( int inputBufferId, SALNativeData salData)
@@ -213,8 +213,8 @@ public class NetworkManager
     /**
      *  Read data received
      *  @warning the outputBuffer should not be deportedData type
-     *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
-     *  @param[out] pData pointer on the data read
+     *  @param outputBufferId identifier of the output buffer in which the data must be read
+     *  @param pData pointer on the data read
      *  @return error eNETWORK_Error
     **/
     public eNETWORK_Error readData( int outputBufferId, byte[] data)
@@ -237,9 +237,9 @@ public class NetworkManager
      *  Read data received with timeout
      *  @details This function is blocking
      *  @warning the outputBuffer should not be deportedData type
-     *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
-     *  @param[out] data pointer on the data read
-     *  @param[in] timeoutMs maximum time in millisecond to wait if there is no data to read
+     *  @param outputBufferId identifier of the output buffer in which the data must be read
+     *  @param data pointer on the data read
+     *  @param timeoutMs maximum time in millisecond to wait if there is no data to read
      *  @return error eNETWORK_Error
     **/
     public eNETWORK_Error readDataWithTimeout( int outputBufferId, byte[] data, int timeoutMs)
@@ -261,8 +261,8 @@ public class NetworkManager
     /**
      *  Read deported data received
      *  @warning the outputBuffer must be deportedData type
-     *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
-     *  @param[out] data Data where store the reading
+     *  @param outputBufferId identifier of the output buffer in which the data must be read
+     *  @param data Data where store the reading
      *  @return error eNETWORK_Error type
     **/
     public eNETWORK_Error readDeportedData( int outputBufferId, NetworkDataRecv data)
@@ -284,9 +284,9 @@ public class NetworkManager
     /**
      *  Read deported data received with timeout
      *  @warning the outputBuffer must be deportedData type
-     *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
-     *  @param[out] data Data where store the reading
-     *  @param[in] timeoutMs maximum time in millisecond to wait if there is no data to read
+     *  @param outputBufferId identifier of the output buffer in which the data must be read
+     *  @param data Data where store the reading
+     *  @param timeoutMs maximum time in millisecond to wait if there is no data to read
      *  @return error eNETWORK_Error type
     **/
     public eNETWORK_Error readDeportedDataWithTimeout( int outputBufferId, NetworkDataRecv data, int timeoutMs)
@@ -325,9 +325,9 @@ public class NetworkManager
     
     /**
      *  CallBack for the status of the data sent or free
-     *  @param[in] IoBufferId identifier of the IoBuffer is calling back
-     *  @param[in] data data sent
-     *  @param[in] status reason of the callback
+     *  @param IoBufferId identifier of the IoBuffer is calling back
+     *  @param data data sent
+     *  @param status reason of the callback
      *  @return eNETWORK_CALLBACK_RETURN what do in timeout case
     **/
     public int callback (int IoBuffer, SALNativeData data, int status) 
@@ -373,7 +373,7 @@ class RunSending implements Runnable
 
     /**
      *  Constructor
-     *  @param[in] pManager Pointer C on the network manager
+     *  @param pManager Pointer C on the network manager
     **/
     RunSending(long pManager)
     {
@@ -400,7 +400,7 @@ class RunReceiving implements Runnable
     
     /**
      *  Constructor
-     *  @param[in] pManager Pointer C on the network manager
+     *  @param pManager Pointer C on the network manager
     **/
     RunReceiving(long pManager)
     {

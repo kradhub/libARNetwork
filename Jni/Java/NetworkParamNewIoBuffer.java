@@ -38,9 +38,9 @@ public class NetworkParamNewIoBuffer
     
     /**
      *  Constructor
-     *  @param[in] id Identifier of the ioBuffer
-     *  @param[in] dataType Type of the data stored in the buffer
-     *  @param[in] numberOfCell Maximum number of data can be stored in the buffer
+     *  @param id Identifier of the ioBuffer
+     *  @param dataType Type of the data stored in the buffer
+     *  @param numberOfCell Maximum number of data can be stored in the buffer
     **/
     public NetworkParamNewIoBuffer( int id, eNETWORK_Frame_Type dataType, int numberOfCell )
     {
@@ -88,7 +88,7 @@ public class NetworkParamNewIoBuffer
     
     /**
      *  Set the sending time 
-     *  @param[in] sendingWaitTimeMs Time in millisecond between 2 send
+     *  @param sendingWaitTimeMs Time in millisecond between 2 send
     **/
     public void setSendingWaitTimeMs(int sendingWaitTimeMs) 
     {
@@ -101,7 +101,7 @@ public class NetworkParamNewIoBuffer
     
     /**
      *  Set the Timeout 
-     *  @param[in] ackTimeoutMs Timeout in millisecond before retry to send the data waiting an acknowledgment
+     *  @param ackTimeoutMs Timeout in millisecond before retry to send the data waiting an acknowledgment
     **/
     public void setAckTimeoutMs(int ackTimeoutMs) 
     {
@@ -114,7 +114,7 @@ public class NetworkParamNewIoBuffer
     
     /**
      *  Set the maximum number of retry 
-     *  @param[in] nbOfRetry Maximum number of retry of sending before to consider a failure
+     *  @param nbOfRetry Maximum number of retry of sending before to consider a failure
     **/
     public void setNbOfRetry(int nbOfRetry) 
     {
@@ -127,7 +127,7 @@ public class NetworkParamNewIoBuffer
     
     /**
      *  @brief set the size of one data
-     *  @param[in] cellSize Size of one data in byte
+     *  @param cellSize Size of one data in byte
     **/
     public void setCellSize(int cellSize) 
     {
@@ -140,7 +140,7 @@ public class NetworkParamNewIoBuffer
     
     /**
      *  Set using deported data
-     *  @param[in] useDeportedData Indicator of using deported data
+     *  @param useDeportedData Indicator of using deported data
     **/
     public void setDeportedData(int useDeportedData) 
     {
@@ -153,7 +153,7 @@ public class NetworkParamNewIoBuffer
     
     /**
      *  Set overwriting
-     *  @param[in] isOverwriting Indicator of overwriting possibility (1 = true | 0 = false)
+     *  @param isOverwriting Indicator of overwriting possibility (1 = true | 0 = false)
     **/
     public void setIsOverwriting( int isOverwriting)
     {
