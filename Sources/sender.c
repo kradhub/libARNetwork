@@ -71,21 +71,24 @@ eNETWORK_Error NETWORK_SenderAddToBuffer( network_sender_t* pSender,
  *  @brief call the Callback this timeout status
  *  @param pSender the pointer on the Sender
  *  @param pInputBuffer Pointer on the input buffer
- *  @return 1 to reset the retry counter or 0 to stop the InputBuffer
+ *  @return eNETWORK_CALLBACK_RETURN
  *  @note only call by NETWORK_RunSendingThread()
  *  @see NETWORK_RunSendingThread()
 **/
-int NETWORK_SenderTimeOutCallback( network_sender_t* pSender,const network_ioBuffer_t* pInputBuffer );
+eNETWORK_CALLBACK_RETURN NETWORK_SenderTimeOutCallback(network_sender_t* pSender, 
+                                                          const network_ioBuffer_t* pInputBuffer);
 
 /**
  *  @brief manager the return of the callback
  *  @param pSender the pointer on the Sender
- *  @param pInputBuffer Pointer on the input buffer
- *  @param callbackReturn 
+ *  @param[in] pInputBuffer Pointer on the input buffer
+ *  @param[in] callbackReturn 
  *  @note only call by NETWORK_RunSendingThread()
  *  @see NETWORK_RunSendingThread()
 **/
-void NETWORK_SenderManagerTimeOut( network_sender_t* pSender, network_ioBuffer_t* pInputTemp,int callbackReturn );
+void NETWORK_SenderManagerTimeOut( network_sender_t* pSender, 
+                                   network_ioBuffer_t* pInputTemp, 
+                                   eNETWORK_CALLBACK_RETURN callbackReturn);
 
 /*****************************************
  * 
@@ -93,8 +96,10 @@ void NETWORK_SenderManagerTimeOut( network_sender_t* pSender, network_ioBuffer_t
  *
 ******************************************/
 
-network_sender_t* NETWORK_NewSender( unsigned int sendingBufferSize, unsigned int numOfInputBuff,
-                                       network_ioBuffer_t** ppTab_input )
+network_sender_t* NETWORK_NewSender( unsigned int sendingBufferSize,
+                                       unsigned int numOfInputBuff,
+                                       network_ioBuffer_t** ppTab_input,
+                                       network_ioBuffer_t** ppTAbInputMap)
 {    
     /** -- Create a new sender -- */
     
@@ -109,7 +114,8 @@ network_sender_t* NETWORK_NewSender( unsigned int sendingBufferSize, unsigned in
     {
         pSender->isAlive = 1;
         pSender->numOfInputBuff = numOfInputBuff;
-        pSender->pptab_inputBuffer = ppTab_input;
+        pSender->pptab_inputBuffer = ppTab_input;    
+        pSender->ppTAbInputMap = ppTAbInputMap;
         
         /** Create the Sending buffer */
         pSender->pSendingBuffer = NETWORK_NewBuffer(sendingBufferSize, 1);
@@ -163,7 +169,7 @@ void* NETWORK_RunSendingThread(void* data)
     int indexInput = 0;
     network_ioBuffer_t* pInputTemp = NULL;
     eNETWORK_Error error = NETWORK_OK;
-    int callbackReturn = 0;
+    eNETWORK_CALLBACK_RETURN callbackReturn = NETWORK_CALLBACK_RETURN_DEFAULT;
     
     while( pSender->isAlive )
     {        
@@ -290,7 +296,7 @@ eNETWORK_Error NETWORK_SenderAckReceived(network_sender_t* pSender, int id, int 
     network_ioBuffer_t* pInputBuff = NULL;
     eNETWORK_Error error = NETWORK_OK;
     
-    pInputBuff = NETWORK_IoBufferFromId( pSender->pptab_inputBuffer, pSender->numOfInputBuff, id );
+    pInputBuff = pSender->ppTAbInputMap[id]; 
     
     if(pInputBuff != NULL)
     {
@@ -342,22 +348,25 @@ eNETWORK_Error NETWORK_SenderConnection(network_sender_t* pSender, const char* a
     return error;
 }
 
-void NETWORK_SenderFlush(network_sender_t* pSender)
+eNETWORK_Error NETWORK_SenderFlush(network_sender_t* pSender)
 {
     /** -- Flush all IoBuffer -- */
     
     /** local declarations */
+    eNETWORK_Error error = NETWORK_OK;
     int indexInput;
     network_ioBuffer_t* pInputTemp = NULL;
     
     /** for each input buffer */
-    for(indexInput = 0 ; indexInput < pSender->numOfInputBuff ; ++indexInput  )
+    for(indexInput = 0; indexInput < pSender->numOfInputBuff && error == NETWORK_OK; ++indexInput )
     {
         pInputTemp = pSender->pptab_inputBuffer[indexInput];
         
         /**  flush the IoBuffer */
-        NETWORK_IoBufferFlush(pInputTemp);
+        error = NETWORK_IoBufferFlush(pInputTemp);
     }
+    
+    return error;
 }
 
 void NETWORK_SenderReset(network_sender_t* pSender)
@@ -488,7 +497,8 @@ eNETWORK_Error NETWORK_SenderAddToBuffer( network_sender_t* pSender,
     return error;
 }
 
-int NETWORK_SenderTimeOutCallback(network_sender_t* pSender,const network_ioBuffer_t* pInputBuffer)
+eNETWORK_CALLBACK_RETURN NETWORK_SenderTimeOutCallback(network_sender_t* pSender,
+                                                          const network_ioBuffer_t* pInputBuffer)
 {
     /** -- callback -- */
     
@@ -514,7 +524,9 @@ int NETWORK_SenderTimeOutCallback(network_sender_t* pSender,const network_ioBuff
     return ret;
 }
 
-void NETWORK_SenderManagerTimeOut(network_sender_t* pSender, network_ioBuffer_t* pInputTemp,int callbackReturn)
+void NETWORK_SenderManagerTimeOut(network_sender_t* pSender, 
+                                  network_ioBuffer_t* pInputTemp,
+                                  eNETWORK_CALLBACK_RETURN callbackReturn)
 {
     /**  -- Manager the return of the callback -- */
     
@@ -542,7 +554,7 @@ void NETWORK_SenderManagerTimeOut(network_sender_t* pSender, network_ioBuffer_t*
         break;
         
         default:
-
+            SAL_PRINT(PRINT_ERROR, TAG," Bad CallBack return :%d \n", callbackReturn );
         break;
     }
     

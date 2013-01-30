@@ -13,7 +13,7 @@
 #include <libNetwork/deportedData.h>
 
 /**
- *  @brief network manager allow to send data acknowledged or not.
+ *  @brief network manager allow to send and receive data acknowledged or not.
 **/
 typedef struct network_manager_t network_manager_t;
 
@@ -32,7 +32,7 @@ typedef struct network_manager_t network_manager_t;
  *  @return Pointer on the new Manager
  *  @note This creator adds for all output, one other inOutBuffer for storing the acknowledgment to return.
  * These new buffers are added in the input and output buffer tables.
- *  @warning The identifiers of the IoBuffer should not exceed the value 1000.
+ *  @warning The identifiers of the IoBuffer should not exceed the value 128.
  *  @see NETWORK_DeleteManager()
 **/
 network_manager_t* NETWORK_NewManager( unsigned int recvBufferSize,unsigned int sendBufferSize,
@@ -43,7 +43,7 @@ network_manager_t* NETWORK_NewManager( unsigned int recvBufferSize,unsigned int 
 /**
  *  @brief Delete the Manager
  *  @warning This function free memory
- *  @param ppManager address of the pointer on Network
+ *  @param ppManager address of the pointer on the Manager
  *  @see NETWORK_NewManager()
 **/
 void NETWORK_DeleteManager(network_manager_t** ppManager);
@@ -52,9 +52,10 @@ void NETWORK_DeleteManager(network_manager_t** ppManager);
  *  @brief initialize UDP sockets of sending and receiving the data.
  *  @param pManager pointer on the Manager
  *  @param[in] addr address of connection at which the data will be sent.
+ *  @param[in] sendingPort port on which the data will be sent.
  *  @param[in] recvPort port on which the data will be received.
  *  @param[in] recvTimeoutSec timeout in seconds set on the socket to limit the time of blocking of the function NETWORK_ReceiverRead().
- *  @return error equal to NETWORK_OK if the Bind if successful otherwise see eNETWORK_Manager_Error.
+ *  @return error equal to NETWORK_OK if the initialization if successful otherwise see eNETWORK_Manager_Error.
 **/
 eNETWORK_Error NETWORK_ManagerSocketsInit(network_manager_t* pManager,const char* addr,
                                             int sendingPort,int recvPort, int recvTimeoutSec);
@@ -74,10 +75,10 @@ void* NETWORK_ManagerRunSendingThread(void* data);
 
 /**
  *  @brief Manage the reception of the data.
- *     @warning This function must be called by a specific thread.
- *     @pre The socket of the receiver must be initialized through NETWORK_ManagerSocketsInit().
- *     @post Before join the thread calling this function, NETWORK_ManagerStop() must be called.
- *     @note This function receives the data through NETWORK_ManagerReadData() and stores them in the output buffers according to their parameters.
+ *  @warning This function must be called by a specific thread.
+ *  @pre The socket of the receiver must be initialized through NETWORK_ManagerSocketsInit().
+ *  @post Before join the thread calling this function, NETWORK_ManagerStop() must be called.
+ *  @note This function receives the data through NETWORK_ManagerReadData() and stores them in the output buffers according to their parameters.
  *  @param data thread datas of type network_manager_t*
  *  @return NULL
  *  @see NETWORK_ManagerSocketsInit()
@@ -89,11 +90,18 @@ void* NETWORK_ManagerRunReceivingThread(void* data);
 /**
  *  @brief stop the threads of sending and reception
  *  @details Used to kill the threads calling NETWORK_ManagerRunSendingThread() and NETWORK_ManagerRunReceivingThread().
- *  @param @param pManager pointer on the Manager
+ *  @param pManager pointer on the Manager
  *  @see NETWORK_ManagerRunSendingThread()
  *  @see NETWORK_ManagerRunReceivingThread()
 **/
 void NETWORK_ManagerStop(network_manager_t* pManager);
+
+/**
+ *  @brief Flush all buffers of the network manager
+ *  @param pManager pointer on the Manager
+ *  @return error eNETWORK_Error
+**/
+eNETWORK_Error NETWORK_ManagerFlush(network_manager_t* pManager);
 
 /**
  *  @brief Add data to send
@@ -141,9 +149,8 @@ eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBu
 eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int outputBufferId,
                                                   uint8_t* pData, int dataLimitSize, int* pReadSize );
 
-
 /**
- *  @brief Read data received
+ *  @brief Read data received with timeout
  *  @details This function is blocking
  *  @warning the outputBuffer should not be deportedData type
  *  @param pManager pointer on the Manager
@@ -158,7 +165,7 @@ eNETWORK_Error NETWORK_ManagerReadDataWithTimeout( network_manager_t* pManager,
                                                      int timeoutMs );
 
 /**
- *  @brief Read deported data received
+ *  @brief Read deported data received with timeout
  *  @warning the outputBuffer must be deportedData type
  *  @param pManager pointer on the Manager
  *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
@@ -175,5 +182,5 @@ eNETWORK_Error NETWORK_ManagerReadDeportedDataWithTimeout( network_manager_t* pM
                                                              int* pReadSize,
                                                              int timeoutMs );
 
-#endif // _NETWORK_MANAGER_H_
+#endif /** _NETWORK_MANAGER_H_ */
 

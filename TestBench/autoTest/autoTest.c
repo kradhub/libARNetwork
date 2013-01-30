@@ -108,7 +108,10 @@ void initParamIoBuffer( network_paramNewIoBuffer_t* pTabInput1,
                         network_paramNewIoBuffer_t* pTabInput2, 
                         network_paramNewIoBuffer_t* pTabOutput2 );
                         
-int callbackDepotData(int OutBufferId, uint8_t* pData, void* customData, int status);
+eNETWORK_CALLBACK_RETURN callbackDepotData(int OutBufferId, 
+                                              uint8_t* pData, 
+                                              void* customData, 
+                                              eNETWORK_CALLBACK_STATUS status);
                         
 void* runCheckSendData(void*);
 void* runCheckReadData(void*);
@@ -166,7 +169,7 @@ int main(int argc, char *argv[])
     managerCheck1.pManager = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
                                                  NB_OF_INPUT_NET1, paramInputNetwork1,
                                                  NB_OF_OUTPUT_NET1, paramOutputNetwork1, &error );
-    
+    /** initialize the socket of the Manager1 */
     if( error == NETWORK_OK )
     {
         error = NETWORK_ManagerSocketsInit(managerCheck1.pManager, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
@@ -183,7 +186,7 @@ int main(int argc, char *argv[])
                                                      NB_OF_INPUT_NET2, paramInputNetwork2,
                                                      NB_OF_OUTPUT_NET2, paramOutputNetwork2, &error );  
     }
-    
+    /** initialize the socket of the Manager2 */
     if( error == NETWORK_OK )
     {
         error = NETWORK_ManagerSocketsInit(managerCheck2.pManager, ADRR_IP, PORT2, PORT1, RECEIVER_TIMEOUT_SEC);
@@ -632,7 +635,9 @@ void* runCheckReadData(void* data)
     while(pManagerCheck->thRecvCheckAlive)
     {
         /** checking */
-        if( ! NETWORK_ManagerReadData(pManagerCheck->pManager, ID_CHAR_DATA, (uint8_t*) &chData) )
+        if( NETWORK_OK == NETWORK_ManagerReadData( pManagerCheck->pManager,
+                                                   ID_CHAR_DATA,
+                                                   (uint8_t*) &chData )     )
         {
             printf("- charData: %c \n", chData);
             if( checkData(pManagerCheck, chData) )
@@ -641,7 +646,9 @@ void* runCheckReadData(void* data)
             }
         }
         
-        if( ! NETWORK_ManagerReadData(pManagerCheck->pManager, ID_INT_DATA_WITH_ACK, (uint8_t*) &intData) )
+        if( NETWORK_OK == NETWORK_ManagerReadData( pManagerCheck->pManager,
+                                                   ID_INT_DATA_WITH_ACK, 
+                                                   (uint8_t*) &intData )    )
         {
             printf("- ackInt: %d \n", intData);
             if( checkDataACK( pManagerCheck, intData ) )
@@ -671,11 +678,11 @@ void* runCheckReadDataDeported(void* data)
     {
         /** checking */
         
-        if( ! NETWORK_ManagerReadDeportedData( pManagerCheck->pManager,
-                                               ID_DEPORT_DATA, 
-                                               (uint8_t*) dataDeportedRead, 
-                                               NUMBER_DATA_SENT + STR_SIZE_OFFSET,
-                                               &readSize ) )
+        if( NETWORK_OK == NETWORK_ManagerReadDeportedData( pManagerCheck->pManager,
+                                                           ID_DEPORT_DATA, 
+                                                           (uint8_t*) dataDeportedRead, 
+                                                           NUMBER_DATA_SENT + STR_SIZE_OFFSET,
+                                                           &readSize )                          )
         {
             printf("- depData: %s \n",  dataDeportedRead );
             
@@ -685,16 +692,16 @@ void* runCheckReadDataDeported(void* data)
             }
         }
         
-        if( ! NETWORK_ManagerReadDeportedData( pManagerCheck->pManager, 
-                                               ID_DEPORT_DATA_ACK, 
-                                               (uint8_t*) dataDeportedReadAck, 
-                                               NUMBER_DATA_SENT + STR_SIZE_OFFSET,
-                                               &readSize ) )
+        if( NETWORK_OK == NETWORK_ManagerReadDeportedData( pManagerCheck->pManager, 
+                                                           ID_DEPORT_DATA_ACK, 
+                                                           (uint8_t*) dataDeportedReadAck, 
+                                                           NUMBER_DATA_SENT + STR_SIZE_OFFSET,
+                                                           &readSize )                          )
         {
             
             printf("- depDataACK: %s \n",  dataDeportedReadAck );
             
-            if( checkDeportedDataACK( pManagerCheck, dataDeportedReadAck, readSize) )
+            if( checkDeportedDataACK(pManagerCheck, dataDeportedReadAck, readSize) )
             {
                 printf("error \n");
             } 
@@ -730,10 +737,13 @@ char* allocInitStr( int size )
     return pStr;
 }
 
-int callbackDepotData(int OutBufferId, uint8_t* pData, void* customData, int status)
+eNETWORK_CALLBACK_RETURN callbackDepotData(int OutBufferId, 
+                                               uint8_t* pData, 
+                                               void* customData, 
+                                               eNETWORK_CALLBACK_STATUS status)
 {
     /** local declarations */
-    int retry = 0;
+    int retry = NETWORK_CALLBACK_RETURN_DEFAULT;
     
     printf(" -- callbackDepotData status: %d ",status);
     
@@ -742,13 +752,13 @@ int callbackDepotData(int OutBufferId, uint8_t* pData, void* customData, int sta
         case NETWORK_CALLBACK_STATUS_SENT :
         case NETWORK_CALLBACK_STATUS_SENT_WITH_ACK :
         case NETWORK_CALLBACK_STATUS_FREE :
-            retry = 0;
+            retry = NETWORK_CALLBACK_RETURN_DEFAULT;
             free(pData);
             printf(" free --\n");
         break;
         
         case NETWORK_CALLBACK_STATUS_TIMEOUT :
-            retry = 1;
+            retry = NETWORK_CALLBACK_RETURN_RETRY;
             printf(" retry --\n");
         break;
         

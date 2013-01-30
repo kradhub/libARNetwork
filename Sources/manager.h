@@ -26,6 +26,8 @@ struct network_manager_t
     int numOfOutput; /**< Number of output buffer*/
     int numOfInputWithoutAck; /**< Number of input buffer without the  buffers of acknowledgement*/
     int numOfOutputWithoutAck; /**< Number of output buffer without the  buffers of acknowledgement*/
+    network_ioBuffer_t** ppTAbInputMap; /**< table storing the inputBuffers by their identifier */
+    network_ioBuffer_t** ppTabOutputMap; /**< table storing the outputBuffers by their identifier */
 };
 
 

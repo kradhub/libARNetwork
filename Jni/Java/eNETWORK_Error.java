@@ -2,6 +2,9 @@ package com.parrot.arsdk.libnetwork;
 
 import android.util.SparseArray;
 
+/**
+ *  libNetwork errors known.
+**/
 public enum eNETWORK_Error
 {
     NETWORK_OK (0), /**< no error */
@@ -24,26 +27,40 @@ public enum eNETWORK_Error
     NETWORK_SCOCKET_ERROR_PERMISSION_DENIED (-3999); /**< Permission denied */
     
     private final int m_val;
-    
     static SparseArray<eNETWORK_Error> errList;
     
+    /**
+     *  Constructor
+     *  @param[in] value of the enumeration
+    **/
     eNETWORK_Error(int val)
     {
         m_val = val;
     }
     
+    /**
+     *  Get the value.
+     *  @return value of the enumeration
+    **/
     public int getValue()
     {
         return m_val;
     }
     
+    /*
     public boolean Compare(int val)
     {
     	return m_val == val;
-    }
+    }*/
     
+    /**
+     *  Get error name from value.
+     *  @param[in] val value of the enumeration
+     *  @return name of the enumeration equal to the value
+    **/
     public static eNETWORK_Error getErrorName(int val)
     {
+        /** if the errList not exist, create it */
     	if (null == errList)
     	{
         	eNETWORK_Error[] errorList = eNETWORK_Error.values();

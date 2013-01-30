@@ -27,7 +27,7 @@
 **/
 typedef struct network_ioBuffer_t  
 {
-    int id; /**< Identifier used to find the InOutBuffer in a table*/
+    int id; /**< Identifier used to find the ioBuffer in a table*/
     network_ringBuffer_t* pBuffer;  /**< Pointer on the ringBuffer used to store the data*/
     eNETWORK_Frame_Type dataType;   /**< Type of the data stored in the buffer*/
     int sendingWaitTimeMs;  /**< Time in millisecond between 2 send when the InOutBuffer if used with a libNetwork/sender*/
@@ -75,16 +75,6 @@ void NETWORK_DeleteIoBuffer( network_ioBuffer_t** ppIoBuffer );
 eNETWORK_Error NETWORK_IoBufferAckReceived( network_ioBuffer_t* pIoBuffer, int seqNum );
 
 /**
- *  @brief Search a inOutBuffer from its identifier, in a table
- *  @param[in] pptabInOutBuff address of the table of pointer of inOutBuffer
- *  @param[in] tabSize size of the table of pointers of inOutBuffer
- *  @param[in] id identifier of the inOutBuffer searched
- *  @return address of the inOutBuffer with the identifier searched (equal to NULL if the inOutBuffer is not find)
-**/
-network_ioBuffer_t* NETWORK_IoBufferFromId( network_ioBuffer_t** pptabInOutBuff,
-                                              int tabSize, int id );
-
-/**
  *  @brief Get if the inOutBuffer is waiting an acknowledgement.
  *  @param pIoBuffer Pointer on the input or output buffer
  *  @return IsWaitAck equal to 1 if the inOutBuffer is waiting an acknowledgement otherwise equal to 0
@@ -111,8 +101,9 @@ eNETWORK_Error NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int ca
 /**
  *  @brief flush the IoBuffer
  *  @param pIoBuffer Pointer on the input or output buffer
+ *  @return eNETWORK_Error
 **/
-void NETWORK_IoBufferFlush( network_ioBuffer_t* pIoBuffer );
+eNETWORK_Error NETWORK_IoBufferFlush( network_ioBuffer_t* pIoBuffer );
 
 #endif // _NETWORK_IOBUFFER_H_
 

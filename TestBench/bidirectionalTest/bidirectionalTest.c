@@ -65,7 +65,10 @@ typedef struct printThread
 
 void* printBuff(void* data);
 
-int callbackDepotData(int OutBufferId, uint8_t* pData, void* customData, int status);
+eNETWORK_CALLBACK_RETURN callbackDepotData(int OutBufferId,
+                                               uint8_t* pData, 
+                                               void* customData, 
+                                               eNETWORK_CALLBACK_STATUS status);
 
 /** terminal setting */
 struct termios initial_settings, new_settings;
@@ -497,10 +500,13 @@ void* printBuff(void* data)
     return NULL;
 }
 
-int callbackDepotData(int OutBufferId, uint8_t* pData, void* customData, int status)
+eNETWORK_CALLBACK_RETURN callbackDepotData(int OutBufferId, 
+                                              uint8_t* pData, 
+                                              void* customData, 
+                                              eNETWORK_CALLBACK_STATUS status)
 {
     /** local declarations */
-    int retry = 0;
+    eNETWORK_CALLBACK_RETURN retry = NETWORK_CALLBACK_RETURN_DEFAULT;
     
     printf(" -- callbackDepotData status: %d ",status);
     
@@ -508,7 +514,7 @@ int callbackDepotData(int OutBufferId, uint8_t* pData, void* customData, int sta
     {
         case NETWORK_CALLBACK_STATUS_SENT :
             printf(" callbackSENT --\n");
-            retry = 0;
+            retry = NETWORK_CALLBACK_RETURN_DEFAULT;
             free(pData);
             printf(" free --\n");
         
@@ -516,20 +522,20 @@ int callbackDepotData(int OutBufferId, uint8_t* pData, void* customData, int sta
         
         case NETWORK_CALLBACK_STATUS_SENT_WITH_ACK :
             printf(" callbackSENTWithACK --\n");
-            retry = 0;
+            retry = NETWORK_CALLBACK_RETURN_DEFAULT;
             free(pData);
             printf(" free --\n");
             
         break;
         
         case NETWORK_CALLBACK_STATUS_FREE :
-            retry = 0;
+            retry = NETWORK_CALLBACK_RETURN_DEFAULT;
             free(pData);
             printf(" free --\n");
         break;
         
         case NETWORK_CALLBACK_STATUS_TIMEOUT :
-            retry = 1;
+            retry = NETWORK_CALLBACK_RETURN_RETRY;
             printf(" retry --\n");
         break;
         

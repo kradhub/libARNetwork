@@ -23,6 +23,7 @@ typedef struct network_sender_t
     network_ioBuffer_t** pptab_inputBuffer; /**< address of the table of pointers of input buffer*/
     int numOfInputBuff; 
     int socket; /**< sending Socket. Must be accessed through NETWORK_SenderConnection()*/
+    network_ioBuffer_t** ppTAbInputMap; /**< address of the table storing the inputBuffers by their identifier */
     
     int isAlive; /**< Indicator of aliving used for kill the thread calling the NETWORK_RunSendingThread function (1 = alive | 0 = dead). Must be accessed through NETWORK_StopSender()*/
     int seq; /** sequence number of sending */
@@ -35,11 +36,14 @@ typedef struct network_sender_t
  *  @param[in] sendingBufferSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
  *  @param[in] numOfInputBuff Number of input buffer
  *  @param[in] ppTab_input address of the table of the pointers on the input buffers
+ *  @param[in] ppTAbInputMap address of the table storing the inputBuffers by their identifier
  *  @return Pointer on the new sender
  *  @see NETWORK_DeleteSender()
 **/
-network_sender_t* NETWORK_NewSender(unsigned int sendingBufferSize, unsigned int numOfInputBuff,
-                                network_ioBuffer_t** ppTab_input);
+network_sender_t* NETWORK_NewSender( unsigned int sendingBufferSize,
+                                        unsigned int numOfInputBuff,
+                                        network_ioBuffer_t** ppTab_input, 
+                                        network_ioBuffer_t** ppTAbInputMap);
 
 /**
  *  @brief Delete the sender
@@ -94,8 +98,9 @@ eNETWORK_Error NETWORK_SenderConnection(network_sender_t* pSender,const char* ad
 /**
  *  @brief flush all IoBuffers of the Sender
  *  @param pSender the pointer on the Sender
+ *  @return eNETWORK_Error
 **/
-void NETWORK_SenderFlush(network_sender_t* pSender);
+eNETWORK_Error NETWORK_SenderFlush(network_sender_t* pSender);
 
 /**
  *  @brief reset the Sender

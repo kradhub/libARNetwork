@@ -12,7 +12,7 @@
 #include "sender.h"
 #include "buffer.h"
 
-#define NETWORK_ID_ACK_OFFSET 1024
+#define NETWORK_ID_ACK_OFFSET 128 //1024
 
 /**
  *  @brief receiver manager
@@ -26,6 +26,7 @@ typedef struct
     network_ioBuffer_t** pptab_outputBuffer; /**< address of the table of pointers of output buffer*/
     int numOfOutputBuff; /**< Number of output buffer*/
     int socket; /**< receiving Socket. Must be accessed through NETWORK_ReceiverBind()*/
+    network_ioBuffer_t** ppTabOutputMap; /**< address of the table storing the outputBuffers by their identifier */
     
     int isAlive; /**< Indicator of aliving used for kill the thread calling the NETWORK_RunReceivingThread function (1 = alive | 0 = dead). Must be accessed through NETWORK_StopReceiver()*/
     
@@ -38,11 +39,14 @@ typedef struct
  *  @param[in] recvBufferSize size in byte of the receiving buffer. ideally must be equal to the sum of the sizes of one data of all output buffers
  *  @param[in] numOfOutputBuff Number of output buffer
  *  @param[in] pptab_output address of the table of the pointers on the output buffers
+ *  @param[in] ppTabOutputMap address of the table storing the outputBuffers by their identifier
  *  @return Pointer on the new receiver
  *  @see NETWORK_DeleteReceiver()
 **/
-network_receiver_t* NETWORK_NewReceiver( unsigned int recvBufferSize, unsigned int numOfOutputBuff,
-                                           network_ioBuffer_t** pptab_output);
+network_receiver_t* NETWORK_NewReceiver( unsigned int recvBufferSize, 
+                                            unsigned int numOfOutputBuff,
+                                            network_ioBuffer_t** pptab_output, 
+                                            network_ioBuffer_t** ppTabOutputMap);
 
 /**
  *  @brief Delete the Receiver

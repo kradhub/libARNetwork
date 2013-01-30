@@ -11,7 +11,7 @@
 #include <inttypes.h>
 
 /**
- *  @brief command type know by the network
+ *  @brief type of frame send by the NETWORK_Manager
 **/
 typedef enum eNETWORK_Frame_Type
 {
@@ -36,4 +36,4 @@ typedef struct network_frame_t
 }network_frame_t;
 
 
-#endif // _NETWORK_FRAME_H_
+#endif /** _NETWORK_FRAME_H_ */

@@ -39,9 +39,9 @@ typedef enum
 **/
 typedef enum
 {
-    NETWORK_CALLBACK_RETURN_DEFECT = 0, /**<   */
+    NETWORK_CALLBACK_RETURN_DEFAULT = 0, /**< default value must be returned when the status callback differ of NETWORK_CALLBACK_STATUS_TIMEOUT */
+    NETWORK_CALLBACK_RETURN_DATA_POP = NETWORK_CALLBACK_RETURN_DEFAULT, /**< pop the data (default behavior)*/
     NETWORK_CALLBACK_RETURN_RETRY, /**< reset the number of retry  */
-    NETWORK_CALLBACK_RETURN_DATA_POP, /**< pop the data */
     NETWORK_CALLBACK_RETURN_FLUSH /**< FLUSH all input buffers*/
     
 } eNETWORK_CALLBACK_RETURN;
@@ -58,5 +58,5 @@ typedef enum
     
 } eNETWORK_CALLBACK_STATUS;
 
-#endif // _NETWORK_STATUS_H_
+#endif /** _NETWORK_STATUS_H_ */
 

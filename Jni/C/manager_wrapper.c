@@ -34,7 +34,19 @@ typedef struct network_JNI_callbackData_t
  *
 ******************************************/
 
-int JNI_network_deportDatacallback (int IoBufferId, uint8_t* pData, void* pCustomData, int status);
+/**
+ *  @brief call back use when the data are sent or have a timeout 
+ *  @param[in] IoBufferId identifier of the IoBuffer is calling back
+ *  @param[in] pData pointer on the data
+ *  @param[in] pCustomData pointer on a custom data
+ *  @param[in] status indicating the reason of the callback. eNETWORK_CALLBACK_STATUS type
+ *  @return eNETWORK_CALLBACK_RETURN
+ *  @see eNETWORK_CALLBACK_STATUS
+**/
+eNETWORK_CALLBACK_RETURN JNI_network_deportDatacallback(int IoBufferId, 
+                                                            uint8_t* pData, 
+                                                            void* pCustomData, 
+                                                            eNETWORK_CALLBACK_STATUS status);
 
 /**
  *  @brief free the global references used by the callback
@@ -50,13 +62,20 @@ void freeCallbackData (JNIEnv* env, network_JNI_callbackData_t** ppCallbackData)
  *
 ******************************************/
 
-static const char* TAG = "APP";
-JavaVM* g_vm = NULL;
+static const char* TAG = "APP"; /** tag used by the print of the file */
+JavaVM* g_vm = NULL; /** reference to the java virtual machine */
 
+/**
+ *  @brief save the reference to the java virtual machine
+ *  @note this function is automatically call on the JNI startup
+ *  @param[in] vm reference to the java virtual machine
+ *  @param[in] reserved data reserved
+ *  @return JNI version
+**/
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm, void *reserved)
 {
-    SAL_PRINT(PRINT_DEBUG, TAG,"Library has been loaded");
+    SAL_PRINT(PRINT_DEBUG, TAG, "Library has been loaded");
 
 	/** Saving the reference to the java virtual machine */
 	g_vm = vm;
@@ -65,8 +84,25 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
 	return JNI_VERSION_1_6;
 }
 
+
 /**
  *  @brief Create a new manager
+ *  @warning This function allocate memory
+ *  @post NETWORK_ManagerSocketsInit() must be called to initialize the sockets, indicate on which address send the data, the sending port the receiving  port and the timeout. 
+ *  @param env reference to the java environment
+ *  @param obj reference to the object calling this function
+ *  @param[in] recvBufferSize size in byte of the receiving buffer. ideally must be equal to the sum of the sizes of one data of all output buffers
+ *  @param[in] sendBufferSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
+ *  @param[in] numberOfInput Number of input buffer
+ *  @param[in] inputArray array of the parameters of creation of the inputs. The table must contain as many parameters as the number of input buffer.
+ *  @param[in] numberOfOutput Number of output buffer
+ *  @param[in] outputArray array of the parameters of creation of the outputs. The table must contain as many parameters as the number of output buffer.
+ *  @return Pointer on the network_manager_t.
+ *  @note This creator adds for all output, one other inOutBuffer for storing the acknowledgment to return.
+ * These new buffers are added in the input and output buffer tables.
+ *  @warning The identifiers of the IoBuffer should not exceed the value 128.
+ *  @see Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeDeleteManager()
+ * 
 **/
 JNIEXPORT jlong JNICALL
 Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeNewManager ( JNIEnv *env, jobject obj, 
@@ -75,8 +111,7 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeNewManager ( JNIEnv *env, 
                                                                   jint numberOfInput, 
                                                                   jobjectArray inputArray, 
                                                                   jint numberOfOutput,
-                                                                  jobjectArray outputArray,
-                                                                  jint jError )
+                                                                  jobjectArray outputArray)
 {
     /** -- Create a new manager -- */
     
@@ -157,12 +192,23 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeNewManager ( JNIEnv *env, 
                                        numberOfOutput, ptabParamOutput, &error); 
     }
     
-    /** return error */
-    jError = error;
+    /** print error */
+    if(error == NETWORK_OK)
+    {
+        SAL_PRINT(PRINT_ERROR, TAG," error: %d occurred \n", error );
+    }
     
     return (long) pManager;
 }
 
+/**
+ *  @brief Delete the Manager
+ *  @warning This function free memory
+ *  @param env reference to the java environment
+ *  @param obj reference to the object calling this function
+ *  @param jpManager adress of the network_manager_t
+ *  @see Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeNewManager()
+**/
 JNIEXPORT void JNICALL
 Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeDeleteManager (JNIEnv *env, jobject obj, jlong jpManager)
 {
@@ -172,6 +218,17 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeDeleteManager (JNIEnv *env
     NETWORK_DeleteManager(&pManager);
 }
 
+/**
+ *  @brief initialize UDP sockets of sending and receiving the data.
+ *  @param env reference to the java environment
+ *  @param obj reference to the object calling this function
+ *  @param jpManager adress of the network_manager_t
+ *  @param[in] jaddr address of connection at which the data will be sent.
+ *  @param[in] sendingPort port on which the data will be sent.
+ *  @param[in] recvPort port on which the data will be received.
+ *  @param[in] recvTimeoutSec timeout in seconds set on the socket to limit the time of blocking of the function NETWORK_ReceiverRead().
+ *  @return error equal to NETWORK_OK if the Bind if successful otherwise see eNETWORK_Manager_Error.
+**/
 JNIEXPORT jint JNICALL
 Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSocketsInit ( JNIEnv *env, jobject obj,
                                             jlong jpManager, jstring jaddr, jint sendingPort,
@@ -191,6 +248,19 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSocketsInit ( JNIEn
     return error;
 }
 
+/**
+ *  @brief Manage the sending of the data 
+ *  @warning This function must be called by a specific thread.
+ *  @pre The sockets must be initialized through nativeManagerSocketsInit().
+ *  @post Before join the thread calling this function, nativeManagerStop() must be called.
+ *  @note This function send the data stored in the input buffer through NETWORK_ManagerSendData().
+ *  @param env reference to the java environment
+ *  @param obj reference to the object calling this function
+ *  @param jpManager adress of the network_manager_t
+ *  @return NULL
+ *  @see Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSocketsInit()
+ *  @see Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerStop()
+**/
 JNIEXPORT jint JNICALL
 Java_com_parrot_arsdk_libnetwork_RunSending_nativeManagerRunSendingThread( JNIEnv *env, jobject obj, jlong jpManager )
 {
@@ -202,6 +272,19 @@ Java_com_parrot_arsdk_libnetwork_RunSending_nativeManagerRunSendingThread( JNIEn
     return (int) NETWORK_ManagerRunSendingThread( pManager );
 }
 
+/**
+ *  @brief Manage the reception of the data.
+ *  @warning This function must be called by a specific thread.
+ *  @pre The socket of the receiver must be initialized through nativeManagerSocketsInit().
+ *  @post Before join the thread calling this function, nativeManagerStop() must be called.
+ *  @note This function receives the data through NETWORK_ManagerReadData() and stores them in the output buffers according to their parameters.
+ *  @param env reference to the java environment
+ *  @param obj reference to the object calling this function
+ *  @param jpManager adress of the network_manager_t
+ *  @return NULL
+ *  @see Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSocketsInit()
+ *  @see Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerStop()
+**/
 JNIEXPORT jint JNICALL
 Java_com_parrot_arsdk_libnetwork_RunReceiving_nativeManagerRunReceivingThread(JNIEnv *env, jobject obj, jlong jpManager)
 {
@@ -213,6 +296,15 @@ Java_com_parrot_arsdk_libnetwork_RunReceiving_nativeManagerRunReceivingThread(JN
     return (int) NETWORK_ManagerRunReceivingThread(pManager);
 }
 
+/**
+ *  @brief stop the threads of sending and reception
+ *  @details Used to kill the threads calling nativeManagerRunSendingThread() and nativeManagerRunReceivingThread().
+ *  @param env reference to the java environment
+ *  @param obj reference to the object calling this function
+ *  @param jpManager adress of the network_manager_t
+ *  @see Java_com_parrot_arsdk_libnetwork_RunSending_nativeManagerRunSendingThread()
+ *  @see Java_com_parrot_arsdk_libnetwork_RunReceiving_nativeManagerRunReceivingThread()
+**/
 JNIEXPORT void JNICALL
 Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerStop(JNIEnv *env, jobject obj, jlong jpManager)
 {
@@ -224,6 +316,33 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerStop(JNIEnv *env, j
     NETWORK_ManagerStop(pManager);
 }
 
+
+/**
+ *  @brief Flush all buffers of the network manager
+ *  @param pManager pointer on the Manager
+ *  @return error eNETWORK_Error
+**/
+JNIEXPORT int JNICALL
+Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerFlush(JNIEnv *env, jobject obj, 
+                                                                   jlong jpManager)
+{
+    /** -- Flush all buffers of the network manager -- */
+    
+    /** local declarations */
+    network_manager_t* pManager = (network_manager_t*) (intptr_t) jpManager;
+    
+    return NETWORK_ManagerFlush(pManager);
+}
+
+/**
+ *  @brief Add data to send
+ *  @param env reference to the java environment
+ *  @param obj reference to the object calling this function
+ *  @param jpManager adress of the network_manager_t
+ *  @param[in] inputBufferId identifier of the input buffer in which the data must be stored
+ *  @param[in] jData array of byte to send
+ *  @return error eNETWORK_Error
+**/
 JNIEXPORT int JNICALL
 Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSendData( JNIEnv *env, jobject obj, 
                                                                   jlong jpManager, jint inputBufferId, 
@@ -250,6 +369,17 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSendData( JNIEnv *e
     return error;
 }
 
+/**
+ *  @brief Add deported data to send
+ *  @param env reference to the java environment
+ *  @param obj reference to the object calling this function
+ *  @param jpManager adress of the network_manager_t
+ *  @param[in] inputBufferId identifier of the input buffer in which the data must be stored
+ *  @param[in] SALData SALNativeData to send
+ *  @param[in] jpData array of byte to send ( use salData.getData() )
+ *  @param[in] dataSize size of the data to send ( use salData.getDataSize() )
+ *  @return error eNETWORK_Error
+**/
 JNIEXPORT int JNICALL
 Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSendDeportedData( JNIEnv *env, jobject obj, jlong jpManager,
                                                                           jint inputBufferId, jobject SALData, 
@@ -287,6 +417,16 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSendDeportedData( J
     return error;
 }
 
+/**
+ *  @brief Read data received
+ *  @warning the outputBuffer should not be deportedData type
+ *  @param env reference to the java environment
+ *  @param obj reference to the object calling this function
+ *  @param jpManager adress of the network_manager_t
+ *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
+ *  @param[out] jData array of byte to store the data received
+ *  @return error eNETWORK_Error
+**/
 JNIEXPORT int JNICALL
 Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadData(JNIEnv *env, jobject obj, jlong jpManager, jint outputBufferId, jbyteArray jData)
 {
@@ -311,10 +451,20 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadData(JNIEnv *en
     return error;
 }
 
+/**
+ *  @brief Read deported data received
+ *  @warning the outputBuffer must be deportedData type
+ *  @param env reference to the java environment
+ *  @param obj reference to the object calling this function
+ *  @param jpManager adress of the network_manager_t
+ *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
+ *  @param[out] jData NetworkDataRecv to store the data received
+ *  @return error eNETWORK_Error type
+**/
 JNIEXPORT int JNICALL
 Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDeportedData( JNIEnv *env, jobject obj, jlong jpManager, jint outputBufferId, jobject jData)
 {
-    /** -- read data received -- */
+    /** -- read deported data received -- */
     
     /** local declarations */
     jbyteArray jbyteArrayData = NULL;
@@ -325,7 +475,7 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDeportedData( J
     eNETWORK_Error error = NETWORK_OK;
     network_manager_t* pManager = (network_manager_t*) (intptr_t) jpManager;
     
-    /** get the dataRecv class reference */
+    /** get the NetworkDataRecv class reference */
     jclass dataRecv_cls = (*env)->GetObjectClass(env, jData);
     
     if(dataRecv_cls != NULL)
@@ -362,13 +512,27 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDeportedData( J
     return error;
 }
 
+/**
+ *  @brief Read data received with timeout
+ *  @details This function is blocking
+ *  @warning the outputBuffer should not be deportedData type
+ *  @param env reference to the java environment
+ *  @param obj reference to the object calling this function
+ *  @param jpManager adress of the network_manager_t
+ *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
+ *  @param[out] jData array of byte to store the data received
+ *  @param[in] timeoutMs maximum time in millisecond to wait if there is no data to read
+ *  @return error eNETWORK_Error
+**/
 JNIEXPORT int JNICALL
-Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDataWithTimeout( JNIEnv *env, jobject obj, jlong jpManager, 
+Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDataWithTimeout(JNIEnv *env,
+                                                                                 jobject obj,
+                                                                                 jlong jpManager, 
                                                                                  jint outputBufferId, 
                                                                                  jbyteArray jData,
                                                                                  jint timeoutMs )
 {
-    /** -- read data received-- */
+    /** -- read data received with timeout-- */
     
     /** local declarations */
     network_manager_t* pManager = (network_manager_t*) (intptr_t) jpManager;
@@ -389,7 +553,17 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDataWithTimeout
     return error;
 }
 
-
+/**
+ *  @brief Read deported data received with timeout
+ *  @warning the outputBuffer must be deportedData type
+ *  @param env reference to the java environment
+ *  @param obj reference to the object calling this function
+ *  @param jpManager adress of the network_manager_t
+ *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
+ *  @param[out] jData NetworkDataRecv to store the data received
+ *  @param[in] timeoutMs maximum time in millisecond to wait if there is no data to read
+ *  @return error eNETWORK_Error type
+**/
 JNIEXPORT int JNICALL
 Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDeportedDataWithTimeout( JNIEnv *env,
                                                                                           jobject obj,
@@ -448,14 +622,17 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDeportedDataWit
     return error;
 }
 
-int JNI_network_deportDatacallback (int IoBufferId, uint8_t* pData, void* pCustomData, int status)
+eNETWORK_CALLBACK_RETURN JNI_network_deportDatacallback(int IoBufferId, 
+                                                           uint8_t* pData, 
+                                                           void* pCustomData,
+                                                           eNETWORK_CALLBACK_STATUS status)
 {
     /** callback */
     
     /** local declarations */
     JNIEnv* env = NULL;
     eNETWORK_Error error = NETWORK_OK;
-    eNETWORK_CALLBACK_RETURN callbackReturn = 0;
+    eNETWORK_CALLBACK_RETURN callbackReturn = NETWORK_CALLBACK_RETURN_DEFAULT;
     int retry = 0;
     jclass manager_cls =  NULL;
     jmethodID jmCallback = 0;

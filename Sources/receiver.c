@@ -76,10 +76,13 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
  *  @param[in] OutBufferId IoBuffer identifier of the IoBuffer is calling back
  *  @param[in] pData pointer on the data
  *  @param[in] status status indicating the reason of the callback. eNETWORK_CALLBACK_STATUS_Status type
- *  @return   
+ *  @return  eNETWORK_CALLBACK_RETURN 
  *  @see eNETWORK_CALLBACK_STATUS
 **/
-int NETWORK_freedeportedData(int OutBufferId, uint8_t* pData, void* pCustomData, int status);
+eNETWORK_CALLBACK_RETURN NETWORK_freedeportedData(int OutBufferId, 
+                                                      uint8_t* pData, 
+                                                      void* pCustomData, 
+                                                      eNETWORK_CALLBACK_STATUS status);
 
 /*****************************************
  * 
@@ -88,8 +91,10 @@ int NETWORK_freedeportedData(int OutBufferId, uint8_t* pData, void* pCustomData,
 ******************************************/
 
 
-network_receiver_t* NETWORK_NewReceiver( unsigned int recvBufferSize, unsigned int numOfOutputBuff,
-                                           network_ioBuffer_t** pptab_output)
+network_receiver_t* NETWORK_NewReceiver( unsigned int recvBufferSize, 
+                                            unsigned int numOfOutputBuff,
+                                            network_ioBuffer_t** pptab_output,
+                                            network_ioBuffer_t** ppTabOutputMap)
 {    
     /** -- Create a new receiver -- */
     
@@ -107,6 +112,8 @@ network_receiver_t* NETWORK_NewReceiver( unsigned int recvBufferSize, unsigned i
         
         pReceiver->numOfOutputBuff = numOfOutputBuff;
         pReceiver->pptab_outputBuffer = pptab_output;
+        
+        pReceiver->ppTabOutputMap = ppTabOutputMap;
         
         pReceiver->pRecvBuffer = NETWORK_NewBuffer(recvBufferSize,1);
         if(pReceiver->pRecvBuffer == NULL)
@@ -160,7 +167,7 @@ void* NETWORK_RunReceivingThread(void* data)
     while( pReceiver->isAlive )
     {    
         /** wait a receipt */
-        if( NETWORK_ReceiverRead( pReceiver ) > 0)
+        if( NETWORK_ReceiverRead( pReceiver ) > 0 )
         {    
             /** for each command present in the receiver buffer */        
             pFrame = NETWORK_ReceiverGetNextFrame(pReceiver, pFrame);
@@ -179,7 +186,16 @@ void* NETWORK_RunReceivingThread(void* data)
                                                            *( (int*) &pFrame->data ) );
                         if( error != NETWORK_OK )
                         {
-                            SAL_PRINT(PRINT_ERROR, TAG,"acknowledge received, error: %d occurred \n", error);
+                            switch(error)
+                            {
+                                case NETWORK_IOBUFFER_ERROR_BAD_ACK:
+                                    SAL_PRINT(PRINT_DEBUG, TAG,"Bad acknowledge, error: %d occurred \n", error);
+                                break;
+                                
+                                default:
+                                    SAL_PRINT(PRINT_ERROR, TAG,"acknowledge received, error: %d occurred \n", error);
+                                break;
+                            }
                         }
                         
                     break;
@@ -189,9 +205,7 @@ void* NETWORK_RunReceivingThread(void* data)
                                                 pFrame->seq, pFrame->id);
                         
                         /** push the data received in the output buffer targeted */
-                        pOutBufferTemp = NETWORK_IoBufferFromId( pReceiver->pptab_outputBuffer, 
-                                                                 pReceiver->numOfOutputBuff,
-                                                                 pFrame->id);
+                        pOutBufferTemp = pReceiver->ppTabOutputMap[ pFrame->id ]; 
                         
                         if(pOutBufferTemp != NULL)
                         {
@@ -213,9 +227,8 @@ void* NETWORK_RunReceivingThread(void* data)
                          * push the data received in the output buffer targeted, 
                          * save the sequence of the command and return an acknowledgement
                         **/
-                        pOutBufferTemp = NETWORK_IoBufferFromId(    pReceiver->pptab_outputBuffer, 
-                                                            pReceiver->numOfOutputBuff,
-                                                            pFrame->id);
+                        pOutBufferTemp = pReceiver->ppTabOutputMap[ pFrame->id ];
+
                         if(pOutBufferTemp != NULL)
                         {
                             /** OutBuffer->seqWaitAck used to save the last seq */
@@ -268,9 +281,7 @@ void NETWORK_ReturnACK(network_receiver_t* pReceiver, int id, int seq)
     /** -- return an acknowledgement -- */
     
     /** local declarations */
-    network_ioBuffer_t* pBufferASK = NETWORK_IoBufferFromId( pReceiver->pptab_outputBuffer,
-                                                                pReceiver->numOfOutputBuff,
-                                                                idOutputToIdAck(id) );
+    network_ioBuffer_t* pBufferASK = pReceiver->ppTabOutputMap[ idOutputToIdAck(id) ];
                                                                 
     if(pBufferASK != NULL)
     {
@@ -439,11 +450,14 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
     return error;
 }
 
-int NETWORK_freedeportedData(int OutBufferId, uint8_t* pData, void* pCustomData, int status)
+eNETWORK_CALLBACK_RETURN NETWORK_freedeportedData(int OutBufferId,
+                                                      uint8_t* pData, 
+                                                      void* pCustomData, 
+                                                      eNETWORK_CALLBACK_STATUS status)
 {
     /** call back use to free deported data */
     
     free(pData);
     
-    return NETWORK_OK;
+    return NETWORK_CALLBACK_RETURN_DEFAULT;
 }

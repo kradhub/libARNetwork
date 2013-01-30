@@ -22,10 +22,13 @@
  *  @param[in] pData pointer on the data
  *  @param[in] pCustomData pointer on a custom data
  *  @param[in] status indicating the reason of the callback. eNETWORK_CALLBACK_STATUS type
- *  @return 1 to reset the retry counter or 0 to stop the InputBuffer 
+ *  @return what do in timeout case
  *  @see eNETWORK_CALLBACK_STATUS
 **/
-typedef int (*network_deportDatacallback)(int IoBufferId, uint8_t* pData, void* customData, int status);
+typedef eNETWORK_CALLBACK_RETURN (*network_deportDatacallback)(int IoBufferId,
+                                                                       uint8_t* pData, 
+                                                                       void* customData,
+                                                                       eNETWORK_CALLBACK_STATUS status);
 
 /**
  *  @brief deported data used to send large data or data with scalable size
@@ -39,5 +42,5 @@ typedef struct network_DeportedData_t
                                       
 }network_DeportedData_t;
 
-#endif // _NETWORK_DEPORTEDDATA_H_
+#endif /** _NETWORK_DEPORTEDDATA_H_ */
 

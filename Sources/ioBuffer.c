@@ -169,30 +169,6 @@ eNETWORK_Error NETWORK_IoBufferAckReceived( network_ioBuffer_t* pIoBuffer, int s
     return error;
 }
 
-network_ioBuffer_t* NETWORK_IoBufferFromId( network_ioBuffer_t** pptabInOutBuff,
-                                                int tabSize, int id )
-{
-    /** -- Search a inOutBuffer from its identifier, in a table -- */
-    
-    /** local declarations */
-    network_ioBuffer_t** it = pptabInOutBuff ;
-    network_ioBuffer_t** itEnd = pptabInOutBuff + (tabSize);
-    network_ioBuffer_t* pIoBufferSearched = NULL;
-    int find = 0;
-    
-    /** for each inoutBuffer of the table check if the ID is the same as the ID searched */
-    for(it = pptabInOutBuff ; ( it != itEnd ) && !find ; ++it )
-    {
-        if( (*it)->id == id)
-        {
-            pIoBufferSearched = *it;
-            find = 1;
-        }
-    }
-    
-    return pIoBufferSearched;
-}
-
 int NETWORK_IoBufferIsWaitAck(    network_ioBuffer_t* pIoBuffer)
 {
     /** -- Get if the inOutBuffer is waiting an acknowledgement -- */
@@ -262,20 +238,28 @@ eNETWORK_Error NETWORK_IoBufferDeleteData( network_ioBuffer_t* pIoBuffer, int ca
     return error;
 }
 
-void NETWORK_IoBufferFlush( network_ioBuffer_t* pIoBuffer )
+eNETWORK_Error NETWORK_IoBufferFlush( network_ioBuffer_t* pIoBuffer )
 {
     /** -- flush the IoBuffer -- */
     
     /** local declarations */
-    eNETWORK_Error errorDataDel = NETWORK_OK;
+    eNETWORK_Error error = NETWORK_OK;
+    
+    sal_mutex_lock( &(pIoBuffer->mutex) );
     
     /**  delete all data */
-    while(errorDataDel == NETWORK_OK)
+    while(error == NETWORK_OK)
     {
-        errorDataDel = NETWORK_IoBufferDeleteData(pIoBuffer, NETWORK_CALLBACK_STATUS_FREE);
+        error = NETWORK_IoBufferDeleteData(pIoBuffer, NETWORK_CALLBACK_STATUS_FREE);
     }
     
-    /**  reset */
+    /** if the error occurred is "buffer empty" there is no error */
+    if( error == NETWORK_ERROR_BUFFER_EMPTY)
+    {
+        error = NETWORK_OK;
+    }
+    
+    /** state reset */
     pIoBuffer->isWaitAck = 0;
     pIoBuffer->seqWaitAck = 0;
     pIoBuffer->waitTimeCount = pIoBuffer->sendingWaitTimeMs;
@@ -286,5 +270,8 @@ void NETWORK_IoBufferFlush( network_ioBuffer_t* pIoBuffer )
     sal_sem_destroy( &(pIoBuffer->outputSem) );
     sal_sem_init( &(pIoBuffer->outputSem), 1, 0);
     
+    sal_mutex_unlock(&(pIoBuffer->mutex));
+    
+    return error; 
 }
 

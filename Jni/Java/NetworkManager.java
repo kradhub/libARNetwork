@@ -3,7 +3,9 @@ package com.parrot.arsdk.libnetwork;
 import android.util.Log;
 import com.parrot.arsdk.libsal.SALNativeData;
 
-
+/**
+ * Network manager allow to send and receive data acknowledged or not.
+**/
 public class NetworkManager 
 {
     private static final String tag = "NetworkManager";
@@ -25,23 +27,28 @@ public class NetworkManager
         
     }
     
-    private native long nativeNewManager (int recvBufferSize, int sendBufferSize,
+    private native long nativeNewManager( int recvBufferSize, int sendBufferSize,
                                             int numberOfInput, Object[] inputArray, 
                                             int numberOfOutput, Object[] outputArray,
-                                            int jerror);
+                                            int jerror );
                                                     
     private native int nativeDeleteManager( long jpManager);
-    private native int nativeManagerSocketsInit( long jpManager, String jaddr, int sendingPort, int recvPort, int recvTimeoutSec);
+    private native int nativeManagerSocketsInit( long jpManager, String jaddr, int sendingPort,
+                                                   int recvPort, int recvTimeoutSec );
     
+    private native void nativeManagerStop( long jpManager );
+    private native int nativeManagerFlush( long jpManager );
     
-    private native void nativeManagerStop( long jpManager);
-    private native int nativeManagerSendData(long jpManager, int inputBufferId, byte[] data);
-    private native int nativeManagerReadData(long jpManager, int outputBufferId, byte[] data);
-    private native int nativeManagerReadDataWithTimeout(long jpManager, int outputBufferId, byte[] data, int timeoutMs);
+    private native int nativeManagerSendData( long jpManager, int inputBufferId, byte[] data );
+    private native int nativeManagerReadData( long jpManager, int outputBufferId, byte[] data );
+    private native int nativeManagerReadDataWithTimeout( long jpManager, int outputBufferId,
+                                                           byte[] data, int timeoutMs );
     
     private native int nativeManagerSendDeportedData( long jpManager,int inputBufferId, 
-                                                        SALNativeData SALData, long pData, int dataSize);
-    private native int nativeManagerReadDeportedData( long jpManager, int outputBufferId, NetworkDataRecv data);
+                                                        SALNativeData SALData, long pData, 
+                                                        int dataSize);
+    private native int nativeManagerReadDeportedData( long jpManager, int outputBufferId,
+                                                        NetworkDataRecv data);
     private native int nativeManagerReadDeportedDataWithTimeout( long jpManager, 
                                                                    int outputBufferId, 
                                                                    NetworkDataRecv data, 
@@ -53,6 +60,13 @@ public class NetworkManager
     public RunSending runSending;
     public RunReceiving runReceiving;
     
+    /**
+     *  Constructor
+     *  @param[in] recvBufferSize Size of the reception buffer
+     *  @param[in] sendBufferSize Size of the sending buffer
+     *  @param[in] inputArray array of the parameters of the input buffers
+     *  @param[in] outputArray array of the parameters of the output buffers
+    **/
     public NetworkManager(int recvBufferSize ,int sendBufferSize, 
                              NetworkParamNewIoBuffer inputArray[], 
                              NetworkParamNewIoBuffer outputArray[]) 
@@ -73,6 +87,10 @@ public class NetworkManager
 
     }
     
+    /**
+     *  Dispose
+     *  @post after this function the object must be not used more
+    **/
     public void dispose() 
     {
         if(m_initOk == true)
@@ -83,11 +101,22 @@ public class NetworkManager
         }
     }
     
+    /**
+     *  Destructor
+    **/
     public void finalize () 
     {
         dispose();
     }
     
+    /**
+     *  Initialize UDP sockets of sending and receiving the data.
+     *  @param[in] addr address of connection at which the data will be sent.
+     *  @param[in] sendingPort port on which the data will be sent.
+     *  @param[in] recvPort port on which the data will be received.
+     *  @param[in] recvTimeoutSec timeout in seconds set on the socket to limit the time of blocking of the function NETWORK_ReceiverRead().
+     *  @return error equal to NETWORK_OK if the initialization if successful otherwise see eNETWORK_Manager_Error.
+    **/
     public eNETWORK_Error socketsInit (String addr, int sendingPort, int recvPort, int recvTimeoutSec)
     {
         eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
@@ -101,6 +130,12 @@ public class NetworkManager
         return error;
     }
     
+    /**
+     *  Stop the threads of sending and reception
+     *  @details Used to kill the threads calling NETWORK_ManagerRunSendingThread() and NETWORK_ManagerRunReceivingThread().
+     *  @see NETWORK_ManagerRunSendingThread()
+     *  @see NETWORK_ManagerRunReceivingThread()
+    **/
     public void stop()
     {
         if(m_initOk == true)
@@ -109,6 +144,32 @@ public class NetworkManager
         }
     }
     
+    /**
+     *  Flush all buffers of the network manager
+     *  @return error eNETWORK_Error
+    **/
+    public eNETWORK_Error Flush()
+    {
+        eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
+        if(m_initOk == true)
+        {
+            int intError = nativeManagerFlush( mp_manager );
+            error =  eNETWORK_Error.getErrorName(intError);
+        }
+        else
+        {
+            error = eNETWORK_Error.NETWORK_ERROR_BAD_PARAMETER;
+        }
+        
+        return error;
+    }
+    
+    /**
+     *  Add data to send
+     *  @param[in] inputBufferId identifier of the input buffer in which the data must be stored
+     *  @param[in] data pointer on the data to send
+     *  @return error eNETWORK_Error
+    **/
     public eNETWORK_Error SendData( int inputBufferId, byte[] data)
     {
         eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
@@ -125,39 +186,12 @@ public class NetworkManager
         return error;
     }
     
-    
-    public eNETWORK_Error readData( int outputBufferId, byte[] data)
-    {
-        eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
-        if(m_initOk == true)
-        {
-            int intError = nativeManagerReadData(mp_manager, outputBufferId, data);
-            error =  eNETWORK_Error.getErrorName(intError);  
-        }
-        else
-        {
-            error = eNETWORK_Error.NETWORK_ERROR_BAD_PARAMETER;
-        }
-        
-        return error;
-    }
-    
-    public eNETWORK_Error readDataWithTimeout( int outputBufferId, byte[] data, int timeoutMs)
-    {
-        eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
-        if(m_initOk == true)
-        {
-            int intError = nativeManagerReadDataWithTimeout(mp_manager, outputBufferId, data, timeoutMs);
-            error =  eNETWORK_Error.getErrorName(intError);  
-        }
-        else
-        {
-            error = eNETWORK_Error.NETWORK_ERROR_BAD_PARAMETER;
-        }
-        
-        return error;
-    }
-    
+    /**
+     *  Add deported data to send
+     *  @param[in] inputBufferId identifier of the input buffer in which the data must be stored
+     *  @param[in] salData data to send
+     *  @return error eNETWORK_Error
+    **/
     public eNETWORK_Error sendDeportedData( int inputBufferId, SALNativeData salData)
     {
         eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
@@ -176,6 +210,61 @@ public class NetworkManager
         return error;
     }
     
+    /**
+     *  Read data received
+     *  @warning the outputBuffer should not be deportedData type
+     *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
+     *  @param[out] pData pointer on the data read
+     *  @return error eNETWORK_Error
+    **/
+    public eNETWORK_Error readData( int outputBufferId, byte[] data)
+    {
+        eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
+        if(m_initOk == true)
+        {
+            int intError = nativeManagerReadData(mp_manager, outputBufferId, data);
+            error =  eNETWORK_Error.getErrorName(intError);  
+        }
+        else
+        {
+            error = eNETWORK_Error.NETWORK_ERROR_BAD_PARAMETER;
+        }
+        
+        return error;
+    }
+    
+    /**
+     *  Read data received with timeout
+     *  @details This function is blocking
+     *  @warning the outputBuffer should not be deportedData type
+     *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
+     *  @param[out] data pointer on the data read
+     *  @param[in] timeoutMs maximum time in millisecond to wait if there is no data to read
+     *  @return error eNETWORK_Error
+    **/
+    public eNETWORK_Error readDataWithTimeout( int outputBufferId, byte[] data, int timeoutMs)
+    {
+        eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
+        if(m_initOk == true)
+        {
+            int intError = nativeManagerReadDataWithTimeout(mp_manager, outputBufferId, data, timeoutMs);
+            error =  eNETWORK_Error.getErrorName(intError);  
+        }
+        else
+        {
+            error = eNETWORK_Error.NETWORK_ERROR_BAD_PARAMETER;
+        }
+        
+        return error;
+    }
+    
+    /**
+     *  Read deported data received
+     *  @warning the outputBuffer must be deportedData type
+     *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
+     *  @param[out] data Data where store the reading
+     *  @return error eNETWORK_Error type
+    **/
     public eNETWORK_Error readDeportedData( int outputBufferId, NetworkDataRecv data)
     {
         eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
@@ -192,6 +281,14 @@ public class NetworkManager
         return error;
     }
     
+    /**
+     *  Read deported data received with timeout
+     *  @warning the outputBuffer must be deportedData type
+     *  @param[in] outputBufferId identifier of the output buffer in which the data must be read
+     *  @param[out] data Data where store the reading
+     *  @param[in] timeoutMs maximum time in millisecond to wait if there is no data to read
+     *  @return error eNETWORK_Error type
+    **/
     public eNETWORK_Error readDeportedDataWithTimeout( int outputBufferId, NetworkDataRecv data, int timeoutMs)
     {
         eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
@@ -208,16 +305,31 @@ public class NetworkManager
         return error;
     }
     
+    /**
+     *  Get the pointer C on the network manager 
+     *  @return  Pointer C on the network manager 
+    **/
     public long getManager () 
     {
         return mp_manager;
     }
     
+    /**
+     *  Get is the Manager is correctly initialized and if it is usable
+     *  @return true is the Manager is usable
+    **/
     public boolean isCorrectlyInitialized () 
     {
         return m_initOk;
     }
     
+    /**
+     *  CallBack for the status of the data sent or free
+     *  @param[in] IoBufferId identifier of the IoBuffer is calling back
+     *  @param[in] data data sent
+     *  @param[in] status reason of the callback
+     *  @return eNETWORK_CALLBACK_RETURN what do in timeout case
+    **/
     public int callback (int IoBuffer, SALNativeData data, int status) 
     {
         /** -- callback -- */
@@ -250,38 +362,56 @@ public class NetworkManager
 
 }
 
+/**
+ *  Sending Runnable
+**/
 class RunSending implements Runnable
 {
     private static native int nativeManagerRunSendingThread( long jpManager);
     
     long mp_manager;
 
+    /**
+     *  Constructor
+     *  @param[in] pManager Pointer C on the network manager
+    **/
     RunSending(long pManager)
     {
       mp_manager = pManager;
     }
     
+    /**
+     *  Manage the sending of the data
+    **/
     public void run()
     {
        nativeManagerRunSendingThread(mp_manager);
     }
-    
 }
 
+/**
+ *  Reception Runnable
+**/
 class RunReceiving implements Runnable
 {
     private static native int nativeManagerRunReceivingThread( long jpManager);
     
     long mp_manager;
-
+    
+    /**
+     *  Constructor
+     *  @param[in] pManager Pointer C on the network manager
+    **/
     RunReceiving(long pManager)
     {
       mp_manager = pManager;
     }
     
+    /**
+     *  Manage the reception of the data.
+    **/
     public void run()
     {
        nativeManagerRunReceivingThread(mp_manager);
     }
-    
 }
