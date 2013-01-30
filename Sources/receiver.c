@@ -396,33 +396,42 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
     int semError = 0;
     int bufferFreeCellNb = 0;
     
+    /** if the ioBuffer used deportedData*/
     if( pOutBuffer->deportedData )
     {
         bufferFreeCellNb = NETWORK_RingBuffGetFreeCellNb(pOutBuffer->pBuffer);
         
-        /** if the buffer is not full or it is overwriting*/
+        /** if the buffer is not full or it is overwriting */
         if( pOutBuffer->pBuffer->isOverwriting == 1 ||
             bufferFreeCellNb > 0 )
         {
             /** alloc data deported */
             deportedDataTemp.dataSize = pFrame->size - offsetof( network_frame_t,data );
-            deportedDataTemp.pData = malloc( deportedDataTemp.dataSize );
             deportedDataTemp.callback = &(NETWORK_freedeportedData);
             
-            /** copy the data received in the space allocated */
-            memcpy(deportedDataTemp.pData, &(pFrame->data), deportedDataTemp.dataSize);
-            
-            if( bufferFreeCellNb == 0)
+            deportedDataTemp.pData = malloc( deportedDataTemp.dataSize );
+            if(deportedDataTemp.pData == NULL)
             {
-                /** if the buffer is full, free the data deported lost by the overwriting */
+                error = NETWORK_ERROR_ALLOC;
+            }
+            
+            if(error == NETWORK_OK)
+            {
+                /** copy the data received in the space allocated */
+                memcpy(deportedDataTemp.pData, &(pFrame->data), deportedDataTemp.dataSize);
                 
-                /** get the deported Data Overwritten */
-                error = NETWORK_RingBuffPopFront( pOutBuffer->pBuffer, (uint8_t*) &deportedDataOverwritten );
-                /** free the deported Data Overwritten*/
-                deportedDataOverwritten.callback( pOutBuffer->id, 
-                                                  deportedDataOverwritten.pData,
-                                                  deportedDataOverwritten.pCustomData, 
-                                                  NETWORK_CALLBACK_STATUS_FREE);
+                if( bufferFreeCellNb == 0)
+                {
+                    /** if the buffer is full, free the data deported lost by the overwriting */
+                    
+                    /** get the deported Data Overwritten */
+                    error = NETWORK_RingBuffPopFront( pOutBuffer->pBuffer, (uint8_t*) &deportedDataOverwritten );
+                    /** free the deported Data Overwritten*/
+                    deportedDataOverwritten.callback( pOutBuffer->id, 
+                                                      deportedDataOverwritten.pData,
+                                                      deportedDataOverwritten.pCustomData, 
+                                                      NETWORK_CALLBACK_STATUS_FREE);
+                }
             }
             
             if(error == NETWORK_OK)
