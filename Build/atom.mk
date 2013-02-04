@@ -10,6 +10,10 @@ LOCAL_DESCRIPTION := ardrone3 SDK Network Control Library
 
 LOCAL_LIBRARIES := libSAL
 LOCAL_EXPORT_LDLIBS := -lnetwork
+
+#Autotools variables
+LOCAL_AUTOTOOLS_CONFIGURE_ARGS := --with-libSalInstall=""
+
 # User define command to be launch before configure step.
 # Generates files used by configure
 define LOCAL_AUTOTOOLS_CMD_POST_UNPACK
