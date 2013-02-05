@@ -104,9 +104,13 @@ public class NetworkManager
     /**
      *  Destructor
     **/
-    public void finalize () 
+    public void finalize () throws Throwable
     {
-        dispose();
+        try {
+            dispose ();
+        } finally {
+            super.finalize ();
+        }
     }
     
     /**
