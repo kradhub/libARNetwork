@@ -26,10 +26,10 @@ typedef enum eNETWORK_Frame_Type
 /**
  *  @brief frame send by the NETWORK_Manager
 **/
-typedef struct network_frame_t
+typedef struct __attribute__((__packed__)) network_frame_t
 {
-    eNETWORK_Frame_Type type; /**< frame type */
-    uint32_t id; /**< identifier of the buffer sending the frame */
+    uint8_t type; /**< frame type eNETWORK_Frame_Type*/
+    uint8_t id; /**< identifier of the buffer sending the frame */
     uint32_t seq; /**< sequence number of the frame */
     uint32_t size; /**< size of the frame */
     uint8_t  data;  /**< data of the frame */

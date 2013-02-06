@@ -450,24 +450,22 @@ eNETWORK_Error NETWORK_SenderAddToBuffer( network_sender_t* pSender,
     if( error == NETWORK_OK )
     {    
         /** add type */
-        droneEndianInt32 =  htodl( (uint32_t) pInputBuffer->dataType );
-        memcpy( pSender->pSendingBuffer->pFront, &(droneEndianInt32), sizeof(uint32_t));
-        pSender->pSendingBuffer->pFront +=  sizeof(uint32_t) ;
+        memcpy( pSender->pSendingBuffer->pFront, &(pInputBuffer->dataType), sizeof(uint8_t) );
+        pSender->pSendingBuffer->pFront +=  sizeof(uint8_t) ;
         
         /** add id */
-        droneEndianInt32 =  htodl(pInputBuffer->id);
-        memcpy( pSender->pSendingBuffer->pFront, &(droneEndianInt32), sizeof(uint32_t));
-        pSender->pSendingBuffer->pFront +=  sizeof(uint32_t) ;
+        memcpy( pSender->pSendingBuffer->pFront, &(pInputBuffer->id), sizeof(uint8_t) );
+        pSender->pSendingBuffer->pFront +=  sizeof(uint8_t);
         
         /** add seq */
         droneEndianInt32 =  htodl(seqNum);
         memcpy( pSender->pSendingBuffer->pFront, &(droneEndianInt32), sizeof(uint32_t));
-        pSender->pSendingBuffer->pFront +=  sizeof(uint32_t) ;
+        pSender->pSendingBuffer->pFront +=  sizeof(uint32_t);
         
         /** add size */
         droneEndianInt32 =  htodl(sizeNeed); 
         memcpy( pSender->pSendingBuffer->pFront, &(droneEndianInt32), sizeof(uint32_t));
-        pSender->pSendingBuffer->pFront +=  sizeof(uint32_t) ;
+        pSender->pSendingBuffer->pFront +=  sizeof(uint32_t);
         
         /** add data */
         if( pInputBuffer->deportedData )

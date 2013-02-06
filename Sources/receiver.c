@@ -370,6 +370,10 @@ network_frame_t* NETWORK_ReceiverGetNextFrame( network_receiver_t* pReceiver,
         nextFrame = (network_frame_t*) ( (uint8_t*)prevFrame + prevFrame->size ) ;
     }
     
+    /** convert the endianness of the next frame */
+    nextFrame->seq = dtohl( nextFrame->seq ); 
+    nextFrame->size = dtohl( nextFrame->size ); 
+    
     /** if the receiving buffer not contain enough data for the frame head*/
     /** or not contain enough data for the full frame*/
     if ( (uint8_t*) nextFrame > (uint8_t*) pReceiver->pRecvBuffer->pFront - 
@@ -378,7 +382,6 @@ network_frame_t* NETWORK_ReceiverGetNextFrame( network_receiver_t* pReceiver,
     {
         nextFrame = NULL;
     }
-
     
     return nextFrame;
 }
