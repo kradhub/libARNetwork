@@ -31,6 +31,9 @@ typedef enum
     NETWORK_IOBUFFER_ERROR_BAD_ACK,  /**< the sequence number isn't same as that waiting */
     NETWORK_SCOCKET_ERROR = -4000,  /**< socket error unknown */
     NETWORK_SCOCKET_ERROR_PERMISSION_DENIED, /**< Permission denied */
+    NETWORK_RECEIVER_ERROR = -5000, /**< receiver error unknown */
+    NETWORK_RECEIVER_ERROR_BUFFER_END, /**< end of the Receiver Buffer */
+    NETWORK_RECEIVER_ERROR_BAD_FRAME, /**< error bad frame */
     
 } eNETWORK_Error;
 

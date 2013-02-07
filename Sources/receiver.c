@@ -50,13 +50,20 @@
 /**
  *  @brief get the next Frame of the receiving buffer
  *  @param pReceiver the pointer on the receiver
- *  @param prevFrame[in] pointer on the previous frame
- *  @return nextFrame pointer on the next frame
+ *  @param[out] pNextFrame pointer where store the frame
+ *  @return eNETWORK_Error
  *  @pre only call by NETWORK_RunSendingThread()
  *  @see NETWORK_RunSendingThread()
 **/
-network_frame_t* NETWORK_ReceiverGetNextFrame( network_receiver_t* pReceiver,
-                                                 network_frame_t* prevFrame );
+eNETWORK_Error NETWORK_ReceiverGetFrame( network_receiver_t* pReceiver, network_frame_t* pFrame );
+
+/**
+ *  @brief get a Frame from an address
+ *  @param[in] orgPointer address where get the frame
+ *  @param[out] pFrame pointer where store the frame
+ *  @return eNETWORK_Error
+**/
+void NETWORK_getFrameFromAddr( uint8_t* orgPointer, network_frame_t* pFrame );
 
 /**
  *  @brief copy the data received to the output buffer
@@ -79,7 +86,7 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
  *  @return  eNETWORK_CALLBACK_RETURN 
  *  @see eNETWORK_CALLBACK_STATUS
 **/
-eNETWORK_CALLBACK_RETURN NETWORK_freedeportedData(int OutBufferId, 
+eNETWORK_CALLBACK_RETURN NETWORK_freeDeportedData(int OutBufferId, 
                                                       uint8_t* pData, 
                                                       void* pCustomData, 
                                                       eNETWORK_CALLBACK_STATUS status);
@@ -121,6 +128,9 @@ network_receiver_t* NETWORK_NewReceiver( unsigned int recvBufferSize,
             error = NETWORK_ERROR_NEW_BUFFER;
         }
     
+        /** initialize the reading pointer to the start of the buffer  */
+        pReceiver->readingPointer = pReceiver->pRecvBuffer->pStart;
+    
         /** delete the receiver if an error occurred */
         if(error != NETWORK_OK)
         {
@@ -160,30 +170,34 @@ void* NETWORK_RunReceivingThread(void* data)
     
     /** local declarations */
     network_receiver_t* pReceiver = data;
-    network_frame_t* pFrame = NULL;
+    network_frame_t frame ;
     network_ioBuffer_t* pOutBufferTemp = NULL;
     eNETWORK_Error error = NETWORK_OK;
+    int ackSeqNumDAta = 0;
     
     while( pReceiver->isAlive )
     {    
         /** wait a receipt */
         if( NETWORK_ReceiverRead( pReceiver ) > 0 )
         {    
-            /** for each command present in the receiver buffer */        
-            pFrame = NETWORK_ReceiverGetNextFrame(pReceiver, pFrame);
-            while( pFrame != NULL )
+            /** for each frame present in the receiver buffer */ 
+            error = NETWORK_ReceiverGetFrame(pReceiver, &frame);
+            while( error == NETWORK_OK ) 
             {    
                 /** management by the command type */            
-                switch (pFrame->type)
+                switch (/*pFrame->type*/ frame.type)
                 {
                     case NETWORK_FRAME_TYPE_ACK:
                         SAL_PRINT(PRINT_DEBUG, TAG," - TYPE: NETWORK_FRAME_TYPE_ACK | SEQ:%d | ID:%d \n",
-                                                pFrame->seq, pFrame->id);
+                                                    frame.seq, frame.id);
                                                 
+                        /** get the acknowledge sequence number from the data */
+                        memcpy( &ackSeqNumDAta, (uint32_t*) frame.pData, sizeof(uint32_t) );
+                        
                         /** transmit the acknowledgement to the sender */
                         error = NETWORK_SenderAckReceived( pReceiver->pSender,
-                                                           idAckToIdInput(pFrame->id),
-                                                           *( (int*) &pFrame->data ) );
+                                                           idAckToIdInput(frame.id),
+                                                           ackSeqNumDAta );
                         if( error != NETWORK_OK )
                         {
                             switch(error)
@@ -202,14 +216,14 @@ void* NETWORK_RunReceivingThread(void* data)
                     
                     case NETWORK_FRAME_TYPE_DATA:
                         SAL_PRINT(PRINT_DEBUG, TAG," - TYPE: NETWORK_FRAME_TYPE_DATA | SEQ:%d | ID:%d \n",
-                                                pFrame->seq, pFrame->id);
+                                                   frame.seq, frame.id);
                         
                         /** push the data received in the output buffer targeted */
-                        pOutBufferTemp = pReceiver->ppTabOutputMap[ pFrame->id ]; 
+                        pOutBufferTemp = pReceiver->ppTabOutputMap[ frame.id ]; 
                         
                         if(pOutBufferTemp != NULL)
                         {
-                            error = NETWORK_ReceiverCopyDataRecv( pReceiver, pOutBufferTemp, pFrame );
+                            error = NETWORK_ReceiverCopyDataRecv( pReceiver, pOutBufferTemp, &frame );
                             
                             if( error != NETWORK_OK )
                             {
@@ -221,24 +235,25 @@ void* NETWORK_RunReceivingThread(void* data)
                     
                     case NETWORK_FRAME_TYPE_DATA_WITH_ACK:
                         SAL_PRINT(PRINT_DEBUG, TAG," - TYPE: NETWORK_FRAME_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
-                                                    pFrame->seq, pFrame->id);
+                                                    frame.seq, frame.id);
                         
                         /** 
                          * push the data received in the output buffer targeted, 
                          * save the sequence of the command and return an acknowledgement
                         **/
-                        pOutBufferTemp = pReceiver->ppTabOutputMap[ pFrame->id ];
+                        pOutBufferTemp = pReceiver->ppTabOutputMap[ frame.id ];
 
                         if(pOutBufferTemp != NULL)
                         {
                             /** OutBuffer->seqWaitAck used to save the last seq */
-                            if( pFrame->seq != pOutBufferTemp->seqWaitAck )
+                            if( frame.seq != pOutBufferTemp->seqWaitAck )
                             {        
-                                error = NETWORK_ReceiverCopyDataRecv( pReceiver, pOutBufferTemp,
-                                                                          pFrame);
+                                error = NETWORK_ReceiverCopyDataRecv( pReceiver, 
+                                                                      pOutBufferTemp,
+                                                                      &frame);
                                 if( error == NETWORK_OK)
                                 {
-                                    pOutBufferTemp->seqWaitAck = pFrame->seq;
+                                    pOutBufferTemp->seqWaitAck = frame.seq;
                                 }
                                 else
                                 {
@@ -247,18 +262,18 @@ void* NETWORK_RunReceivingThread(void* data)
                             }
                             
                             /** sending ack even if the seq is not correct */
-                            NETWORK_ReturnACK(pReceiver, pFrame->id, pFrame->seq);
+                            NETWORK_ReturnACK(pReceiver, frame.id, frame.seq);
                             
                         }    
                                                 
                     break;
                     
                     default:
-                        SAL_PRINT(PRINT_WARNING, TAG," !!! command type not known !!! \n");
+                        SAL_PRINT(PRINT_WARNING, TAG," !!! command type: %d not known  !!! \n", frame.type); //!!!!
                     break;
                 }
                 /** get the next frame*/
-                pFrame = NETWORK_ReceiverGetNextFrame(pReceiver, pFrame);
+                error = NETWORK_ReceiverGetFrame(pReceiver, &frame);
             }
             NETWORK_BufferClean(pReceiver->pRecvBuffer);
         }
@@ -351,39 +366,86 @@ eNETWORK_Error NETWORK_ReceiverBind( network_receiver_t* pReceiver, unsigned sho
  *
 ******************************************/
 
-network_frame_t* NETWORK_ReceiverGetNextFrame( network_receiver_t* pReceiver, 
-                                                 network_frame_t* prevFrame )
+eNETWORK_Error NETWORK_ReceiverGetFrame( network_receiver_t* pReceiver, network_frame_t* pFrame )
 {
-    /** -- get the next Frame of the receiving buffer -- */
+    /** -- get a Frame of the receiving buffer -- */
     
     /** local declarations */
-    network_frame_t* nextFrame = NULL;
+    eNETWORK_Error error = NETWORK_OK;
     
-    if (prevFrame == NULL)
+    /** if the receiving buffer not contain enough data for the frame head*/
+    if( pReceiver->readingPointer > pReceiver->pRecvBuffer->pFront - offsetof(network_frame_t, pData ) )
     {
-        /** if no previous frame, get the first frame of the receiving buffer */
-        nextFrame = (network_frame_t*) pReceiver->pRecvBuffer->pStart;
+        if( pReceiver->readingPointer == pReceiver->pRecvBuffer->pFront)
+        {
+            error = NETWORK_RECEIVER_ERROR_BUFFER_END;
+        }
+        else
+        {
+            error = NETWORK_RECEIVER_ERROR_BAD_FRAME;
+        }
+    }
+    
+    if( error == NETWORK_OK )
+    {
+        /** get the frame from the reading address */
+        NETWORK_getFrameFromAddr( pReceiver->readingPointer, pFrame );
+        
+        /** if the receiving buffer not contain enough data for the full frame */
+        if ( pReceiver->readingPointer > pReceiver->pRecvBuffer->pFront - pFrame->size )
+        {
+            error = NETWORK_RECEIVER_ERROR_BAD_FRAME;
+        }
+    }
+    
+    if( error == NETWORK_OK )
+    {
+        /** offset the readingPointer on the next frame */
+        pReceiver->readingPointer = ( pReceiver->readingPointer + pFrame->size );
     }
     else
     {
-        /** get the next frame */
-        nextFrame = (network_frame_t*) ( (uint8_t*)prevFrame + prevFrame->size ) ;
+        /** reset the reading pointer to the start of the buffer */
+        pReceiver->readingPointer = pReceiver->pRecvBuffer->pStart;
+        
+        /** reset pFrame */
+        pFrame->type = NETWORK_FRAME_TYPE_UNINITIALIZED;
+        pFrame->id = 0;
+        pFrame->seq = 0;
+        pFrame->size = 0;
+        pFrame->pData = NULL;
     }
+                
+    return error;
+}
+
+void NETWORK_getFrameFromAddr( uint8_t* orgPointer, network_frame_t* pFrame )
+{
+    /** local declarations */
+    uint8_t* tempPointer = orgPointer;
     
-    /** convert the endianness of the next frame */
-    nextFrame->seq = dtohl( nextFrame->seq ); 
-    nextFrame->size = dtohl( nextFrame->size ); 
+    /** get type */
+    memcpy( &(pFrame->type), tempPointer, sizeof(uint8_t) );
+    tempPointer +=  sizeof(uint8_t) ;
     
-    /** if the receiving buffer not contain enough data for the frame head*/
-    /** or not contain enough data for the full frame*/
-    if ( (uint8_t*) nextFrame > (uint8_t*) pReceiver->pRecvBuffer->pFront - 
-                                                            offsetof(network_frame_t, data) ||
-         (uint8_t*) nextFrame > (uint8_t*) pReceiver->pRecvBuffer->pFront - nextFrame->size    )
-    {
-        nextFrame = NULL;
-    }
+    /** get id */
+    memcpy( &(pFrame->id), tempPointer, sizeof(uint8_t) );
+    tempPointer +=  sizeof(uint8_t);
     
-    return nextFrame;
+    /** get seq */
+    memcpy( &(pFrame->seq), tempPointer, sizeof(uint32_t));
+    tempPointer +=  sizeof(uint32_t);
+    /** convert the endianness */
+    pFrame->seq = dtohl( pFrame->seq );
+    
+    /** get size */
+    memcpy( &(pFrame->size), tempPointer, sizeof(uint32_t));
+    tempPointer +=  sizeof(uint32_t);
+    /** convert the endianness */
+    pFrame->size = dtohl( pFrame->size );
+    
+    /** data address */
+    pFrame->pData = tempPointer;
 }
 
 eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
@@ -399,7 +461,7 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
     int semError = 0;
     int bufferFreeCellNb = 0;
     
-    /** if the ioBuffer used deportedData*/
+    /** if the ioBuffer used deportedData */
     if( pOutBuffer->deportedData )
     {
         bufferFreeCellNb = NETWORK_RingBuffGetFreeCellNb(pOutBuffer->pBuffer);
@@ -409,8 +471,8 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
             bufferFreeCellNb > 0 )
         {
             /** alloc data deported */
-            deportedDataTemp.dataSize = pFrame->size - offsetof( network_frame_t,data );
-            deportedDataTemp.callback = &(NETWORK_freedeportedData);
+            deportedDataTemp.dataSize = pFrame->size - offsetof( network_frame_t, pData );
+            deportedDataTemp.callback = &(NETWORK_freeDeportedData);
             
             deportedDataTemp.pData = malloc( deportedDataTemp.dataSize );
             if(deportedDataTemp.pData == NULL)
@@ -421,7 +483,7 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
             if(error == NETWORK_OK)
             {
                 /** copy the data received in the space allocated */
-                memcpy(deportedDataTemp.pData, &(pFrame->data), deportedDataTemp.dataSize);
+                memcpy(deportedDataTemp.pData, pFrame->pData, deportedDataTemp.dataSize);
                 
                 if( bufferFreeCellNb == 0)
                 {
@@ -429,7 +491,7 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
                     
                     /** get the deported Data Overwritten */
                     error = NETWORK_RingBuffPopFront( pOutBuffer->pBuffer, (uint8_t*) &deportedDataOverwritten );
-                    /** free the deported Data Overwritten*/
+                    /** free the deported Data Overwritten */
                     deportedDataOverwritten.callback( pOutBuffer->id, 
                                                       deportedDataOverwritten.pData,
                                                       deportedDataOverwritten.pCustomData, 
@@ -451,7 +513,7 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
     else
     {
         /** push the data received in the output buffer targeted */
-        error = NETWORK_RingBuffPushBack( pOutBuffer->pBuffer, &(pFrame->data) );
+        error = NETWORK_RingBuffPushBack( pOutBuffer->pBuffer, pFrame->pData );
     }
     
     if(error == NETWORK_OK)
@@ -468,7 +530,7 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
     return error;
 }
 
-eNETWORK_CALLBACK_RETURN NETWORK_freedeportedData(int OutBufferId,
+eNETWORK_CALLBACK_RETURN NETWORK_freeDeportedData(int OutBufferId,
                                                       uint8_t* pData, 
                                                       void* pCustomData, 
                                                       eNETWORK_CALLBACK_STATUS status)

@@ -12,7 +12,7 @@
 #include "sender.h"
 #include "buffer.h"
 
-#define NETWORK_ID_ACK_OFFSET 128 //1024
+#define NETWORK_ID_ACK_OFFSET 128
 
 /**
  *  @brief receiver manager
@@ -27,6 +27,8 @@ typedef struct
     int numOfOutputBuff; /**< Number of output buffer*/
     int socket; /**< receiving Socket. Must be accessed through NETWORK_ReceiverBind()*/
     network_ioBuffer_t** ppTabOutputMap; /**< address of the table storing the outputBuffers by their identifier */
+    
+    uint8_t* readingPointer; /** head of reading on the RecvBuffer */
     
     int isAlive; /**< Indicator of aliving used for kill the thread calling the NETWORK_RunReceivingThread function (1 = alive | 0 = dead). Must be accessed through NETWORK_StopReceiver()*/
     

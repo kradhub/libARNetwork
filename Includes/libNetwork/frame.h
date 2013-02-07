@@ -32,7 +32,7 @@ typedef struct __attribute__((__packed__)) network_frame_t
     uint8_t id; /**< identifier of the buffer sending the frame */
     uint32_t seq; /**< sequence number of the frame */
     uint32_t size; /**< size of the frame */
-    uint8_t  data;  /**< data of the frame */
+    uint8_t*  pData;  /**< pointer on the data of the frame */
 }network_frame_t;
 
 

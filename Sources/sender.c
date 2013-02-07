@@ -438,7 +438,7 @@ eNETWORK_Error NETWORK_SenderAddToBuffer( network_sender_t* pSender,
     if( error == NETWORK_OK )
     {
         /** calculate the size needed */
-        sizeNeed = offsetof(network_frame_t, data) + dataSize;
+        sizeNeed = offsetof(network_frame_t, pData) + dataSize;
         
         /** check the size free */
         if( NETWORK_BufferGetFreeCellNb(pSender->pSendingBuffer) < sizeNeed )
@@ -487,7 +487,7 @@ eNETWORK_Error NETWORK_SenderAddToBuffer( network_sender_t* pSender,
         else
         {
             /** if the adding of the data is failed, decrement the front of the SendingBuffer */
-            pSender->pSendingBuffer->pFront -= offsetof(network_frame_t, data);
+            pSender->pSendingBuffer->pFront -= offsetof(network_frame_t, pData);
         }
         
     }

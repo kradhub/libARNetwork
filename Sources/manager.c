@@ -435,7 +435,7 @@ eNETWORK_Error NETWORK_ManagerSendDeportedData( network_manager_t* pManager, int
         if( pInputBuffer->deportedData && 
             pData != NULL && 
             callback != NULL &&  
-            dataSize < ( pManager->pSender->pSendingBuffer->numberOfCell - offsetof(network_frame_t, data) ) )
+            dataSize < ( pManager->pSender->pSendingBuffer->numberOfCell - offsetof(network_frame_t, pData) ) )
         {
             /** initialize deportedDataTemp and push it in the InputBuffer */
             deportedDataTemp.pData = pData;
@@ -898,7 +898,7 @@ eNETWORK_Error NETWORK_ManagerCreateIoBuffer( network_manager_t* pManager,
         /**     id is smaller than the id acknowledge offset */
         /**     dataSize isn't too big */
         if( ptabParamInput[ii].id >= NETWORK_ID_ACK_OFFSET && 
-            ptabParamInput[ii].cellSize >= ( sendBufferSize - offsetof(network_frame_t, data) ))
+            ptabParamInput[ii].cellSize >= ( sendBufferSize - offsetof(network_frame_t, pData ) )) 
         {
             error = NETWORK_ERROR_BAD_PARAMETER;
         }
