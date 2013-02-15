@@ -20,8 +20,8 @@
  ******************************************/
 
 #include <stdlib.h>
-#include <libSAL/print.h>
-#include <libSAL/thread.h>
+#include <libARSAL/ARSAL_Print.h>
+#include <libARSAL/ARSAL_Thread.h>
 
 #include <string.h>
 
@@ -85,10 +85,10 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
     /** local declarations */
     network_manager_t* pManager1= NULL;
     network_manager_t* pManager2= NULL;
-    sal_thread_t thread_send1 = NULL;
-    sal_thread_t thread_recv1 = NULL;
-    sal_thread_t thread_send2 = NULL;
-    sal_thread_t thread_recv2 = NULL;
+    ARSAL_Thread_t thread_send1 = NULL;
+    ARSAL_Thread_t thread_recv1 = NULL;
+    ARSAL_Thread_t thread_send2 = NULL;
+    ARSAL_Thread_t thread_recv2 = NULL;
     
     int ii = 0;
     int error = 0;
@@ -227,11 +227,11 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
     
     
     /** create the threads */
-    sal_thread_create(&(thread_recv2), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager2);
-    sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager1);
+    ARSAL_Thread_Create(&(thread_recv2), (ARSAL_Thread_Routine_t) NETWORK_ManagerRunReceivingThread, pManager2);
+    ARSAL_Thread_Create(&(thread_recv1), (ARSAL_Thread_Routine_t) NETWORK_ManagerRunReceivingThread, pManager1);
     
-    sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager1);
-    sal_thread_create(&thread_send2, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager2);
+    ARSAL_Thread_Create(&thread_send1, (ARSAL_Thread_Routine_t) NETWORK_ManagerRunSendingThread, pManager1);
+    ARSAL_Thread_Create(&thread_send2, (ARSAL_Thread_Routine_t) NETWORK_ManagerRunSendingThread, pManager2);
     
     
     /** loop sending data */
@@ -302,21 +302,21 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
     //kill all thread
     if(thread_send1 != NULL)
     {
-        sal_thread_join(&(thread_send1), NULL);
+        ARSAL_Thread_Join(&(thread_send1), NULL);
     }
     if(thread_send2 != NULL)
     {
-        sal_thread_join(&(thread_send2), NULL);
+        ARSAL_Thread_Join(&(thread_send2), NULL);
     }
     
     if(thread_recv1 != NULL)
     {
-        sal_thread_join(&(thread_recv1), NULL);
+        ARSAL_Thread_Join(&(thread_recv1), NULL);
     }
     
     if(thread_recv2 != NULL)
     {
-        sal_thread_join(&(thread_recv2), NULL);
+        ARSAL_Thread_Join(&(thread_recv2), NULL);
     }
     
     
@@ -410,10 +410,10 @@ int callBackDepotData(int OutBufferId, void* pData, int status);
     NSLog(@"end \n");
     
     /** delete */
-    sal_thread_destroy(&thread_send1);
-    sal_thread_destroy(&thread_send2);
-    sal_thread_destroy(&thread_recv1);
-    sal_thread_destroy(&thread_recv2);
+    ARSAL_Thread_Destroy(&thread_send1);
+    ARSAL_Thread_Destroy(&thread_send2);
+    ARSAL_Thread_Destroy(&thread_recv1);
+    ARSAL_Thread_Destroy(&thread_recv2);
     NETWORK_DeleteManager( &pManager1 );
     NETWORK_DeleteManager( &pManager2 );
     

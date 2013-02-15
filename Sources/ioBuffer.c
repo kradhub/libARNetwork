@@ -12,8 +12,8 @@
 ******************************************/
 
 #include <stdlib.h>
-#include <libSAL/print.h>
-#include <libSAL/mutex.h>
+#include <libARSAL/ARSAL_Print.h>
+#include <libARSAL/ARSAL_Mutex.h>
 
 #include <libNetwork/status.h>
 #include "ringBuffer.h"
@@ -51,8 +51,8 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
     { 
         /** Initialize to default values */
         pIoBuffer->pBuffer = NULL;
-        sal_mutex_init( &(pIoBuffer->mutex) );
-        sal_sem_init( &(pIoBuffer->outputSem), 1, 0);
+        ARSAL_Mutex_Init( &(pIoBuffer->mutex) );
+        ARSAL_Sem_Init( &(pIoBuffer->outputSem), 1, 0);
         
         if( NETWORK_ParamNewIoBufferCheck( pParam ) )
         {
@@ -104,7 +104,7 @@ network_ioBuffer_t* NETWORK_NewIoBuffer( const network_paramNewIoBuffer_t* pPara
         if( error )
         {
             /** delete the inOutput buffer if an error occurred */
-            SAL_PRINT(PRINT_ERROR, TAG,"error: %d occurred \n", error );
+            ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG,"error: %d occurred \n", error );
             NETWORK_DeleteIoBuffer(&pIoBuffer);
         }
     }
@@ -125,8 +125,8 @@ void NETWORK_DeleteIoBuffer( network_ioBuffer_t** ppIoBuffer )
         
         if(pIoBuffer)
         {    
-            sal_mutex_destroy( &(pIoBuffer->mutex) );
-            sal_sem_destroy( &(pIoBuffer->outputSem) );
+            ARSAL_Mutex_Destroy( &(pIoBuffer->mutex) );
+            ARSAL_Sem_Destroy( &(pIoBuffer->outputSem) );
             
             if(pIoBuffer->deportedData)
             {
@@ -151,7 +151,7 @@ eNETWORK_Error NETWORK_IoBufferAckReceived( network_ioBuffer_t* pIoBuffer, int s
     /** local declarations */
     eNETWORK_Error error = NETWORK_OK;
     
-    sal_mutex_lock( &(pIoBuffer->mutex) );
+    ARSAL_Mutex_Lock( &(pIoBuffer->mutex) );
     
     /** delete the data if the sequence number received is same as the sequence number expected */
     if( pIoBuffer->isWaitAck && pIoBuffer->seqWaitAck == seqNum )
@@ -164,7 +164,7 @@ eNETWORK_Error NETWORK_IoBufferAckReceived( network_ioBuffer_t* pIoBuffer, int s
         error = NETWORK_IOBUFFER_ERROR_BAD_ACK;
     }
     
-    sal_mutex_unlock(&(pIoBuffer->mutex));
+    ARSAL_Mutex_Unlock(&(pIoBuffer->mutex));
     
     return error;
 }
@@ -176,11 +176,11 @@ int NETWORK_IoBufferIsWaitAck(    network_ioBuffer_t* pIoBuffer)
     /** local declarations */
     int isWaitAckCpy = 0;
     
-    sal_mutex_lock(&(pIoBuffer->mutex));
+    ARSAL_Mutex_Lock(&(pIoBuffer->mutex));
     
     isWaitAckCpy = pIoBuffer->isWaitAck;
     
-    sal_mutex_unlock(&(pIoBuffer->mutex));
+    ARSAL_Mutex_Unlock(&(pIoBuffer->mutex));
     
     return isWaitAckCpy;
 }
@@ -245,7 +245,7 @@ eNETWORK_Error NETWORK_IoBufferFlush( network_ioBuffer_t* pIoBuffer )
     /** local declarations */
     eNETWORK_Error error = NETWORK_OK;
     
-    sal_mutex_lock( &(pIoBuffer->mutex) );
+    ARSAL_Mutex_Lock( &(pIoBuffer->mutex) );
     
     /**  delete all data */
     while(error == NETWORK_OK)
@@ -267,10 +267,10 @@ eNETWORK_Error NETWORK_IoBufferFlush( network_ioBuffer_t* pIoBuffer )
     pIoBuffer->retryCount = 0;
     
     /** reset semaphore */
-    sal_sem_destroy( &(pIoBuffer->outputSem) );
-    sal_sem_init( &(pIoBuffer->outputSem), 1, 0);
+    ARSAL_Sem_Destroy( &(pIoBuffer->outputSem) );
+    ARSAL_Sem_Init( &(pIoBuffer->outputSem), 1, 0);
     
-    sal_mutex_unlock(&(pIoBuffer->mutex));
+    ARSAL_Mutex_Unlock(&(pIoBuffer->mutex));
     
     return error; 
 }

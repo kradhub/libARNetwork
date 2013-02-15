@@ -12,7 +12,7 @@
 ******************************************/
 
 #include <stdlib.h>
-#include <libSAL/print.h>
+#include <libARSAL/ARSAL_Print.h>
 
 #include <libNetwork/status.h>
 
@@ -91,7 +91,7 @@ int NETWORK_ParamNewIoBufferCheck( const network_paramNewIoBuffer_t* pParam )
     }
     else
     {
-        SAL_PRINT(PRINT_ERROR, TAG," parameters for new IoBuffer are not correct. \n \
+        ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG," parameters for new IoBuffer are not correct. \n \
 values expected: \n \
     - id > -1 (value set: %d)\n\
     - dataType != NETWORK_FRAME_TYPE_UNINITIALIZED (value set: %d)\n\

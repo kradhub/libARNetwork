@@ -15,8 +15,8 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include <libSAL/print.h>
-#include <libSAL/mutex.h>
+#include <libARSAL/ARSAL_Print.h>
+#include <libARSAL/ARSAL_Mutex.h>
 
 #include "buffer.h"
 
@@ -84,11 +84,11 @@ void NETWORK_BufferPrint(network_buffer_t* pBuffer)
 {    
     /** -- Print the state of the buffer -- */
     
-    SAL_PRINT(PRINT_WARNING, TAG," pointer dataBuffer :%d \n",pBuffer->pStart);
-    SAL_PRINT(PRINT_WARNING, TAG," numberOfCell :%d \n",pBuffer->numberOfCell);
-    SAL_PRINT(PRINT_WARNING, TAG," cellSize :%d \n",pBuffer->cellSize);
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG," pointer dataBuffer :%d \n",pBuffer->pStart);
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG," numberOfCell :%d \n",pBuffer->numberOfCell);
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG," cellSize :%d \n",pBuffer->cellSize);
     
-    SAL_PRINT(PRINT_WARNING, TAG," data : \n");
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG," data : \n");
 
     NETWORK_BufferDataPrint(pBuffer);
 }
@@ -104,12 +104,12 @@ void NETWORK_BufferDataPrint(network_buffer_t* pBuffer)
     
     while( it < itEnd )
     {
-        SAL_PRINT(PRINT_WARNING, TAG,"    - 0x: ");
+        ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG,"    - 0x: ");
         for(ii = 0 ; ii < pBuffer->cellSize ; ++ii)
         {
-            SAL_PRINT(PRINT_WARNING, TAG,"%2x | ",*((uint8_t*)it));
+            ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG,"%2x | ",*((uint8_t*)it));
             ++it;
         }
-        SAL_PRINT(PRINT_WARNING, TAG,"\n");
+        ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG,"\n");
     }
 }

@@ -8,7 +8,7 @@
 #ifndef _NETWORK_RINGBUFFER_H_
 #define _NETWORK_RINGBUFFER_H_
 
-#include <libSAL/mutex.h>
+#include <libARSAL/ARSAL_Mutex.h>
 #include <inttypes.h>
 
 /**
@@ -26,7 +26,7 @@ typedef struct network_ringBuffer_t
     unsigned int indexInput; /**< Index of the data input*/
     unsigned int indexOutput; /**< Index of the data output*/
     
-    sal_mutex_t mutex; /**< Mutex to take before to use the ringBuffer*/
+    ARSAL_Mutex_t mutex; /**< Mutex to take before to use the ringBuffer*/
 
 }network_ringBuffer_t;
 

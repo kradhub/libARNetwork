@@ -19,11 +19,11 @@
 
 #include <string.h>
 
-#include <libSAL/print.h>
-#include <libSAL/mutex.h>
-#include <libSAL/sem.h>
-#include <libSAL/socket.h>
-#include <libSAL/endianness.h>
+#include <libARSAL/ARSAL_Print.h>
+#include <libARSAL/ARSAL_Mutex.h>
+#include <libARSAL/ARSAL_Sem.h>
+#include <libARSAL/ARSAL_Socket.h>
+#include <libARSAL/ARSAL_Endianness.h>
 
 #include <libNetwork/status.h>
 #include <libNetwork/frame.h>
@@ -134,7 +134,7 @@ network_receiver_t* NETWORK_NewReceiver( unsigned int recvBufferSize,
         /** delete the receiver if an error occurred */
         if(error != NETWORK_OK)
         {
-            SAL_PRINT(PRINT_ERROR, TAG,"error: %d occurred \n", error );
+            ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG,"error: %d occurred \n", error );
             NETWORK_DeleteReceiver(&pReceiver);
         }
     }
@@ -188,7 +188,7 @@ void* NETWORK_RunReceivingThread(void* data)
                 switch (/*pFrame->type*/ frame.type)
                 {
                     case NETWORK_FRAME_TYPE_ACK:
-                        SAL_PRINT(PRINT_DEBUG, TAG," - TYPE: NETWORK_FRAME_TYPE_ACK | SEQ:%d | ID:%d \n",
+                        ARSAL_PRINT(ARSAL_PRINT_DEBUG, TAG," - TYPE: NETWORK_FRAME_TYPE_ACK | SEQ:%d | ID:%d \n",
                                                     frame.seq, frame.id);
                                                 
                         /** get the acknowledge sequence number from the data */
@@ -203,11 +203,11 @@ void* NETWORK_RunReceivingThread(void* data)
                             switch(error)
                             {
                                 case NETWORK_IOBUFFER_ERROR_BAD_ACK:
-                                    SAL_PRINT(PRINT_DEBUG, TAG,"Bad acknowledge, error: %d occurred \n", error);
+                                    ARSAL_PRINT(ARSAL_PRINT_DEBUG, TAG,"Bad acknowledge, error: %d occurred \n", error);
                                 break;
                                 
                                 default:
-                                    SAL_PRINT(PRINT_ERROR, TAG,"acknowledge received, error: %d occurred \n", error);
+                                    ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG,"acknowledge received, error: %d occurred \n", error);
                                 break;
                             }
                         }
@@ -215,7 +215,7 @@ void* NETWORK_RunReceivingThread(void* data)
                     break;
                     
                     case NETWORK_FRAME_TYPE_DATA:
-                        SAL_PRINT(PRINT_DEBUG, TAG," - TYPE: NETWORK_FRAME_TYPE_DATA | SEQ:%d | ID:%d \n",
+                        ARSAL_PRINT(ARSAL_PRINT_DEBUG, TAG," - TYPE: NETWORK_FRAME_TYPE_DATA | SEQ:%d | ID:%d \n",
                                                    frame.seq, frame.id);
                         
                         /** push the data received in the output buffer targeted */
@@ -227,14 +227,14 @@ void* NETWORK_RunReceivingThread(void* data)
                             
                             if( error != NETWORK_OK )
                             {
-                                SAL_PRINT(PRINT_ERROR, TAG,"data received, error: %d occurred \n", error);
+                                ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG,"data received, error: %d occurred \n", error);
                             }
                             
                         }                            
                     break;
                     
                     case NETWORK_FRAME_TYPE_DATA_WITH_ACK:
-                        SAL_PRINT(PRINT_DEBUG, TAG," - TYPE: NETWORK_FRAME_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
+                        ARSAL_PRINT(ARSAL_PRINT_DEBUG, TAG," - TYPE: NETWORK_FRAME_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d \n", 
                                                     frame.seq, frame.id);
                         
                         /** 
@@ -257,7 +257,7 @@ void* NETWORK_RunReceivingThread(void* data)
                                 }
                                 else
                                 {
-                                    SAL_PRINT(PRINT_ERROR, TAG,"data acknowledgeed received, error: %d occurred \n", error);
+                                    ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG,"data acknowledgeed received, error: %d occurred \n", error);
                                 }
                             }
                             
@@ -269,7 +269,7 @@ void* NETWORK_RunReceivingThread(void* data)
                     break;
                     
                     default:
-                        SAL_PRINT(PRINT_WARNING, TAG," !!! command type: %d not known  !!! \n", frame.type); //!!!!
+                        ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG," !!! command type: %d not known  !!! \n", frame.type); //!!!!
                     break;
                 }
                 /** get the next frame*/
@@ -279,7 +279,7 @@ void* NETWORK_RunReceivingThread(void* data)
         }
     }
 
-    sal_close(pReceiver->socket);
+    ARSAL_Socket_Close(pReceiver->socket);
        
     return NULL;
 }
@@ -309,7 +309,7 @@ int NETWORK_ReceiverRead(network_receiver_t* pReceiver)
     /** -- receiving data present on the socket -- */
     
     /** local declarations */
-    int readDataSize =  sal_recv( pReceiver->socket, pReceiver->pRecvBuffer->pStart,
+    int readDataSize =  ARSAL_Socket_Recv( pReceiver->socket, pReceiver->pRecvBuffer->pStart,
                                   pReceiver->pRecvBuffer->numberOfCell, 0);
     if(readDataSize > 0)
     {
@@ -334,14 +334,14 @@ eNETWORK_Error NETWORK_ReceiverBind( network_receiver_t* pReceiver, unsigned sho
     recvSin.sin_family = AF_INET;
     recvSin.sin_port = htons(port);
     
-    pReceiver->socket = sal_socket( AF_INET, SOCK_DGRAM, 0 );
+    pReceiver->socket = ARSAL_Socket_Create( AF_INET, SOCK_DGRAM, 0 );
     
     /** set the socket timeout */
     timeout.tv_sec = timeoutSec;
     timeout.tv_usec = 0; 
-    sal_setsockopt(pReceiver->socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
+    ARSAL_Socket_Setsockopt(pReceiver->socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
     
-    errorBind = sal_bind(pReceiver->socket, (struct sockaddr*)&recvSin, sizeof(recvSin));
+    errorBind = ARSAL_Socket_Bind(pReceiver->socket, (struct sockaddr*)&recvSin, sizeof(recvSin));
     
     if( errorBind !=0 )
     {
@@ -519,7 +519,7 @@ eNETWORK_Error NETWORK_ReceiverCopyDataRecv( network_receiver_t* pReceiver,
     if(error == NETWORK_OK)
     {
         /** post a semaphore to indicate data ready to be read */
-        semError = sal_sem_post( &(pOutBuffer->outputSem) );
+        semError = ARSAL_Sem_Post( &(pOutBuffer->outputSem) );
         
         if( semError )
         {

@@ -15,8 +15,8 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include <libSAL/print.h>
-#include <libSAL/mutex.h>
+#include <libARSAL/ARSAL_Print.h>
+#include <libARSAL/ARSAL_Mutex.h>
 
 #include <libNetwork/status.h>
 
@@ -58,7 +58,7 @@ network_ringBuffer_t* NETWORK_NewRingBufferWithOverwriting( unsigned int numberO
         pRingBuff->indexInput = 0;
         pRingBuff->indexOutput = 0;
         pRingBuff->isOverwriting = isOverwriting;
-        sal_mutex_init( &(pRingBuff->mutex) );
+        ARSAL_Mutex_Init( &(pRingBuff->mutex) );
         pRingBuff->dataBuffer = malloc( cellSize * numberOfCell );
         
         if( pRingBuff->dataBuffer == NULL)
@@ -83,7 +83,7 @@ void NETWORK_DeleteRingBuffer( network_ringBuffer_t** ppRingBuff )
         
         if(pRingBuff)
         {
-            sal_mutex_destroy(&(pRingBuff->mutex));
+            ARSAL_Mutex_Destroy(&(pRingBuff->mutex));
             free(pRingBuff->dataBuffer);
             pRingBuff->dataBuffer = NULL;
         
@@ -102,7 +102,7 @@ eNETWORK_Error NETWORK_RingBuffPushBack( network_ringBuffer_t* pRingBuff, const 
     int error = NETWORK_OK;
     uint8_t* buffPointor = NULL;
     
-    sal_mutex_lock(&(pRingBuff->mutex));
+    ARSAL_Mutex_Lock(&(pRingBuff->mutex));
     
     if( NETWORK_RingBuffGetFreeCellNb(pRingBuff) || pRingBuff->isOverwriting)
     {    
@@ -123,7 +123,7 @@ eNETWORK_Error NETWORK_RingBuffPushBack( network_ringBuffer_t* pRingBuff, const 
         error = NETWORK_ERROR_BUFFER_SIZE;
     }
     
-    sal_mutex_unlock(&(pRingBuff->mutex));
+    ARSAL_Mutex_Unlock(&(pRingBuff->mutex));
 
     return error;
 }
@@ -136,7 +136,7 @@ eNETWORK_Error NETWORK_RingBuffPopFront( network_ringBuffer_t* pRingBuff, uint8_
     uint8_t* buffPointor = NULL;
     eNETWORK_Error error = NETWORK_OK;
     
-    sal_mutex_lock(&(pRingBuff->mutex));
+    ARSAL_Mutex_Lock(&(pRingBuff->mutex));
     
     if( !NETWORK_RingBuffIsEmpty(pRingBuff) )
     {
@@ -155,7 +155,7 @@ eNETWORK_Error NETWORK_RingBuffPopFront( network_ringBuffer_t* pRingBuff, uint8_
         error = NETWORK_ERROR_BUFFER_EMPTY;
     }
     
-    sal_mutex_unlock(&(pRingBuff->mutex));
+    ARSAL_Mutex_Unlock(&(pRingBuff->mutex));
     
     return error;
 }
@@ -168,7 +168,7 @@ eNETWORK_Error NETWORK_RingBuffFront(network_ringBuffer_t* pRingBuff, uint8_t* p
     eNETWORK_Error error = NETWORK_OK;
     uint8_t* buffPointor = NULL;
                     
-    sal_mutex_lock(&(pRingBuff->mutex));
+    ARSAL_Mutex_Lock(&(pRingBuff->mutex));
     
     buffPointor = pRingBuff->dataBuffer + 
                     (pRingBuff->indexOutput % (pRingBuff->numberOfCell * pRingBuff->cellSize) );
@@ -182,7 +182,7 @@ eNETWORK_Error NETWORK_RingBuffFront(network_ringBuffer_t* pRingBuff, uint8_t* p
         error = NETWORK_ERROR_BUFFER_SIZE;
     }
     
-    sal_mutex_unlock(&(pRingBuff->mutex));
+    ARSAL_Mutex_Unlock(&(pRingBuff->mutex));
     
     return error;
 }
@@ -191,17 +191,17 @@ void NETWORK_RingBuffPrint(network_ringBuffer_t* pRingBuff)
 {
     /** -- Print the state of the ring buffer -- */
     
-    sal_mutex_lock(&(pRingBuff->mutex));
+    ARSAL_Mutex_Lock(&(pRingBuff->mutex));
     
-    SAL_PRINT(PRINT_WARNING, TAG," pointer dataBuffer :%d \n",pRingBuff->dataBuffer);
-    SAL_PRINT(PRINT_WARNING, TAG," numberOfCell :%d \n",pRingBuff->numberOfCell);
-    SAL_PRINT(PRINT_WARNING, TAG," cellSize :%d \n",pRingBuff->cellSize);
-    SAL_PRINT(PRINT_WARNING, TAG," indexOutput :%d \n",pRingBuff->indexOutput);
-    SAL_PRINT(PRINT_WARNING, TAG," indexInput :%d \n",pRingBuff->indexInput);
-    SAL_PRINT(PRINT_WARNING, TAG," overwriting :%d \n",pRingBuff->isOverwriting);
-    SAL_PRINT(PRINT_WARNING, TAG," data : \n");
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG," pointer dataBuffer :%d \n",pRingBuff->dataBuffer);
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG," numberOfCell :%d \n",pRingBuff->numberOfCell);
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG," cellSize :%d \n",pRingBuff->cellSize);
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG," indexOutput :%d \n",pRingBuff->indexOutput);
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG," indexInput :%d \n",pRingBuff->indexInput);
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG," overwriting :%d \n",pRingBuff->isOverwriting);
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG," data : \n");
     
-    sal_mutex_unlock(&(pRingBuff->mutex));
+    ARSAL_Mutex_Unlock(&(pRingBuff->mutex));
     
     NETWORK_RingBuffDataPrint(pRingBuff);
 }
@@ -215,7 +215,7 @@ void NETWORK_RingBuffDataPrint(network_ringBuffer_t* pRingBuff)
     int  iindex = 0;
     int  ii = 0;
     
-    sal_mutex_lock(&(pRingBuff->mutex));
+    ARSAL_Mutex_Lock(&(pRingBuff->mutex));
     
     for( iindex = pRingBuff->indexOutput ; 
          iindex < pRingBuff->indexInput ;
@@ -223,14 +223,14 @@ void NETWORK_RingBuffDataPrint(network_ringBuffer_t* pRingBuff)
     {
         it = pRingBuff->dataBuffer + (iindex % (pRingBuff->numberOfCell * pRingBuff->cellSize) );
         
-        SAL_PRINT(PRINT_WARNING, TAG,"    - 0x: ");
+        ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG,"    - 0x: ");
         for(ii = 0 ; ii < pRingBuff->cellSize ; ++ii)
         {
-            SAL_PRINT(PRINT_WARNING, TAG,"%2x | ",*((uint8_t*)it));
+            ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG,"%2x | ",*((uint8_t*)it));
             ++it;
         }
-        SAL_PRINT(PRINT_WARNING, TAG,"\n");
+        ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG,"\n");
     }
     
-    sal_mutex_unlock(&(pRingBuff->mutex));
+    ARSAL_Mutex_Unlock(&(pRingBuff->mutex));
 }

@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-#include <libSAL/thread.h>
+#include <libARSAL/ARSAL_Thread.h>
 
 #include <libNetwork/manager.h>
 
@@ -46,8 +46,8 @@
     int id_print_ioBuff_deportDataAck;
     int id_print_ioBuff_deportData;
     
-    sal_thread_t thread_send1;
-    sal_thread_t thread_recv1;
+    ARSAL_Thread_t thread_send1;
+    ARSAL_Thread_t thread_recv1;
     
     NSTimer *timer;
     

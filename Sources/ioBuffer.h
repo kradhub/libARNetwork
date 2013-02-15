@@ -11,8 +11,8 @@
 #include <libNetwork/frame.h>
 #include "ringBuffer.h"
 #include <libNetwork/paramNewIoBuffer.h>
-#include <libSAL/mutex.h>
-#include <libSAL/sem.h>
+#include <libARSAL/ARSAL_Mutex.h>
+#include <libARSAL/ARSAL_Sem.h>
 
 /*****************************************
  * 
@@ -42,8 +42,8 @@ typedef struct network_ioBuffer_t
     int ackWaitTimeCount;   /**< Counter of time to wait before to consider a timeout without receiving an acknowledgement*/
     int retryCount; /**< Counter of sending retry remaining before to consider a failure*/
     
-    sal_mutex_t mutex;  /**< Mutex to take before to use the ringBuffer*/
-    sal_sem_t outputSem; /**< Semaphore used, by the outputs, to know when a data is ready to be read */
+    ARSAL_Mutex_t mutex;  /**< Mutex to take before to use the ringBuffer*/
+    ARSAL_Sem_t outputSem; /**< Semaphore used, by the outputs, to know when a data is ready to be read */
 
 }network_ioBuffer_t;
 

@@ -106,7 +106,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = FD966360164D6AFF00C21FA3 /* Build configuration list for PBXNativeTarget "autoTest" */;
 			buildPhases = (
-				FD96636D164D7B0700C21FA3 /* Build libSAL */,
+				FD96636D164D7B0700C21FA3 /* Build libARSAL */,
 				FD96636A164D74E500C21FA3 /* Build libNetwork */,
 				FD96633E164D6AFF00C21FA3 /* Sources */,
 				FD96633F164D6AFF00C21FA3 /* Frameworks */,
@@ -174,16 +174,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd ../../../Build\nif [ ! -e ./configure ]; then\n./bootstrap\nfi\nif [ $CONFIGURATION = \"Release\" ] || [ $CONFIGURATION = \"Distribution\" ]; then\nPATH=$PLATFORM_DEVELOPER_USR_DIR/usr/bin:$PATH ./configure CC=\"$PLATFORM_DEVELOPER_USR_DIR/bin/llvm-gcc -arch armv7 -isysroot $SDKROOT\" --host=arm --disable-shared --prefix=$CONFIGURATION_BUILD_DIR --with-libSalInstall=$CONFIGURATION_BUILD_DIR\nelse\nPATH=$PLATFORM_DEVELOPER_USR_DIR/usr/bin:$PATH ./configure CC=\"$PLATFORM_DEVELOPER_USR_DIR/bin/llvm-gcc -arch armv7 -isysroot $SDKROOT\" --host=arm --disable-shared --enable-debug --prefix=$CONFIGURATION_BUILD_DIR --with-libSalInstall=$CONFIGURATION_BUILD_DIR\nfi\nmake\nmake install";
+			shellScript = "cd ../../../Build\nif [ ! -e ./configure ]; then\n./bootstrap\nfi\nif [ $CONFIGURATION = \"Release\" ] || [ $CONFIGURATION = \"Distribution\" ]; then\nPATH=$PLATFORM_DEVELOPER_USR_DIR/usr/bin:$PATH ./configure CC=\"$PLATFORM_DEVELOPER_USR_DIR/bin/llvm-gcc -arch armv7 -isysroot $SDKROOT\" --host=arm --disable-shared --prefix=$CONFIGURATION_BUILD_DIR --with-libARSALInstallDir=$CONFIGURATION_BUILD_DIR\nelse\nPATH=$PLATFORM_DEVELOPER_USR_DIR/usr/bin:$PATH ./configure CC=\"$PLATFORM_DEVELOPER_USR_DIR/bin/llvm-gcc -arch armv7 -isysroot $SDKROOT\" --host=arm --disable-shared --enable-debug --prefix=$CONFIGURATION_BUILD_DIR --with-libARSALInstallDir=$CONFIGURATION_BUILD_DIR\nfi\nmake\nmake install";
 		};
-		FD96636D164D7B0700C21FA3 /* Build libSAL */ = {
+		FD96636D164D7B0700C21FA3 /* Build libARSAL */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Build libSAL";
+			name = "Build libARSAL";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -286,7 +286,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = Debug/lib;
 				OTHER_LDFLAGS = (
-					"-lsal_dbg",
+					"-larsal_dbg",
 					"-lnetwork_dbg",
 				);
 				PRODUCT_NAME = autoTest;
@@ -306,7 +306,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = Release/lib;
 				OTHER_LDFLAGS = (
-					"-lsal",
+					"-larsal",
 					"-lnetwork",
 				);
 				PRODUCT_NAME = autoTest;

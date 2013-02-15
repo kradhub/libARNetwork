@@ -20,9 +20,9 @@
 
 #include <errno.h>
 
-#include <libSAL/print.h>
-#include <libSAL/mutex.h>
-#include <libSAL/socket.h>
+#include <libARSAL/ARSAL_Print.h>
+#include <libARSAL/ARSAL_Mutex.h>
+#include <libARSAL/ARSAL_Socket.h>
 
 #include <libNetwork/status.h>
 #include <libNetwork/frame.h>
@@ -205,7 +205,7 @@ network_manager_t* NETWORK_NewManager( unsigned int recvBufferSize,unsigned int 
     /** delete the Manager if an error occurred */
     if( error != NETWORK_OK)
     {
-        SAL_PRINT(PRINT_ERROR, TAG, "error: %d occurred \n", error );
+        ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "error: %d occurred \n", error );
         NETWORK_DeleteManager(&pManager);
     }
 
@@ -307,7 +307,7 @@ void* NETWORK_ManagerRunSendingThread(void* data)
     }
     else
     {
-        SAL_PRINT(PRINT_ERROR, TAG, "error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
+        ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
     }
     
     return ret;
@@ -328,7 +328,7 @@ void* NETWORK_ManagerRunReceivingThread(void* data)
     }
     else
     {
-        SAL_PRINT(PRINT_ERROR, TAG,"error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
+        ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG,"error: %d occurred \n", NETWORK_ERROR_BAD_PARAMETER );
     }
     
     return ret;
@@ -502,7 +502,7 @@ eNETWORK_Error NETWORK_ManagerReadData(network_manager_t* pManager, int outputBu
     if( error == NETWORK_OK )
     {
         /** try to take the semaphore */
-        semError = sal_sem_trywait( &(pOutputBuffer->outputSem) );
+        semError = ARSAL_Sem_Trywait( &(pOutputBuffer->outputSem) );
         
         if(semError)
         {
@@ -567,7 +567,7 @@ eNETWORK_Error NETWORK_ManagerReadDeportedData( network_manager_t* pManager, int
     if( error == NETWORK_OK )
     {
         /** try to take the semaphore */
-        semError = sal_sem_trywait( &(pOutputBuffer->outputSem) );
+        semError = ARSAL_Sem_Trywait( &(pOutputBuffer->outputSem) );
         
         if(semError)
         {
@@ -666,7 +666,7 @@ eNETWORK_Error NETWORK_ManagerReadDataWithTimeout( network_manager_t* pManager,
         semTimeout.tv_nsec = (timeoutMs % 1000) * 1000000;
         
         /** try to take the semaphore with timeout*/
-        semError = sal_sem_timedwait( &(pOutputBuffer->outputSem), &semTimeout);
+        semError = ARSAL_Sem_Timedwait( &(pOutputBuffer->outputSem), &semTimeout);
         
         if(semError)
         {
@@ -741,7 +741,7 @@ eNETWORK_Error NETWORK_ManagerReadDeportedDataWithTimeout( network_manager_t* pM
         semTimeout.tv_nsec = (timeoutMs % 1000) * 1000000;
         
         /** try to take the semaphore with timeout*/
-        semError = sal_sem_timedwait( &(pOutputBuffer->outputSem), &semTimeout);
+        semError = ARSAL_Sem_Timedwait( &(pOutputBuffer->outputSem), &semTimeout);
         
         if(semError)
         {

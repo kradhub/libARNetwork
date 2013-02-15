@@ -1,7 +1,7 @@
 package com.parrot.arsdk.libnetwork;
 
 import android.util.Log;
-import com.parrot.arsdk.libsal.SALNativeData;
+import com.parrot.arsdk.arsal.ARNativeData;
 
 /**
  * Network manager allow to send and receive data acknowledged or not.
@@ -45,7 +45,7 @@ public class NetworkManager
                                                            byte[] data, int timeoutMs );
     
     private native int nativeManagerSendDeportedData( long jpManager,int inputBufferId, 
-                                                        SALNativeData SALData, long pData, 
+                                                        ARNativeData ARData, long pData, 
                                                         int dataSize);
     private native int nativeManagerReadDeportedData( long jpManager, int outputBufferId,
                                                         NetworkDataRecv data);
@@ -193,17 +193,17 @@ public class NetworkManager
     /**
      *  Add deported data to send
      *  @param inputBufferId identifier of the input buffer in which the data must be stored
-     *  @param salData data to send
+     *  @param arData data to send
      *  @return error eNETWORK_Error
     **/
-    public eNETWORK_Error sendDeportedData( int inputBufferId, SALNativeData salData)
+    public eNETWORK_Error sendDeportedData( int inputBufferId, ARNativeData arData)
     {
         eNETWORK_Error error = eNETWORK_Error.NETWORK_OK;
         if(m_initOk == true)
         {
-            long pData =  salData.getData();
-            int dataSize =  salData.getDataSize();
-            int intError = nativeManagerSendDeportedData( mp_manager, inputBufferId, salData, pData, dataSize );
+            long pData =  arData.getData();
+            int dataSize =  arData.getDataSize();
+            int intError = nativeManagerSendDeportedData( mp_manager, inputBufferId, arData, pData, dataSize );
             error =  eNETWORK_Error.getErrorName(intError);  
         }
         else
@@ -334,7 +334,7 @@ public class NetworkManager
      *  @param status reason of the callback
      *  @return eNETWORK_CALLBACK_RETURN what do in timeout case
     **/
-    public int callback (int IoBuffer, SALNativeData data, int status) 
+    public int callback (int IoBuffer, ARNativeData data, int status) 
     {
         /** -- callback -- */
         

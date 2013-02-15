@@ -16,8 +16,8 @@
 
 #include <time.h>
 
-#include <libSAL/print.h>
-#include <libSAL/thread.h>
+#include <libARSAL/ARSAL_Print.h>
+#include <libARSAL/ARSAL_Thread.h>
 
 #include <string.h>
 
@@ -75,14 +75,14 @@ typedef struct managerCheck_t
 {
     network_manager_t* pManager;
     
-    sal_thread_t thread_managerSend;
-    sal_thread_t thread_managerRecv;
+    ARSAL_Thread_t thread_managerSend;
+    ARSAL_Thread_t thread_managerRecv;
     
     int thRecvCheckAlive; /** life flag of the reading thread */
     
-    sal_thread_t thread_checkSend;
-    sal_thread_t thread_checkRecv;
-    sal_thread_t thread_checkRecvDeported;
+    ARSAL_Thread_t thread_checkSend;
+    ARSAL_Thread_t thread_checkRecv;
+    ARSAL_Thread_t thread_checkRecvDeported;
     
     int sentDataNumber; /**< number of the data not acknowledged sent */
     int sentDataAckNumber; /**< number of the data acknowledged sent */
@@ -201,51 +201,51 @@ int main(int argc, char *argv[])
         printf("check start \n");
         
         /** create the threads */
-        sal_thread_create( &(managerCheck2.thread_managerRecv), 
-                           (sal_thread_routine) NETWORK_ManagerRunReceivingThread, 
+        ARSAL_Thread_Create( &(managerCheck2.thread_managerRecv), 
+                           (ARSAL_Thread_Routine_t) NETWORK_ManagerRunReceivingThread, 
                            managerCheck2.pManager );
-        sal_thread_create( &(managerCheck1.thread_managerRecv), 
-                           (sal_thread_routine) NETWORK_ManagerRunReceivingThread, 
+        ARSAL_Thread_Create( &(managerCheck1.thread_managerRecv), 
+                           (ARSAL_Thread_Routine_t) NETWORK_ManagerRunReceivingThread, 
                            managerCheck1.pManager );
         
-        sal_thread_create( &(managerCheck1.thread_managerSend), 
-                           (sal_thread_routine) NETWORK_ManagerRunSendingThread, 
+        ARSAL_Thread_Create( &(managerCheck1.thread_managerSend), 
+                           (ARSAL_Thread_Routine_t) NETWORK_ManagerRunSendingThread, 
                            managerCheck1.pManager );
-        sal_thread_create( &(managerCheck2.thread_managerSend), 
-                           (sal_thread_routine) NETWORK_ManagerRunSendingThread, 
+        ARSAL_Thread_Create( &(managerCheck2.thread_managerSend), 
+                           (ARSAL_Thread_Routine_t) NETWORK_ManagerRunSendingThread, 
                            managerCheck2.pManager );
         
         /** manager 1 to manager 2 */
-        sal_thread_create( &(managerCheck1.thread_checkSend), 
-                           (sal_thread_routine) runCheckSendData, 
+        ARSAL_Thread_Create( &(managerCheck1.thread_checkSend), 
+                           (ARSAL_Thread_Routine_t) runCheckSendData, 
                            &managerCheck1 );
-        sal_thread_create( &(managerCheck2.thread_checkRecv), 
-                           (sal_thread_routine) runCheckReadData, 
+        ARSAL_Thread_Create( &(managerCheck2.thread_checkRecv), 
+                           (ARSAL_Thread_Routine_t) runCheckReadData, 
                            &managerCheck2 );
-        sal_thread_create( &(managerCheck2.thread_checkRecvDeported), 
-                           (sal_thread_routine) runCheckReadDataDeported, 
+        ARSAL_Thread_Create( &(managerCheck2.thread_checkRecvDeported), 
+                           (ARSAL_Thread_Routine_t) runCheckReadDataDeported, 
                            &managerCheck2 );
         
         /** manager 2 to manager 1 */
-        sal_thread_create( &(managerCheck2.thread_checkSend), 
-                           (sal_thread_routine) runCheckSendData, 
+        ARSAL_Thread_Create( &(managerCheck2.thread_checkSend), 
+                           (ARSAL_Thread_Routine_t) runCheckSendData, 
                            &managerCheck2 );
-        sal_thread_create( &(managerCheck1.thread_checkRecv), 
-                           (sal_thread_routine) runCheckReadData, 
+        ARSAL_Thread_Create( &(managerCheck1.thread_checkRecv), 
+                           (ARSAL_Thread_Routine_t) runCheckReadData, 
                            &managerCheck1 );
-        sal_thread_create( &(managerCheck1.thread_checkRecvDeported), 
-                           (sal_thread_routine) runCheckReadDataDeported, 
+        ARSAL_Thread_Create( &(managerCheck1.thread_checkRecvDeported), 
+                           (ARSAL_Thread_Routine_t) runCheckReadDataDeported, 
                            &managerCheck1 );
 
         /** wait the end of the sending */
         if(managerCheck1.thread_checkSend != NULL)
         {
-            sal_thread_join( managerCheck1.thread_checkSend, NULL );
+            ARSAL_Thread_Join( managerCheck1.thread_checkSend, NULL );
         }
         
         if(managerCheck2.thread_checkSend != NULL)
         {
-            sal_thread_join( managerCheck2.thread_checkSend, NULL );
+            ARSAL_Thread_Join( managerCheck2.thread_checkSend, NULL );
         }
 
         /** wait for receiving the last data sent */
@@ -255,21 +255,21 @@ int main(int argc, char *argv[])
         managerCheck2.thRecvCheckAlive = 0;
         if(managerCheck2.thread_checkRecv != NULL)
         {
-            sal_thread_join( managerCheck2.thread_checkRecv, NULL );
+            ARSAL_Thread_Join( managerCheck2.thread_checkRecv, NULL );
         }
         if(managerCheck2.thread_checkRecvDeported != NULL)
         {
-            sal_thread_join( managerCheck2.thread_checkRecvDeported, NULL );
+            ARSAL_Thread_Join( managerCheck2.thread_checkRecvDeported, NULL );
         }
         
         managerCheck1.thRecvCheckAlive = 0;
         if(managerCheck1.thread_checkRecv != NULL)
         {
-            sal_thread_join( managerCheck1.thread_checkRecv, NULL );
+            ARSAL_Thread_Join( managerCheck1.thread_checkRecv, NULL );
         }
         if(managerCheck1.thread_checkRecvDeported != NULL)
         {
-            sal_thread_join( managerCheck1.thread_checkRecvDeported, NULL );
+            ARSAL_Thread_Join( managerCheck1.thread_checkRecvDeported, NULL );
         }
 
         printf(" -- stop -- \n");
@@ -283,21 +283,21 @@ int main(int argc, char *argv[])
         /** kill all threads */
         if(managerCheck1.thread_managerSend != NULL)
         {
-            sal_thread_join( managerCheck1.thread_managerSend, NULL );
+            ARSAL_Thread_Join( managerCheck1.thread_managerSend, NULL );
         }
         if(managerCheck2.thread_managerSend != NULL)
         {
-            sal_thread_join( managerCheck2.thread_managerSend, NULL );
+            ARSAL_Thread_Join( managerCheck2.thread_managerSend, NULL );
         }
         
         if(managerCheck1.thread_managerRecv != NULL)
         {
-            sal_thread_join( managerCheck1.thread_managerRecv, NULL );
+            ARSAL_Thread_Join( managerCheck1.thread_managerRecv, NULL );
         }
         
         if(managerCheck2.thread_managerRecv != NULL)
         {
-            sal_thread_join( managerCheck2.thread_managerRecv, NULL );
+            ARSAL_Thread_Join( managerCheck2.thread_managerRecv, NULL );
         }
     }
 
@@ -359,18 +359,18 @@ int main(int argc, char *argv[])
     printf("end \n");
     
     /** delete */
-    sal_thread_destroy( &(managerCheck1.thread_managerSend) );
-    sal_thread_destroy( &(managerCheck2.thread_managerSend) );
-    sal_thread_destroy( &(managerCheck1.thread_managerRecv) );
-    sal_thread_destroy( &(managerCheck2.thread_managerRecv) );
+    ARSAL_Thread_Destroy( &(managerCheck1.thread_managerSend) );
+    ARSAL_Thread_Destroy( &(managerCheck2.thread_managerSend) );
+    ARSAL_Thread_Destroy( &(managerCheck1.thread_managerRecv) );
+    ARSAL_Thread_Destroy( &(managerCheck2.thread_managerRecv) );
     
-    sal_thread_destroy( &(managerCheck1.thread_checkSend) );
-    sal_thread_destroy( &(managerCheck2.thread_checkRecv) );
-    sal_thread_destroy( &(managerCheck2.thread_checkRecvDeported) );
+    ARSAL_Thread_Destroy( &(managerCheck1.thread_checkSend) );
+    ARSAL_Thread_Destroy( &(managerCheck2.thread_checkRecv) );
+    ARSAL_Thread_Destroy( &(managerCheck2.thread_checkRecvDeported) );
     
-    sal_thread_destroy( &(managerCheck2.thread_checkSend) );
-    sal_thread_destroy( &(managerCheck1.thread_checkRecv) );
-    sal_thread_destroy( &(managerCheck1.thread_checkRecvDeported) );
+    ARSAL_Thread_Destroy( &(managerCheck2.thread_checkSend) );
+    ARSAL_Thread_Destroy( &(managerCheck1.thread_checkRecv) );
+    ARSAL_Thread_Destroy( &(managerCheck1.thread_checkRecvDeported) );
     
     NETWORK_DeleteManager( &(managerCheck1.pManager) );
     NETWORK_DeleteManager( &(managerCheck2.pManager) );

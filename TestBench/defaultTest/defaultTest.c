@@ -14,7 +14,7 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 
-#include <libSAL/thread.h>
+#include <libARSAL/ARSAL_Thread.h>
 
 #include <libNetwork/manager.h>
 
@@ -74,8 +74,8 @@ int main(int argc, char *argv[])
     int connectError = 1;
     char IpAddress[16];
     
-    sal_thread_t thread_send1;
-    sal_thread_t thread_recv1;
+    ARSAL_Thread_t thread_send1;
+    ARSAL_Thread_t thread_recv1;
     
     /** save terminal setting */
     tcgetattr(0,&initial_settings);    
@@ -125,8 +125,8 @@ int main(int argc, char *argv[])
     }
     
     /** start threads */
-    sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager);
-    sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager);
+    ARSAL_Thread_Create(&(thread_recv1), (ARSAL_Thread_Routine_t) NETWORK_ManagerRunReceivingThread, pManager);
+    ARSAL_Thread_Create(&thread_send1, (ARSAL_Thread_Routine_t) NETWORK_ManagerRunSendingThread, pManager);
     
     while ( ((scanChar = getchar()) != '\n') && scanChar != EOF )
     {
@@ -152,12 +152,12 @@ int main(int argc, char *argv[])
     printf("wait ... \n");
     
     /** kill all thread */
-    sal_thread_join(&(thread_send1), NULL);
-    sal_thread_join(&(thread_recv1), NULL);
+    ARSAL_Thread_Join(&(thread_send1), NULL);
+    ARSAL_Thread_Join(&(thread_recv1), NULL);
 
     /** delete */
-    sal_thread_destroy(&thread_send1);
-    sal_thread_destroy(&thread_recv1);
+    ARSAL_Thread_Destroy(&thread_send1);
+    ARSAL_Thread_Destroy(&thread_recv1);
     NETWORK_DeleteManager( &pManager );
     
     printf("end \n");

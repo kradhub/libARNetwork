@@ -122,7 +122,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = FDBBB62A1651600B00B84AF6 /* Build configuration list for PBXNativeTarget "bidirectionalTest" */;
 			buildPhases = (
-				FDBBB655165262C000B84AF6 /* Build libSAL */,
+				FDBBB655165262C000B84AF6 /* Build libARSAL */,
 				FDBBB656165262F500B84AF6 /* Build libNetwork */,
 				FDBBB5FF1651600A00B84AF6 /* Sources */,
 				FDBBB6001651600A00B84AF6 /* Frameworks */,
@@ -180,14 +180,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		FDBBB655165262C000B84AF6 /* Build libSAL */ = {
+		FDBBB655165262C000B84AF6 /* Build libARSAL */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Build libSAL";
+			name = "Build libARSAL";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -206,7 +206,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd ../../../../Build\nif [ ! -e ./configure ]; then\n./bootstrap\nfi\nif [ $CONFIGURATION = \"Release\" ] || [ $CONFIGURATION = \"Distribution\" ]; then\nPATH=$PLATFORM_DEVELOPER_USR_DIR/usr/bin:$PATH ./configure CC=\"$PLATFORM_DEVELOPER_USR_DIR/bin/llvm-gcc -arch armv7 -isysroot $SDKROOT\" --host=arm --disable-shared --prefix=$CONFIGURATION_BUILD_DIR --with-libSalInstall=$CONFIGURATION_BUILD_DIR\nelse\nPATH=$PLATFORM_DEVELOPER_USR_DIR/usr/bin:$PATH ./configure CC=\"$PLATFORM_DEVELOPER_USR_DIR/bin/llvm-gcc -arch armv7 -isysroot $SDKROOT\" --host=arm --disable-shared --enable-debug --prefix=$CONFIGURATION_BUILD_DIR --with-libSalInstall=$CONFIGURATION_BUILD_DIR\nfi\nmake\nmake install";
+			shellScript = "cd ../../../../Build\nif [ ! -e ./configure ]; then\n./bootstrap\nfi\nif [ $CONFIGURATION = \"Release\" ] || [ $CONFIGURATION = \"Distribution\" ]; then\nPATH=$PLATFORM_DEVELOPER_USR_DIR/usr/bin:$PATH ./configure CC=\"$PLATFORM_DEVELOPER_USR_DIR/bin/llvm-gcc -arch armv7 -isysroot $SDKROOT\" --host=arm --disable-shared --prefix=$CONFIGURATION_BUILD_DIR --with-libARSALInstallDir=$CONFIGURATION_BUILD_DIR\nelse\nPATH=$PLATFORM_DEVELOPER_USR_DIR/usr/bin:$PATH ./configure CC=\"$PLATFORM_DEVELOPER_USR_DIR/bin/llvm-gcc -arch armv7 -isysroot $SDKROOT\" --host=arm --disable-shared --enable-debug --prefix=$CONFIGURATION_BUILD_DIR --with-libARSALInstallDir=$CONFIGURATION_BUILD_DIR\nfi\nmake\nmake install";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -321,7 +321,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = Debug/lib;
 				OTHER_LDFLAGS = (
-					"-lsal_dbg",
+					"-larsal_dbg",
 					"-lnetwork_dbg",
 				);
 				PRODUCT_NAME = bidirectionalTest;
@@ -340,7 +340,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = Release/lib;
 				OTHER_LDFLAGS = (
-					"-lsal",
+					"-larsal",
 					"-lnetwork",
 				);
 				PRODUCT_NAME = bidirectionalTest;

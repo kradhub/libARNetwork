@@ -17,7 +17,7 @@
 #include <jni.h>
 #include <stdlib.h>
 
-#include <libSAL/print.h>
+#include <libARSAL/ARSAL_Print.h>
 
 /**
  *  @brief data sent to the callbak 
@@ -25,7 +25,7 @@
 typedef struct network_JNI_callbackData_t
 {
     jobject jManager; /**< manager sent the data */
-    jobject jSALData; /**< java native data*/
+    jobject jARData; /**< java native data*/
 }network_JNI_callbackData_t;
 
 /*****************************************
@@ -75,7 +75,7 @@ JavaVM* g_vm = NULL; /** reference to the java virtual machine */
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm, void *reserved)
 {
-    SAL_PRINT(PRINT_DEBUG, TAG, "Library has been loaded");
+    ARSAL_PRINT(ARSAL_PRINT_DEBUG, TAG, "Library has been loaded");
 
 	/** Saving the reference to the java virtual machine */
 	g_vm = vm;
@@ -195,7 +195,7 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeNewManager ( JNIEnv *env, 
     /** print error */
     if(error == NETWORK_OK)
     {
-        SAL_PRINT(PRINT_ERROR, TAG," error: %d occurred \n", error );
+        ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG," error: %d occurred \n", error );
     }
     
     return (long) pManager;
@@ -375,14 +375,14 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSendData( JNIEnv *e
  *  @param obj reference to the object calling this function
  *  @param jpManager adress of the network_manager_t
  *  @param[in] inputBufferId identifier of the input buffer in which the data must be stored
- *  @param[in] SALData SALNativeData to send
- *  @param[in] jpData array of byte to send ( use salData.getData() )
- *  @param[in] dataSize size of the data to send ( use salData.getDataSize() )
+ *  @param[in] ARData ARNativeData to send
+ *  @param[in] jpData array of byte to send ( use arData.getData() )
+ *  @param[in] dataSize size of the data to send ( use arData.getDataSize() )
  *  @return error eNETWORK_Error
 **/
 JNIEXPORT int JNICALL
 Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSendDeportedData( JNIEnv *env, jobject obj, jlong jpManager,
-                                                                          jint inputBufferId, jobject SALData, 
+                                                                          jint inputBufferId, jobject ARData, 
                                                                           jlong jpData, jint dataSize)
 {
     /** -- Add data deported to send -- */
@@ -406,8 +406,8 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerSendDeportedData( J
         /** create a global reference of the java manager object delete by the callback */
         pCallbackData->jManager = (*env)->NewGlobalRef(env, obj);
         
-        /** create a global reference of the java SALnativeData object delete by the callback */
-        pCallbackData->jSALData = (*env)->NewGlobalRef(env, SALData);
+        /** create a global reference of the java ARnativeData object delete by the callback */
+        pCallbackData->jARData = (*env)->NewGlobalRef(env, ARData);
         
         /** send the data */
         error = NETWORK_ManagerSendDeportedData( pManager, inputBufferId, pData, dataSize, pCallbackData,
@@ -486,7 +486,7 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDeportedData( J
         
         if(jbyteArrayData == NULL)
         {
-            SAL_PRINT(PRINT_ERROR, TAG, "error jbyteArrayData" );
+            ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "error jbyteArrayData" );
             error = NETWORK_ERROR_BAD_PARAMETER; 
         }
     }
@@ -594,7 +594,7 @@ Java_com_parrot_arsdk_libnetwork_NetworkManager_nativeManagerReadDeportedDataWit
         
         if(jbyteArrayData == NULL)
         {
-            SAL_PRINT(PRINT_ERROR, TAG, "error jbyteArrayData" );
+            ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "error jbyteArrayData" );
             error = NETWORK_ERROR_BAD_PARAMETER; 
         }
     }
@@ -652,12 +652,12 @@ eNETWORK_CALLBACK_RETURN JNI_network_deportDatacallback(int IoBufferId,
         
         /** get the manager class reference */
         manager_cls = (*env)->GetObjectClass(env, pCallbackData->jManager);
-        jmCallback = (*env)->GetMethodID(env, manager_cls, "callback", "(ILcom/parrot/arsdk/libsal/SALNativeData;I)I" );
+        jmCallback = (*env)->GetMethodID(env, manager_cls, "callback", "(ILcom/parrot/arsdk/arsal/ARNativeData;I)I" );
         
         /** free the local reference on the class manager */
         (*env)->DeleteLocalRef(env, manager_cls);
         
-        callbackReturn = (*env)->CallIntMethod(env, pCallbackData->jManager, jmCallback, IoBufferId, pCallbackData->jSALData, status); 
+        callbackReturn = (*env)->CallIntMethod(env, pCallbackData->jManager, jmCallback, IoBufferId, pCallbackData->jARData, status); 
 
         switch(status)
         {
@@ -701,8 +701,8 @@ void freeCallbackData (JNIEnv* env, network_JNI_callbackData_t** ppCallbackData)
         
         if(pCallbackData != NULL)
         {
-            /** delete the java SALnativeData object reference */
-            (*env)->DeleteGlobalRef( env, pCallbackData->jSALData );
+            /** delete the java ARNativeData object reference */
+            (*env)->DeleteGlobalRef( env, pCallbackData->jARData );
             
             /** delete the java manager object reference */
             (*env)->DeleteGlobalRef( env, pCallbackData->jManager );

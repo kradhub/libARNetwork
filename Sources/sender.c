@@ -20,9 +20,9 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <libSAL/print.h>
-#include <libSAL/socket.h>
-#include <libSAL/endianness.h>
+#include <libARSAL/ARSAL_Print.h>
+#include <libARSAL/ARSAL_Socket.h>
+#include <libARSAL/ARSAL_Endianness.h>
 
 #include <libNetwork/status.h>
 #include <libNetwork/frame.h>
@@ -128,7 +128,7 @@ network_sender_t* NETWORK_NewSender( unsigned int sendingBufferSize,
         /** delete the sender if an error occurred */
         if(error != NETWORK_OK)
         {
-            SAL_PRINT(PRINT_ERROR, TAG,"error: %d occurred \n", error );
+            ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG,"error: %d occurred \n", error );
             NETWORK_DeleteSender(&pSender);
         }
         
@@ -195,7 +195,7 @@ void* NETWORK_RunSendingThread(void* data)
                     {
                         /** if there are timeout and too sending retry ... */
                         
-                        SAL_PRINT(PRINT_DEBUG, TAG," !!! too retry !!! \n");
+                        ARSAL_PRINT(ARSAL_PRINT_DEBUG, TAG," !!! too retry !!! \n");
                         
                         callbackReturn = NETWORK_SenderTimeOutCallback(pSender, pInputTemp);
                         
@@ -277,7 +277,7 @@ void* NETWORK_RunSendingThread(void* data)
         NETWORK_SenderSend(pSender);
     }
 
-    sal_close(pSender->socket);
+    ARSAL_Socket_Close(pSender->socket);
         
     return NULL;
 }
@@ -327,9 +327,9 @@ eNETWORK_Error NETWORK_SenderConnection(network_sender_t* pSender, const char* a
     sendSin.sin_family = AF_INET;
     sendSin.sin_port = htons(port);
     
-    pSender->socket = sal_socket(  AF_INET, SOCK_DGRAM, 0);
+    pSender->socket = ARSAL_Socket_Create(  AF_INET, SOCK_DGRAM, 0);
 
-    connectError = sal_connect( pSender->socket, (struct sockaddr*)&sendSin, sizeof(sendSin) );
+    connectError = ARSAL_Socket_Connect( pSender->socket, (struct sockaddr*)&sendSin, sizeof(sendSin) );
     
     if(connectError != 0)
     {
@@ -400,7 +400,7 @@ void NETWORK_SenderSend(network_sender_t* pSender)
                
         nbCharCopy = pSender->pSendingBuffer->pFront - pSender->pSendingBuffer->pStart;
         
-        sal_send(pSender->socket, pSender->pSendingBuffer->pStart, nbCharCopy, 0);
+        ARSAL_Socket_Send(pSender->socket, pSender->pSendingBuffer->pStart, nbCharCopy, 0);
             
         pSender->pSendingBuffer->pFront = pSender->pSendingBuffer->pStart;
     }
@@ -552,7 +552,7 @@ void NETWORK_SenderManagerTimeOut(network_sender_t* pSender,
         break;
         
         default:
-            SAL_PRINT(PRINT_ERROR, TAG," Bad CallBack return :%d \n", callbackReturn );
+            ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG," Bad CallBack return :%d \n", callbackReturn );
         break;
     }
     

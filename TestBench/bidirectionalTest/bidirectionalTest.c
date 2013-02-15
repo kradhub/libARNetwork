@@ -14,7 +14,7 @@
 #include <stdio.h> 
 #include <stdlib.h>
 
-#include <libSAL/thread.h>
+#include <libARSAL/ARSAL_Thread.h>
 
 #include <libNetwork/manager.h>
 
@@ -130,9 +130,9 @@ int main(int argc, char *argv[])
     
     printThread printThread1;
     
-    sal_thread_t thread_send1;
-    sal_thread_t thread_recv1;
-    sal_thread_t thread_printBuff;
+    ARSAL_Thread_t thread_send1;
+    ARSAL_Thread_t thread_recv1;
+    ARSAL_Thread_t thread_printBuff;
     
     network_paramNewIoBuffer_t paramNetworkL1[5];
     network_paramNewIoBuffer_t paramNetworkL2[4];
@@ -313,9 +313,9 @@ int main(int argc, char *argv[])
     
     printThread1.alive = 1;
     
-    sal_thread_create(&thread_printBuff, (sal_thread_routine) printBuff, &printThread1 );
-    sal_thread_create(&(thread_recv1), (sal_thread_routine) NETWORK_ManagerRunReceivingThread, pManager1);
-    sal_thread_create(&thread_send1, (sal_thread_routine) NETWORK_ManagerRunSendingThread, pManager1);
+    ARSAL_Thread_Create(&thread_printBuff, (ARSAL_Thread_Routine_t) printBuff, &printThread1 );
+    ARSAL_Thread_Create(&(thread_recv1), (ARSAL_Thread_Routine_t) NETWORK_ManagerRunReceivingThread, pManager1);
+    ARSAL_Thread_Create(&thread_send1, (ARSAL_Thread_Routine_t) NETWORK_ManagerRunSendingThread, pManager1);
     
     chData = 0;
     
@@ -437,14 +437,14 @@ int main(int argc, char *argv[])
     NETWORK_ManagerStop(pManager1);
     
     /** kill all thread */
-    sal_thread_join(thread_send1, NULL);
-    sal_thread_join(thread_recv1, NULL);
-    sal_thread_join(thread_printBuff, NULL);
+    ARSAL_Thread_Join(thread_send1, NULL);
+    ARSAL_Thread_Join(thread_recv1, NULL);
+    ARSAL_Thread_Join(thread_printBuff, NULL);
 
     /** delete */
-    sal_thread_destroy(&thread_send1);
-    sal_thread_destroy(&thread_recv1);
-    sal_thread_destroy(&thread_printBuff);
+    ARSAL_Thread_Destroy(&thread_send1);
+    ARSAL_Thread_Destroy(&thread_recv1);
+    ARSAL_Thread_Destroy(&thread_printBuff);
     NETWORK_DeleteManager( &pManager1 );
     
     printf("end\n");
