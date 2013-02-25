@@ -1,6 +1,6 @@
 /**
  *  @file autoTest.c
- *  @brief libNetWork TestBench automatic
+ *  @brief libARNetwork TestBench automatic
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
 **/
@@ -21,9 +21,9 @@
 
 #include <string.h>
 
-#include <libNetwork/frame.h>
-#include <libNetwork/manager.h>
-#include <libNetwork/paramNewIoBuffer.h>
+#include <libARNetwork/ARNETWORK_Frame.h>
+#include <libARNetwork/ARNETWORK_Manager.h>
+#include <libARNetwork/ARNETWORK_IOBufferParam.h>
 
 #include <unistd.h>
 
@@ -33,101 +33,92 @@
  *
 ******************************************/
 
-#define NUMBER_DATA_SENT 26
-#define SENDING_SLEEP_TIME_US 5000
-#define READING_SLEEP_TIME_US 1000
+#define AUTOTEST_NUMBER_DATA_SENT 26
+#define AUTOTEST_SENDING_SLEEP_TIME_US 5000
+#define AUTOTEST_READING_SLEEP_TIME_US 1000
 
-#define RECEIVER_TIMEOUT_SEC 5
-#define FIRST_CHAR_SENT 'A'
-#define FIRST_INT_ACK_SENT 100
+#define AUTOTEST_RECEIVER_TIMEOUT_SEC 5
+#define AUTOTEST_FIRST_CHAR_SENT 'A'
+#define AUTOTEST_FIRST_INT_ACK_SENT 100
 
-#define FIRST_DEPORTED_DATA 'a'
-#define STR_SIZE_OFFSET 2 /** offset add to the send number for calculate the size of the string to send */
+#define AUTOTEST_FIRST_DEPORTED_DATA 'a'
+#define AUTOTEST_STR_SIZE_OFFSET 2 /** offset add to the send number for calculate the size of the string to send */
 
-#define RECV_TIMEOUT_MS 10
-#define PORT1 12345
-#define PORT2 54321
-#define ADRR_IP "127.0.0.1"
+#define AUTOTEST_RECV_TIMEOUT_MS 10
+#define AUTOTEST_PORT1 12345
+#define AUTOTEST_PORT2 54321
+#define AUTOTEST_ADRR_IP "127.0.0.1"
 
-#define SEND_BUFF_SIZE 256
-#define RECV_BUFF_SIZE 256
+#define AUTOTEST_SENDING_BUFFER_SIZE 256
+#define AUTOTEST_RECEIVER_BUFFER_SIZE 256
 
-#define NB_OF_INPUT_NET1 4
-#define NB_OF_OUTPUT_NET1 4
-#define NB_OF_INPUT_NET2 4
-#define NB_OF_OUTPUT_NET2 4
-
-#define SENDDATA 1
-#define SENDDATADEPORT 1
+#define AUTOTEST_NUMBER_OF_INPUT_NET1 4
+#define AUTOTEST_NUMBER_OF_OUTPUT_NET1 4
+#define AUTOTEST_NUMBER_OF_INPUT_NET2 4
+#define AUTOTEST_NUMBER_OF_OUTPUT_NET2 4
 
 /** define of the ioBuffer identifiers */
-typedef enum eID_BUFF
+typedef enum
 {
-    ID_CHAR_DATA = 5,
-    ID_INT_DATA_WITH_ACK,
-    ID_INT_DATA,
-    ID_DEPORT_DATA,
-    ID_DEPORT_DATA_ACK
+    ID_IOBUFFER_CHAR_DATA = 5,
+    ID_IOBUFFER_INT_DATA_WITH_ACK,
+    ID_IOBUFFER_INT_DATA,
+    ID_IOBUFFER_VARIABLE_SIZE_DATA,
+    ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK
     
-}eID_BUFF;
+}eID_IOBUFFER;
 
-typedef struct managerCheck_t
+typedef struct
 {
-    network_manager_t* pManager;
+    ARNETWORK_Manager_t *managerPtr;
     
-    ARSAL_Thread_t thread_managerSend;
-    ARSAL_Thread_t thread_managerRecv;
+    ARSAL_Thread_t managerSendingThread;
+    ARSAL_Thread_t managerReceiverThread;
     
-    int thRecvCheckAlive; /** life flag of the reading thread */
+    int isReadingThreadAlive; /** life flag of the reading thread */
     
-    ARSAL_Thread_t thread_checkSend;
-    ARSAL_Thread_t thread_checkRecv;
-    ARSAL_Thread_t thread_checkRecvDeported;
+    ARSAL_Thread_t dataSendingThread;
+    ARSAL_Thread_t fixedSizeDataReadingThread;
+    ARSAL_Thread_t variableSizeDataReadingThread;
     
-    int sentDataNumber; /**< number of the data not acknowledged sent */
-    int sentDataAckNumber; /**< number of the data acknowledged sent */
-    int sentDataDeportedNumber; /**< number of the data deported not acknowledged sent */
-    int sentDataDeportedAckNumber; /**< number of the data deported acknowledged sent */
+    int numberOfFixedSizeDataSent; /**< number of fixed size data not acknowledged sent */
+    int numberOfFixedSizeDataAckSent; /**< number of fixed size data acknowledged sent */
+    int numberOfVariableSizeDataSent; /**< number of variable size data not acknowledged sent */
+    int numberOfVariableSizeDataAckSent; /**< number of variable size data acknowledged sent */
     
-    int recvDataNumber; /**< number of the data not acknowledged receved */
-    int recvDataAckNumber; /**< number of the data acknowledged receved */
-    int recvDataDeportedNumber; /**< number of the data deported not acknowledged receved */
-    int recvDataDeportedAckNumber; /**< number of the data deported acknowledged receved */
+    int numberOfFixedSizeDataReceived; /**< number of fixed size data not acknowledged receved */
+    int numberOfFixedSizeDataAckReceived; /**< number of fixed size data acknowledged receved */
+    int numberOfVariableSizeDataReceived; /**< number of variable size data not acknowledged receved */
+    int numberOfVariableSizeDataAckReceived; /**< number of variable size data acknowledged receved */
     
-    char lastDataRecv; /**< last date not acknowledged receved */
-    int lastDataDeportedSize; /**< last size of the date deported not acknowledged receved */
+    char lastFSDataRecv; /**< last date not acknowledged receved */
+    int lastSizeOfVSDataRecv; /**< last size of the date deported not acknowledged receved */
     
     int numberOfError; /**< number of cheking error */
     
-}managerCheck_t;
+}AUTOTEST_ManagerCheck_t;
 
-void initManagerCheck(managerCheck_t* pManagerCheck);
+void AUTOTEST_InitManagerCheck(AUTOTEST_ManagerCheck_t *managerCheckPtr);
 
-void initParamIoBuffer( network_paramNewIoBuffer_t* pTabInput1, 
-                        network_paramNewIoBuffer_t* pTabOutput1,
-                        network_paramNewIoBuffer_t* pTabInput2, 
-                        network_paramNewIoBuffer_t* pTabOutput2 );
-                        
-eNETWORK_CALLBACK_RETURN callbackDepotData(int OutBufferId, 
-                                              uint8_t* pData, 
-                                              void* customData, 
-                                              eNETWORK_CALLBACK_STATUS status);
-                        
-void* runCheckSendData(void*);
-void* runCheckReadData(void*);
-void* runCheckReadDataDeported(void* data);
+void AUTOTEST_InitParamIOBuffer( ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_IOBufferParam_t *outputArr1, ARNETWORK_IOBufferParam_t *inputArr2, ARNETWORK_IOBufferParam_t *outputArr2 );
 
-eNETWORK_Error sendData(managerCheck_t* pManagerCheck);
-eNETWORK_Error sendDataAck(managerCheck_t* pManagerCheck);
-eNETWORK_Error sendDataDeported(managerCheck_t* pManagerCheck);
-eNETWORK_Error sendDataDeportedAck(managerCheck_t* pManagerCheck);
+eARNETWORK_MANAGER_CALLBACK_RETURN AUTOTEST_VariableSizeDataCallback(int OutBufferId, uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status);
 
-char* allocInitStr(  int size );
+void* AUTOTEST_DataSendingRun(void*);
+void* AUTOTEST_FixedSizeDataReadingRun(void*);
+void* AUTOTEST_VariableSizeDataReadingRun(void* data);
 
-int checkData( managerCheck_t* pManagerCheck, char data );
-int checkDataACK( managerCheck_t* pManagerCheck, int dataAck );
-int checkDeportedData( managerCheck_t* pManagerCheck, int dataSize );
-int checkDeportedDataACK( managerCheck_t* pManagerCheck, char* pDataDeportedAck, int dataSizeAck );
+eARNETWORK_ERROR AUTOTEST_SendFixedSizeData(AUTOTEST_ManagerCheck_t *managerCheckPtr);
+eARNETWORK_ERROR AUTOTEST_SendFixedSizeDataAck(AUTOTEST_ManagerCheck_t *managerCheckPtr);
+eARNETWORK_ERROR AUTOTEST_SendVariableSizeData(AUTOTEST_ManagerCheck_t *managerCheckPtr);
+eARNETWORK_ERROR AUTOTEST_SendVaribleSizeDatadAck(AUTOTEST_ManagerCheck_t *managerCheckPtr);
+
+char* AUTOTEST_AllocInitString(  int size );
+
+int AUTOTEST_CheckFixedSizeData( AUTOTEST_ManagerCheck_t *managerCheckPtr, char data );
+int AUTOTEST_CheckFixedSizeDataACK( AUTOTEST_ManagerCheck_t *managerCheckPtr, int dataAck );
+int AUTOTEST_CheckVariableSizeData( AUTOTEST_ManagerCheck_t *managerCheckPtr, int dataSize );
+int AUTOTEST_CheckVariableSizeDataACK( AUTOTEST_ManagerCheck_t *managerCheckPtr, char* dataPtrDeportedAck, int dataSizeAck );
 
 
 /*****************************************
@@ -139,165 +130,141 @@ int checkDeportedDataACK( managerCheck_t* pManagerCheck, char* pDataDeportedAck,
 int main(int argc, char *argv[])
 {
     /** local declarations */
-    managerCheck_t managerCheck1;
-    managerCheck_t managerCheck2;
+    AUTOTEST_ManagerCheck_t managerCheck1;
+    AUTOTEST_ManagerCheck_t managerCheck2;
     
-    eNETWORK_Error error = NETWORK_OK;
-    int ackTransM1toM2Dif = 0;
-    int ackDepTransM1toM2Dif = 0;
-    int ackTransM2toM1Dif = 0;
-    int ackDepTransM2toM1Dif = 0;
+    eARNETWORK_ERROR error = ARNETWORK_OK;
+    int FSDataAckTransM1toM2Dif = 0;
+    int VSDataAckTransM1toM2Dif = 0;
+    int FSDataAckTransM2toM1Dif = 0;
+    int VSDataAckTransM2toM1Dif = 0;
     
     int ret = 0;
 
-    network_paramNewIoBuffer_t paramInputNetwork1[NB_OF_INPUT_NET1];
-    network_paramNewIoBuffer_t paramOutputNetwork1[NB_OF_OUTPUT_NET1];
+    ARNETWORK_IOBufferParam_t paramInputNetwork1[AUTOTEST_NUMBER_OF_INPUT_NET1];
+    ARNETWORK_IOBufferParam_t paramOutputNetwork1[AUTOTEST_NUMBER_OF_OUTPUT_NET1];
     
-    network_paramNewIoBuffer_t paramInputNetwork2[NB_OF_INPUT_NET2];
-    network_paramNewIoBuffer_t paramOutputNetwork2[NB_OF_OUTPUT_NET2];
+    ARNETWORK_IOBufferParam_t paramInputNetwork2[AUTOTEST_NUMBER_OF_INPUT_NET2];
+    ARNETWORK_IOBufferParam_t paramOutputNetwork2[AUTOTEST_NUMBER_OF_OUTPUT_NET2];
     
     /** default init */
-    initManagerCheck( &managerCheck1 );
-    initManagerCheck( &managerCheck2 );
-    initParamIoBuffer( paramInputNetwork1, paramOutputNetwork1, paramInputNetwork2, paramOutputNetwork2 );
+    AUTOTEST_InitManagerCheck( &managerCheck1 );
+    AUTOTEST_InitManagerCheck( &managerCheck2 );
+    AUTOTEST_InitParamIOBuffer( paramInputNetwork1, paramOutputNetwork1, paramInputNetwork2, paramOutputNetwork2 );
     /** initialize random seed: */
     srand ( time(NULL) );
     
-    printf(" -- libNetWork TestBench auto -- \n");
+    printf(" -- libARNetwork TestBench auto -- \n");
     
     /** create the Manager1 */
-    managerCheck1.pManager = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
-                                                 NB_OF_INPUT_NET1, paramInputNetwork1,
-                                                 NB_OF_OUTPUT_NET1, paramOutputNetwork1, &error );
+    managerCheck1.managerPtr = ARNETWORK_Manager_New( AUTOTEST_RECEIVER_BUFFER_SIZE, AUTOTEST_SENDING_BUFFER_SIZE, AUTOTEST_NUMBER_OF_INPUT_NET1, paramInputNetwork1, AUTOTEST_NUMBER_OF_OUTPUT_NET1, paramOutputNetwork1, &error );
     /** initialize the socket of the Manager1 */
-    if( error == NETWORK_OK )
+    if( error == ARNETWORK_OK )
     {
-        error = NETWORK_ManagerSocketsInit(managerCheck1.pManager, ADRR_IP, PORT1, PORT2, RECEIVER_TIMEOUT_SEC);
-        if(error != NETWORK_OK)
+        error = ARNETWORK_Manager_SocketsInit(managerCheck1.managerPtr, AUTOTEST_ADRR_IP, AUTOTEST_PORT1, AUTOTEST_PORT2, AUTOTEST_RECEIVER_TIMEOUT_SEC);
+        if(error != ARNETWORK_OK)
         {
-            printf("managerCheck1.pManager error initsocket = %d \n", error);
-        }
-    }
-
-    /** create the Manager2 */
-    if( error == NETWORK_OK )
-    {
-        managerCheck2.pManager = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE,
-                                                     NB_OF_INPUT_NET2, paramInputNetwork2,
-                                                     NB_OF_OUTPUT_NET2, paramOutputNetwork2, &error );  
-    }
-    /** initialize the socket of the Manager2 */
-    if( error == NETWORK_OK )
-    {
-        error = NETWORK_ManagerSocketsInit(managerCheck2.pManager, ADRR_IP, PORT2, PORT1, RECEIVER_TIMEOUT_SEC);
-        if(error != NETWORK_OK)
-        {
-            printf("managerCheck2.pManager error initsocket = %d \n ", error);
+            printf("managerCheck1.managerPtr error initsocket = %d \n", error);
         }
     }
     
-    if( error == NETWORK_OK )
+    /** create the Manager2 */
+    if( error == ARNETWORK_OK )
+    {
+        managerCheck2.managerPtr = ARNETWORK_Manager_New( AUTOTEST_RECEIVER_BUFFER_SIZE, AUTOTEST_SENDING_BUFFER_SIZE, AUTOTEST_NUMBER_OF_INPUT_NET2, paramInputNetwork2, AUTOTEST_NUMBER_OF_OUTPUT_NET2, paramOutputNetwork2, &error );  
+    }
+    /** initialize the socket of the Manager2 */
+    if( error == ARNETWORK_OK )
+    {
+        error = ARNETWORK_Manager_SocketsInit(managerCheck2.managerPtr, AUTOTEST_ADRR_IP, AUTOTEST_PORT2, AUTOTEST_PORT1, AUTOTEST_RECEIVER_TIMEOUT_SEC);
+        if(error != ARNETWORK_OK)
+        {
+            printf("managerCheck2.managerPtr error initsocket = %d \n ", error);
+        }
+    }
+    
+    if( error == ARNETWORK_OK )
     {
         printf("check start \n");
         
         /** create the threads */
-        ARSAL_Thread_Create( &(managerCheck2.thread_managerRecv), 
-                           (ARSAL_Thread_Routine_t) NETWORK_ManagerRunReceivingThread, 
-                           managerCheck2.pManager );
-        ARSAL_Thread_Create( &(managerCheck1.thread_managerRecv), 
-                           (ARSAL_Thread_Routine_t) NETWORK_ManagerRunReceivingThread, 
-                           managerCheck1.pManager );
+        ARSAL_Thread_Create( &(managerCheck2.managerReceiverThread), (ARSAL_Thread_Routine_t) ARNETWORK_Manager_ReceivingThreadRun, managerCheck2.managerPtr );
+        ARSAL_Thread_Create( &(managerCheck1.managerReceiverThread), (ARSAL_Thread_Routine_t) ARNETWORK_Manager_ReceivingThreadRun, managerCheck1.managerPtr );
         
-        ARSAL_Thread_Create( &(managerCheck1.thread_managerSend), 
-                           (ARSAL_Thread_Routine_t) NETWORK_ManagerRunSendingThread, 
-                           managerCheck1.pManager );
-        ARSAL_Thread_Create( &(managerCheck2.thread_managerSend), 
-                           (ARSAL_Thread_Routine_t) NETWORK_ManagerRunSendingThread, 
-                           managerCheck2.pManager );
+        ARSAL_Thread_Create( &(managerCheck1.managerSendingThread), (ARSAL_Thread_Routine_t) ARNETWORK_Manager_SendingThreadRun, managerCheck1.managerPtr );
+        ARSAL_Thread_Create( &(managerCheck2.managerSendingThread), (ARSAL_Thread_Routine_t) ARNETWORK_Manager_SendingThreadRun, managerCheck2.managerPtr );
         
         /** manager 1 to manager 2 */
-        ARSAL_Thread_Create( &(managerCheck1.thread_checkSend), 
-                           (ARSAL_Thread_Routine_t) runCheckSendData, 
-                           &managerCheck1 );
-        ARSAL_Thread_Create( &(managerCheck2.thread_checkRecv), 
-                           (ARSAL_Thread_Routine_t) runCheckReadData, 
-                           &managerCheck2 );
-        ARSAL_Thread_Create( &(managerCheck2.thread_checkRecvDeported), 
-                           (ARSAL_Thread_Routine_t) runCheckReadDataDeported, 
-                           &managerCheck2 );
+        ARSAL_Thread_Create( &(managerCheck1.dataSendingThread), (ARSAL_Thread_Routine_t) AUTOTEST_DataSendingRun, &managerCheck1 );
+        ARSAL_Thread_Create( &(managerCheck2.fixedSizeDataReadingThread), (ARSAL_Thread_Routine_t) AUTOTEST_FixedSizeDataReadingRun, &managerCheck2 );
+        ARSAL_Thread_Create( &(managerCheck2.variableSizeDataReadingThread), (ARSAL_Thread_Routine_t) AUTOTEST_VariableSizeDataReadingRun, &managerCheck2 );
         
         /** manager 2 to manager 1 */
-        ARSAL_Thread_Create( &(managerCheck2.thread_checkSend), 
-                           (ARSAL_Thread_Routine_t) runCheckSendData, 
-                           &managerCheck2 );
-        ARSAL_Thread_Create( &(managerCheck1.thread_checkRecv), 
-                           (ARSAL_Thread_Routine_t) runCheckReadData, 
-                           &managerCheck1 );
-        ARSAL_Thread_Create( &(managerCheck1.thread_checkRecvDeported), 
-                           (ARSAL_Thread_Routine_t) runCheckReadDataDeported, 
-                           &managerCheck1 );
+        ARSAL_Thread_Create( &(managerCheck2.dataSendingThread), (ARSAL_Thread_Routine_t) AUTOTEST_DataSendingRun, &managerCheck2 );
+        ARSAL_Thread_Create( &(managerCheck1.fixedSizeDataReadingThread), (ARSAL_Thread_Routine_t) AUTOTEST_FixedSizeDataReadingRun, &managerCheck1 );
+        ARSAL_Thread_Create( &(managerCheck1.variableSizeDataReadingThread), (ARSAL_Thread_Routine_t) AUTOTEST_VariableSizeDataReadingRun, &managerCheck1 );
 
         /** wait the end of the sending */
-        if(managerCheck1.thread_checkSend != NULL)
+        if(managerCheck1.dataSendingThread != NULL)
         {
-            ARSAL_Thread_Join( managerCheck1.thread_checkSend, NULL );
+            ARSAL_Thread_Join( managerCheck1.dataSendingThread, NULL );
         }
         
-        if(managerCheck2.thread_checkSend != NULL)
+        if(managerCheck2.dataSendingThread != NULL)
         {
-            ARSAL_Thread_Join( managerCheck2.thread_checkSend, NULL );
+            ARSAL_Thread_Join( managerCheck2.dataSendingThread, NULL );
         }
 
         /** wait for receiving the last data sent */
-        usleep(SENDING_SLEEP_TIME_US);
+        usleep(AUTOTEST_SENDING_SLEEP_TIME_US);
         
         /** stop the reading */
-        managerCheck2.thRecvCheckAlive = 0;
-        if(managerCheck2.thread_checkRecv != NULL)
+        managerCheck2.isReadingThreadAlive = 0;
+        if(managerCheck2.fixedSizeDataReadingThread != NULL)
         {
-            ARSAL_Thread_Join( managerCheck2.thread_checkRecv, NULL );
+            ARSAL_Thread_Join( managerCheck2.fixedSizeDataReadingThread, NULL );
         }
-        if(managerCheck2.thread_checkRecvDeported != NULL)
+        if(managerCheck2.variableSizeDataReadingThread != NULL)
         {
-            ARSAL_Thread_Join( managerCheck2.thread_checkRecvDeported, NULL );
+            ARSAL_Thread_Join( managerCheck2.variableSizeDataReadingThread, NULL );
         }
         
-        managerCheck1.thRecvCheckAlive = 0;
-        if(managerCheck1.thread_checkRecv != NULL)
+        managerCheck1.isReadingThreadAlive = 0;
+        if(managerCheck1.fixedSizeDataReadingThread != NULL)
         {
-            ARSAL_Thread_Join( managerCheck1.thread_checkRecv, NULL );
+            ARSAL_Thread_Join( managerCheck1.fixedSizeDataReadingThread, NULL );
         }
-        if(managerCheck1.thread_checkRecvDeported != NULL)
+        if(managerCheck1.variableSizeDataReadingThread != NULL)
         {
-            ARSAL_Thread_Join( managerCheck1.thread_checkRecvDeported, NULL );
+            ARSAL_Thread_Join( managerCheck1.variableSizeDataReadingThread, NULL );
         }
 
         printf(" -- stop -- \n");
         
         /** stop all therad */
-        NETWORK_ManagerStop(managerCheck1.pManager);
-        NETWORK_ManagerStop(managerCheck2.pManager);
+        ARNETWORK_Manager_Stop(managerCheck1.managerPtr);
+        ARNETWORK_Manager_Stop(managerCheck2.managerPtr);
         
         printf("wait ... \n");
         
         /** kill all threads */
-        if(managerCheck1.thread_managerSend != NULL)
+        if(managerCheck1.managerSendingThread != NULL)
         {
-            ARSAL_Thread_Join( managerCheck1.thread_managerSend, NULL );
+            ARSAL_Thread_Join( managerCheck1.managerSendingThread, NULL );
         }
-        if(managerCheck2.thread_managerSend != NULL)
+        if(managerCheck2.managerSendingThread != NULL)
         {
-            ARSAL_Thread_Join( managerCheck2.thread_managerSend, NULL );
-        }
-        
-        if(managerCheck1.thread_managerRecv != NULL)
-        {
-            ARSAL_Thread_Join( managerCheck1.thread_managerRecv, NULL );
+            ARSAL_Thread_Join( managerCheck2.managerSendingThread, NULL );
         }
         
-        if(managerCheck2.thread_managerRecv != NULL)
+        if(managerCheck1.managerReceiverThread != NULL)
         {
-            ARSAL_Thread_Join( managerCheck2.thread_managerRecv, NULL );
+            ARSAL_Thread_Join( managerCheck1.managerReceiverThread, NULL );
+        }
+        
+        if(managerCheck2.managerReceiverThread != NULL)
+        {
+            ARSAL_Thread_Join( managerCheck2.managerReceiverThread, NULL );
         }
     }
 
@@ -306,37 +273,37 @@ int main(int argc, char *argv[])
     printf("\n");
     
     printf(" -- managerCheck1 to managerCheck2 -- \n " );
-    printf(" %d data sent | %d data receved \n ", managerCheck1.sentDataNumber, managerCheck2.recvDataNumber );
-    printf(" %d dataACK sent | %d data receved \n ", managerCheck1.sentDataAckNumber, managerCheck2.recvDataAckNumber );
-    printf(" %d dataDeported sent | %d dataDeported receved \n ", managerCheck1.sentDataDeportedNumber, managerCheck2.recvDataDeportedNumber );
-    printf(" %d dataDeportedAck sent | %d dataDeportedAck receved \n ", managerCheck1.sentDataDeportedAckNumber, managerCheck2.recvDataDeportedAckNumber );
+    printf(" %d data sent | %d data receved \n ", managerCheck1.numberOfFixedSizeDataSent, managerCheck2.numberOfFixedSizeDataReceived );
+    printf(" %d dataACK sent | %d data receved \n ", managerCheck1.numberOfFixedSizeDataAckSent, managerCheck2.numberOfFixedSizeDataAckReceived );
+    printf(" %d dataDeported sent | %d dataDeported receved \n ", managerCheck1.numberOfVariableSizeDataSent, managerCheck2.numberOfVariableSizeDataReceived );
+    printf(" %d dataDeportedAck sent | %d dataDeportedAck receved \n ", managerCheck1.numberOfVariableSizeDataAckSent, managerCheck2.numberOfVariableSizeDataAckReceived );
     printf(" number of transmission error: %d \n", managerCheck2.numberOfError);
     
     printf("\n");
     
     printf(" -- managerCheck2 to managerCheck1 -- \n " );
-    printf(" %d data sent | %d data receved \n ", managerCheck2.sentDataNumber, managerCheck1.recvDataNumber );
-    printf(" %d dataACK sent | %d data receved \n ", managerCheck2.sentDataAckNumber, managerCheck1.recvDataAckNumber );
-    printf(" %d dataDeported sent | %d dataDeported receved \n ", managerCheck2.sentDataDeportedNumber, managerCheck1.recvDataDeportedNumber );
-    printf(" %d dataDeportedAck sent | %d dataDeportedAck receved \n ", managerCheck2.sentDataDeportedAckNumber, managerCheck1.recvDataDeportedAckNumber );
+    printf(" %d data sent | %d data receved \n ", managerCheck2.numberOfFixedSizeDataSent, managerCheck1.numberOfFixedSizeDataReceived );
+    printf(" %d dataACK sent | %d data receved \n ", managerCheck2.numberOfFixedSizeDataAckSent, managerCheck1.numberOfFixedSizeDataAckReceived );
+    printf(" %d dataDeported sent | %d dataDeported receved \n ", managerCheck2.numberOfVariableSizeDataSent, managerCheck1.numberOfVariableSizeDataReceived );
+    printf(" %d dataDeportedAck sent | %d dataDeportedAck receved \n ", managerCheck2.numberOfVariableSizeDataAckSent, managerCheck1.numberOfVariableSizeDataAckReceived );
     printf(" number of transmission error: %d \n", managerCheck1.numberOfError);
 
     printf("\n");
 
     /** global cheking */
 
-    ackTransM1toM2Dif = managerCheck1.sentDataAckNumber - managerCheck2.recvDataAckNumber;
-    ackDepTransM1toM2Dif = managerCheck1.sentDataDeportedAckNumber - managerCheck2.recvDataDeportedAckNumber;
-    ackTransM2toM1Dif = managerCheck2.sentDataAckNumber - managerCheck1.recvDataAckNumber;
-    ackDepTransM2toM1Dif = managerCheck2.sentDataDeportedAckNumber - managerCheck1.recvDataDeportedAckNumber;
+    FSDataAckTransM1toM2Dif = managerCheck1.numberOfFixedSizeDataAckSent - managerCheck2.numberOfFixedSizeDataAckReceived;
+    VSDataAckTransM1toM2Dif = managerCheck1.numberOfVariableSizeDataAckSent - managerCheck2.numberOfVariableSizeDataAckReceived;
+    FSDataAckTransM2toM1Dif = managerCheck2.numberOfFixedSizeDataAckSent - managerCheck1.numberOfFixedSizeDataAckReceived;
+    VSDataAckTransM2toM1Dif = managerCheck2.numberOfVariableSizeDataAckSent - managerCheck1.numberOfVariableSizeDataAckReceived;
 
-    if( error == NETWORK_OK &&
+    if( error == ARNETWORK_OK &&
         managerCheck1.numberOfError == 0 &&
         managerCheck2.numberOfError == 0 &&
-        ackTransM1toM2Dif == 0 &&
-        ackDepTransM1toM2Dif == 0 &&
-        ackTransM2toM1Dif == 0 &&
-        ackDepTransM2toM1Dif == 0 )
+        FSDataAckTransM1toM2Dif == 0 &&
+        VSDataAckTransM1toM2Dif == 0 &&
+        FSDataAckTransM2toM1Dif == 0 &&
+        VSDataAckTransM2toM1Dif == 0 )
     {
         printf(" # -- Good result of the test bench -- # \n");
     }
@@ -344,233 +311,230 @@ int main(int argc, char *argv[])
     {
         printf(" # -- Bad result of the test bench -- # \n\n");
         
-        printf("    libNetWork error : %d \n", error);
-        printf("    %d data acknowledged lost of manager 1 to manager 2 \n", ackTransM1toM2Dif);
-        printf("    %d data deported acknowledged lost of manager 1 to manager 2 \n", ackDepTransM1toM2Dif);
-        printf("    %d data acknowledged lost of manager 2 to manager 1 \n", ackTransM2toM1Dif);
-        printf("    %d data deported acknowledged lost of manager 2 to manager 1 \n", ackDepTransM2toM1Dif);
+        printf("    libARNetwork error : %d \n", error);
+        printf("    %d fixed size data acknowledged lost of manager 1 to manager 2 \n", FSDataAckTransM1toM2Dif);
+        printf("    %d variable size data acknowledged lost of manager 1 to manager 2 \n", VSDataAckTransM1toM2Dif);
+        printf("    %d fixed size data acknowledged lost of manager 2 to manager 1 \n", FSDataAckTransM2toM1Dif);
+        printf("    %d variable size data acknowledged lost of manager 2 to manager 1 \n", VSDataAckTransM2toM1Dif);
         printf("    %d data corrupted of manager 1 to manager 2 \n", managerCheck2.numberOfError);
         printf("    %d data corrupted of manager 2 to manager 1 \n", managerCheck1.numberOfError);
         
         ret = -1;
     }
-
+    
     printf("\n");
     printf("end \n");
     
     /** delete */
-    ARSAL_Thread_Destroy( &(managerCheck1.thread_managerSend) );
-    ARSAL_Thread_Destroy( &(managerCheck2.thread_managerSend) );
-    ARSAL_Thread_Destroy( &(managerCheck1.thread_managerRecv) );
-    ARSAL_Thread_Destroy( &(managerCheck2.thread_managerRecv) );
+    ARSAL_Thread_Destroy( &(managerCheck1.managerSendingThread) );
+    ARSAL_Thread_Destroy( &(managerCheck2.managerSendingThread) );
+    ARSAL_Thread_Destroy( &(managerCheck1.managerReceiverThread) );
+    ARSAL_Thread_Destroy( &(managerCheck2.managerReceiverThread) );
     
-    ARSAL_Thread_Destroy( &(managerCheck1.thread_checkSend) );
-    ARSAL_Thread_Destroy( &(managerCheck2.thread_checkRecv) );
-    ARSAL_Thread_Destroy( &(managerCheck2.thread_checkRecvDeported) );
+    ARSAL_Thread_Destroy( &(managerCheck1.dataSendingThread) );
+    ARSAL_Thread_Destroy( &(managerCheck2.fixedSizeDataReadingThread) );
+    ARSAL_Thread_Destroy( &(managerCheck2.variableSizeDataReadingThread) );
     
-    ARSAL_Thread_Destroy( &(managerCheck2.thread_checkSend) );
-    ARSAL_Thread_Destroy( &(managerCheck1.thread_checkRecv) );
-    ARSAL_Thread_Destroy( &(managerCheck1.thread_checkRecvDeported) );
+    ARSAL_Thread_Destroy( &(managerCheck2.dataSendingThread) );
+    ARSAL_Thread_Destroy( &(managerCheck1.fixedSizeDataReadingThread) );
+    ARSAL_Thread_Destroy( &(managerCheck1.variableSizeDataReadingThread) );
     
-    NETWORK_DeleteManager( &(managerCheck1.pManager) );
-    NETWORK_DeleteManager( &(managerCheck2.pManager) );
+    ARNETWORK_Manager_Delete( &(managerCheck1.managerPtr) );
+    ARNETWORK_Manager_Delete( &(managerCheck2.managerPtr) );
 
     return ret;
 }
 
-void initParamIoBuffer( network_paramNewIoBuffer_t* pTabInput1, 
-                        network_paramNewIoBuffer_t* pTabOutput1,
-                        network_paramNewIoBuffer_t* pTabInput2, 
-                        network_paramNewIoBuffer_t* pTabOutput2)
+void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_IOBufferParam_t *outputArr1, ARNETWORK_IOBufferParam_t *inputArr2, ARNETWORK_IOBufferParam_t *outputArr2)
 {
     /** initialization of the buffer parameters */
     /** --- network 1 --- */
     
-    /** input ID_CHAR_DATA char */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput1[0]) );
-    pTabInput1[0].id = ID_CHAR_DATA;
-    pTabInput1[0].dataType = NETWORK_FRAME_TYPE_DATA;
-    pTabInput1[0].numberOfCell = 1;
-    pTabInput1[0].cellSize = sizeof(char);
-    pTabInput1[0].isOverwriting = 1;
+    /** input ID_IOBUFFER_CHAR_DATA char */
+    ARNETWORK_IOBufferParam_DefaultInit( &(inputArr1[0]) );
+    inputArr1[0].ID = ID_IOBUFFER_CHAR_DATA;
+    inputArr1[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    inputArr1[0].numberOfCell = 1;
+    inputArr1[0].cellSize = sizeof(char);
+    inputArr1[0].isOverwriting = 1;
     
-    /** input ID_INT_DATA_WITH_ACK int */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput1[1]) );
-    pTabInput1[1].id = ID_INT_DATA_WITH_ACK;
-    pTabInput1[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    pTabInput1[1].sendingWaitTimeMs = 2;
-    pTabInput1[1].ackTimeoutMs = 5;
-    pTabInput1[1].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER /*20*/;
-    pTabInput1[1].numberOfCell = 5;
-    pTabInput1[1].cellSize = sizeof(int);
+    /** input ID_IOBUFFER_INT_DATA_WITH_ACK int */
+    ARNETWORK_IOBufferParam_DefaultInit( &(inputArr1[1]) );
+    inputArr1[1].ID = ID_IOBUFFER_INT_DATA_WITH_ACK;
+    inputArr1[1].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    inputArr1[1].sendingWaitTimeMs = 2;
+    inputArr1[1].ackTimeoutMs = 5;
+    inputArr1[1].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER /*20*/;
+    inputArr1[1].numberOfCell = 5;
+    inputArr1[1].cellSize = sizeof(int);
     
-    /** input ID_DEPORT_DATA */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput1[2]) );
-    pTabInput1[2].id = ID_DEPORT_DATA;
-    pTabInput1[2].dataType = NETWORK_FRAME_TYPE_DATA;
-    pTabInput1[2].sendingWaitTimeMs = 2;
-    pTabInput1[2].numberOfCell = 5;
-    pTabInput1[2].deportedData = 1;
+    /** input ID_IOBUFFER_VARIABLE_SIZE_DATA */
+    ARNETWORK_IOBufferParam_DefaultInit( &(inputArr1[2]) );
+    inputArr1[2].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA;
+    inputArr1[2].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    inputArr1[2].sendingWaitTimeMs = 2;
+    inputArr1[2].numberOfCell = 5;
+    inputArr1[2].isUsingVariableSizeData = 1;
     
-    /** input ID_DEPORT_DATA_ACK */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput1[3]) );
-    pTabInput1[3].id = ID_DEPORT_DATA_ACK;
-    pTabInput1[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    pTabInput1[3].sendingWaitTimeMs = 2;
-    pTabInput1[3].ackTimeoutMs = 5;
-    pTabInput1[3].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER /*20*/;
-    pTabInput1[3].numberOfCell = 5;
-    pTabInput1[3].deportedData = 1;
-
+    /** input ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK */
+    ARNETWORK_IOBufferParam_DefaultInit( &(inputArr1[3]) );
+    inputArr1[3].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK;
+    inputArr1[3].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    inputArr1[3].sendingWaitTimeMs = 2;
+    inputArr1[3].ackTimeoutMs = 5;
+    inputArr1[3].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER /*20*/;
+    inputArr1[3].numberOfCell = 5;
+    inputArr1[3].isUsingVariableSizeData = 1;
+    
     /** outputs: */
     
-    /** output ID_CHAR_DATA char */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput1[0]) );
-    pTabOutput1[0].id = ID_CHAR_DATA;
-    pTabOutput1[0].dataType = NETWORK_FRAME_TYPE_DATA;
-    pTabOutput1[0].numberOfCell = 1;
-    pTabOutput1[0].cellSize = sizeof(char);
-    pTabOutput1[0].isOverwriting = 1;
+    /** output ID_IOBUFFER_CHAR_DATA char */
+    ARNETWORK_IOBufferParam_DefaultInit( &(outputArr1[0]) );
+    outputArr1[0].ID = ID_IOBUFFER_CHAR_DATA;
+    outputArr1[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    outputArr1[0].numberOfCell = 1;
+    outputArr1[0].cellSize = sizeof(char);
+    outputArr1[0].isOverwriting = 1;
     
-    /** output ID_INT_DATA_WITH_ACK int */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput1[1]) );
-    pTabOutput1[1].id = ID_INT_DATA_WITH_ACK;
-    pTabOutput1[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    pTabOutput1[1].sendingWaitTimeMs = 2;
-    pTabOutput1[1].ackTimeoutMs = 5;
-    pTabOutput1[1].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER/*20*/;
-    pTabOutput1[1].numberOfCell = 5;
-    pTabOutput1[1].cellSize = sizeof(int);
+    /** output ID_IOBUFFER_INT_DATA_WITH_ACK int */
+    ARNETWORK_IOBufferParam_DefaultInit( &(outputArr1[1]) );
+    outputArr1[1].ID = ID_IOBUFFER_INT_DATA_WITH_ACK;
+    outputArr1[1].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    outputArr1[1].sendingWaitTimeMs = 2;
+    outputArr1[1].ackTimeoutMs = 5;
+    outputArr1[1].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER/*20*/;
+    outputArr1[1].numberOfCell = 5;
+    outputArr1[1].cellSize = sizeof(int);
     
-    /** output ID_DEPORT_DATA */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput1[2]) );
-    pTabOutput1[2].id = ID_DEPORT_DATA;
-    pTabOutput1[2].dataType = NETWORK_FRAME_TYPE_DATA;
-    pTabOutput1[2].sendingWaitTimeMs = 2;
-    pTabOutput1[2].numberOfCell = 5;
-    pTabOutput1[2].deportedData = 1;
+    /** output ID_IOBUFFER_VARIABLE_SIZE_DATA */
+    ARNETWORK_IOBufferParam_DefaultInit( &(outputArr1[2]) );
+    outputArr1[2].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA;
+    outputArr1[2].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    outputArr1[2].sendingWaitTimeMs = 2;
+    outputArr1[2].numberOfCell = 5;
+    outputArr1[2].isUsingVariableSizeData = 1;
     
-    /** output ID_DEPORT_DATA_ACK */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput1[3]) );
-    pTabOutput1[3].id = ID_DEPORT_DATA_ACK;
-    pTabOutput1[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    pTabOutput1[3].sendingWaitTimeMs = 2;
-    pTabOutput1[3].ackTimeoutMs = 5;
-    pTabOutput1[3].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER/*20*/;
-    pTabOutput1[3].numberOfCell = 5;
-    pTabOutput1[3].deportedData = 1;
+    /** output ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK */
+    ARNETWORK_IOBufferParam_DefaultInit( &(outputArr1[3]) );
+    outputArr1[3].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK;
+    outputArr1[3].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    outputArr1[3].sendingWaitTimeMs = 2;
+    outputArr1[3].ackTimeoutMs = 5;
+    outputArr1[3].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER/*20*/;
+    outputArr1[3].numberOfCell = 5;
+    outputArr1[3].isUsingVariableSizeData = 1;
     
     /** ----------------------------- */
     
     /**--- network 2 --- */
     
-    /** input ID_CHAR_DATA char */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput2[0]) );
-    pTabInput2[0].id = ID_CHAR_DATA;
-    pTabInput2[0].dataType = NETWORK_FRAME_TYPE_DATA;
-    pTabInput2[0].numberOfCell = 1;
-    pTabInput2[0].cellSize = sizeof(char);
-    pTabInput2[0].isOverwriting = 1;
+    /** input ID_IOBUFFER_CHAR_DATA char */
+    ARNETWORK_IOBufferParam_DefaultInit( &(inputArr2[0]) );
+    inputArr2[0].ID = ID_IOBUFFER_CHAR_DATA;
+    inputArr2[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    inputArr2[0].numberOfCell = 1;
+    inputArr2[0].cellSize = sizeof(char);
+    inputArr2[0].isOverwriting = 1;
     
-    /** input ID_INT_DATA_WITH_ACK int */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput2[1]) );
-    pTabInput2[1].id = ID_INT_DATA_WITH_ACK;
-    pTabInput2[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    pTabInput2[1].sendingWaitTimeMs = 2;
-    pTabInput2[1].ackTimeoutMs = 5;
-    pTabInput2[1].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER/*20*/;
-    pTabInput2[1].numberOfCell = 5;
-    pTabInput2[1].cellSize = sizeof(int);
+    /** input ID_IOBUFFER_INT_DATA_WITH_ACK int */
+    ARNETWORK_IOBufferParam_DefaultInit( &(inputArr2[1]) );
+    inputArr2[1].ID = ID_IOBUFFER_INT_DATA_WITH_ACK;
+    inputArr2[1].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    inputArr2[1].sendingWaitTimeMs = 2;
+    inputArr2[1].ackTimeoutMs = 5;
+    inputArr2[1].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER/*20*/;
+    inputArr2[1].numberOfCell = 5;
+    inputArr2[1].cellSize = sizeof(int);
     
-    /** input ID_DEPORT_DATA */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput2[2]) );
-    pTabInput2[2].id = ID_DEPORT_DATA;
-    pTabInput2[2].dataType = NETWORK_FRAME_TYPE_DATA;
-    pTabInput2[2].sendingWaitTimeMs = 2;
-    pTabInput2[2].numberOfCell = 5;
-    pTabInput2[2].deportedData = 1;
+    /** input ID_IOBUFFER_VARIABLE_SIZE_DATA */
+    ARNETWORK_IOBufferParam_DefaultInit( &(inputArr2[2]) );
+    inputArr2[2].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA;
+    inputArr2[2].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    inputArr2[2].sendingWaitTimeMs = 2;
+    inputArr2[2].numberOfCell = 5;
+    inputArr2[2].isUsingVariableSizeData = 1;
     
-    /** input ID_DEPORT_DATA_ACK */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabInput2[3]) );
-    pTabInput2[3].id = ID_DEPORT_DATA_ACK;
-    pTabInput2[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    pTabInput2[3].sendingWaitTimeMs = 2;
-    pTabInput2[3].ackTimeoutMs = 5;
-    pTabInput2[3].nbOfRetry = NETWORK_IOBUFFER_INFINITE_NUMBER/*20*/;
-    pTabInput2[3].numberOfCell = 5;
-    pTabInput2[3].deportedData = 1;
+    /** input ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK */
+    ARNETWORK_IOBufferParam_DefaultInit( &(inputArr2[3]) );
+    inputArr2[3].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK;
+    inputArr2[3].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    inputArr2[3].sendingWaitTimeMs = 2;
+    inputArr2[3].ackTimeoutMs = 5;
+    inputArr2[3].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER/*20*/;
+    inputArr2[3].numberOfCell = 5;
+    inputArr2[3].isUsingVariableSizeData = 1;
     
     /** outputs: */
     
-    /**  output ID_CHAR_DATA int */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput2[0]) );
-    pTabOutput2[0].id = ID_CHAR_DATA;
-    pTabOutput2[0].dataType = NETWORK_FRAME_TYPE_DATA;
-    pTabOutput2[0].sendingWaitTimeMs = 3;
-    pTabOutput2[0].numberOfCell = 1;
-    pTabOutput2[0].cellSize = sizeof(char);
-    pTabOutput2[0].isOverwriting = 1;
+    /**  output ID_IOBUFFER_CHAR_DATA int */
+    ARNETWORK_IOBufferParam_DefaultInit( &(outputArr2[0]) );
+    outputArr2[0].ID = ID_IOBUFFER_CHAR_DATA;
+    outputArr2[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    outputArr2[0].sendingWaitTimeMs = 3;
+    outputArr2[0].numberOfCell = 1;
+    outputArr2[0].cellSize = sizeof(char);
+    outputArr2[0].isOverwriting = 1;
     
-    /** output ID_INT_DATA_WITH_ACK int */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput2[1]) );
-    pTabOutput2[1].id = ID_INT_DATA_WITH_ACK;
-    pTabOutput2[1].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    pTabOutput2[1].numberOfCell = 5;
-    pTabOutput2[1].cellSize = sizeof(int);
+    /** output ID_IOBUFFER_INT_DATA_WITH_ACK int */
+    ARNETWORK_IOBufferParam_DefaultInit( &(outputArr2[1]) );
+    outputArr2[1].ID = ID_IOBUFFER_INT_DATA_WITH_ACK;
+    outputArr2[1].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    outputArr2[1].numberOfCell = 5;
+    outputArr2[1].cellSize = sizeof(int);
     
-    /** output ID_DEPORT_DATA */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput2[2]) );
-    pTabOutput2[2].id = ID_DEPORT_DATA;
-    pTabOutput2[2].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    pTabOutput2[2].numberOfCell = 5;
-    pTabOutput2[2].deportedData = 1;
+    /** output ID_IOBUFFER_VARIABLE_SIZE_DATA */
+    ARNETWORK_IOBufferParam_DefaultInit( &(outputArr2[2]) );
+    outputArr2[2].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA;
+    outputArr2[2].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    outputArr2[2].numberOfCell = 5;
+    outputArr2[2].isUsingVariableSizeData = 1;
     
-    /** output ID_DEPORT_DATA_ACK */
-    NETWORK_ParamNewIoBufferDefaultInit( &(pTabOutput2[3]) );
-    pTabOutput2[3].id = ID_DEPORT_DATA_ACK;
-    pTabOutput2[3].dataType = NETWORK_FRAME_TYPE_DATA_WITH_ACK;
-    pTabOutput2[3].numberOfCell = 5;
-    pTabOutput2[3].deportedData = 1;
+    /** output ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK */
+    ARNETWORK_IOBufferParam_DefaultInit( &(outputArr2[3]) );
+    outputArr2[3].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK;
+    outputArr2[3].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    outputArr2[3].numberOfCell = 5;
+    outputArr2[3].isUsingVariableSizeData = 1;
     
     /** ----------------------------- */
 }
 
-void initManagerCheck( managerCheck_t* pManagerCheck )
+void AUTOTEST_InitManagerCheck( AUTOTEST_ManagerCheck_t *managerCheckPtr )
 {
     /** -- intitialize the managerCheck -- */
     
-    pManagerCheck->pManager = NULL;
-    pManagerCheck->thread_managerSend = NULL;
-    pManagerCheck->thread_managerRecv = NULL;
+    managerCheckPtr->managerPtr = NULL;
+    managerCheckPtr->managerSendingThread = NULL;
+    managerCheckPtr->managerReceiverThread = NULL;
     
-    pManagerCheck->thRecvCheckAlive  = 1;
+    managerCheckPtr->isReadingThreadAlive  = 1;
     
-    pManagerCheck->thread_checkSend = NULL;
-    pManagerCheck->thread_checkRecv = NULL ;
-    pManagerCheck->thread_checkRecvDeported = NULL;
+    managerCheckPtr->dataSendingThread = NULL;
+    managerCheckPtr->fixedSizeDataReadingThread = NULL ;
+    managerCheckPtr->variableSizeDataReadingThread = NULL;
     
-    pManagerCheck->sentDataNumber = 0; 
-    pManagerCheck->sentDataAckNumber = 0;
-    pManagerCheck->sentDataDeportedNumber = 0;
-    pManagerCheck->sentDataDeportedAckNumber = 0;
+    managerCheckPtr->numberOfFixedSizeDataSent = 0; 
+    managerCheckPtr->numberOfFixedSizeDataAckSent = 0;
+    managerCheckPtr->numberOfVariableSizeDataSent = 0;
+    managerCheckPtr->numberOfVariableSizeDataAckSent = 0;
     
-    pManagerCheck->recvDataNumber = 0;
-    pManagerCheck->recvDataAckNumber = 0;
-    pManagerCheck->recvDataDeportedNumber = 0;
-    pManagerCheck->recvDataDeportedAckNumber = 0;
+    managerCheckPtr->numberOfFixedSizeDataReceived = 0;
+    managerCheckPtr->numberOfFixedSizeDataAckReceived = 0;
+    managerCheckPtr->numberOfVariableSizeDataReceived = 0;
+    managerCheckPtr->numberOfVariableSizeDataAckReceived = 0;
     
-    pManagerCheck->lastDataRecv = FIRST_CHAR_SENT - 1;
-    pManagerCheck->lastDataDeportedSize = -1;
+    managerCheckPtr->lastFSDataRecv = AUTOTEST_FIRST_CHAR_SENT - 1;
+    managerCheckPtr->lastSizeOfVSDataRecv = -1;
     
-    pManagerCheck->numberOfError = 0;
+    managerCheckPtr->numberOfError = 0;
 }
 
-void* runCheckSendData(void* data)
+void* AUTOTEST_DataSendingRun(void* data)
 {
-    /** -- thread run send data -- */
+    /** -- Data Sending Run thread -- */
     
     /** local declarations */
-    managerCheck_t* pManagerCheck = (managerCheck_t*)data;
+    AUTOTEST_ManagerCheck_t *managerCheckPtr = (AUTOTEST_ManagerCheck_t*)data;
     int alive = 1;
     
     /** send while all data are sent */
@@ -580,140 +544,128 @@ void* runCheckSendData(void* data)
         
         /** for all data type, if not all data are sent, try to send with fifty-fifty chance */
         
-        if( pManagerCheck->sentDataNumber < NUMBER_DATA_SENT )
+        if( managerCheckPtr->numberOfFixedSizeDataSent < AUTOTEST_NUMBER_DATA_SENT )
         {
             alive = 1;
             if( rand() % 2 )
             {
-                sendData( pManagerCheck );
+                AUTOTEST_SendFixedSizeData( managerCheckPtr );
             }
         }
         
-        if( pManagerCheck->sentDataAckNumber < NUMBER_DATA_SENT )
+        if( managerCheckPtr->numberOfFixedSizeDataAckSent < AUTOTEST_NUMBER_DATA_SENT )
         {
             alive = 1;
             if( rand() % 2 )
             {
-                sendDataAck( pManagerCheck );
+                AUTOTEST_SendFixedSizeDataAck( managerCheckPtr );
             }
         }
         
-        if( pManagerCheck->sentDataDeportedNumber < NUMBER_DATA_SENT )
+        if( managerCheckPtr->numberOfVariableSizeDataSent < AUTOTEST_NUMBER_DATA_SENT )
         {
             alive = 1;
             if( rand() % 2 )
             {
-                sendDataDeported( pManagerCheck );
+                AUTOTEST_SendVariableSizeData( managerCheckPtr );
             }
         }
         
-        if( pManagerCheck->sentDataDeportedAckNumber < NUMBER_DATA_SENT )
+        if( managerCheckPtr->numberOfVariableSizeDataAckSent < AUTOTEST_NUMBER_DATA_SENT )
         {
             alive = 1;
             if( rand() % 2 )
             {
-                sendDataDeportedAck( pManagerCheck );
+                AUTOTEST_SendVaribleSizeDatadAck( managerCheckPtr );
             }
         }
         
-        usleep(SENDING_SLEEP_TIME_US);
+        usleep(AUTOTEST_SENDING_SLEEP_TIME_US);
     }
     
     return NULL;
 }
 
-void* runCheckReadData(void* data)
+void* AUTOTEST_FixedSizeDataReadingRun(void* data)
 {
     /** -- thread run read and check data -- */
     
     /** local declarations */
-    managerCheck_t* pManagerCheck = (managerCheck_t*)data;
+    AUTOTEST_ManagerCheck_t *managerCheckPtr = (AUTOTEST_ManagerCheck_t*)data;
     
     char chData = 0;
     int intData = 0;
     
-    while(pManagerCheck->thRecvCheckAlive)
+    while(managerCheckPtr->isReadingThreadAlive)
     {
         /** checking */
-        if( NETWORK_OK == NETWORK_ManagerReadData( pManagerCheck->pManager,
-                                                   ID_CHAR_DATA,
-                                                   (uint8_t*) &chData )     )
+        if( ARNETWORK_OK == ARNETWORK_Manager_ReadFixedSizeData( managerCheckPtr->managerPtr, ID_IOBUFFER_CHAR_DATA,(uint8_t*) &chData) )
         {
             printf("- charData: %c \n", chData);
-            if( checkData(pManagerCheck, chData) )
+            if( AUTOTEST_CheckFixedSizeData(managerCheckPtr, chData) )
             {
                 printf("error \n");
             }
         }
         
-        if( NETWORK_OK == NETWORK_ManagerReadData( pManagerCheck->pManager,
-                                                   ID_INT_DATA_WITH_ACK, 
-                                                   (uint8_t*) &intData )    )
+        if( ARNETWORK_OK == ARNETWORK_Manager_ReadFixedSizeData(managerCheckPtr->managerPtr, ID_IOBUFFER_INT_DATA_WITH_ACK, (uint8_t*) &intData ))
         {
             printf("- ackInt: %d \n", intData);
-            if( checkDataACK( pManagerCheck, intData ) )
+            if( AUTOTEST_CheckFixedSizeDataACK( managerCheckPtr, intData ) )
             {
                 printf("error \n");
             }
         }
         
-        usleep(READING_SLEEP_TIME_US);
+        usleep(AUTOTEST_READING_SLEEP_TIME_US);
     }
     
     return NULL;
 }
 
-void* runCheckReadDataDeported(void* data)
+void* AUTOTEST_VariableSizeDataReadingRun(void* data)
 {
     /** -- thread run read and check data deported -- */
     
     /** local declarations */
-    managerCheck_t* pManagerCheck = (managerCheck_t*)data;
+    AUTOTEST_ManagerCheck_t *managerCheckPtr = (AUTOTEST_ManagerCheck_t*) data;
     
     int readSize = 0;
-    char dataDeportedRead[ NUMBER_DATA_SENT + STR_SIZE_OFFSET ];
-    char dataDeportedReadAck[ NUMBER_DATA_SENT + STR_SIZE_OFFSET ];
+    char dataDeportedRead[ AUTOTEST_NUMBER_DATA_SENT + AUTOTEST_STR_SIZE_OFFSET ];
+    char dataDeportedReadAck[ AUTOTEST_NUMBER_DATA_SENT + AUTOTEST_STR_SIZE_OFFSET ];
     
-    while(pManagerCheck->thRecvCheckAlive)
+    while(managerCheckPtr->isReadingThreadAlive)
     {
         /** checking */
         
-        if( NETWORK_OK == NETWORK_ManagerReadDeportedData( pManagerCheck->pManager,
-                                                           ID_DEPORT_DATA, 
-                                                           (uint8_t*) dataDeportedRead, 
-                                                           NUMBER_DATA_SENT + STR_SIZE_OFFSET,
-                                                           &readSize )                          )
+        if( ARNETWORK_OK == ARNETWORK_Manager_ReadVariableSizeData(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA, (uint8_t*) dataDeportedRead, AUTOTEST_NUMBER_DATA_SENT + AUTOTEST_STR_SIZE_OFFSET, &readSize ))
         {
-            printf("- depData: %s \n",  dataDeportedRead );
+            printf("- dataDeportedRead: %s \n",  dataDeportedRead );
             
-            if( checkDeportedData( pManagerCheck, readSize) )
+            if( AUTOTEST_CheckVariableSizeData( managerCheckPtr, readSize) )
             {
                 printf("error \n");
             }
         }
         
-        if( NETWORK_OK == NETWORK_ManagerReadDeportedData( pManagerCheck->pManager, 
-                                                           ID_DEPORT_DATA_ACK, 
-                                                           (uint8_t*) dataDeportedReadAck, 
-                                                           NUMBER_DATA_SENT + STR_SIZE_OFFSET,
-                                                           &readSize )                          )
+        if( ARNETWORK_OK == ARNETWORK_Manager_ReadVariableSizeData(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK, (uint8_t*) dataDeportedReadAck, AUTOTEST_NUMBER_DATA_SENT + AUTOTEST_STR_SIZE_OFFSET, &readSize ))
         {
             
-            printf("- depDataACK: %s \n",  dataDeportedReadAck );
+            printf("- dataDeportedReadAck: %s \n",  dataDeportedReadAck );
             
-            if( checkDeportedDataACK(pManagerCheck, dataDeportedReadAck, readSize) )
+            if( AUTOTEST_CheckVariableSizeDataACK(managerCheckPtr, dataDeportedReadAck, readSize) )
             {
                 printf("error \n");
             } 
         }
         
-        usleep(READING_SLEEP_TIME_US);
+        usleep(AUTOTEST_READING_SLEEP_TIME_US);
     }
     
     return NULL;
 }
 
-char* allocInitStr( int size )
+char* AUTOTEST_AllocInitString( int size )
 {
     /** allocate and initialize the string to send */
     
@@ -727,64 +679,60 @@ char* allocInitStr( int size )
     /** write data */
     for(ii = 0; ii < size - 1 ; ++ii)
     {
-        pStr[ii] = ( FIRST_DEPORTED_DATA + ii );
+        pStr[ii] = ( AUTOTEST_FIRST_DEPORTED_DATA + ii );
     }
     
     /** end the string */
     pStr[size-1] = '\0' ;
     
-
     return pStr;
 }
 
-eNETWORK_CALLBACK_RETURN callbackDepotData(int OutBufferId, 
-                                               uint8_t* pData, 
-                                               void* customData, 
-                                               eNETWORK_CALLBACK_STATUS status)
+eARNETWORK_MANAGER_CALLBACK_RETURN AUTOTEST_VariableSizeDataCallback(int OutBufferId, uint8_t* dataPtr, void* customData, eARNETWORK_MANAGER_CALLBACK_STATUS status)
 {
     /** local declarations */
-    int retry = NETWORK_CALLBACK_RETURN_DEFAULT;
+    int retry = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
     
-    printf(" -- callbackDepotData status: %d ",status);
+    printf(" -- AUTOTEST_VariableSizeDataCallback status: %d ",status);
     
     switch(status)
     {
-        case NETWORK_CALLBACK_STATUS_SENT :
-        case NETWORK_CALLBACK_STATUS_SENT_WITH_ACK :
-        case NETWORK_CALLBACK_STATUS_FREE :
-            retry = NETWORK_CALLBACK_RETURN_DEFAULT;
-            free(pData);
+        case ARNETWORK_MANAGER_CALLBACK_STATUS_SENT :
+        case ARNETWORK_MANAGER_CALLBACK_STATUS_SENT_WITH_ACK :
+        case ARNETWORK_MANAGER_CALLBACK_STATUS_FREE :
+            retry = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
+            free(dataPtr);
             printf(" free --\n");
-        break;
+            break;
         
-        case NETWORK_CALLBACK_STATUS_TIMEOUT :
-            retry = NETWORK_CALLBACK_RETURN_RETRY;
+        case ARNETWORK_MANAGER_CALLBACK_STATUS_TIMEOUT :
+            retry = ARNETWORK_MANAGER_CALLBACK_RETURN_RETRY;
             printf(" retry --\n");
-        break;
+            break;
         
         default:
             printf(" default --\n");
-        break;
+            break;
     }
     
     return retry;
 }
 
-eNETWORK_Error sendData(managerCheck_t* pManagerCheck)
+eARNETWORK_ERROR AUTOTEST_SendFixedSizeData(AUTOTEST_ManagerCheck_t *managerCheckPtr)
 {
     /** -- send data not acknowledged -- */
     
     /** local declarations */
-    eNETWORK_Error error = NETWORK_OK;
-    char chData = FIRST_CHAR_SENT + pManagerCheck->sentDataNumber;
+    eARNETWORK_ERROR error = ARNETWORK_OK;
+    char chData = AUTOTEST_FIRST_CHAR_SENT + managerCheckPtr->numberOfFixedSizeDataSent;
     
     printf(" send char: %c \n",chData);
-    error = NETWORK_ManagerSendData( pManagerCheck->pManager, ID_CHAR_DATA, (uint8_t*) &chData);
+    error = ARNETWORK_Manager_SendFixedSizeData( managerCheckPtr->managerPtr, ID_IOBUFFER_CHAR_DATA, (uint8_t*) &chData);
         
-    if( error == NETWORK_OK)
+    if( error == ARNETWORK_OK)
     {
         /** increment Number of data sent*/
-        ++( pManagerCheck->sentDataNumber );
+        ++( managerCheckPtr->numberOfFixedSizeDataSent );
     }
     else
     {
@@ -794,21 +742,21 @@ eNETWORK_Error sendData(managerCheck_t* pManagerCheck)
     return error;
 }
 
-eNETWORK_Error sendDataAck(managerCheck_t* pManagerCheck)
+eARNETWORK_ERROR AUTOTEST_SendFixedSizeDataAck(AUTOTEST_ManagerCheck_t *managerCheckPtr)
 {
     /** -- send data acknowledged -- */
     
     /** local declarations */
-    eNETWORK_Error error = NETWORK_OK;
-    int intData = FIRST_INT_ACK_SENT + pManagerCheck->sentDataAckNumber;
+    eARNETWORK_ERROR error = ARNETWORK_OK;
+    int intData = AUTOTEST_FIRST_INT_ACK_SENT + managerCheckPtr->numberOfFixedSizeDataAckSent;
     
     printf(" send int: %d \n",intData);        
-    error = NETWORK_ManagerSendData( pManagerCheck->pManager, ID_INT_DATA_WITH_ACK, (uint8_t*) &intData );
+    error = ARNETWORK_Manager_SendFixedSizeData( managerCheckPtr->managerPtr, ID_IOBUFFER_INT_DATA_WITH_ACK, (uint8_t*) &intData );
     
-    if( error == NETWORK_OK)
+    if( error == ARNETWORK_OK)
     {
         /** increment Number of data acknowledged sent*/
-        ++( pManagerCheck->sentDataAckNumber ); 
+        ++(managerCheckPtr->numberOfFixedSizeDataAckSent); 
     }
     else
     {
@@ -818,29 +766,25 @@ eNETWORK_Error sendDataAck(managerCheck_t* pManagerCheck)
     return error;
 }
 
-eNETWORK_Error sendDataDeported(managerCheck_t* pManagerCheck)
+eARNETWORK_ERROR AUTOTEST_SendVariableSizeData(AUTOTEST_ManagerCheck_t *managerCheckPtr)
 {
     /** -- send data deported not acknowledged -- */
     
     /** local declarations */
-    eNETWORK_Error error = NETWORK_OK;
+    eARNETWORK_ERROR error = ARNETWORK_OK;
     char* pStrDataDeported = NULL;
-    int dataDeportSize = pManagerCheck->sentDataDeportedNumber + STR_SIZE_OFFSET;
+    int dataDeportSize = managerCheckPtr->numberOfVariableSizeDataSent + AUTOTEST_STR_SIZE_OFFSET;
     
     /** create DataDeported */
-    pStrDataDeported = allocInitStr( dataDeportSize );
+    pStrDataDeported = AUTOTEST_AllocInitString( dataDeportSize );
     
     printf(" send str: %s size: %d \n", pStrDataDeported, dataDeportSize);  
-    error = NETWORK_ManagerSendDeportedData( pManagerCheck->pManager, ID_DEPORT_DATA,
-                                             (uint8_t*) pStrDataDeported, 
-                                             dataDeportSize,
-                                             NULL,
-                                             &(callbackDepotData) );
-                                             
-    if( error == NETWORK_OK)
+    error = ARNETWORK_Manager_SendVariableSizeData( managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA, (uint8_t*) pStrDataDeported, dataDeportSize, NULL, &(AUTOTEST_VariableSizeDataCallback) );
+    
+    if( error == ARNETWORK_OK)
     {
         /** increment Number of data deported not acknowledged sent*/
-        ++( pManagerCheck->sentDataDeportedNumber );
+        ++( managerCheckPtr->numberOfVariableSizeDataSent );
     }
     else
     {
@@ -850,28 +794,26 @@ eNETWORK_Error sendDataDeported(managerCheck_t* pManagerCheck)
     return error;
 }
 
-eNETWORK_Error sendDataDeportedAck(managerCheck_t* pManagerCheck)
+eARNETWORK_ERROR AUTOTEST_SendVaribleSizeDatadAck(AUTOTEST_ManagerCheck_t *managerCheckPtr)
 {
     /** -- send data deported acknowledged -- */
     
     /** local declarations */
-    eNETWORK_Error error = NETWORK_OK;
+    eARNETWORK_ERROR error = ARNETWORK_OK;
     char* pStrDataDeportedAck = NULL;
-    int dataDeportSizeAck = pManagerCheck->sentDataDeportedAckNumber + STR_SIZE_OFFSET;
+    int dataDeportSizeAck = managerCheckPtr->numberOfVariableSizeDataAckSent + AUTOTEST_STR_SIZE_OFFSET;
     
     /** create DataDeported */
-    pStrDataDeportedAck = allocInitStr( dataDeportSizeAck );
+    pStrDataDeportedAck = AUTOTEST_AllocInitString( dataDeportSizeAck );
     
     printf(" send str: %s size: %d \n", pStrDataDeportedAck, dataDeportSizeAck);
     
-    error = NETWORK_ManagerSendDeportedData( pManagerCheck->pManager, ID_DEPORT_DATA_ACK,
-                                             (uint8_t*) pStrDataDeportedAck, dataDeportSizeAck,
-                                             NULL, &(callbackDepotData) );
+    error = ARNETWORK_Manager_SendVariableSizeData(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK, (uint8_t*) pStrDataDeportedAck, dataDeportSizeAck, NULL, &(AUTOTEST_VariableSizeDataCallback));
     
-    if( error == NETWORK_OK)
+    if( error == ARNETWORK_OK)
     {
         /** increment Number of data deported acknowledged sent*/
-        ++( pManagerCheck->sentDataDeportedAckNumber );
+        ++( managerCheckPtr->numberOfVariableSizeDataAckSent );
     }
     else
     {
@@ -882,99 +824,99 @@ eNETWORK_Error sendDataDeportedAck(managerCheck_t* pManagerCheck)
 }
 
 
-int checkData( managerCheck_t* pManagerCheck, char data )
+int AUTOTEST_CheckFixedSizeData( AUTOTEST_ManagerCheck_t *managerCheckPtr, char data )
 {
-    /** -- check the data receved -- */
+    /** -- check the fixed size data receved -- */
     
     /** local declarations */
     int error = 0;
     
-    if( data > pManagerCheck->lastDataRecv )
+    if( data > managerCheckPtr->lastFSDataRecv )
     {
-        pManagerCheck->lastDataRecv = data;
+        managerCheckPtr->lastFSDataRecv = data;
     }
     else
     {
         error = 1;
         /** increment the cheking error */
-        ++(pManagerCheck->numberOfError);
+        ++(managerCheckPtr->numberOfError);
     }
     
     /** increment data not acknowledged receved*/
-    ++( pManagerCheck->recvDataNumber );
+    ++( managerCheckPtr->numberOfFixedSizeDataReceived );
     
     return error;
 }
 
-int checkDataACK( managerCheck_t* pManagerCheck, int dataAck )
+int AUTOTEST_CheckFixedSizeDataACK( AUTOTEST_ManagerCheck_t *managerCheckPtr, int dataAck )
 {
-    /** -- check the data acknowledged receved -- */
+    /** -- check the fixed size data acknowledged receved -- */
     
     /** local declarations */
     int error = 0;
-    int dataAckCheck = FIRST_INT_ACK_SENT + pManagerCheck->recvDataAckNumber;
+    int dataAckCheck = AUTOTEST_FIRST_INT_ACK_SENT + managerCheckPtr->numberOfFixedSizeDataAckReceived;
     
     if( dataAckCheck != dataAck )
     {
         error = 1;
         /** increment the cheking error */
-        ++(pManagerCheck->numberOfError);
+        ++(managerCheckPtr->numberOfError);
     }
     
     /** increment data acknowledged receved*/
-    ++( pManagerCheck->recvDataAckNumber );
+    ++( managerCheckPtr->numberOfFixedSizeDataAckReceived );
     
     return error;
 }
 
-int checkDeportedData( managerCheck_t* pManagerCheck, int dataSize)
+int AUTOTEST_CheckVariableSizeData( AUTOTEST_ManagerCheck_t *managerCheckPtr, int dataSize)
 {
-    /** -- check the data deported not acknowledged receved -- */
+    /** -- check the variable size data not acknowledged receved -- */
     
     /** local declarations */
     int error = 0;
     
-    if( dataSize > pManagerCheck->lastDataDeportedSize )
+    if( dataSize > managerCheckPtr->lastSizeOfVSDataRecv )
     {
-        pManagerCheck->lastDataDeportedSize = dataSize;
+        managerCheckPtr->lastSizeOfVSDataRecv = dataSize;
     }
     else
     {
         error = 1;
         /** increment the cheking error */
-        ++(pManagerCheck->numberOfError);
+        ++(managerCheckPtr->numberOfError);
     }
     
     /** increment data deported not acknowledged receved*/
-    ++( pManagerCheck->recvDataDeportedNumber );
+    ++( managerCheckPtr->numberOfVariableSizeDataReceived );
     
     return error;
 }
 
-int checkDeportedDataACK( managerCheck_t* pManagerCheck, char* pDataDeportedAck, int dataSizeAck )
+int AUTOTEST_CheckVariableSizeDataACK( AUTOTEST_ManagerCheck_t *managerCheckPtr, char* dataPtrDeportedAck, int dataSizeAck )
 {
-    /** -- check the data deported acknowledged receved -- */
+    /** -- check the variable size data acknowledged receved -- */
     
     /** local declarations */
     int error = 0;
     char* pCheckStr = NULL;
-    int checkStrSize = pManagerCheck->recvDataDeportedAckNumber + 2;
+    int checkStrSize = managerCheckPtr->numberOfVariableSizeDataAckReceived + 2;
 
     /** check the size of the data */
     if( dataSizeAck != checkStrSize )
     {
         error = 1;
         /** increment the cheking error */
-        ++(pManagerCheck->numberOfError);
+        ++(managerCheckPtr->numberOfError);
     }
     
     if(error == 0)
     {
         /** create DataDeportedAck check */
-        pCheckStr = allocInitStr( checkStrSize );
+        pCheckStr = AUTOTEST_AllocInitString( checkStrSize );
         
         /** compare the data with the string expected */
-        error = memcmp(pDataDeportedAck, pCheckStr, checkStrSize);
+        error = memcmp(dataPtrDeportedAck, pCheckStr, checkStrSize);
         
         /** free the checking string */
         free(pCheckStr);
@@ -983,11 +925,11 @@ int checkDeportedDataACK( managerCheck_t* pManagerCheck, char* pDataDeportedAck,
     if(error != 0)
     {
         /** increment the cheking error */
-        ++(pManagerCheck->numberOfError);
+        ++(managerCheckPtr->numberOfError);
     }
     
     /** increment data deported acknowledged receved*/
-    ++( pManagerCheck->recvDataDeportedAckNumber );
+    ++(managerCheckPtr->numberOfVariableSizeDataAckReceived);
     
     return error;
 }

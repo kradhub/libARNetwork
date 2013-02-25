@@ -5,8 +5,8 @@
  *  @author maxime.maitre@parrot.com
 **/
 
-#ifndef _NETWORK_DEF_H_
-#define _NETWORK_DEF_H_
+#ifndef _ARNETWORK_DEF_H_
+#define _ARNETWORK_DEF_H_
 
 #include <inttypes.h>
 
@@ -20,7 +20,7 @@
 #define ID_SEND_RING_BUFF 1
 #define ID_SEND_SING_BUFF 2
 
-typedef enum eID_BUFF
+typedef enum
 {
     ID_CHAR_DATA = 5, //manager ->
     ID_INT_DATA_WITH_ACK, //manager ->
@@ -33,5 +33,5 @@ typedef enum eID_BUFF
     ID_DEPORT_DATA_2,//manager <-
 }eID_BUFF;
 
-#endif // _NETWORK_DEF_H_
+#endif /** _ARNETWORK_DEF_H_ */
 

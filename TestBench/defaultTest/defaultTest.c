@@ -1,6 +1,6 @@
 /**
  *  @file main.h
- *  @brief libNetWork TestBench automatic
+ *  @brief libARNetwork TestBench automatic
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
 **/
@@ -16,7 +16,7 @@
 
 #include <libARSAL/ARSAL_Thread.h>
 
-#include <libNetwork/manager.h>
+#include <libARNetwork/ARNETWORK_Manager.h>
 
 #include <unistd.h>
 #include <signal.h>
@@ -69,8 +69,8 @@ int main(int argc, char *argv[])
     char scanChar = 0;
     int sendPort = 0;
     int recvPort = 0;
-    network_manager_t* pManager = NULL;
-    eNETWORK_Error error = NETWORK_OK;
+    ARNETWORK_Manager_t *managerPtr = NULL;
+    eARNETWORK_ERROR error = ARNETWORK_OK;
     int connectError = 1;
     char IpAddress[16];
     
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     /** call fixTerminal when the terminal kill the program */
     signal (SIGINT, fixTerminal);
     
-    printf(" -- libNetWork TestBench default -- \n");
+    printf(" -- libARNetwork TestBench default -- \n");
     
     while(scanChar == 0)
     {
@@ -94,30 +94,29 @@ int main(int argc, char *argv[])
             case '1':
                 sendPort = PORT1;
                 recvPort = PORT2;
-            break;
+                break;
             
             case '2':
                 sendPort = PORT2;
                 recvPort = PORT1;
-            break;
+                break;
             
             default:
                 scanChar = 0;
-            break;
+                break;
         }
     }
     
-    pManager = NETWORK_NewManager( RECV_BUFF_SIZE, SEND_BUFF_SIZE, 0, NULL, 0,NULL, &error);
+    managerPtr = ARNETWORK_Manager_New( RECV_BUFF_SIZE, SEND_BUFF_SIZE, 0, NULL, 0,NULL, &error);
     
-    if(error == NETWORK_OK )
+    if(error == ARNETWORK_OK)
     {
         while( connectError != 0)
         {
             printf("repeater IP address ? : ");
             scanf("%s",IpAddress);
             
-            connectError = NETWORK_ManagerSocketsInit( pManager, IpAddress, sendPort,
-                                                        recvPort, RECV_TIMEOUT_MS );
+            connectError = ARNETWORK_Manager_SocketsInit(managerPtr, IpAddress, sendPort, recvPort, RECV_TIMEOUT_MS);
             
             printf("    - connect error: %d \n", connectError );            
             printf("\n");
@@ -125,8 +124,8 @@ int main(int argc, char *argv[])
     }
     
     /** start threads */
-    ARSAL_Thread_Create(&(thread_recv1), (ARSAL_Thread_Routine_t) NETWORK_ManagerRunReceivingThread, pManager);
-    ARSAL_Thread_Create(&thread_send1, (ARSAL_Thread_Routine_t) NETWORK_ManagerRunSendingThread, pManager);
+    ARSAL_Thread_Create(&(thread_recv1), (ARSAL_Thread_Routine_t) ARNETWORK_Manager_ReceivingThreadRun, managerPtr);
+    ARSAL_Thread_Create(&thread_send1, (ARSAL_Thread_Routine_t) ARNETWORK_Manager_SendingThreadRun, managerPtr);
     
     while ( ((scanChar = getchar()) != '\n') && scanChar != EOF )
     {
@@ -136,7 +135,7 @@ int main(int argc, char *argv[])
     /** set the terminal on nonBloking mode */
     setupNonBlockingTerm ();
     
-    if(error == NETWORK_OK )
+    if(error == ARNETWORK_OK )
     {
         printf("press q to quit: \n");
         
@@ -147,7 +146,7 @@ int main(int argc, char *argv[])
     }
     
     /** stop all therad */
-    NETWORK_ManagerStop(pManager);
+    ARNETWORK_Manager_Stop(managerPtr);
     
     printf("wait ... \n");
     
@@ -158,7 +157,7 @@ int main(int argc, char *argv[])
     /** delete */
     ARSAL_Thread_Destroy(&thread_send1);
     ARSAL_Thread_Destroy(&thread_recv1);
-    NETWORK_DeleteManager( &pManager );
+    ARNETWORK_Manager_Delete( &managerPtr );
     
     printf("end \n");
     

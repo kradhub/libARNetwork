@@ -1,9 +1,9 @@
-package com.parrot.arsdk.libnetwork;
+package com.parrot.arsdk.arnetwork;
 
 /**
  *  Class used to store the deported data received
 **/
-public class NetworkDataRecv 
+public class ARNetworkDataRecv 
 {
     private byte[] m_data;
     private int m_limitSize;
@@ -13,7 +13,7 @@ public class NetworkDataRecv
      *  Constructor
      *  @param limitSize maximum size of the data read
     **/
-    public NetworkDataRecv(int limitSize) 
+    public ARNetworkDataRecv(int limitSize) 
     {
         m_data = new byte[limitSize];
         m_limitSize = limitSize;
@@ -35,8 +35,8 @@ public class NetworkDataRecv
     **/
     public int getReadSize() 
     {
-		return m_readSize;
-	}
+        return m_readSize;
+    }
     
     /**
      *  Convert the data read to string
