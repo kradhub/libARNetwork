@@ -30,9 +30,10 @@ typedef enum
 typedef enum
 {
     ARNETWORK_MANAGER_CALLBACK_STATUS_SENT = 0, /**< data sent */
-    ARNETWORK_MANAGER_CALLBACK_STATUS_SENT_WITH_ACK, /**< data acknowledged sent */
-    ARNETWORK_MANAGER_CALLBACK_STATUS_TIMEOUT, /**< timeout occurred, data not received */
-    ARNETWORK_MANAGER_CALLBACK_STATUS_FREE /**< free the data not sent */
+    ARNETWORK_MANAGER_CALLBACK_STATUS_ACK_RECEIVED, /**< acknowledged received */
+    ARNETWORK_MANAGER_CALLBACK_STATUS_TIMEOUT, /**< timeout occurred, data not received; the callback must return what the network manager must do with the data. */
+    ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL, /**< data will not sent */
+    ARNETWORK_MANAGER_CALLBACK_STATUS_FREE /**< free the data not sent; in case of variable size data, this data can be reused or freed. */
     
 } eARNETWORK_MANAGER_CALLBACK_STATUS;
 
@@ -45,7 +46,7 @@ typedef enum
  *  @return what do in timeout case
  *  @see eARNETWORK_MANAGER_CALLBACK_STATUS
 **/
-typedef eARNETWORK_MANAGER_CALLBACK_RETURN (*ARNETWORK_Manger_Callback_t) (int IoBufferId, uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status);
+typedef eARNETWORK_MANAGER_CALLBACK_RETURN (*ARNETWORK_Manager_Callback_t) (int IoBufferId, uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status);
 
 /**
  *  @brief network manager allow to send and receive data acknowledged or not.
@@ -135,35 +136,17 @@ void ARNETWORK_Manager_Stop(ARNETWORK_Manager_t *managerPtr);
 eARNETWORK_ERROR ARNETWORK_Manager_Flush(ARNETWORK_Manager_t *managerPtr);
 
 /**
- *  @brief Add data to send in a IOBuffer using fixed size data
- *  @param managerPtr pointer on the Manager
- *  @param[in] inputBufferID identifier of the input buffer in which the data must be stored
- *  @param[in] dataPtr pointer on the data to send
- *  @return error eARNETWORK_ERROR
-**/
-eARNETWORK_ERROR ARNETWORK_Manager_SendFixedSizeData(ARNETWORK_Manager_t *managerPtr, int inputBufferID, const uint8_t *dataPtr);
-
-/**
- *  @brief Add data to send in a IOBuffer using variable size data
+ *  @brief Add data to send in a IOBuffer
  *  @param managerPtr pointer on the Manager
  *  @param[in] inputBufferID identifier of the input buffer in which the data must be stored
  *  @param[in] dataPtr pointer on the data to send
  *  @param[in] dataSize size of the data to send
  *  @param[in] customData custom data sent to the callback
  *  @param[in] callback pointer on the callback to call when the data is sent or an error occurred
+ *  @param[in] doDataCopy indocator to copy the data in the ARNETWORK_Manager
  *  @return error eARNETWORK_ERROR
 **/
-eARNETWORK_ERROR ARNETWORK_Manager_SendVariableSizeData(ARNETWORK_Manager_t *managerPtr, int inputBufferID, uint8_t *dataPtr, int dataSize, void *customData, ARNETWORK_Manger_Callback_t callback);
-
-/**
- *  @brief Read data received in a IOBuffer using fixed size data
- *  @warning the outputBuffer should not be using of variable Size Data type
- *  @param managerPtr pointer on the Manager
- *  @param[in] outputBufferID identifier of the output buffer in which the data must be read
- *  @param[out] dataPtr pointer on the data read
- *  @return error eARNETWORK_ERROR
-**/
-eARNETWORK_ERROR ARNETWORK_Manager_ReadFixedSizeData(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr);
+eARNETWORK_ERROR ARNETWORK_Manager_SendData(ARNETWORK_Manager_t *managerPtr, int inputBufferID, uint8_t *dataPtr, int dataSize, void *customData, ARNETWORK_Manager_Callback_t callback, int doDataCopy);
 
 /**
  *  @brief Read data received in a IOBuffer using variable size data
@@ -175,19 +158,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_ReadFixedSizeData(ARNETWORK_Manager_t *manage
  *  @param[out] readSizePtr pointer to store the size of the data read
  *  @return error eARNETWORK_ERROR type
 **/
-eARNETWORK_ERROR ARNETWORK_Manager_ReadVariableSizeData(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr);
-
-/**
- *  @brief Read, with timeout, a data received in IOBuffer using fixed size data
- *  @details This function is blocking
- *  @warning the outputBuffer should not be using of variable Size Data type
- *  @param managerPtr pointer on the Manager
- *  @param[in] outputBufferID identifier of the output buffer in which the data must be read
- *  @param[out] dataPtr pointer on the data read
- *  @param[in] timeoutMs maximum time in millisecond to wait if there is no data to read
- *  @return error eARNETWORK_ERROR
-**/
-eARNETWORK_ERROR ARNETWORK_Manager_ReadFizedSizeDataWithTimeout(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int timeoutMs);
+eARNETWORK_ERROR ARNETWORK_Manager_ReadData(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr);
 
 /**
  *  @brief Read, with timeout, a data received in IOBuffer using variable size data
@@ -200,7 +171,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_ReadFizedSizeDataWithTimeout(ARNETWORK_Manage
  *  @param[in] timeoutMs maximum time in millisecond to wait if there is no data to read
  *  @return error eARNETWORK_ERROR type
 **/
-eARNETWORK_ERROR ARNETWORK_Manager_ReadVariableSizeDataWithTimeout(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr, int timeoutMs);
+eARNETWORK_ERROR ARNETWORK_Manager_ReadDataWithTimeout(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr, int timeoutMs);
 
 #endif /** _ARNETWORK_MANAGER_H_ */
 

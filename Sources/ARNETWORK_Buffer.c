@@ -85,7 +85,7 @@ void ARNETWORK_Buffer_Print(ARNETWORK_Buffer_t *bufferPtr)
 {
     /** -- Print the state of the buffer -- */
     
-    ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_BUFFER_TAG, " pointer daArruffer :%d \n",bufferPtr->startPtr);
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_BUFFER_TAG, " pointer dataBuffer :%d \n",bufferPtr->startPtr);
     ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_BUFFER_TAG, " numberOfCell :%d \n",bufferPtr->numberOfCell);
     ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_BUFFER_TAG, " cellSize :%d \n",bufferPtr->cellSize);
     

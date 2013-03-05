@@ -321,40 +321,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeFlush(JNIEnv *env, jobjec
 }
 
 /**
- *  @brief Add data to send in a IOBuffer using fixed size data
- *  @param env reference to the java environment
- *  @param obj reference to the object calling this function
- *  @param jManagerPtr adress of the ARNETWORK_Manager_t
- *  @param[in] inputBufferID identifier of the input buffer in which the data must be stored
- *  @param[in] jData array of byte to send
- *  @return error eARNETWORK_ERROR
-**/
-JNIEXPORT jint JNICALL
-Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendFixedSizeData( JNIEnv *env, jobject obj, jlong jManagerPtr, jint inputBufferID, jbyteArray jData )
-{
-    /** -- Add data to send in a IOBuffer using fixed size data -- */
-    
-    /** local declarations */
-    ARNETWORK_Manager_t *managerPtr = (ARNETWORK_Manager_t*) (intptr_t) jManagerPtr;
-    eARNETWORK_ERROR error = ARNETWORK_OK;
-    uint8_t *dataPtr = (*env)->GetByteArrayElements (env, jData, NULL);
-    
-    if (NULL != jData)
-    {
-        error = ARNETWORK_Manager_SendFixedSizeData(managerPtr, inputBufferID, dataPtr);
-        
-        (*env)->ReleaseByteArrayElements (env, jData, dataPtr, JNI_ABORT); // Use JNI_ABORT because we NEVER want to modify jData
-    }
-    else
-    {
-        error = ARNETWORK_ERROR_BAD_PARAMETER;
-    }
-    
-    return error;
-}
-
-/**
- *  @brief Add data to send in a IOBuffer using variable size data
+ *  @brief Add data to send in a IOBuffer
  *  @param env reference to the java environment
  *  @param obj reference to the object calling this function
  *  @param jManagerPtr adress of the ARNETWORK_Manager_t
@@ -362,10 +329,11 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendFixedSizeData( JNIEnv
  *  @param[in] ARData ARNativeData to send
  *  @param[in] jdataPtr array of byte to send ( use arData.getData() )
  *  @param[in] dataSize size of the data to send ( use arData.getDataSize() )
+ *  @param[in] doDataCopy indocator to copy the data in the ARNETWORK_Manager
  *  @return error eARNETWORK_ERROR
 **/
 JNIEXPORT jint JNICALL
-Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendVariableSizeData(JNIEnv *env, jobject obj, jlong jManagerPtr, jint inputBufferID, jobject ARData, jlong jdataPtr, jint dataSize)
+Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendData(JNIEnv *env, jobject obj, jlong jManagerPtr, jint inputBufferID, jobject ARData, jlong jdataPtr, jint dataSize, jint doDataCopy)
 {
     /** -- Add data to send in a IOBuffer using variable size data -- */
     
@@ -376,64 +344,34 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendVariableSizeData(JNIE
     eARNETWORK_ERROR error = ARNETWORK_OK;
     ARNETWORK_Manager_t *managerPtr = (ARNETWORK_Manager_t*) (intptr_t) jManagerPtr;
     
-    /** allocate the data send to the callback */
-    callbackDataPtr = malloc( sizeof(ARNETWORK_JNIManager_CallbackData_t) );
-    if(callbackDataPtr == NULL)
+    /** if NO copy data create a custom data to send to the callback*/
+    if(!doDataCopy)
     {
-        error = ARNETWORK_ERROR_ALLOC;
-    }
-    
-    if(error == ARNETWORK_OK)
-    {
+        /** allocate the data send to the callback */
+        callbackDataPtr = malloc( sizeof(ARNETWORK_JNIManager_CallbackData_t) );
+        if(callbackDataPtr == NULL)
+        {
+            error = ARNETWORK_ERROR_ALLOC;
+        }
+        
         /** create a global reference of the java manager object delete by the callback */
         callbackDataPtr->jManager = (*env)->NewGlobalRef(env, obj);
         
         /** create a global reference of the java ARnativeData object delete by the callback */
         callbackDataPtr->jARData = (*env)->NewGlobalRef(env, ARData);
-        
+    }
+    
+    if(error == ARNETWORK_OK)
+    {
         /** send the data */
-        error = ARNETWORK_Manager_SendVariableSizeData( managerPtr, inputBufferID, dataPtr, dataSize, callbackDataPtr, &(ARNETWORK_JNIManger_Callback_t) );
+        error = ARNETWORK_Manager_SendData( managerPtr, inputBufferID, dataPtr, dataSize, callbackDataPtr, &(ARNETWORK_JNIManger_Callback_t), doDataCopy);
     }
     
     return error;
 }
 
 /**
- *  @brief Read data received in a IOBuffer using fixed size data
- *  @warning the outputBuffer should not be using of variable Size Data type
- *  @param env reference to the java environment
- *  @param obj reference to the object calling this function
- *  @param jManagerPtr adress of the ARNETWORK_Manager_t
- *  @param[in] outputBufferID identifier of the output buffer in which the data must be read
- *  @param[out] jData array of byte to store the data received
- *  @return error eARNETWORK_ERROR
-**/
-JNIEXPORT jint JNICALL
-Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadFixedSizeData(JNIEnv *env, jobject obj, jlong jManagerPtr, jint outputBufferID, jbyteArray jData)
-{
-    /** -- Read data received in a IOBuffer using fixed size data -- */
-    
-    /** local declarations */
-    ARNETWORK_Manager_t *managerPtr = (ARNETWORK_Manager_t*) (intptr_t) jManagerPtr;
-    eARNETWORK_ERROR error = ARNETWORK_OK;
-    uint8_t *dataPtr = (*env)->GetByteArrayElements (env, jData, NULL);
-    
-    if (NULL != jData)
-    {
-        error = ARNETWORK_Manager_ReadFixedSizeData(managerPtr, outputBufferID, dataPtr);
-        
-        (*env)->ReleaseByteArrayElements(env, jData, dataPtr, 0);
-    }
-    else
-    {
-        error = ARNETWORK_ERROR_BAD_PARAMETER;
-    }
-    
-    return error;
-}
-
-/**
- *  @brief Read data received in a IOBuffer using variable size data
+ *  @brief Read data received in a IOBuffer
  *  @warning the outputBuffer must be using of variable Size Data type
  *  @param env reference to the java environment
  *  @param obj reference to the object calling this function
@@ -443,7 +381,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadFixedSizeData(JNIEnv 
  *  @return error eARNETWORK_ERROR type
 **/
 JNIEXPORT jint JNICALL
-Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadVarableSizeData(JNIEnv *env, jobject obj, jlong jManagerPtr, jint outputBufferID, jobject jData)
+Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadData(JNIEnv *env, jobject obj, jlong jManagerPtr, jint outputBufferID, jobject jData)
 {
     /** -- Read data received in a IOBuffer using variable size data -- */
     
@@ -479,7 +417,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadVarableSizeData(JNIEn
    
         dataPtr = (*env)->GetByteArrayElements (env, jbyteArrayData, NULL);
         
-        ARNETWORK_Manager_ReadVariableSizeData( managerPtr, outputBufferID, dataPtr, limitSize, &readSize );
+        ARNETWORK_Manager_ReadData( managerPtr, outputBufferID, dataPtr, limitSize, &readSize );
         
         fieldID = (*env)->GetFieldID(env, dataRecv_cls, "m_readSize", "I" );
         (*env)->SetIntField(env, jData, fieldID, readSize);
@@ -494,43 +432,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadVarableSizeData(JNIEn
 }
 
 /**
- *  @brief Read, with timeout, a data received in IOBuffer using fixed size data
- *  @details This function is blocking
- *  @warning the outputBuffer should not be using of variable Size Data type
- *  @param env reference to the java environment
- *  @param obj reference to the object calling this function
- *  @param jManagerPtr adress of the ARNETWORK_Manager_t
- *  @param[in] outputBufferID identifier of the output buffer in which the data must be read
- *  @param[out] jData array of byte to store the data received
- *  @param[in] timeoutMs maximum time in millisecond to wait if there is no data to read
- *  @return error eARNETWORK_ERROR
-**/
-JNIEXPORT jint JNICALL
-Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadFixedSizeDataWithTimeout(JNIEnv *env, jobject obj, jlong jManagerPtr, jint outputBufferID, jbyteArray jData, jint timeoutMs)
-{
-    /** -- Read, with timeout, a data received in IOBuffer using fixed size data -- */
-    
-    /** local declarations */
-    ARNETWORK_Manager_t *managerPtr = (ARNETWORK_Manager_t*) (intptr_t) jManagerPtr;
-    eARNETWORK_ERROR error = ARNETWORK_OK;
-    uint8_t *dataPtr = (*env)->GetByteArrayElements (env, jData, NULL);
-    
-    if (NULL != jData)
-    {
-        error = ARNETWORK_Manager_ReadFixedSizeDataWithTimeout( managerPtr, outputBufferID, dataPtr, timeoutMs );
-        
-        (*env)->ReleaseByteArrayElements(env, jData, dataPtr, 0);
-    }
-    else
-    {
-        error = ARNETWORK_ERROR_BAD_PARAMETER;
-    }
-    
-    return error;
-}
-
-/**
- *  @brief Read, with timeout, a data received in IOBuffer using variable size data
+ *  @brief Read, with timeout, a data received in IOBuffer
  *  @warning the outputBuffer must be using of variable Size Data type
  *  @param env reference to the java environment
  *  @param obj reference to the object calling this function
@@ -541,7 +443,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadFixedSizeDataWithTime
  *  @return error eARNETWORK_ERROR type
 **/
 JNIEXPORT jint JNICALL
-Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadVarableSizeDataWithTimeout(JNIEnv *env, jobject obj, jlong jManagerPtr, jint outputBufferID, jobject jData, jint timeoutMs)
+Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadDataWithTimeout(JNIEnv *env, jobject obj, jlong jManagerPtr, jint outputBufferID, jobject jData, jint timeoutMs)
 {
     /** -- Read, with timeout, a data received in IOBuffer using variable size data -- */
     
@@ -577,7 +479,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadVarableSizeDataWithTi
    
         dataPtr = (*env)->GetByteArrayElements (env, jbyteArrayData, NULL);
         
-        error = ARNETWORK_Manager_ReadVariableSizeDataWithTimeout( managerPtr, outputBufferID, dataPtr, limitSize, &readSize, timeoutMs );
+        error = ARNETWORK_Manager_ReadDataWithTimeout( managerPtr, outputBufferID, dataPtr, limitSize, &readSize, timeoutMs );
         
         fieldID = (*env)->GetFieldID(env, dataRecv_cls, "m_readSize", "I" );
         (*env)->SetIntField(env, jData, fieldID, readSize);
@@ -633,15 +535,19 @@ eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManger_Callback_t(int IOBufferID
         switch(status)
         {
             case ARNETWORK_MANAGER_CALLBACK_STATUS_SENT :
-            case ARNETWORK_MANAGER_CALLBACK_STATUS_SENT_WITH_ACK :
-            case ARNETWORK_MANAGER_CALLBACK_STATUS_FREE :
                 
-                ARNETWORK_JNIManager_FreeCallbackData (env, &callbackDataPtr);
+                break;
+            
+            case ARNETWORK_MANAGER_CALLBACK_STATUS_ACK_RECEIVED :
                 
                 break;
             
             case ARNETWORK_MANAGER_CALLBACK_STATUS_TIMEOUT :
-            
+                
+                break;
+                
+            case ARNETWORK_MANAGER_CALLBACK_STATUS_FREE :
+                ARNETWORK_JNIManager_FreeCallbackData (env, &callbackDataPtr);
                 break;
             
             default:

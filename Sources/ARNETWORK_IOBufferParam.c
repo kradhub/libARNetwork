@@ -32,9 +32,8 @@
 #define ARNETWORK_IOBUFFER_ACK_TIMEOUT_MS_DEFAULT ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER
 #define ARNETWORK_IOBUFFER_NUMBER_OF_RETRY_DEFAULT ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER
 #define ARNETWORK_IOBUFFER_NUMBER_OF_CELL_DEFAULT 0
-#define ARNETWORK_IOBUFFER_CELL_SIZE_DEFAULT 0
+#define ARNETWORK_IOBUFFER_MAX_SIZE_OF_DATA_COPY_DEFAULT 0
 #define ARNETWORK_IOBUFFER_OVERWRITING_DEFAULT 0
-#define ARNETWORK_IOBUFFER_USING_VARIABLE_SIZE_DATA_DEFAULT 0 
 
 /*****************************************
  * 
@@ -58,9 +57,8 @@ eARNETWORK_ERROR ARNETWORK_IOBufferParam_DefaultInit(ARNETWORK_IOBufferParam_t *
         IOBufferParamPtr->numberOfRetry = ARNETWORK_IOBUFFER_NUMBER_OF_RETRY_DEFAULT;
         
         IOBufferParamPtr->numberOfCell = ARNETWORK_IOBUFFER_NUMBER_OF_CELL_DEFAULT;    
-        IOBufferParamPtr->cellSize = ARNETWORK_IOBUFFER_CELL_SIZE_DEFAULT;
+        IOBufferParamPtr->dataCopyMaxSize = ARNETWORK_IOBUFFER_MAX_SIZE_OF_DATA_COPY_DEFAULT;
         IOBufferParamPtr->isOverwriting = ARNETWORK_IOBUFFER_OVERWRITING_DEFAULT;
-        IOBufferParamPtr->isUsingVariableSizeData = ARNETWORK_IOBUFFER_USING_VARIABLE_SIZE_DATA_DEFAULT;
     }
     else
     {
@@ -83,9 +81,7 @@ int ARNETWORK_IOBufferParam_Check(const ARNETWORK_IOBufferParam_t *IOBufferParam
         (IOBufferParamPtr->dataType != ARNETWORK_FRAME_TYPE_UNINITIALIZED) &&
         (IOBufferParamPtr->sendingWaitTimeMs > 0) &&
         (IOBufferParamPtr->ackTimeoutMs >= -1) &&
-        (IOBufferParamPtr->numberOfRetry >= -1) &&
-        (IOBufferParamPtr->numberOfCell > 0) &&
-        (IOBufferParamPtr->cellSize > 0) )
+        (IOBufferParamPtr->numberOfRetry >= -1) )
     {
         ok = 1;
     }
@@ -99,18 +95,16 @@ values expected: \n \
     - ackTimeoutMs > 0 or -1 if not used (value set: %d)\n\
     - numberOfRetry > 0 or -1 if not used  (value set: %d)\n\
     - numberOfCell > 0 (value set: %d)\n\
-    - cellSize > 0 (value set: %d)\n\
-    - isOverwriting = 0 or 1 (value set: %d)\n\
-    - isUsingVariableSizeData = 0 or 1 (value set: %d)\n", 
-        ARNETWORK_IOBUFFER_ID_DEFAULT, IOBufferParamPtr->ID, 
-        ARNETWORK_FRAME_TYPE_UNINITIALIZED, IOBufferParamPtr->dataType, 
-        IOBufferParamPtr->sendingWaitTimeMs,
-        IOBufferParamPtr->ackTimeoutMs,
-        IOBufferParamPtr->numberOfRetry,
-        IOBufferParamPtr->numberOfCell,
-        IOBufferParamPtr->cellSize,
-        IOBufferParamPtr->isOverwriting,
-        IOBufferParamPtr->isUsingVariableSizeData);
+    - dataCopyMaxSize >= 0 (value set: %d)\n\
+    - isOverwriting = 0 or 1 (value set: %d)\n", 
+    ARNETWORK_IOBUFFER_ID_DEFAULT, IOBufferParamPtr->ID, 
+    ARNETWORK_FRAME_TYPE_UNINITIALIZED, IOBufferParamPtr->dataType, 
+    IOBufferParamPtr->sendingWaitTimeMs,
+    IOBufferParamPtr->ackTimeoutMs,
+    IOBufferParamPtr->numberOfRetry,
+    IOBufferParamPtr->numberOfCell,
+    IOBufferParamPtr->dataCopyMaxSize,
+    IOBufferParamPtr->isOverwriting);
     }
     
    return ok; 

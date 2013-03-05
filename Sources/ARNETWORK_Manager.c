@@ -25,7 +25,7 @@
 #include <libARNetwork/ARNETWORK_Error.h>
 #include <libARNetwork/ARNETWORK_Frame.h>
 #include "ARNETWORK_RingBuffer.h"
-#include "ARNETWORK_VariableSizeData.h"
+#include "ARNETWORK_DataDescriptor.h"
 #include <libARNetwork/ARNETWORK_IOBufferParam.h>
 #include "ARNETWORK_IOBuffer.h"
 #include "ARNETWORK_Sender.h"
@@ -52,7 +52,7 @@
 /**
  *  @brief create manager's IOBuffers.
  *  @warning only call by ARNETWORK_Manager_New()
- *  @pre managerPtr->outputBufferPtrArr and managerPtr->inputBufferPtrArr must be allocated and not set to NULL. //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *  @pre managerPtr->outputBufferPtrArr and managerPtr->inputBufferPtrArr must be allocated and not set to NULL.
  *  @param managerPtr pointer on the Manager
  *  @param[in] inputParamArr array of the parameters of creation of the inputs. The array must contain as many parameters as the number of input buffer.
  *  @param[in] outputParamArr array of the parameters of creation of the outputs. The array must contain as many parameters as the number of output buffer.
@@ -98,10 +98,10 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New(unsigned int recvBufferSize,unsigned 
     }
     
     /**
-     *  For each output buffer a buffer of acknowledgement is add and referenced
-     *  in the output buffer list and the input buffer list.
+     * For each output buffer a buffer of acknowledgement is add and referenced
+     * in the output buffer list and the input buffer list.
     **/
-
+    
     if( error == ARNETWORK_OK )
     {
         /**
@@ -193,7 +193,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New(unsigned int recvBufferSize,unsigned 
         ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_MANAGER_TAG, "error: %d occurred \n", error );
         ARNETWORK_Manager_Delete(&managerPtr);
     }
-
+    
     /** return the error */
     if(errorPtr != NULL)
     {
@@ -353,7 +353,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_Flush(ARNETWORK_Manager_t *managerPtr)
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_Manager_SendFixedSizeData(ARNETWORK_Manager_t *managerPtr, int inputBufferID, const uint8_t *dataPtr)
+eARNETWORK_ERROR ARNETWORK_Manager_SendData(ARNETWORK_Manager_t *managerPtr, int inputBufferID, uint8_t *dataPtr, int dataSize, void *customData, ARNETWORK_Manager_Callback_t callback, int doDataCopy)
 {
     /** -- Add data to send in a IOBuffer using fixed size data -- */
     
@@ -361,178 +361,42 @@ eARNETWORK_ERROR ARNETWORK_Manager_SendFixedSizeData(ARNETWORK_Manager_t *manage
     eARNETWORK_ERROR error = ARNETWORK_OK;
     ARNETWORK_IOBuffer_t *inputBufferPtr = NULL;
     
-    /** check paratemters */
-    if(managerPtr != NULL  )
+    /** check paratemters:
+     *  -   the manager ponter is not NUL
+     *  -   the data pointer is not NULL
+     *  -   the callback is not NULL
+     */
+    if( (managerPtr != NULL) && (dataPtr != NULL) && (callback != NULL) )
     {
         /** get the address of the inputBuffer */
         inputBufferPtr = managerPtr->inputBufferPtrMap[inputBufferID];
-    }
-    else
-    {
-       error = ARNETWORK_ERROR_BAD_PARAMETER;
-    }
-    
-    if(inputBufferPtr != NULL)
-    {
-        /** check paratemters:
-         *  -   the IOBuffer is Using fixed Size Data
-         *  -   dataPtr is not null
-        **/
-        if( ( ! inputBufferPtr->isUsingVariableSizeData ) && ( dataPtr != NULL ) )
-        {
-            error = ARNETWORK_RingBuffer_PushBack(inputBufferPtr->bufferPtr, dataPtr);
-        }
-        else
-        {
-            error = ARNETWORK_ERROR_BAD_PARAMETER;
-        }
-    }
-    else
-    {
-        error = ARNETWORK_ERROR_ID_UNKNOWN;
-    }
-    
-    return error;
-}
-
-eARNETWORK_ERROR ARNETWORK_Manager_SendVariableSizeData(ARNETWORK_Manager_t *managerPtr, int inputBufferID, uint8_t *dataPtr, int dataSize, void *customData, ARNETWORK_Manger_Callback_t callback)
-{
-    /** -- Add data to send in a IOBuffer using variable size data -- */
-    
-    /** local declarations */
-    eARNETWORK_ERROR error = ARNETWORK_OK;
-    ARNETWORK_IOBuffer_t *inputBufferPtr = NULL;
-    ARNETWORK_VariableSizeData_t variableSizeDataTemp;
-    ARNETWORK_VariableSizeData_t variableSizeDataOverwritten;
-    
-    /** check paratemters */
-    if(managerPtr != NULL)
-    {
-        /** get the address of the inputBuffer */
-        inputBufferPtr = managerPtr->inputBufferPtrMap[inputBufferID];
-    }
-    else
-    {
-        error = ARNETWORK_ERROR_BAD_PARAMETER;
-    }
-    
-    if(inputBufferPtr != NULL)
-    {
-        /** check paratemters:
-         *  -   the IOBuffer is using variable size data
-         *  -   data pointer is not null
-         *  -   callback is not null
-         *  -   data isn't too large ; test: data size < (sending buffer size) - (frame header size) 
-        **/
-        if( (inputBufferPtr->isUsingVariableSizeData) && 
-            (dataPtr != NULL) && 
-            (callback != NULL) &&  
-            (dataSize < (managerPtr->senderPtr->sendingBufferPtr->numberOfCell - offsetof(ARNETWORK_Frame_t, dataPtr))) )
-        {
-            /** initialize variableSizeDataTemp and push it in the InputBuffer */
-            variableSizeDataTemp.dataPtr = dataPtr;
-            variableSizeDataTemp.dataSize = dataSize;
-            variableSizeDataTemp.customData = customData;
-            variableSizeDataTemp.callback = callback;
-            
-            /** if the buffer is overwriting and it is full */
-            if( (inputBufferPtr->bufferPtr->isOverwriting == 1) && (ARNETWORK_RingBuffer_GetFreeCellNumber(inputBufferPtr->bufferPtr) == 0) )
-            {
-                /** get the variable size Data Overwritten */
-                error = ARNETWORK_RingBuffer_PopFront( inputBufferPtr->bufferPtr, (uint8_t*) &variableSizeDataOverwritten );
-                /** free the variable size Data Overwritten */
-                variableSizeDataOverwritten.callback(inputBufferPtr->ID, variableSizeDataOverwritten.dataPtr, variableSizeDataOverwritten.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_FREE);
-            }
-            
-            if(error == ARNETWORK_OK)
-            {
-                error = ARNETWORK_RingBuffer_PushBack(inputBufferPtr->bufferPtr, (uint8_t*) &variableSizeDataTemp);
-            }
-        }
-        else
-        {
-            error = ARNETWORK_ERROR_BAD_PARAMETER;
-        }
-    }
-    else
-    {
-        error = ARNETWORK_ERROR_ID_UNKNOWN;
-    }
-    
-    return error;
-}
-
-eARNETWORK_ERROR ARNETWORK_Manager_ReadFixedSizeData(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr)
-{
-    /** -- Read data received in a IOBuffer using fixed size data -- */
-    
-    /** local declarations */
-    eARNETWORK_ERROR error = ARNETWORK_OK;
-    ARNETWORK_IOBuffer_t *outputBufferPtr = NULL;
-    int semError = 0;
-
-    /** check paratemters */
-    if(managerPtr != NULL)
-    {
-        outputBufferPtr = managerPtr->outputBufferPtrMap[outputBufferID];
         
-        /** check pOutputBuffer */
-        if(outputBufferPtr == NULL)
+        if( inputBufferPtr == NULL  )
         {
             error = ARNETWORK_ERROR_ID_UNKNOWN;
         }
     }
     else
     {
-        error = ARNETWORK_ERROR_BAD_PARAMETER;
+       error = ARNETWORK_ERROR_BAD_PARAMETER;
     }
     
-    if( error == ARNETWORK_OK )
+    if(error == ARNETWORK_OK)
     {
-        /** try to take the semaphore */
-        semError = ARSAL_Sem_Trywait( &(outputBufferPtr->outputSem) );
-        
-        if(semError)
-        {
-            switch( errno )
-            {
-                case EAGAIN : /** no semaphore */ 
-                    error = ARNETWORK_ERROR_BUFFER_EMPTY;
-                    break;
-                
-                default:
-                    error = ARNETWORK_ERROR_SEMAPHORE;
-                    break;
-            }
-        }
-    }
-    
-    if( error == ARNETWORK_OK )
-    {
-        /** check if the IOBuffer is using Fixed size data */
-        if( !outputBufferPtr->isUsingVariableSizeData )
-        {
-            /** pop the data in the OutputBuffer */
-            error = ARNETWORK_RingBuffer_PopFront(outputBufferPtr->bufferPtr, dataPtr);
-        }
-        else
-        {
-            error = ARNETWORK_ERROR_BAD_PARAMETER;
-        }
+        /** add the data in the inputBuffer */
+        error = ARNETWORK_IOBuffer_AddData(inputBufferPtr, dataPtr, dataSize, customData, callback, doDataCopy);
     }
     
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_Manager_ReadVariableSizeData(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr)
+eARNETWORK_ERROR ARNETWORK_Manager_ReadData(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr)
 {
     /** -- Read data received in a IOBuffer using variable size data -- */
     
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
     ARNETWORK_IOBuffer_t *outputBufferPtr = NULL;
-    ARNETWORK_VariableSizeData_t variableSizeDataTemp;
-    int readSize = 0;
     int semError = 0;
     
     /** check paratemters */
@@ -574,124 +438,19 @@ eARNETWORK_ERROR ARNETWORK_Manager_ReadVariableSizeData(ARNETWORK_Manager_t *man
     
     if( error == ARNETWORK_OK )
     {
-        /** check if the IOBuffer is using variable size data */
-        if( outputBufferPtr->isUsingVariableSizeData )
-        {
-            /** get variable size data */
-            error = ARNETWORK_RingBuffer_PopFront(outputBufferPtr->bufferPtr, (uint8_t*) &variableSizeDataTemp);
-            
-            if( error == ARNETWORK_OK )
-            {
-                /** data size check*/
-                if(variableSizeDataTemp.dataSize <= dataLimitSize)
-                {
-                    /** data copy */
-                    memcpy(dataPtr, variableSizeDataTemp.dataPtr, variableSizeDataTemp.dataSize);
-                    
-                    /** set variable size data read */
-                    readSize = variableSizeDataTemp.dataSize;
-                    
-                    /** free the variable size data*/
-                    variableSizeDataTemp.callback(outputBufferPtr->ID, variableSizeDataTemp.dataPtr, variableSizeDataTemp.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_FREE);
-                }
-                else
-                {
-                    error = ARNETWORK_ERROR_BUFFER_SIZE;
-                }
-            }
-        }
-        else
-        {
-            error = ARNETWORK_ERROR_BAD_PARAMETER;
-        }
-    }
-    
-    /** return the size of the data read */
-    if(readSizePtr != NULL)
-    {
-        *readSizePtr = readSize;
+        error = ARNETWORK_IOBuffer_ReadData(outputBufferPtr, dataPtr, dataLimitSize, readSizePtr);
     }
     
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_Manager_ReadFixedSizeDataWithTimeout(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int timeoutMs)
-{
-    /** -- Read, with timeout, a data received in IOBuffer using fixed size data -- */
-    
-    /** local declarations */
-    eARNETWORK_ERROR error = ARNETWORK_OK;
-    ARNETWORK_IOBuffer_t *outputBufferPtr = NULL;
-    int semError = 0;
-    struct timespec semTimeout;
-    
-    /** check paratemters */
-    if(managerPtr != NULL)
-    {
-        /** get the address of the outputBuffer */
-        outputBufferPtr = managerPtr->outputBufferPtrMap[outputBufferID];
-        
-        /** check pOutputBuffer */
-        if(outputBufferPtr == NULL)
-        {
-            error = ARNETWORK_ERROR_ID_UNKNOWN;
-        }
-    }
-    else
-    {
-        error = ARNETWORK_ERROR_BAD_PARAMETER;
-    }
-    
-    if( error == ARNETWORK_OK )
-    {
-        /** convert timeoutMs in timespec */
-        semTimeout.tv_sec = timeoutMs / 1000;
-        semTimeout.tv_nsec = (timeoutMs % 1000) * 1000000;
-        
-        /** try to take the semaphore with timeout*/
-        semError = ARSAL_Sem_Timedwait(&(outputBufferPtr->outputSem), &semTimeout);
-        
-        if(semError)
-        {
-            switch( errno )
-            {
-                case ETIMEDOUT : /** semaphore time out */ 
-                    error = ARNETWORK_ERROR_BUFFER_EMPTY;
-                    break;
-                
-                default:
-                    error = ARNETWORK_ERROR_SEMAPHORE;
-                    break;
-            }
-        }
-    }
-    
-    if( error == ARNETWORK_OK )
-    {
-        /** check if the IOBuffer is using fixed size data */
-        if( !outputBufferPtr->isUsingVariableSizeData )
-        {
-            /** pop the data in the OutputBuffer */
-            error = ARNETWORK_RingBuffer_PopFront(outputBufferPtr->bufferPtr, dataPtr);
-        }
-        else
-        {
-            error = ARNETWORK_ERROR_BAD_PARAMETER;
-        }
-    }
-    
-    return error;
-}
-
-eARNETWORK_ERROR ARNETWORK_Manager_ReadVariableSizeDataWithTimeout(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr, int timeoutMs)
+eARNETWORK_ERROR ARNETWORK_Manager_ReadDataWithTimeout(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr, int timeoutMs)
 {
     /** -- Read, with timeout, a data received in IOBuffer using variable size data -- */
     
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
     ARNETWORK_IOBuffer_t *outputBufferPtr = NULL;
-    ARNETWORK_VariableSizeData_t variableSizeDataTemp;
-    int readSize = 0;
     int semError = 0;
     struct timespec semTimeout;
     
@@ -737,47 +496,11 @@ eARNETWORK_ERROR ARNETWORK_Manager_ReadVariableSizeDataWithTimeout(ARNETWORK_Man
     
     if( error == ARNETWORK_OK )
     {
-        /** check if the IOBuffer is using variable size data */
-        if( outputBufferPtr->isUsingVariableSizeData )
-        {
-            /** get variable size data */
-            error = ARNETWORK_RingBuffer_PopFront(outputBufferPtr->bufferPtr, (uint8_t*) &variableSizeDataTemp);
-            
-            if( error == ARNETWORK_OK )
-            {
-                /** data size check*/
-                if(variableSizeDataTemp.dataSize <= dataLimitSize)
-                {
-                    /** data copy */
-                    memcpy(dataPtr, variableSizeDataTemp.dataPtr, variableSizeDataTemp.dataSize);
-                    
-                    /** set data read */
-                    readSize = variableSizeDataTemp.dataSize;
-                    
-                    /** free the variable size data */
-                    variableSizeDataTemp.callback(outputBufferPtr->ID, variableSizeDataTemp.dataPtr, variableSizeDataTemp.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_FREE);
-                }
-                else
-                {
-                    error = ARNETWORK_ERROR_BUFFER_SIZE;
-                }
-            }
-        }
-        else
-        {
-            error = ARNETWORK_ERROR_BAD_PARAMETER;
-        }
-    }
-    
-    /** return the size of the data read */
-    if(readSizePtr != NULL)
-    {
-        *readSizePtr = readSize;
+        error = ARNETWORK_IOBuffer_ReadData(outputBufferPtr, dataPtr, dataLimitSize, readSizePtr);
     }
     
     return error;
 }
-
 
 /*****************************************
  * 
@@ -799,7 +522,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer(ARNETWORK_Manager_t *managerPt
     ARNETWORK_IOBufferParam_DefaultInit(&paramNewACK); 
     paramNewACK.dataType = ARNETWORK_FRAME_TYPE_ACK;
     paramNewACK.numberOfCell = 1;
-    paramNewACK.cellSize = sizeof(int);
+    paramNewACK.dataCopyMaxSize = sizeof( ((ARNETWORK_Frame_t *)NULL)->seq );
     paramNewACK.isOverwriting = 0;
     
     /**
@@ -811,20 +534,16 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer(ARNETWORK_Manager_t *managerPt
     for(ii = 0; ii < managerPtr->numberOfOutputWithoutAck && error == ARNETWORK_OK ; ++ii)
     {
         /** check parameters */
-        /**     id must be smaller than the id acknowledge offset */
-        if( outputParamArr[ii].ID >= ARNETWORK_MANAGER_ACK_ID_OFFSET )
+        /** -   id must be smaller than the id acknowledge offset */
+        /** -   all output buffer must have the ability to copy*/
+        if( (outputParamArr[ii].ID >= ARNETWORK_MANAGER_ACK_ID_OFFSET) ||
+            (outputParamArr[ii].dataCopyMaxSize == 0) )
         {
             error = ARNETWORK_ERROR_BAD_PARAMETER;
         }
         
         if( error == ARNETWORK_OK )
         {
-            /** set cellSize if the IOBuffer uses variable size data */
-            if(outputParamArr[ii].isUsingVariableSizeData == 1)
-            {
-                outputParamArr[ii].cellSize = sizeof(ARNETWORK_VariableSizeData_t);
-            }
-            
             /** Create the output buffer */
             managerPtr->outputBufferPtrArr[ii] = ARNETWORK_IOBuffer_New( &(outputParamArr[ii]) );
             if(managerPtr->outputBufferPtrArr[ii] == NULL)
@@ -848,11 +567,11 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer(ARNETWORK_Manager_t *managerPt
         }
          
         if( error == ARNETWORK_OK )
-        {  
+        {
             /** store buffer of acknowledgement at the end of the output and input buffer lists. */
             managerPtr->inputBufferPtrArr[managerPtr->numberOfInputWithoutAck + ii] = managerPtr->outputBufferPtrArr[ indexAckOutput ];
             
-            /** store the outputBuffer and the buffer of acknowledgement in the ioBuffer Maps*/
+            /** store the outputBuffer and the buffer of acknowledgement in the IOBuffer Maps*/
             managerPtr->outputBufferPtrMap[ managerPtr->outputBufferPtrArr[ii]->ID ] = managerPtr->outputBufferPtrArr[ii];
             managerPtr->outputBufferPtrMap[ managerPtr->outputBufferPtrArr[indexAckOutput]->ID ] = managerPtr->outputBufferPtrArr[indexAckOutput];
             managerPtr->inputBufferPtrMap[ managerPtr->outputBufferPtrArr[indexAckOutput]->ID ] = managerPtr->outputBufferPtrArr[indexAckOutput];
@@ -864,21 +583,15 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer(ARNETWORK_Manager_t *managerPt
     {
         /** check parameters: */
         /** -   id is smaller than the id acknowledge offset */
-        /** -   dataSize isn't too big */
-        if( (inputParamArr[ii].ID >= ARNETWORK_MANAGER_ACK_ID_OFFSET) && 
-            (inputParamArr[ii].cellSize >= (sendBufferSize - offsetof(ARNETWORK_Frame_t, dataPtr))) ) 
+        /** -   dataCopyMaxSize isn't too big */
+        if( (inputParamArr[ii].ID >= ARNETWORK_MANAGER_ACK_ID_OFFSET) || 
+            (inputParamArr[ii].dataCopyMaxSize >= (sendBufferSize - offsetof(ARNETWORK_Frame_t, dataPtr))) ) 
         {
             error = ARNETWORK_ERROR_BAD_PARAMETER;
         }
         
         if( error == ARNETWORK_OK )
         {
-            /** set cellSize if the IOBuffer uses variable size data */
-            if(inputParamArr[ii].isUsingVariableSizeData == 1)
-            {
-                inputParamArr[ii].cellSize = sizeof(ARNETWORK_VariableSizeData_t);
-            }
-            
             /** Create the intput buffer */
             managerPtr->inputBufferPtrArr[ii] = ARNETWORK_IOBuffer_New( &(inputParamArr[ii]) );
             if(managerPtr->inputBufferPtrArr[ii] == NULL)

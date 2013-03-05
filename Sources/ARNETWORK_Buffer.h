@@ -58,7 +58,7 @@ static inline unsigned int ARNETWORK_Buffer_GetFreeCellNumber(const ARNETWORK_Bu
 **/
 static inline int ARNETWORK_Buffer_IsEmpty(ARNETWORK_Buffer_t *bufferPtr)
 {
-    return bufferPtr->startPtr == bufferPtr->frontPtr ? 1 : 0;
+    return (bufferPtr->startPtr == bufferPtr->frontPtr) ? 1 : 0;
 }
 
 /**

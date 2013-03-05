@@ -81,9 +81,10 @@ void ARNETWORK_Receiver_Stop(ARNETWORK_Receiver_t *receiverPtr);
  *  @param receiverPtr the pointer on the Receiver
  *  @param[in] ID identifier of the command to acknowledged
  *  @param[in] seq sequence number of the command to acknowledged
+ *  @return eARNETWORK_ERROR
  *  @see ARNETWORK_Receiver_New()
 **/
-void ARNETWORK_Receiver_ReturnACK(ARNETWORK_Receiver_t *receiverPtr, int ID, int seq);
+eARNETWORK_ERROR ARNETWORK_Receiver_ReturnACK(ARNETWORK_Receiver_t *receiverPtr, int ID, uint32_t seq);
 
 /**
  *  @brief receiving data present on the socket

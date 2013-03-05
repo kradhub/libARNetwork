@@ -37,9 +37,8 @@ typedef struct
     int numberOfRetry; /**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a ARNetwork_Sender*/
     
     unsigned int numberOfCell; /**< Maximum number of data stored*/
-    unsigned int cellSize; /**< Size of one data in byte*/
+    unsigned int dataCopyMaxSize; /**< Maximum Size, in byte, of the data copied in the buffer (the IOBuffer allocates a buffer of numberOfCell X dataCopyMaxSize )*/
     int isOverwriting; /**< Indicator of overwriting possibility (1 = true | 0 = false)*/
-    int isUsingVariableSizeData; /**< Indicator of using variable size data */
 
 }ARNETWORK_IOBufferParam_t;
 

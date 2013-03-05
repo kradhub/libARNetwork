@@ -18,7 +18,7 @@
 **/
 typedef struct  
 {
-    uint8_t* daArruffer; /**< Pointer on the data buffer*/
+    uint8_t *dataBuffer; /**< Pointer on the data buffer*/
     unsigned int numberOfCell; /**< Maximum number of data stored*/
     unsigned int cellSize; /**< Size of one data in byte*/
     unsigned int isOverwriting; /**< Indicator of overwriting possibility (1 = true | 0 = false)*/
@@ -74,12 +74,36 @@ void ARNETWORK_RingBuffer_Delete(ARNETWORK_RingBuffer_t **ringBufferPtrAddr);
 eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBack(ARNETWORK_RingBuffer_t *ringBufferPtr, const uint8_t *newDataPtr);
 
 /**
+ *  @brief Add the new data at the back of the ring buffer
+ *  @warning newDataPtr must be different of NULL
+ *  @warning data size must not be more than ring buffer's cell size
+ *  @note if data size is less than ring buffer's cell size, the bytes at the cell end are not set. 
+ *  @param ringBufferPtr pointer on the ring buffer
+ *  @param[in] newDataPtr pointer on the data to add
+ *  @param[in] dataSize size in byte of the data to copy from newDataPtr
+ *  @param[out] dataCopyPtrAddr address to return the pointer on the data copy in the ring buffer ; can be equal to NULL 
+ *  @return error eARNETWORK_ERROR
+**/
+eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBackWithSize(ARNETWORK_RingBuffer_t *ringBufferPtr, const uint8_t *newDataPtr, int dataSize, uint8_t **dataCopyPtrAddr);
+
+/**
  *  @brief Pop the oldest data
  *  @param ringBufferPtr pointer on the ring buffer
  *  @param[out] dataPopPtr pointer on the data popped
  *  @return error eARNETWORK_ERROR
 **/
 eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFront(ARNETWORK_RingBuffer_t *ringBufferPtr, uint8_t *dataPopPtr);
+
+/**
+ *  @brief Pop the oldest data
+ *  @warning dataSize must be less or equal of the ring buffer's cell size.
+ *  @note if data size is less than ring buffer's cell size, the bytes at the cell end are lost.
+ *  @param ringBufferPtr pointer on the ring buffer
+ *  @param[out] dataPopPtr pointer on the data popped
+ *  @param[in] dataSize size to copy from the front data to the dataPopPtr
+ *  @return error eARNETWORK_ERROR
+**/
+eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFrontWithSize(ARNETWORK_RingBuffer_t *ringBufferPtr, uint8_t *dataPopPtr, int dataSize);
 
 /**
  *  @brief Return the number of free cell of the ring buffer
@@ -98,7 +122,7 @@ static inline int ARNETWORK_RingBuffer_GetFreeCellNumber(const ARNETWORK_RingBuf
 **/
 static inline int ARNETWORK_RingBuffer_IsEmpty(const ARNETWORK_RingBuffer_t *ringBufferPtr)
 {
-    return ringBufferPtr->indexInput == ringBufferPtr->indexOutput;
+    return (ringBufferPtr->indexInput == ringBufferPtr->indexOutput) ? 1 : 0;
 }
 
 /**

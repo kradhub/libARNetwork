@@ -28,7 +28,7 @@
 #include <libARNetwork/ARNETWORK_Error.h>
 #include <libARNetwork/ARNETWORK_Frame.h>
 #include "ARNETWORK_Buffer.h"
-#include "ARNETWORK_VariableSizeData.h"
+#include "ARNETWORK_DataDescriptor.h"
 #include "ARNETWORK_Manager.h"
 #include <libARNetwork/ARNETWORK_Manager.h>
 #include "ARNETWORK_IOBuffer.h"
@@ -79,17 +79,6 @@ void ARNETWORK_Receiver_GetFrameFromAddr(uint8_t *orgFrameAddr, ARNETWORK_Frame_
 **/
 eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv(ARNETWORK_Receiver_t *receiverPtr, ARNETWORK_IOBuffer_t *outputBufferPtr, ARNETWORK_Frame_t *framePtr);
 
-/**
- *  @brief call back used to free variable size data 
- *  @param[in] outputBufferID IOBuffer identifier of the IOBuffer is calling back
- *  @param[in] dataPtr pointer on the data
- *  @param[in] customData custom data
- *  @param[in] status status indicating the reason of the callback. eARNETWORK_MANAGER_CALLBACK_STATUS_Status type
- *  @return  eARNETWORK_MANAGER_CALLBACK_RETURN 
- *  @see eARNETWORK_MANAGER_CALLBACK_STATUS
-**/
-eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_Receiver_FreeVariableSizeDataCallback(int outputBufferID, uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status);
-
 /*****************************************
  * 
  *             implementation :
@@ -98,7 +87,7 @@ eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_Receiver_FreeVariableSizeDataCallba
 
 
 ARNETWORK_Receiver_t* ARNETWORK_Receiver_New(unsigned int recvBufferSize, unsigned int numberOfOutputBuff, ARNETWORK_IOBuffer_t **outputBufferPtrArr, ARNETWORK_IOBuffer_t **outputBufferPtrMap)
-{    
+{
     /** -- Create a new receiver -- */
     
     /** local declarations */
@@ -123,10 +112,10 @@ ARNETWORK_Receiver_t* ARNETWORK_Receiver_New(unsigned int recvBufferSize, unsign
         {
             error = ARNETWORK_ERROR_NEW_BUFFER;
         }
-    
+        
         /** initialize the reading pointer to the start of the buffer  */
         receiverPtr->readingPointer = receiverPtr->receivingBufferPtr->startPtr;
-    
+        
         /** delete the receiver if an error occurred */
         if(error != ARNETWORK_OK)
         {
@@ -152,7 +141,7 @@ void ARNETWORK_Receiver_Delete(ARNETWORK_Receiver_t **receiverPtrAddr)
         if(receiverPtr)
         {
             ARNETWORK_Buffer_Delete( &(receiverPtr->receivingBufferPtr) );
-    
+            
             free(receiverPtr);
             receiverPtr = NULL;
         }
@@ -161,7 +150,7 @@ void ARNETWORK_Receiver_Delete(ARNETWORK_Receiver_t **receiverPtrAddr)
 }
 
 void* ARNETWORK_Receiver_ThreadRun(void *data)
-{    
+{
     /** -- Manage the reception of the data on the Receiver' socket. -- */
     
     /** local declarations */
@@ -172,15 +161,15 @@ void* ARNETWORK_Receiver_ThreadRun(void *data)
     int ackSeqNumDAta = 0;
     
     while( receiverPtr->isAlive )
-    {    
+    {
         /** wait a receipt */
         if( ARNETWORK_Receiver_Read( receiverPtr ) > 0 )
         {    
-            /** for each frame present in the receiver buffer */ 
+            /** for each frame present in the receiver buffer */
             error = ARNETWORK_Receiver_GetFrame(receiverPtr, &frame);
             while( error == ARNETWORK_OK ) 
-            {    
-                /** management by the command type */            
+            {
+                /** management by the command type */
                 switch (frame.type)
                 {
                     case ARNETWORK_FRAME_TYPE_ACK:
@@ -252,10 +241,14 @@ void* ARNETWORK_Receiver_ThreadRun(void *data)
                             }
                             
                             /** sending ack even if the seq is not correct */
-                            ARNETWORK_Receiver_ReturnACK(receiverPtr, frame.ID, frame.seq);
+                            error = ARNETWORK_Receiver_ReturnACK(receiverPtr, frame.ID, frame.seq);
+                            if( error != ARNETWORK_OK)
+                            {
+                                ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG,"ReturnACK, error: %d occurred \n", error);
+                            }
                             
-                        }    
-                                                
+                        }
+                        
                         break;
                     
                     default:
@@ -280,18 +273,20 @@ void ARNETWORK_Receiver_Stop(ARNETWORK_Receiver_t *receiverPtr)
     receiverPtr->isAlive = 0;
 }
 
-
-void ARNETWORK_Receiver_ReturnACK(ARNETWORK_Receiver_t *receiverPtr, int ID, int seq)
+eARNETWORK_ERROR ARNETWORK_Receiver_ReturnACK(ARNETWORK_Receiver_t *receiverPtr, int ID, uint32_t seq)
 {
     /** -- return an acknowledgement -- */
     
     /** local declarations */
-    ARNETWORK_IOBuffer_t* pBufferASK = receiverPtr->outputBufferPtrMap[ ARNETWORK_Manager_IDOutputToIDAck(ID) ];
-                                                                
-    if(pBufferASK != NULL)
+    eARNETWORK_ERROR error = ARNETWORK_OK;
+    ARNETWORK_IOBuffer_t* ACKIOBufferPtr = receiverPtr->outputBufferPtrMap[ ARNETWORK_Manager_IDOutputToIDAck(ID) ];
+    
+    if(ACKIOBufferPtr != NULL)
     {
-        ARNETWORK_RingBuffer_PushBack( pBufferASK->bufferPtr, (uint8_t*) &seq );
+        error = ARNETWORK_IOBuffer_AddData(ACKIOBufferPtr, (uint8_t*) &seq, sizeof(seq), NULL, NULL, 1);
     }
+    
+    return error;
 }
 
 int ARNETWORK_Receiver_Read(ARNETWORK_Receiver_t *receiverPtr)
@@ -444,61 +439,22 @@ eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv(ARNETWORK_Receiver_t *receiverP
     
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    ARNETWORK_VariableSizeData_t variableSizeDataTemp;
-    ARNETWORK_VariableSizeData_t variableSizeDataOverwritten;
     int semError = 0;
-    int bufferFreeCellNb = 0;
+    int dataSize = 0;
     
-    /** if the IOBuffer using variable size data */
-    if( outputBufferPtr->isUsingVariableSizeData )
+    /** get the data size*/
+    dataSize = framePtr->size - offsetof(ARNETWORK_Frame_t, dataPtr);
+    
+    /** if the output buffer can copy the data */
+    if( ARNETWORK_IOBuffer_CanCopyData(outputBufferPtr) )
     {
-        bufferFreeCellNb = ARNETWORK_RingBuffer_GetFreeCellNumber(outputBufferPtr->bufferPtr);
-        
-        /** if the buffer is not full or it is overwriting */
-        if( outputBufferPtr->bufferPtr->isOverwriting == 1 ||
-            bufferFreeCellNb > 0 )
-        {
-            /** allocate variable size data */
-            variableSizeDataTemp.dataSize = framePtr->size - offsetof(ARNETWORK_Frame_t, dataPtr);
-            variableSizeDataTemp.callback = &(ARNETWORK_Receiver_FreeVariableSizeDataCallback);
-            
-            variableSizeDataTemp.dataPtr = malloc(variableSizeDataTemp.dataSize);
-            if(variableSizeDataTemp.dataPtr == NULL)
-            {
-                error = ARNETWORK_ERROR_ALLOC;
-            }
-            
-            if(error == ARNETWORK_OK)
-            {
-                /** copy the data received in the space allocated */
-                memcpy(variableSizeDataTemp.dataPtr, framePtr->dataPtr, variableSizeDataTemp.dataSize);
-                
-                if( bufferFreeCellNb == 0)
-                {
-                    /** if the buffer is full, free the variable size data lost by the overwriting */
-                    
-                    /** get the variable size data Overwritten */
-                    error = ARNETWORK_RingBuffer_PopFront( outputBufferPtr->bufferPtr, (uint8_t*) &variableSizeDataOverwritten );
-                    /** free the variable size data Overwritten */
-                    variableSizeDataOverwritten.callback( outputBufferPtr->ID, variableSizeDataOverwritten.dataPtr, variableSizeDataOverwritten.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_FREE);
-                }
-            }
-            
-            if(error == ARNETWORK_OK)
-            {
-                /** push the variableSizeDataTemp in the output buffer targeted */
-                error = ARNETWORK_RingBuffer_PushBack( outputBufferPtr->bufferPtr, (uint8_t*) &variableSizeDataTemp );
-            }
-        }
-        else
-        {
-            error = ARNETWORK_ERROR_BUFFER_SIZE;
-        }
+        /** copy the data in the IOBuffer */
+        error = ARNETWORK_IOBuffer_AddData(outputBufferPtr, framePtr->dataPtr, dataSize, NULL, NULL, 1);
     }
     else
     {
-        /** push the data received in the output buffer targeted */
-        error = ARNETWORK_RingBuffer_PushBack( outputBufferPtr->bufferPtr, framePtr->dataPtr );
+        error = ARNETWORK_ERROR_BAD_PARAMETER;
+        ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG,"Error: output buffer can't copy data \n");
     }
     
     if(error == ARNETWORK_OK)
@@ -513,13 +469,4 @@ eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv(ARNETWORK_Receiver_t *receiverP
     }
     
     return error;
-}
-
-eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_Receiver_FreeVariableSizeDataCallback(int outputBufferID, uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status)
-{
-    /** call back used to free variable size data */
-    
-    free(dataPtr);
-    
-    return ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
 }

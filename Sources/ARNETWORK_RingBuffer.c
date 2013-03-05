@@ -48,25 +48,25 @@ ARNETWORK_RingBuffer_t* ARNETWORK_RingBuffer_NewWithOverwriting(unsigned int num
     /** -- Create a new ring buffer -- */
     
     /** local declarations */
-    ARNETWORK_RingBuffer_t* pRingBuff =  malloc( sizeof(ARNETWORK_RingBuffer_t) );
+    ARNETWORK_RingBuffer_t* ringBufferPtr =  malloc( sizeof(ARNETWORK_RingBuffer_t) );
     
-    if(pRingBuff)
+    if(ringBufferPtr)
     {
-        pRingBuff->numberOfCell = numberOfCell;
-        pRingBuff->cellSize = cellSize;
-        pRingBuff->indexInput = 0;
-        pRingBuff->indexOutput = 0;
-        pRingBuff->isOverwriting = isOverwriting;
-        ARSAL_Mutex_Init( &(pRingBuff->mutex) );
-        pRingBuff->daArruffer = malloc( cellSize * numberOfCell );
+        ringBufferPtr->numberOfCell = numberOfCell;
+        ringBufferPtr->cellSize = cellSize;
+        ringBufferPtr->indexInput = 0;
+        ringBufferPtr->indexOutput = 0;
+        ringBufferPtr->isOverwriting = isOverwriting;
+        ARSAL_Mutex_Init( &(ringBufferPtr->mutex) );
+        ringBufferPtr->dataBuffer = malloc( cellSize * numberOfCell );
         
-        if( pRingBuff->daArruffer == NULL)
+        if( ringBufferPtr->dataBuffer == NULL)
         {
-            ARNETWORK_RingBuffer_Delete(&pRingBuff);
+            ARNETWORK_RingBuffer_Delete(&ringBufferPtr);
         }
     }
     
-    return pRingBuff;
+    return ringBufferPtr;
 }
 
 void ARNETWORK_RingBuffer_Delete(ARNETWORK_RingBuffer_t **ringBufferPtrAddr)
@@ -83,8 +83,8 @@ void ARNETWORK_RingBuffer_Delete(ARNETWORK_RingBuffer_t **ringBufferPtrAddr)
         if(ringBufferPtr != NULL)
         {
             ARSAL_Mutex_Destroy(&(ringBufferPtr->mutex));
-            free(ringBufferPtr->daArruffer);
-            ringBufferPtr->daArruffer = NULL;
+            free(ringBufferPtr->dataBuffer);
+            ringBufferPtr->dataBuffer = NULL;
         
             free(ringBufferPtr);
             ringBufferPtr = NULL;
@@ -93,9 +93,16 @@ void ARNETWORK_RingBuffer_Delete(ARNETWORK_RingBuffer_t **ringBufferPtrAddr)
     }
 }
 
-eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBack(ARNETWORK_RingBuffer_t *ringBufferPtr, const uint8_t *newDataPtr)
+eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBack(ARNETWORK_RingBuffer_t *ringBufferPtr, const uint8_t *newDataPtr) //inline ?
 {
     /** -- Add the new data at the back of the ring buffer -- */
+    
+    return ARNETWORK_RingBuffer_PushBackWithSize(ringBufferPtr, newDataPtr, ringBufferPtr->cellSize, NULL);
+}
+
+eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBackWithSize(ARNETWORK_RingBuffer_t *ringBufferPtr, const uint8_t *newDataPtr, int dataSize, uint8_t **dataCopyPtrAddr)
+{
+    /** -- Add the new data at the back of the ring buffer with specification of the data size -- */
     
     /** local declarations */
     int error = ARNETWORK_OK;
@@ -103,16 +110,23 @@ eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBack(ARNETWORK_RingBuffer_t *ringBuffe
     
     ARSAL_Mutex_Lock(&(ringBufferPtr->mutex));
     
-    if( ARNETWORK_RingBuffer_GetFreeCellNumber(ringBufferPtr) || ringBufferPtr->isOverwriting)
+    /** check if the has enough free cell or the buffer is overwriting */
+    if( (ARNETWORK_RingBuffer_GetFreeCellNumber(ringBufferPtr)) || (ringBufferPtr->isOverwriting) )
     {    
         if( !ARNETWORK_RingBuffer_GetFreeCellNumber(ringBufferPtr) )
         {
             (ringBufferPtr->indexOutput) += ringBufferPtr->cellSize;
         }
         
-        bufferPtr = ringBufferPtr->daArruffer + ( ringBufferPtr->indexInput % (ringBufferPtr->numberOfCell * ringBufferPtr->cellSize) );
+        bufferPtr = ringBufferPtr->dataBuffer + ( ringBufferPtr->indexInput % (ringBufferPtr->numberOfCell * ringBufferPtr->cellSize) );
         
-        memcpy(bufferPtr, newDataPtr, ringBufferPtr->cellSize);
+        memcpy(bufferPtr, newDataPtr, dataSize);
+        
+        /** return the pointer on the data copy in the ring buffer */
+        if(dataCopyPtrAddr != NULL)
+        {
+            *dataCopyPtrAddr = bufferPtr;
+        }
         
         ringBufferPtr->indexInput += ringBufferPtr->cellSize;
     }
@@ -126,7 +140,14 @@ eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBack(ARNETWORK_RingBuffer_t *ringBuffe
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFront(ARNETWORK_RingBuffer_t *ringBufferPtr, uint8_t *dataPopPtr)
+eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFront(ARNETWORK_RingBuffer_t *ringBufferPtr, uint8_t *dataPopPtr) //see inline
+{
+    /** -- Pop the oldest data -- */
+    
+    return ARNETWORK_RingBuffer_PopFrontWithSize(ringBufferPtr, dataPopPtr, ringBufferPtr->cellSize);
+}
+
+eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFrontWithSize(ARNETWORK_RingBuffer_t *ringBufferPtr, uint8_t *dataPopPtr, int dataSize)
 {
     /** -- Pop the oldest data -- */
     
@@ -141,10 +162,9 @@ eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFront(ARNETWORK_RingBuffer_t *ringBuffe
         if(dataPopPtr != NULL)
         {
             /** get the address of the front data */
-            bufferPtr = ringBufferPtr->daArruffer + (ringBufferPtr->indexOutput % (ringBufferPtr->numberOfCell * ringBufferPtr->cellSize));
-            memcpy(dataPopPtr, bufferPtr, ringBufferPtr->cellSize);
+            bufferPtr = ringBufferPtr->dataBuffer + (ringBufferPtr->indexOutput % (ringBufferPtr->numberOfCell * ringBufferPtr->cellSize));
+            memcpy(dataPopPtr, bufferPtr, dataSize);
         }
-        
         (ringBufferPtr->indexOutput) += ringBufferPtr->cellSize;
     }
     else
@@ -168,7 +188,7 @@ eARNETWORK_ERROR ARNETWORK_RingBuffer_Front(ARNETWORK_RingBuffer_t *ringBufferPt
     ARSAL_Mutex_Lock(&(ringBufferPtr->mutex));
     
     /** get the address of the front data */
-    bufferPtr = ringBufferPtr->daArruffer + (ringBufferPtr->indexOutput % (ringBufferPtr->numberOfCell * ringBufferPtr->cellSize));
+    bufferPtr = ringBufferPtr->dataBuffer + (ringBufferPtr->indexOutput % (ringBufferPtr->numberOfCell * ringBufferPtr->cellSize));
     
     if( !ARNETWORK_RingBuffer_IsEmpty(ringBufferPtr) )
     {
@@ -190,7 +210,7 @@ void ARNETWORK_RingBuffer_Print(ARNETWORK_RingBuffer_t *ringBufferPtr)
     
     ARSAL_Mutex_Lock(&(ringBufferPtr->mutex));
     
-    ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_RINGBUFFER_TAG," pointer daArruffer :%d \n",ringBufferPtr->daArruffer);
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_RINGBUFFER_TAG," pointer dataBuffer :%d \n",ringBufferPtr->dataBuffer);
     ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_RINGBUFFER_TAG," numberOfCell :%d \n",ringBufferPtr->numberOfCell);
     ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_RINGBUFFER_TAG," cellSize :%d \n",ringBufferPtr->cellSize);
     ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_RINGBUFFER_TAG," indexOutput :%d \n",ringBufferPtr->indexOutput);
@@ -208,7 +228,7 @@ void ARNETWORK_RingBuffer_DataPrint(ARNETWORK_RingBuffer_t *ringBufferPtr)
     /** -- Print the contents of the ring buffer -- */
     
     /** local declarations */
-    uint8_t* it = NULL;
+    uint8_t *it = NULL;
     int  index = 0;
     int  ii = 0;
     
@@ -217,7 +237,7 @@ void ARNETWORK_RingBuffer_DataPrint(ARNETWORK_RingBuffer_t *ringBufferPtr)
     /** for all cell of the ringBuffer */
     for( index = ringBufferPtr->indexOutput ; index < ringBufferPtr->indexInput ; index += ringBufferPtr->cellSize )
     {
-        it = ringBufferPtr->daArruffer + (index % (ringBufferPtr->numberOfCell * ringBufferPtr->cellSize) );
+        it = ringBufferPtr->dataBuffer + (index % (ringBufferPtr->numberOfCell * ringBufferPtr->cellSize) );
         
         ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_RINGBUFFER_TAG,"    - 0x: ");
         

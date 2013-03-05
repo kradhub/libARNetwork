@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
     paramNetworkL1[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
     paramNetworkL1[0].sendingWaitTimeMs = 3;
     paramNetworkL1[0].numberOfCell = 1;
-    paramNetworkL1[0].cellSize = sizeof(char);
+    paramNetworkL1[0].dataCopyMaxSize = sizeof(char);
     paramNetworkL1[0].isOverwriting = 1;
     
     /** input ID_INT_DATA_WITH_ACK int */
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
     paramNetworkL1[1].ackTimeoutMs = 10;
     paramNetworkL1[1].numberOfRetry = 5;
     paramNetworkL1[1].numberOfCell = 5;
-    paramNetworkL1[1].cellSize = sizeof(int);
+    paramNetworkL1[1].dataCopyMaxSize = sizeof(int);
     
     /** input ID_DEPORT_DATA_ACK  */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL1[2]) );
@@ -169,7 +169,6 @@ int main(int argc, char *argv[])
     paramNetworkL1[2].ackTimeoutMs = 10;
     paramNetworkL1[2].numberOfRetry = 5;
     paramNetworkL1[2].numberOfCell = 5;
-    paramNetworkL1[2].isUsingVariableSizeData = 1;
     
     /** input ID_DEPORT_DATA */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL1[3]) );
@@ -177,7 +176,6 @@ int main(int argc, char *argv[])
     paramNetworkL1[3].dataType = ARNETWORK_FRAME_TYPE_DATA;
     paramNetworkL1[3].sendingWaitTimeMs = 2;
     paramNetworkL1[3].numberOfCell = 5;
-    paramNetworkL1[3].isUsingVariableSizeData = 1;
     
     /** input ID_KEEP_ALIVE char */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL1[4]) );
@@ -185,7 +183,7 @@ int main(int argc, char *argv[])
     paramNetworkL1[4].dataType = ARNETWORK_FRAME_TYPE_KEEP_ALIVE;
     paramNetworkL1[4].sendingWaitTimeMs = 100;
     paramNetworkL1[4].numberOfCell = 1;
-    paramNetworkL1[4].cellSize = sizeof(int);
+    paramNetworkL1[4].dataCopyMaxSize = sizeof(int);
     paramNetworkL1[4].isOverwriting = 1;
     
     /**  ID_CHAR_DATA_2 int */
@@ -194,7 +192,7 @@ int main(int argc, char *argv[])
     paramNetworkL2[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
     paramNetworkL2[0].sendingWaitTimeMs = 3;
     paramNetworkL2[0].numberOfCell = 1;
-    paramNetworkL2[0].cellSize = sizeof(char);
+    paramNetworkL2[0].dataCopyMaxSize = sizeof(char);
     paramNetworkL2[0].isOverwriting = 1;
     
     /**  ID_INT_DATA_WITH_ACK_2 char */
@@ -205,7 +203,7 @@ int main(int argc, char *argv[])
     paramNetworkL2[1].ackTimeoutMs = 10;
     paramNetworkL2[1].numberOfRetry = -1 /*5*/;
     paramNetworkL2[1].numberOfCell = 5;
-    paramNetworkL2[1].cellSize = sizeof(int);
+    paramNetworkL2[1].dataCopyMaxSize = sizeof(int);
     paramNetworkL2[1].isOverwriting = 0;    
     
     /** input ID_DEPORT_DATA_ACK_2  */
@@ -216,15 +214,13 @@ int main(int argc, char *argv[])
     paramNetworkL2[2].ackTimeoutMs = 10;
     paramNetworkL2[2].numberOfRetry = -1 /*5*/;
     paramNetworkL2[2].numberOfCell = 5;
-    paramNetworkL2[2].isUsingVariableSizeData = 1;    
     
     /** input ID_DEPORT_DATA_2 */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL2[3]) );
     paramNetworkL2[3].ID = ID_DEPORT_DATA_2;
     paramNetworkL2[3].dataType = ARNETWORK_FRAME_TYPE_DATA;
     paramNetworkL2[3].sendingWaitTimeMs = 2;
-    paramNetworkL2[3].numberOfCell = 5;
-    paramNetworkL2[3].isUsingVariableSizeData = 1;    
+    paramNetworkL2[3].numberOfCell = 5;   
                 
     printf("\n ~~ This soft sends data and repeater ack ~~ \n \n");
     
@@ -333,7 +329,7 @@ int main(int argc, char *argv[])
                 ++chData;
                 printf("send char data :%d \n",chData);
             
-                error = ARNETWORK_Manager_SendFixedSizeData(pManager1, id_ioBuff_char, (uint8_t*) &chData);
+                error = ARNETWORK_Manager_SendData(pManager1, id_ioBuff_char, (uint8_t*) &chData, sizeof(char), NULL, &(callbackDepotData),1); // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 if(error != ARNETWORK_OK )
                 {
                     printf("buffer full \n");
@@ -346,7 +342,7 @@ int main(int argc, char *argv[])
                 printf("int data acknowledged :%d \n",intData);
                 printf("\n");
                                         
-                error = ARNETWORK_Manager_SendFixedSizeData(pManager1, id_ioBuff_intAck, (uint8_t*) &intData) ;
+                error = ARNETWORK_Manager_SendData(pManager1, id_ioBuff_intAck, (uint8_t*) &intData, sizeof(char), NULL, &(callbackDepotData),1); // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 if(error != ARNETWORK_OK )
                 {
                     printf("buffer full \n");
@@ -375,7 +371,7 @@ int main(int argc, char *argv[])
                 /** end the string */
                 dataPtrDeported_ack[dataDeportSize_ack - 1] = '\0' ;
                 
-                error = ARNETWORK_Manager_SendVariableSizeData(pManager1, id_ioBuff_deportDataAck, (uint8_t*) dataPtrDeported_ack, dataDeportSize_ack, NULL, &(callbackDepotData));
+                error = ARNETWORK_Manager_SendData(pManager1, id_ioBuff_deportDataAck, (uint8_t*) dataPtrDeported_ack, dataDeportSize_ack, NULL, &(callbackDepotData),0);
                 if(error != ARNETWORK_OK )
                 {
                     printf("buffer full \n");
@@ -404,7 +400,7 @@ int main(int argc, char *argv[])
                 /** end the string */
                 dataPtrDeported[dataDeportSize - 1] = '\0' ;
                 
-                error = ARNETWORK_Manager_SendVariableSizeData(pManager1, id_ioBuff_deportData, (uint8_t*) dataPtrDeported, dataDeportSize, NULL, &(callbackDepotData));
+                error = ARNETWORK_Manager_SendData(pManager1, id_ioBuff_deportData, (uint8_t*) dataPtrDeported, dataDeportSize, NULL, &(callbackDepotData),0);
                 if(error != ARNETWORK_OK )
                 {
                     printf("buffer full \n");
@@ -453,29 +449,25 @@ void* printBuff(void* data)
     {
         usleep(MILLISECOND);
 
-        error = ARNETWORK_Manager_ReadFixedSizeData( pprintThread1->pManager, pprintThread1->id_ioBuff_char, (uint8_t*) &chData ) ;
+        error = ARNETWORK_Manager_ReadData( pprintThread1->pManager, pprintThread1->id_ioBuff_char, (uint8_t*) &chData, sizeof(char), NULL); // !!!!!!!!!
         if( error ==  ARNETWORK_OK )
         {
             printf("- char :%d \n", chData);
         }
         
-        error = ARNETWORK_Manager_ReadFixedSizeData( pprintThread1->pManager, pprintThread1->id_ioBuff_intAck, (uint8_t*) &intData );
+        error = ARNETWORK_Manager_ReadData( pprintThread1->pManager, pprintThread1->id_ioBuff_intAck, (uint8_t*) &intData, sizeof(int), NULL);// !!!!!!!!!
         if( error ==  ARNETWORK_OK )
         {
             printf("- int ack :%d \n", intData);
         }
         
-        error = ARNETWORK_Manager_ReadVariableSizeData( pprintThread1->pManager, 
-                                                 pprintThread1->id_ioBuff_deportDataAck, 
-                                                 (uint8_t*) &deportData,LIMIT_SIZE_DEPORT_DATA, NULL );
+        error = ARNETWORK_Manager_ReadData(pprintThread1->pManager, pprintThread1->id_ioBuff_deportDataAck, (uint8_t*) &deportData,LIMIT_SIZE_DEPORT_DATA, NULL); // !!!!!!!!
         if( error ==  ARNETWORK_OK )
         {
             printf("- deport string data ack :%s \n", deportData);
         }
         
-        error = ARNETWORK_Manager_ReadVariableSizeData( pprintThread1->pManager, 
-                                                 pprintThread1->id_ioBuff_deportData, 
-                                                 (uint8_t*) &deportData,LIMIT_SIZE_DEPORT_DATA, NULL );
+        error = ARNETWORK_Manager_ReadData(pprintThread1->pManager, pprintThread1->id_ioBuff_deportData, (uint8_t*) &deportData, LIMIT_SIZE_DEPORT_DATA, NULL); // !!!!!!!
         if( error ==  ARNETWORK_OK )
         {
             printf("- deport string data :%s \n", deportData);
@@ -486,10 +478,7 @@ void* printBuff(void* data)
     return NULL;
 }
 
-eARNETWORK_MANAGER_CALLBACK_RETURN callbackDepotData(int OutBufferId, 
-                                              uint8_t* dataPtr, 
-                                              void* customData, 
-                                              eARNETWORK_MANAGER_CALLBACK_STATUS status)
+eARNETWORK_MANAGER_CALLBACK_RETURN callbackDepotData(int OutBufferId, uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status)
 {
     /** local declarations */
     eARNETWORK_MANAGER_CALLBACK_RETURN retry = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
@@ -499,30 +488,31 @@ eARNETWORK_MANAGER_CALLBACK_RETURN callbackDepotData(int OutBufferId,
     switch(status)
     {
         case ARNETWORK_MANAGER_CALLBACK_STATUS_SENT :
-            printf(" callbackSENT --\n");
+            printf(" SENT --\n");
             retry = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
-            free(dataPtr);
-            printf(" free --\n");
             
             break;
         
-        case ARNETWORK_MANAGER_CALLBACK_STATUS_SENT_WITH_ACK :
-            printf(" callbackSENTWithACK --\n");
+        case ARNETWORK_MANAGER_CALLBACK_STATUS_ACK_RECEIVED :
+            printf(" ACK  received--\n");
             retry = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
-            free(dataPtr);
-            printf(" free --\n");
             
             break;
         
         case ARNETWORK_MANAGER_CALLBACK_STATUS_FREE :
+            printf(" free --\n");
             retry = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
             free(dataPtr);
-            printf(" free --\n");
             break;
         
         case ARNETWORK_MANAGER_CALLBACK_STATUS_TIMEOUT :
             retry = ARNETWORK_MANAGER_CALLBACK_RETURN_RETRY;
             printf(" retry --\n");
+            break;
+        
+        case ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL :
+            printf(" cancel --\n");
+            retry = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
             break;
         
         default:

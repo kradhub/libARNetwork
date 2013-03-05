@@ -6,16 +6,17 @@ import com.parrot.arsdk.arsal.ARNativeData;
 /**
  * Network manager allow to send and receive data acknowledged or not.
 **/
-public class ARNetworkManager 
+public abstract class ARNetworkManager 
 {
-    private static final String tag = "NetworkManager";
+    private static final String TAG = "NetworkManager";
     
     protected enum eARNETWORK_MANAGER_CALLBACK_STATUS
     {
         ARNETWORK_MANAGER_CALLBACK_STATUS_SENT, /**< data sent  */
-        ARNETWORK_MANAGER_CALLBACK_STATUS_SENT_WITH_ACK, /**< data acknowledged sent  */
-        ARNETWORK_MANAGER_CALLBACK_STATUS_TIMEOUT, /**< timeout occurred, data not received */
-        ARNETWORK_MANAGER_CALLBACK_STATUS_FREE; /**< free the data not sent*/
+        ARNETWORK_MANAGER_CALLBACK_STATUS_ACK_RECEIVED, /**< acknowledged received */
+        ARNETWORK_MANAGER_CALLBACK_STATUS_TIMEOUT, /**< timeout occurred, data not received; the callback must return what the network manager must do with the data. */
+        ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL, /**< data will not be sent */
+        ARNETWORK_MANAGER_CALLBACK_STATUS_FREE /**< free the data not sent; in case of variable size data, this data can be reused or freed. */
     }
     
     protected enum eARNETWORK_MANAGER_CALLBACK_RETURN
@@ -35,13 +36,9 @@ public class ARNetworkManager
     private native void nativeStop(long jManagerPtr);
     private native int nativeFlush(long jManagerPtr);
     
-    private native int nativeSendFixedSizeData( long jManagerPtr, int inputBufferID, byte[] data );
-    private native int nativeReadFixedSizeData( long jManagerPtr, int outputBufferID, byte[] data );
-    private native int nativeReadFixedSizeDataWithTimeout( long jManagerPtr, int outputBufferID, byte[] data, int timeoutMs );
-    
-    private native int nativeSendVariableSizeData( long jManagerPtr,int inputBufferID, ARNativeData ARData, long dataPtr, int dataSize);
-    private native int nativeReadVarableSizeData( long jManagerPtr, int outputBufferID, ARNetworkDataRecv data);
-    private native int nativeReadVarableSizeDataWithTimeout( long jManagerPtr, int outputBufferID, ARNetworkDataRecv data, int timeoutMs);
+    private native int nativeSendData( long jManagerPtr,int inputBufferID, ARNativeData ARData, long dataPtr, int dataSize, int doDataCopy);
+    private native int nativeReadData( long jManagerPtr, int outputBufferID, ARNetworkDataRecv data);
+    private native int nativeReadDataWithTimeout( long jManagerPtr, int outputBufferID, ARNetworkDataRecv data, int timeoutMs);
     
     private long m_managerPtr;
     private boolean m_initOk;
@@ -62,7 +59,7 @@ public class ARNetworkManager
         m_initOk = false;
         m_managerPtr = nativeNew(recvBufferSize, sendBufferSize, inputParamArray.length, inputParamArray, outputParamArray.length, outputParamArray, error);
         
-        Log.d ("LOG_TAG", "Error:" + error );
+        Log.d (TAG, "Error:" + error );
         
         if( m_managerPtr != 0 )
         {
@@ -153,43 +150,25 @@ public class ARNetworkManager
         
         return error;
     }
-    
+
     /**
      *  Add data to send
      *  @param inputBufferID identifier of the input buffer in which the data must be stored
-     *  @param data pointer on the data to send
-     *  @return error eARNETWORK_ERROR
-    **/
-    public eARNETWORK_ERROR SendData( int inputBufferID, byte[] data)
-    {
-        eARNETWORK_ERROR error = eARNETWORK_ERROR.ARNETWORK_OK;
-        if(m_initOk == true)
-        {
-            int intError = nativeSendFixedSizeData(m_managerPtr, inputBufferID, data);
-            error =  eARNETWORK_ERROR.getErrorName(intError); 
-        }
-        else
-        {
-            error = eARNETWORK_ERROR.ARNETWORK_ERROR_BAD_PARAMETER;
-        }
-        
-        return error;
-    }
-    
-    /**
-     *  Add deported data to send
-     *  @param inputBufferID identifier of the input buffer in which the data must be stored
      *  @param arData data to send
+     *  @param doDataCopy indocator to copy the data in the ARNETWORK_Manager
      *  @return error eARNETWORK_ERROR
     **/
-    public eARNETWORK_ERROR sendDeportedData( int inputBufferID, ARNativeData arData)
+    public eARNETWORK_ERROR sendData(int inputBufferID, ARNativeData arData, boolean doDataCopy)
     {
         eARNETWORK_ERROR error = eARNETWORK_ERROR.ARNETWORK_OK;
+        
+        int doDataCopyInt = (doDataCopy) ? 1 : 0;
+        
         if(m_initOk == true)
         {
             long dataPtr =  arData.getData();
             int dataSize =  arData.getDataSize();
-            int intError = nativeSendVariableSizeData( m_managerPtr, inputBufferID, arData, dataPtr, dataSize );
+            int intError = nativeSendData( m_managerPtr, inputBufferID, arData, dataPtr, dataSize, doDataCopyInt );
             error =  eARNETWORK_ERROR.getErrorName(intError);  
         }
         else
@@ -202,17 +181,17 @@ public class ARNetworkManager
     
     /**
      *  Read data received
-     *  @warning the outputBuffer should not be using variable data 
+     *  @warning the outputBuffer must be using variable data
      *  @param outputBufferID identifier of the output buffer in which the data must be read
-     *  @param dataPtr pointer on the data read
-     *  @return error eARNETWORK_ERROR
+     *  @param data Data where store the reading
+     *  @return error eARNETWORK_ERROR type
     **/
-    public eARNETWORK_ERROR readData( int outputBufferID, byte[] data)
+    public eARNETWORK_ERROR readData(int outputBufferID, ARNetworkDataRecv data)
     {
         eARNETWORK_ERROR error = eARNETWORK_ERROR.ARNETWORK_OK;
         if(m_initOk == true)
         {
-            int intError = nativeReadFixedSizeData(m_managerPtr, outputBufferID, data);
+            int intError = nativeReadData( m_managerPtr, outputBufferID, data);
             error =  eARNETWORK_ERROR.getErrorName(intError);  
         }
         else
@@ -225,66 +204,17 @@ public class ARNetworkManager
     
     /**
      *  Read data received with timeout
-     *  @details This function is blocking
-     *  @warning the outputBuffer should not be using variable data
-     *  @param outputBufferID identifier of the output buffer in which the data must be read
-     *  @param data pointer on the data read
-     *  @param timeoutMs maximum time in millisecond to wait if there is no data to read
-     *  @return error eARNETWORK_ERROR
-    **/
-    public eARNETWORK_ERROR readDataWithTimeout( int outputBufferID, byte[] data, int timeoutMs)
-    {
-        eARNETWORK_ERROR error = eARNETWORK_ERROR.ARNETWORK_OK;
-        if(m_initOk == true)
-        {
-            int intError = nativeReadFixedSizeDataWithTimeout(m_managerPtr, outputBufferID, data, timeoutMs);
-            error =  eARNETWORK_ERROR.getErrorName(intError);  
-        }
-        else
-        {
-            error = eARNETWORK_ERROR.ARNETWORK_ERROR_BAD_PARAMETER;
-        }
-        
-        return error;
-    }
-    
-    /**
-     *  Read deported data received
-     *  @warning the outputBuffer must be using variable data
-     *  @param outputBufferID identifier of the output buffer in which the data must be read
-     *  @param data Data where store the reading
-     *  @return error eARNETWORK_ERROR type
-    **/
-    public eARNETWORK_ERROR readDeportedData(int outputBufferID, ARNetworkDataRecv data)
-    {
-        eARNETWORK_ERROR error = eARNETWORK_ERROR.ARNETWORK_OK;
-        if(m_initOk == true)
-        {
-            int intError = nativeReadVarableSizeData( m_managerPtr, outputBufferID, data);
-            error =  eARNETWORK_ERROR.getErrorName(intError);  
-        }
-        else
-        {
-            error = eARNETWORK_ERROR.ARNETWORK_ERROR_BAD_PARAMETER;
-        }
-        
-        return error;
-    }
-    
-    /**
-     *  Read deported data received with timeout
-     *  @warning the outputBuffer must be using variable data
      *  @param outputBufferID identifier of the output buffer in which the data must be read
      *  @param data Data where store the reading
      *  @param timeoutMs maximum time in millisecond to wait if there is no data to read
      *  @return error eARNETWORK_ERROR type
     **/
-    public eARNETWORK_ERROR readDeportedDataWithTimeout(int outputBufferID, ARNetworkDataRecv data, int timeoutMs)
+    public eARNETWORK_ERROR readDataWithTimeout(int outputBufferID, ARNetworkDataRecv data, int timeoutMs)
     {
         eARNETWORK_ERROR error = eARNETWORK_ERROR.ARNETWORK_OK;
         if(m_initOk == true)
         {
-            int intError = nativeReadVarableSizeDataWithTimeout( m_managerPtr, outputBufferID, data, timeoutMs);
+            int intError = nativeReadDataWithTimeout( m_managerPtr, outputBufferID, data, timeoutMs);
             error =  eARNETWORK_ERROR.getErrorName(intError);  
         }
         else
@@ -320,36 +250,8 @@ public class ARNetworkManager
      *  @param status reason of the callback
      *  @return eARNETWORK_MANAGER_CALLBACK_RETURN what do in timeout case
     **/
-    public int callback (int IoBuffer, ARNativeData data, int status) 
-    {
-        /** -- callback -- */
-        
-        /** local declarations */
-        int retry = 0;
-        
-        eARNETWORK_MANAGER_CALLBACK_STATUS jStatus = eARNETWORK_MANAGER_CALLBACK_STATUS.values()[status];
-        
-        switch( jStatus )
-        {
-            case ARNETWORK_MANAGER_CALLBACK_STATUS_SENT :
-            case ARNETWORK_MANAGER_CALLBACK_STATUS_SENT_WITH_ACK :
-            case ARNETWORK_MANAGER_CALLBACK_STATUS_FREE :
-                retry = eARNETWORK_MANAGER_CALLBACK_RETURN.ARNETWORK_MANAGER_CALLBACK_RETURN_DATA_POP.ordinal();
-                break;
-            
-            case ARNETWORK_MANAGER_CALLBACK_STATUS_TIMEOUT :
-                retry = eARNETWORK_MANAGER_CALLBACK_RETURN.ARNETWORK_MANAGER_CALLBACK_RETURN_RETRY.ordinal();
-                break;
-            
-            default:
-                Log.e(tag, "default case status:" + jStatus);
-                break;
-        }
-        
-        return retry;
-
-    }
-
+    public abstract int callback (int IoBuffer, ARNativeData data, int status);
+    
 }
 
 /**

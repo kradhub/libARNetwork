@@ -28,13 +28,12 @@
 typedef struct  
 {
     int ID; /**< Identifier used to find the ioBuffer in a array*/
-    ARNETWORK_RingBuffer_t *bufferPtr; /**< Pointer on the ringBuffer used to store the data*/
+    ARNETWORK_RingBuffer_t *dataCopyRBufferPtr; /**< Pointer on the ringBuffer used to store the data copy */
+    ARNETWORK_RingBuffer_t *dataDescriptorRBufferPtr; /**< Pointer on the ringBuffer used to store the data description */
     eARNETWORK_FRAME_TYPE dataType; /**< Type of the data stored in the buffer*/
     int sendingWaitTimeMs;  /**< Time in millisecond between 2 send when the InOutBuffer if used with a libARNetwork/sender*/
     int ackTimeoutMs; /**< Timeout in millisecond after retry to send the data when the InOutBuffer is used with a libARNetwork/sender*/
     int numberOfRetry; /**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libARNetwork/sender*/
-    //    timeoutcallback(ARNETWORK_IOBuffer_t* this)
-    int isUsingVariableSizeData; /**< Indicator of using variable size data */
     
     int isWaitAck; /**< Indicator of waiting an acknowledgement  (1 = true | 0 = false). Must be accessed through ARNETWORK_IOBuffer_IsWaitAck()*/
     int seqWaitAck; /**< Sequence number of the acknowledge waiting if used with a libARNetwork/sender or of the last command stored if used with a libARNetwork/reveiver*/
@@ -66,6 +65,16 @@ ARNETWORK_IOBuffer_t* ARNETWORK_IOBuffer_New(const ARNETWORK_IOBufferParam_t *pa
 void ARNETWORK_IOBuffer_Delete( ARNETWORK_IOBuffer_t **IOBufferPtrAddr );
 
 /**
+ *  @brief Possibility of the IOBuffer to copy the data in itself
+ *  @param IOBufferPtr Pointer on the input or output buffer
+ *  @return 1 if the IOBuffer can copy the data otherwise 0
+**/
+static inline int ARNETWORK_IOBuffer_CanCopyData(ARNETWORK_IOBuffer_t *IOBufferPtr)
+{
+    return (IOBufferPtr->dataCopyRBufferPtr != NULL) ? 1 : 0;
+}
+
+/**
  *  @brief Receive an acknowledgement to a IOBuffer.
  *  @details If the IOBuffer is waiting about an acknowledgement and seqNum is equal to the sequence number waited, the inOutBuffer pops the last data and delete its is waiting acknowledgement.
  *  @param[in] IOBufferPtr Pointer on the input or output buffer
@@ -82,28 +91,57 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AckReceived( ARNETWORK_IOBuffer_t *IOBufferP
 int ARNETWORK_IOBuffer_IsWaitAck( ARNETWORK_IOBuffer_t *IOBufferPtr );
 
 /**
- *  @brief call the callback of all variable size data with the ARNETWORK_MANAGER_CALLBACK_STATUS_FREE status.
- *  @warning the IOBuffer must store ARNETWORK_VariableSizeData_t
+ *  @brief cancel all remaining data.
+ *  @warning the IOBuffer must store ARNETWORK_DataDescriptor_t
  *  @param IOBufferPtr Pointer on the IOBuffer using varaible size data
  *  @return error equal to ARNETWORK_OK if the data are correctly free otherwise see eARNETWORK_ERROR
 **/
-eARNETWORK_ERROR ARNETWORK_IOBuffer_FreeAllVariableSizeData(ARNETWORK_IOBuffer_t *IOBufferPtr);
+eARNETWORK_ERROR ARNETWORK_IOBuffer_CancelAllData(ARNETWORK_IOBuffer_t *IOBufferPtr);
 
 /**
- *  @brief delete the later data of the IOBuffer
- *  @warning used only when the data is correctly sent
+ *  @brief Pop the later data of the IOBuffer and free it
+ *  @param IOBufferPtr Pointer on the input or output buffer
+ *  @return error equal to ARNETWORK_OK if the data are correctly deleted otherwise see eARNETWORK_ERROR
+**/
+eARNETWORK_ERROR ARNETWORK_IOBuffer_PopData(ARNETWORK_IOBuffer_t *IOBufferPtr);
+
+/**
+ *  @brief Pop the later data of the IOBuffer with callback calling and free it
  *  @param IOBufferPtr Pointer on the input or output buffer
  *  @param[in] callbackStatus status sent by the callback
  *  @return error equal to ARNETWORK_OK if the data are correctly deleted otherwise see eARNETWORK_ERROR
 **/
-eARNETWORK_ERROR ARNETWORK_IOBuffer_DeleteData(ARNETWORK_IOBuffer_t *IOBufferPtr, int callbackStatus);
+eARNETWORK_ERROR ARNETWORK_IOBuffer_PopDataWithCallBack(ARNETWORK_IOBuffer_t *IOBufferPtr, eARNETWORK_MANAGER_CALLBACK_STATUS callbackStatus);
 
 /**
  *  @brief flush the IOBuffer
  *  @param IOBufferPtr Pointer on the input or output buffer
  *  @return eARNETWORK_ERROR
 **/
-eARNETWORK_ERROR ARNETWORK_IOBuffer_Flush( ARNETWORK_IOBuffer_t *IOBufferPtr );
+eARNETWORK_ERROR ARNETWORK_IOBuffer_Flush(ARNETWORK_IOBuffer_t *IOBufferPtr);
+
+/**
+ *  @brief Add data in a IOBuffer
+ *  @param IOBufferPtr Pointer on the input or output buffer
+ *  @param[in] dataPtr pointer on the data to add
+ *  @param[in] dataSize size of the data to add
+ *  @param[in] customData custom data sent to the callback
+ *  @param[in] callback pointer on the callback to call when the data is sent or an error occurred
+ *  @param[in] doDataCopy indocator to copy the data in the IOBuffer
+ *  @return error eARNETWORK_ERROR
+**/
+eARNETWORK_ERROR ARNETWORK_IOBuffer_AddData(ARNETWORK_IOBuffer_t *IOBufferPtr, uint8_t *dataPtr, int dataSize, void *customData, ARNETWORK_Manager_Callback_t callback, int doDataCopy);
+
+/**
+ *  @brief read data received in a IOBuffer
+ *  @warning the data read is pop
+ *  @param IOBufferPtr Pointer on the input or output buffer
+ *  @param[out] dataPtr pointer on the data read
+ *  @param[in] dataLimitSize limit size of the copy
+ *  @param[out] readSizePtr pointer to store the size of the data read ; can be equal to NULL
+ *  @return error eARNETWORK_ERROR type
+**/
+eARNETWORK_ERROR ARNETWORK_IOBuffer_ReadData(ARNETWORK_IOBuffer_t *IOBufferPtr, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr);
 
 #endif /** _ARNETWORK_IOBUFFER_PRIVATE_H_ */
 

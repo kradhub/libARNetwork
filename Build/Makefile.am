@@ -4,16 +4,16 @@
 ACLOCAL_AMFLAGS                                             =   -I m4
 
 # The list of header files that belong to the library (to be installed later)
-HEADER_FILES                                                =   ../Includes/libARNetwork/ARNETWORK_Manager.h            \
-                                                                ../Includes/libARNetwork/ARNETWORK_Frame.h              \
-                                                                ../Includes/libARNetwork/ARNETWORK_Error.h             \
+HEADER_FILES                                                =   ../Includes/libARNetwork/ARNETWORK_Manager.h          \
+                                                                ../Includes/libARNetwork/ARNETWORK_Frame.h            \
+                                                                ../Includes/libARNetwork/ARNETWORK_Error.h            \
                                                                 ../Includes/libARNetwork/ARNETWORK_IOBufferParam.h
 
 # The sources to add to the library and to add to the source distribution
 SOURCE_FILES                                                =   $(HEADER_FILES)                         \
                                                                 ../Sources/ARNETWORK_Buffer.c           \
                                                                 ../Sources/ARNETWORK_RingBuffer.c       \
-                                                                ../Sources/ARNETWORK_VariableSizeData.h \
+                                                                ../Sources/ARNETWORK_DataDescriptor.h   \
                                                                 ../Sources/ARNETWORK_IOBufferParam.c    \
                                                                 ../Sources/ARNETWORK_IOBuffer.c         \
                                                                 ../Sources/ARNETWORK_Sender.c           \

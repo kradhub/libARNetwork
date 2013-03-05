@@ -102,7 +102,7 @@ void AUTOTEST_InitManagerCheck(AUTOTEST_ManagerCheck_t *managerCheckPtr);
 
 void AUTOTEST_InitParamIOBuffer( ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_IOBufferParam_t *outputArr1, ARNETWORK_IOBufferParam_t *inputArr2, ARNETWORK_IOBufferParam_t *outputArr2 );
 
-eARNETWORK_MANAGER_CALLBACK_RETURN AUTOTEST_VariableSizeDataCallback(int OutBufferId, uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status);
+eARNETWORK_MANAGER_CALLBACK_RETURN AUTOTEST_DataCallback(int OutBufferId, uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status);
 
 void* AUTOTEST_DataSendingRun(void*);
 void* AUTOTEST_FixedSizeDataReadingRun(void*);
@@ -355,7 +355,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     inputArr1[0].ID = ID_IOBUFFER_CHAR_DATA;
     inputArr1[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
     inputArr1[0].numberOfCell = 1;
-    inputArr1[0].cellSize = sizeof(char);
+    inputArr1[0].dataCopyMaxSize = sizeof(char);
     inputArr1[0].isOverwriting = 1;
     
     /** input ID_IOBUFFER_INT_DATA_WITH_ACK int */
@@ -366,7 +366,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     inputArr1[1].ackTimeoutMs = 5;
     inputArr1[1].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER /*20*/;
     inputArr1[1].numberOfCell = 5;
-    inputArr1[1].cellSize = sizeof(int);
+    inputArr1[1].dataCopyMaxSize = sizeof(int);
     
     /** input ID_IOBUFFER_VARIABLE_SIZE_DATA */
     ARNETWORK_IOBufferParam_DefaultInit( &(inputArr1[2]) );
@@ -374,7 +374,6 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     inputArr1[2].dataType = ARNETWORK_FRAME_TYPE_DATA;
     inputArr1[2].sendingWaitTimeMs = 2;
     inputArr1[2].numberOfCell = 5;
-    inputArr1[2].isUsingVariableSizeData = 1;
     
     /** input ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK */
     ARNETWORK_IOBufferParam_DefaultInit( &(inputArr1[3]) );
@@ -384,7 +383,6 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     inputArr1[3].ackTimeoutMs = 5;
     inputArr1[3].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER /*20*/;
     inputArr1[3].numberOfCell = 5;
-    inputArr1[3].isUsingVariableSizeData = 1;
     
     /** outputs: */
     
@@ -393,7 +391,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     outputArr1[0].ID = ID_IOBUFFER_CHAR_DATA;
     outputArr1[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
     outputArr1[0].numberOfCell = 1;
-    outputArr1[0].cellSize = sizeof(char);
+    outputArr1[0].dataCopyMaxSize = sizeof(char);
     outputArr1[0].isOverwriting = 1;
     
     /** output ID_IOBUFFER_INT_DATA_WITH_ACK int */
@@ -402,9 +400,9 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     outputArr1[1].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
     outputArr1[1].sendingWaitTimeMs = 2;
     outputArr1[1].ackTimeoutMs = 5;
-    outputArr1[1].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER/*20*/;
+    outputArr1[1].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER /*20*/;
     outputArr1[1].numberOfCell = 5;
-    outputArr1[1].cellSize = sizeof(int);
+    outputArr1[1].dataCopyMaxSize = sizeof(int);
     
     /** output ID_IOBUFFER_VARIABLE_SIZE_DATA */
     ARNETWORK_IOBufferParam_DefaultInit( &(outputArr1[2]) );
@@ -412,7 +410,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     outputArr1[2].dataType = ARNETWORK_FRAME_TYPE_DATA;
     outputArr1[2].sendingWaitTimeMs = 2;
     outputArr1[2].numberOfCell = 5;
-    outputArr1[2].isUsingVariableSizeData = 1;
+    outputArr1[2].dataCopyMaxSize = sizeof(char) * 30; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
     /** output ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK */
     ARNETWORK_IOBufferParam_DefaultInit( &(outputArr1[3]) );
@@ -422,7 +420,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     outputArr1[3].ackTimeoutMs = 5;
     outputArr1[3].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER/*20*/;
     outputArr1[3].numberOfCell = 5;
-    outputArr1[3].isUsingVariableSizeData = 1;
+    outputArr1[3].dataCopyMaxSize = sizeof(char) * 30; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
     /** ----------------------------- */
     
@@ -433,7 +431,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     inputArr2[0].ID = ID_IOBUFFER_CHAR_DATA;
     inputArr2[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
     inputArr2[0].numberOfCell = 1;
-    inputArr2[0].cellSize = sizeof(char);
+    inputArr2[0].dataCopyMaxSize = sizeof(char);
     inputArr2[0].isOverwriting = 1;
     
     /** input ID_IOBUFFER_INT_DATA_WITH_ACK int */
@@ -444,7 +442,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     inputArr2[1].ackTimeoutMs = 5;
     inputArr2[1].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER/*20*/;
     inputArr2[1].numberOfCell = 5;
-    inputArr2[1].cellSize = sizeof(int);
+    inputArr2[1].dataCopyMaxSize = sizeof(int);
     
     /** input ID_IOBUFFER_VARIABLE_SIZE_DATA */
     ARNETWORK_IOBufferParam_DefaultInit( &(inputArr2[2]) );
@@ -452,7 +450,6 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     inputArr2[2].dataType = ARNETWORK_FRAME_TYPE_DATA;
     inputArr2[2].sendingWaitTimeMs = 2;
     inputArr2[2].numberOfCell = 5;
-    inputArr2[2].isUsingVariableSizeData = 1;
     
     /** input ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK */
     ARNETWORK_IOBufferParam_DefaultInit( &(inputArr2[3]) );
@@ -462,7 +459,6 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     inputArr2[3].ackTimeoutMs = 5;
     inputArr2[3].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER/*20*/;
     inputArr2[3].numberOfCell = 5;
-    inputArr2[3].isUsingVariableSizeData = 1;
     
     /** outputs: */
     
@@ -472,7 +468,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     outputArr2[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
     outputArr2[0].sendingWaitTimeMs = 3;
     outputArr2[0].numberOfCell = 1;
-    outputArr2[0].cellSize = sizeof(char);
+    outputArr2[0].dataCopyMaxSize = sizeof(char);
     outputArr2[0].isOverwriting = 1;
     
     /** output ID_IOBUFFER_INT_DATA_WITH_ACK int */
@@ -480,21 +476,21 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     outputArr2[1].ID = ID_IOBUFFER_INT_DATA_WITH_ACK;
     outputArr2[1].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
     outputArr2[1].numberOfCell = 5;
-    outputArr2[1].cellSize = sizeof(int);
+    outputArr2[1].dataCopyMaxSize = sizeof(int);
     
     /** output ID_IOBUFFER_VARIABLE_SIZE_DATA */
     ARNETWORK_IOBufferParam_DefaultInit( &(outputArr2[2]) );
     outputArr2[2].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA;
     outputArr2[2].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
     outputArr2[2].numberOfCell = 5;
-    outputArr2[2].isUsingVariableSizeData = 1;
+    outputArr2[2].dataCopyMaxSize = sizeof(char) * 30; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
     /** output ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK */
     ARNETWORK_IOBufferParam_DefaultInit( &(outputArr2[3]) );
     outputArr2[3].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK;
     outputArr2[3].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
     outputArr2[3].numberOfCell = 5;
-    outputArr2[3].isUsingVariableSizeData = 1;
+    outputArr2[3].dataCopyMaxSize = sizeof(char) * 30; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
     /** ----------------------------- */
 }
@@ -599,7 +595,7 @@ void* AUTOTEST_FixedSizeDataReadingRun(void* data)
     while(managerCheckPtr->isReadingThreadAlive)
     {
         /** checking */
-        if( ARNETWORK_OK == ARNETWORK_Manager_ReadFixedSizeData( managerCheckPtr->managerPtr, ID_IOBUFFER_CHAR_DATA,(uint8_t*) &chData) )
+        if( ARNETWORK_OK == ARNETWORK_Manager_ReadData(managerCheckPtr->managerPtr, ID_IOBUFFER_CHAR_DATA, (uint8_t*) &chData, sizeof(char), NULL) ) // !!!!!!!!!!!!!
         {
             printf("- charData: %c \n", chData);
             if( AUTOTEST_CheckFixedSizeData(managerCheckPtr, chData) )
@@ -608,7 +604,7 @@ void* AUTOTEST_FixedSizeDataReadingRun(void* data)
             }
         }
         
-        if( ARNETWORK_OK == ARNETWORK_Manager_ReadFixedSizeData(managerCheckPtr->managerPtr, ID_IOBUFFER_INT_DATA_WITH_ACK, (uint8_t*) &intData ))
+        if( ARNETWORK_OK == ARNETWORK_Manager_ReadDataWithTimeout(managerCheckPtr->managerPtr, ID_IOBUFFER_INT_DATA_WITH_ACK, (uint8_t*) &intData, sizeof(int), NULL, 2) ) // !!!!!!!!!!
         {
             printf("- ackInt: %d \n", intData);
             if( AUTOTEST_CheckFixedSizeDataACK( managerCheckPtr, intData ) )
@@ -638,7 +634,7 @@ void* AUTOTEST_VariableSizeDataReadingRun(void* data)
     {
         /** checking */
         
-        if( ARNETWORK_OK == ARNETWORK_Manager_ReadVariableSizeData(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA, (uint8_t*) dataDeportedRead, AUTOTEST_NUMBER_DATA_SENT + AUTOTEST_STR_SIZE_OFFSET, &readSize ))
+        if( ARNETWORK_OK == ARNETWORK_Manager_ReadData(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA, (uint8_t*) dataDeportedRead, AUTOTEST_NUMBER_DATA_SENT + AUTOTEST_STR_SIZE_OFFSET, &readSize ))
         {
             printf("- dataDeportedRead: %s \n",  dataDeportedRead );
             
@@ -648,7 +644,7 @@ void* AUTOTEST_VariableSizeDataReadingRun(void* data)
             }
         }
         
-        if( ARNETWORK_OK == ARNETWORK_Manager_ReadVariableSizeData(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK, (uint8_t*) dataDeportedReadAck, AUTOTEST_NUMBER_DATA_SENT + AUTOTEST_STR_SIZE_OFFSET, &readSize ))
+        if( ARNETWORK_OK == ARNETWORK_Manager_ReadDataWithTimeout(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK, (uint8_t*) dataDeportedReadAck, AUTOTEST_NUMBER_DATA_SENT + AUTOTEST_STR_SIZE_OFFSET, &readSize, 2 ))
         {
             
             printf("- dataDeportedReadAck: %s \n",  dataDeportedReadAck );
@@ -688,26 +684,35 @@ char* AUTOTEST_AllocInitString( int size )
     return pStr;
 }
 
-eARNETWORK_MANAGER_CALLBACK_RETURN AUTOTEST_VariableSizeDataCallback(int OutBufferId, uint8_t* dataPtr, void* customData, eARNETWORK_MANAGER_CALLBACK_STATUS status)
+eARNETWORK_MANAGER_CALLBACK_RETURN AUTOTEST_DataCallback(int OutBufferId, uint8_t* dataPtr, void* customData, eARNETWORK_MANAGER_CALLBACK_STATUS status)
 {
     /** local declarations */
     int retry = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
     
-    printf(" -- AUTOTEST_VariableSizeDataCallback status: %d ",status);
+    printf(" -- AUTOTEST_DataCallback status: %d ",status);
     
     switch(status)
     {
         case ARNETWORK_MANAGER_CALLBACK_STATUS_SENT :
-        case ARNETWORK_MANAGER_CALLBACK_STATUS_SENT_WITH_ACK :
-        case ARNETWORK_MANAGER_CALLBACK_STATUS_FREE :
-            retry = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
-            free(dataPtr);
-            printf(" free --\n");
+            printf(" sent --\n");
+            break;
+            
+        case ARNETWORK_MANAGER_CALLBACK_STATUS_ACK_RECEIVED :
+            printf(" ack received --\n");
             break;
         
         case ARNETWORK_MANAGER_CALLBACK_STATUS_TIMEOUT :
             retry = ARNETWORK_MANAGER_CALLBACK_RETURN_RETRY;
-            printf(" retry --\n");
+            printf(" timeout retry --\n");
+            break;
+            
+        case ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL :
+            printf(" cancel --\n");
+            break;
+            
+        case ARNETWORK_MANAGER_CALLBACK_STATUS_FREE :
+            free(dataPtr);
+            printf(" free --\n");
             break;
         
         default:
@@ -727,8 +732,8 @@ eARNETWORK_ERROR AUTOTEST_SendFixedSizeData(AUTOTEST_ManagerCheck_t *managerChec
     char chData = AUTOTEST_FIRST_CHAR_SENT + managerCheckPtr->numberOfFixedSizeDataSent;
     
     printf(" send char: %c \n",chData);
-    error = ARNETWORK_Manager_SendFixedSizeData( managerCheckPtr->managerPtr, ID_IOBUFFER_CHAR_DATA, (uint8_t*) &chData);
-        
+    error = ARNETWORK_Manager_SendData( managerCheckPtr->managerPtr, ID_IOBUFFER_CHAR_DATA, (uint8_t*) &chData, sizeof(char), NULL, &(AUTOTEST_DataCallback), 1 );
+    
     if( error == ARNETWORK_OK)
     {
         /** increment Number of data sent*/
@@ -750,8 +755,8 @@ eARNETWORK_ERROR AUTOTEST_SendFixedSizeDataAck(AUTOTEST_ManagerCheck_t *managerC
     eARNETWORK_ERROR error = ARNETWORK_OK;
     int intData = AUTOTEST_FIRST_INT_ACK_SENT + managerCheckPtr->numberOfFixedSizeDataAckSent;
     
-    printf(" send int: %d \n",intData);        
-    error = ARNETWORK_Manager_SendFixedSizeData( managerCheckPtr->managerPtr, ID_IOBUFFER_INT_DATA_WITH_ACK, (uint8_t*) &intData );
+    printf(" send int: %d \n",intData);
+    error = ARNETWORK_Manager_SendData(managerCheckPtr->managerPtr, ID_IOBUFFER_INT_DATA_WITH_ACK, (uint8_t*) &intData, sizeof(int), NULL, &(AUTOTEST_DataCallback), 1);
     
     if( error == ARNETWORK_OK)
     {
@@ -779,7 +784,7 @@ eARNETWORK_ERROR AUTOTEST_SendVariableSizeData(AUTOTEST_ManagerCheck_t *managerC
     pStrDataDeported = AUTOTEST_AllocInitString( dataDeportSize );
     
     printf(" send str: %s size: %d \n", pStrDataDeported, dataDeportSize);  
-    error = ARNETWORK_Manager_SendVariableSizeData( managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA, (uint8_t*) pStrDataDeported, dataDeportSize, NULL, &(AUTOTEST_VariableSizeDataCallback) );
+    error = ARNETWORK_Manager_SendData(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA, (uint8_t*) pStrDataDeported, dataDeportSize, NULL, &(AUTOTEST_DataCallback),0);
     
     if( error == ARNETWORK_OK)
     {
@@ -808,7 +813,7 @@ eARNETWORK_ERROR AUTOTEST_SendVaribleSizeDatadAck(AUTOTEST_ManagerCheck_t *manag
     
     printf(" send str: %s size: %d \n", pStrDataDeportedAck, dataDeportSizeAck);
     
-    error = ARNETWORK_Manager_SendVariableSizeData(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK, (uint8_t*) pStrDataDeportedAck, dataDeportSizeAck, NULL, &(AUTOTEST_VariableSizeDataCallback));
+    error = ARNETWORK_Manager_SendData(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK, (uint8_t*) pStrDataDeportedAck, dataDeportSizeAck, NULL, &(AUTOTEST_DataCallback), 0);
     
     if( error == ARNETWORK_OK)
     {
@@ -822,7 +827,6 @@ eARNETWORK_ERROR AUTOTEST_SendVaribleSizeDatadAck(AUTOTEST_ManagerCheck_t *manag
     
     return error;
 }
-
 
 int AUTOTEST_CheckFixedSizeData( AUTOTEST_ManagerCheck_t *managerCheckPtr, char data )
 {

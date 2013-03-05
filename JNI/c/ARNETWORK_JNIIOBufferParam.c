@@ -33,7 +33,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeDelete(JNIEnv *env,
 }
 
 JNIEXPORT jint JNICALL
-Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeSet(JNIEnv *env, jobject obj, jlong jIOBufferParamPtr, jint ID, jint dataType, jint sendingWaitTimeMs, jint ackTimeoutMs, jint numberOfRetry, jint numberOfCell, jint cellSize, jint isOverwriting, jint isUsingVariableSizeData)
+Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeSet(JNIEnv *env, jobject obj, jlong jIOBufferParamPtr, jint ID, jint dataType, jint sendingWaitTimeMs, jint ackTimeoutMs, jint numberOfRetry, jint numberOfCell, jint dataCopyMaxSize, jint isOverwriting)
 {
     /** local declarations */
     ARNETWORK_IOBufferParam_t* IOBufferParamPtr = (ARNETWORK_IOBufferParam_t*) (intptr_t) jIOBufferParamPtr;
@@ -47,9 +47,8 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeSet(JNIEnv *env, jo
         IOBufferParamPtr->sendingWaitTimeMs = sendingWaitTimeMs;
         IOBufferParamPtr->numberOfRetry = numberOfRetry;
         IOBufferParamPtr->numberOfCell = numberOfCell;
-        IOBufferParamPtr->cellSize = cellSize;
+        IOBufferParamPtr->dataCopyMaxSize = dataCopyMaxSize;
         IOBufferParamPtr->isOverwriting = isOverwriting;
-        IOBufferParamPtr->isUsingVariableSizeData = isUsingVariableSizeData;
     }
     else
     {
