@@ -5,11 +5,12 @@ ifneq ("$(TARGET_LIBC)","bionic")
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := libNetwork
+LOCAL_CATEGORY_PATH := mykonos3/libs
+LOCAL_MODULE := libARNetwork
 LOCAL_DESCRIPTION := ARSDK Network Control Library
 
 LOCAL_LIBRARIES := libARSAL
-LOCAL_EXPORT_LDLIBS := -lnetwork
+LOCAL_EXPORT_LDLIBS := -larnetwork
 
 #Autotools variables
 LOCAL_AUTOTOOLS_CONFIGURE_ARGS := --with-libARSALInstallDir=""
