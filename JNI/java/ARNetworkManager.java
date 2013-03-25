@@ -38,6 +38,7 @@ public abstract class ARNetworkManager
     
     private native int nativeSendData( long jManagerPtr,int inputBufferID, ARNativeData ARData, long dataPtr, int dataSize, int doDataCopy);
     private native int nativeReadData( long jManagerPtr, int outputBufferID, ARNetworkDataRecv data);
+    private native int nativeTryReadData( long jManagerPtr, int outputBufferID, ARNetworkDataRecv data);
     private native int nativeReadDataWithTimeout( long jManagerPtr, int outputBufferID, ARNetworkDataRecv data, int timeoutMs);
     
     private long m_managerPtr;
@@ -181,7 +182,7 @@ public abstract class ARNetworkManager
     
     /**
      *  Read data received
-     *  @warning the outputBuffer must be using variable data
+     *  @warning blocking function
      *  @param outputBufferID identifier of the output buffer in which the data must be read
      *  @param data Data where store the reading
      *  @return error eARNETWORK_ERROR type
@@ -192,6 +193,28 @@ public abstract class ARNetworkManager
         if(m_initOk == true)
         {
             int intError = nativeReadData( m_managerPtr, outputBufferID, data);
+            error =  eARNETWORK_ERROR.getErrorName(intError);  
+        }
+        else
+        {
+            error = eARNETWORK_ERROR.ARNETWORK_ERROR_BAD_PARAMETER;
+        }
+        
+        return error;
+    }
+    
+    /**
+     *  try read data received (non-blocking function)
+     *  @param outputBufferID identifier of the output buffer in which the data must be read
+     *  @param data Data where store the reading
+     *  @return error eARNETWORK_ERROR type
+    **/
+    public eARNETWORK_ERROR tryReadData(int outputBufferID, ARNetworkDataRecv data)
+    {
+        eARNETWORK_ERROR error = eARNETWORK_ERROR.ARNETWORK_OK;
+        if(m_initOk == true)
+        {
+            int intError = nativeTryReadData( m_managerPtr, outputBufferID, data);
             error =  eARNETWORK_ERROR.getErrorName(intError);  
         }
         else

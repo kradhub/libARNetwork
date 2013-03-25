@@ -589,22 +589,23 @@ void* AUTOTEST_FixedSizeDataReadingRun(void* data)
     /** local declarations */
     AUTOTEST_ManagerCheck_t *managerCheckPtr = (AUTOTEST_ManagerCheck_t*)data;
     
+    int readSize = 0;
     char chData = 0;
     int intData = 0;
     
     while(managerCheckPtr->isReadingThreadAlive)
     {
         /** checking */
-        if( ARNETWORK_OK == ARNETWORK_Manager_ReadData(managerCheckPtr->managerPtr, ID_IOBUFFER_CHAR_DATA, (uint8_t*) &chData, sizeof(char), NULL) ) // !!!!!!!!!!!!!
+        if( ARNETWORK_OK == ARNETWORK_Manager_TryReadData(managerCheckPtr->managerPtr, ID_IOBUFFER_CHAR_DATA, (uint8_t*) &chData, sizeof(char), &readSize) )
         {
-            printf("- charData: %c \n", chData);
+            printf("- charData: %c  \n", chData);
             if( AUTOTEST_CheckFixedSizeData(managerCheckPtr, chData) )
             {
                 printf("error \n");
             }
         }
         
-        if( ARNETWORK_OK == ARNETWORK_Manager_ReadDataWithTimeout(managerCheckPtr->managerPtr, ID_IOBUFFER_INT_DATA_WITH_ACK, (uint8_t*) &intData, sizeof(int), NULL, 2) ) // !!!!!!!!!!
+        if( ARNETWORK_OK == ARNETWORK_Manager_TryReadData(managerCheckPtr->managerPtr, ID_IOBUFFER_INT_DATA_WITH_ACK, (uint8_t*) &intData, sizeof(int), &readSize) )
         {
             printf("- ackInt: %d \n", intData);
             if( AUTOTEST_CheckFixedSizeDataACK( managerCheckPtr, intData ) )
@@ -634,7 +635,7 @@ void* AUTOTEST_VariableSizeDataReadingRun(void* data)
     {
         /** checking */
         
-        if( ARNETWORK_OK == ARNETWORK_Manager_ReadData(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA, (uint8_t*) dataDeportedRead, AUTOTEST_NUMBER_DATA_SENT + AUTOTEST_STR_SIZE_OFFSET, &readSize ))
+        if( ARNETWORK_OK == ARNETWORK_Manager_TryReadData(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA, (uint8_t*) dataDeportedRead, AUTOTEST_NUMBER_DATA_SENT + AUTOTEST_STR_SIZE_OFFSET, &readSize ))
         {
             printf("- dataDeportedRead: %s \n",  dataDeportedRead );
             
@@ -644,7 +645,7 @@ void* AUTOTEST_VariableSizeDataReadingRun(void* data)
             }
         }
         
-        if( ARNETWORK_OK == ARNETWORK_Manager_ReadDataWithTimeout(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK, (uint8_t*) dataDeportedReadAck, AUTOTEST_NUMBER_DATA_SENT + AUTOTEST_STR_SIZE_OFFSET, &readSize, 2 ))
+        if( ARNETWORK_OK == ARNETWORK_Manager_TryReadData(managerCheckPtr->managerPtr, ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK, (uint8_t*) dataDeportedReadAck, AUTOTEST_NUMBER_DATA_SENT + AUTOTEST_STR_SIZE_OFFSET, &readSize))
         {
             
             printf("- dataDeportedReadAck: %s \n",  dataDeportedReadAck );

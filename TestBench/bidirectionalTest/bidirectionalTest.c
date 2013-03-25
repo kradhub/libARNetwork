@@ -449,25 +449,25 @@ void* printBuff(void* data)
     {
         usleep(MILLISECOND);
 
-        error = ARNETWORK_Manager_ReadData( pprintThread1->pManager, pprintThread1->id_ioBuff_char, (uint8_t*) &chData, sizeof(char), NULL); // !!!!!!!!!
+        error = ARNETWORK_Manager_TryReadData( pprintThread1->pManager, pprintThread1->id_ioBuff_char, (uint8_t*) &chData, sizeof(char), NULL); // !!!!!!!!!
         if( error ==  ARNETWORK_OK )
         {
             printf("- char :%d \n", chData);
         }
         
-        error = ARNETWORK_Manager_ReadData( pprintThread1->pManager, pprintThread1->id_ioBuff_intAck, (uint8_t*) &intData, sizeof(int), NULL);// !!!!!!!!!
+        error = ARNETWORK_Manager_TryReadData( pprintThread1->pManager, pprintThread1->id_ioBuff_intAck, (uint8_t*) &intData, sizeof(int), NULL);// !!!!!!!!!
         if( error ==  ARNETWORK_OK )
         {
             printf("- int ack :%d \n", intData);
         }
         
-        error = ARNETWORK_Manager_ReadData(pprintThread1->pManager, pprintThread1->id_ioBuff_deportDataAck, (uint8_t*) &deportData,LIMIT_SIZE_DEPORT_DATA, NULL); // !!!!!!!!
+        error = ARNETWORK_Manager_TryReadData(pprintThread1->pManager, pprintThread1->id_ioBuff_deportDataAck, (uint8_t*) &deportData,LIMIT_SIZE_DEPORT_DATA, NULL); // !!!!!!!!
         if( error ==  ARNETWORK_OK )
         {
             printf("- deport string data ack :%s \n", deportData);
         }
         
-        error = ARNETWORK_Manager_ReadData(pprintThread1->pManager, pprintThread1->id_ioBuff_deportData, (uint8_t*) &deportData, LIMIT_SIZE_DEPORT_DATA, NULL); // !!!!!!!
+        error = ARNETWORK_Manager_TryReadData(pprintThread1->pManager, pprintThread1->id_ioBuff_deportData, (uint8_t*) &deportData, LIMIT_SIZE_DEPORT_DATA, NULL); // !!!!!!!
         if( error ==  ARNETWORK_OK )
         {
             printf("- deport string data :%s \n", deportData);

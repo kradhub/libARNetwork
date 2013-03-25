@@ -149,8 +149,8 @@ eARNETWORK_ERROR ARNETWORK_Manager_Flush(ARNETWORK_Manager_t *managerPtr);
 eARNETWORK_ERROR ARNETWORK_Manager_SendData(ARNETWORK_Manager_t *managerPtr, int inputBufferID, uint8_t *dataPtr, int dataSize, void *customData, ARNETWORK_Manager_Callback_t callback, int doDataCopy);
 
 /**
- *  @brief Read data received in a IOBuffer using variable size data
- *  @warning the outputBuffer must be using of variable Size Data type
+ *  @brief Read data received in a IOBuffer using variable size data (blocking function)
+ *  @warning blocking function
  *  @param managerPtr pointer on the Manager
  *  @param[in] outputBufferID identifier of the output buffer in which the data must be read
  *  @param[out] dataPtr pointer on the data read
@@ -161,8 +161,18 @@ eARNETWORK_ERROR ARNETWORK_Manager_SendData(ARNETWORK_Manager_t *managerPtr, int
 eARNETWORK_ERROR ARNETWORK_Manager_ReadData(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr);
 
 /**
+ *  @brief try to read data received in a IOBuffer using variable size data (non-blocking function)
+ *  @param managerPtr pointer on the Manager
+ *  @param[in] outputBufferID identifier of the output buffer in which the data must be read
+ *  @param[out] dataPtr pointer on the data read
+ *  @param[in] dataLimitSize limit size of the copy
+ *  @param[out] readSizePtr pointer to store the size of the data read
+ *  @return error eARNETWORK_ERROR type
+**/
+eARNETWORK_ERROR ARNETWORK_Manager_TryReadData(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr);
+
+/**
  *  @brief Read, with timeout, a data received in IOBuffer using variable size data
- *  @warning the outputBuffer must be using variable data
  *  @param managerPtr pointer on the ARNETWORK_Manager_t
  *  @param[in] outputBufferID identifier of the output buffer in which the data must be read
  *  @param[out] dataPtr pointer on the data read

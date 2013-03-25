@@ -392,7 +392,61 @@ eARNETWORK_ERROR ARNETWORK_Manager_SendData(ARNETWORK_Manager_t *managerPtr, int
 
 eARNETWORK_ERROR ARNETWORK_Manager_ReadData(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr)
 {
-    /** -- Read data received in a IOBuffer using variable size data -- */
+    /** -- Read data received in a IOBuffer using variable size data (blocking function) -- */
+    
+    /** local declarations */
+    eARNETWORK_ERROR error = ARNETWORK_OK;
+    ARNETWORK_IOBuffer_t *outputBufferPtr = NULL;
+    int semError = 0;
+    
+    /** check paratemters */
+    if(managerPtr != NULL)
+    {
+        /** get the address of the outputBuffer */
+        outputBufferPtr = managerPtr->outputBufferPtrMap[outputBufferID];
+        
+        /** check outputBufferPtr */
+        if(outputBufferPtr == NULL)
+        {
+            error = ARNETWORK_ERROR_ID_UNKNOWN;
+        }
+    }
+    else
+    {
+        error = ARNETWORK_ERROR_BAD_PARAMETER;
+    }
+    
+    if( error == ARNETWORK_OK )
+    {
+        /** try to take the semaphore */
+        semError = ARSAL_Sem_Wait( &(outputBufferPtr->outputSem) );
+        
+        if(semError)
+        {
+            switch( errno )
+            {
+                case EAGAIN : /** no semaphore */ 
+                    error = ARNETWORK_ERROR_BUFFER_EMPTY;
+                    break;
+                
+                default:
+                    error = ARNETWORK_ERROR_SEMAPHORE;
+                    break;
+            }
+        }
+    }
+    
+    if( error == ARNETWORK_OK )
+    {
+        error = ARNETWORK_IOBuffer_ReadData(outputBufferPtr, dataPtr, dataLimitSize, readSizePtr);
+    }
+    
+    return error;
+}
+
+eARNETWORK_ERROR ARNETWORK_Manager_TryReadData(ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr)
+{
+    /** -- try to read data received in a IOBuffer using variable size data (non-blocking function) -- */
     
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;

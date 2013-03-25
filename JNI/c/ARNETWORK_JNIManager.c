@@ -372,7 +372,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendData(JNIEnv *env, job
 
 /**
  *  @brief Read data received in a IOBuffer
- *  @warning the outputBuffer must be using of variable Size Data type
+ *  @warning blocking function
  *  @param env reference to the java environment
  *  @param obj reference to the object calling this function
  *  @param jManagerPtr adress of the ARNETWORK_Manager_t
@@ -432,8 +432,67 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadData(JNIEnv *env, job
 }
 
 /**
+ *  @brief try to read data received in a IOBuffer (non-blocking function)
+ *  @param env reference to the java environment
+ *  @param obj reference to the object calling this function
+ *  @param jManagerPtr adress of the ARNETWORK_Manager_t
+ *  @param[in] outputBufferID identifier of the output buffer in which the data must be read
+ *  @param[out] jData ARNetworkDataRecv to store the data received
+ *  @return error eARNETWORK_ERROR type
+**/
+JNIEXPORT jint JNICALL
+Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeTryReadData(JNIEnv *env, jobject obj, jlong jManagerPtr, jint outputBufferID, jobject jData)
+{
+    /** -- Read data received in a IOBuffer using variable size data -- */
+    
+    /** local declarations */
+    jbyteArray jbyteArrayData = NULL;
+    jfieldID fieldID = 0;
+    int limitSize = 0;
+    uint8_t *dataPtr = NULL;
+    int readSize = 0;
+    eARNETWORK_ERROR error = ARNETWORK_OK;
+    ARNETWORK_Manager_t *managerPtr = (ARNETWORK_Manager_t*) (intptr_t) jManagerPtr;
+    
+    /** get the ARNetworkDataRecv class reference */
+    jclass dataRecv_cls = (*env)->GetObjectClass(env, jData);
+    
+    if(dataRecv_cls != NULL)
+    {
+        /** get m_data */
+        fieldID = (*env)->GetFieldID( env, dataRecv_cls, "m_data", "[B" );
+        jbyteArrayData = (*env)->GetObjectField(env, jData, fieldID);
+        
+        if(jbyteArrayData == NULL)
+        {
+            ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_JNIMANGER_TAG, "error jbyteArrayData" );
+            error = ARNETWORK_ERROR_BAD_PARAMETER; 
+        }
+    }
+    
+    if(error == ARNETWORK_OK)
+    {
+        fieldID = (*env)->GetFieldID(env, dataRecv_cls, "m_limitSize", "I" );
+        limitSize = (*env)->GetIntField(env, jData, fieldID);
+   
+        dataPtr = (*env)->GetByteArrayElements (env, jbyteArrayData, NULL);
+        
+        ARNETWORK_Manager_TryReadData( managerPtr, outputBufferID, dataPtr, limitSize, &readSize );
+        
+        fieldID = (*env)->GetFieldID(env, dataRecv_cls, "m_readSize", "I" );
+        (*env)->SetIntField(env, jData, fieldID, readSize);
+        
+        (*env)->ReleaseByteArrayElements( env, jbyteArrayData, dataPtr, 0 );
+    }
+    
+    /** delete class ref */
+    (*env)->DeleteLocalRef (env, dataRecv_cls);
+    
+    return error;
+}
+
+/**
  *  @brief Read, with timeout, a data received in IOBuffer
- *  @warning the outputBuffer must be using of variable Size Data type
  *  @param env reference to the java environment
  *  @param obj reference to the object calling this function
  *  @param jManagerPtr adress of the ARNETWORK_Manager_t
