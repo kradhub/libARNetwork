@@ -19,6 +19,7 @@ SOURCE_FILES                                                =   $(HEADER_FILES) 
                                                                 ../Sources/ARNETWORK_Sender.c           \
                                                                 ../Sources/ARNETWORK_Receiver.c         \
                                                                 ../Sources/ARNETWORK_Manager.c          \
+                                                                ../Sources/ARNETWORK_Error.c            \
                                                                 ../Sources/ARNETWORK_Buffer.h           \
                                                                 ../Sources/ARNETWORK_RingBuffer.h       \
                                                                 ../Sources/ARNETWORK_IOBuffer.h         \
