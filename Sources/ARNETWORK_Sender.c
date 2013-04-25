@@ -66,7 +66,7 @@ void ARNETWORK_Sender_Send (ARNETWORK_Sender_t *senderPtr);
  *  @note only call by ARNETWORK_Sender_ThreadRun()
  *  @see ARNETWORK_Sender_ThreadRun()
  */
-eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, const ARNETWORK_IOBuffer_t *inputBufferPtr, int seqNum);
+eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, int seqNum);
 
 /**
  *  @brief call the Callback this timeout status
@@ -87,6 +87,10 @@ eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_Sender_TimeOutCallback (ARNETWORK_S
  *  @see ARNETWORK_Sender_ThreadRun()
  */
 void ARNETWORK_Sender_ManageTimeOut (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, eARNETWORK_MANAGER_CALLBACK_RETURN callbackReturn);
+
+
+
+void ARNETWORK_Sender_ManageIOBufferIsInRemovingStatus(ARNETWORK_IOBuffer_t *inputBufferPtr, eARNETWORK_MANAGER_CALLBACK_STATUS callbackStatus);
 
 /*****************************************
  *
@@ -189,10 +193,12 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
             inputBufferPtrTemp = senderPtr->inputBufferPtrArr[inputBufferIndex];
             if (inputBufferPtrTemp->dataType == ARNETWORK_FRAME_TYPE_DATA_LOW_LATENCY)
             {
+// TODO: Lock ?
                 if (!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBufferPtr))
                 {
                     mustWait = 0;
                 }
+// TODO: Unlock
             }
         }
         if (mustWait == 1)
@@ -207,101 +213,106 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
         for (inputBufferIndex = 0; inputBufferIndex < senderPtr->numberOfInputBuff; ++inputBufferIndex)
         {
             inputBufferPtrTemp = senderPtr->inputBufferPtrArr[inputBufferIndex];
+            /** lock the IOBuffer */
+            error = ARNETWORK_IOBuffer_Lock(inputBufferPtrTemp);
 
-            /** decrement the time to wait */
-            if (inputBufferPtrTemp->waitTimeCount > 0)
+            if(error == ARNETWORK_OK)
             {
-                -- (inputBufferPtrTemp->waitTimeCount);
-            }
-
-            if (ARNETWORK_IOBuffer_IsWaitAck (inputBufferPtrTemp))
-            {
-                if (inputBufferPtrTemp->ackWaitTimeCount == 0)
+                /** decrement the time to wait */
+                if (inputBufferPtrTemp->waitTimeCount > 0)
                 {
-                    if (inputBufferPtrTemp->retryCount == 0)
+                    -- (inputBufferPtrTemp->waitTimeCount);
+                }
+
+                if (ARNETWORK_IOBuffer_IsWaitAck (inputBufferPtrTemp))
+                {
+                    if (inputBufferPtrTemp->ackWaitTimeCount == 0)
                     {
-                        /** if there are timeout and too sending retry ... */
-
-                        ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_SENDER_TAG, "!!! too retry !!!");
-
-                        callbackReturn = ARNETWORK_Sender_TimeOutCallback (senderPtr, inputBufferPtrTemp);
-
-                        ARNETWORK_Sender_ManageTimeOut (senderPtr, inputBufferPtrTemp, callbackReturn);
-
-                    }
-                    else
-                    {
-                        /** if there is a timeout, retry to send the data */
-
-                        error = ARNETWORK_Sender_AddToBuffer (senderPtr, inputBufferPtrTemp, inputBufferPtrTemp->seqWaitAck);
-                        mustWait = 0;
-
-                        if (error == ARNETWORK_OK)
+                        if (inputBufferPtrTemp->retryCount == 0)
                         {
-                            /** reset the timeout counter*/
-                            inputBufferPtrTemp->ackWaitTimeCount = inputBufferPtrTemp->ackTimeoutMs;
+                            /** if there are timeout and too sending retry ... */
 
-                            /** decrement the number of retry still possible is retryCount isn't -1 */
-                            if (inputBufferPtrTemp->retryCount > 0)
+                            ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_SENDER_TAG, "!!! too retry !!!");
+
+                            callbackReturn = ARNETWORK_Sender_TimeOutCallback (senderPtr, inputBufferPtrTemp);
+
+                            ARNETWORK_Sender_ManageTimeOut (senderPtr, inputBufferPtrTemp, callbackReturn);
+
+                        }
+                        else
+                        {
+                            /** if there is a timeout, retry to send the data */
+
+                            error = ARNETWORK_Sender_AddToBuffer (senderPtr, inputBufferPtrTemp, inputBufferPtrTemp->seqWaitAck);
+                            if (error == ARNETWORK_OK)
                             {
-                                -- (inputBufferPtrTemp->retryCount);
+                                /** reset the timeout counter*/
+                                inputBufferPtrTemp->ackWaitTimeCount = inputBufferPtrTemp->ackTimeoutMs;
+
+                                /** decrement the number of retry still possible is retryCount isn't -1 */
+                                if (inputBufferPtrTemp->retryCount > 0)
+                                {
+                                    -- (inputBufferPtrTemp->retryCount);
+                                }
                             }
                         }
                     }
-                }
 
-                /** decrement the time to wait before considering as a timeout */
-                if (inputBufferPtrTemp->ackWaitTimeCount > 0)
-                {
-                    -- (inputBufferPtrTemp->ackWaitTimeCount);
-                }
-            }
-            else if ((!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBufferPtr)) &&(inputBufferPtrTemp->waitTimeCount == 0))
-            {
-                /** try to add the latest data of the input buffer in the sending buffer; callback with sent status */
-                if (!ARNETWORK_Sender_AddToBuffer (senderPtr, inputBufferPtrTemp, senderPtr->seq))
-                {
-                    inputBufferPtrTemp->waitTimeCount = inputBufferPtrTemp->sendingWaitTimeMs;
-
-                    switch (inputBufferPtrTemp->dataType)
+                    /** decrement the time to wait before considering as a timeout */
+                    if (inputBufferPtrTemp->ackWaitTimeCount > 0)
                     {
-                    case ARNETWORK_FRAME_TYPE_DATA_WITH_ACK:
-                        /**
-                         * reinitialize the input buffer parameters,
-                         * save the sequence wait for the acknowledgement,
-                         * and pass on waiting acknowledgement.
-                         */
-                        inputBufferPtrTemp->isWaitAck = 1;
-                        inputBufferPtrTemp->seqWaitAck = senderPtr->seq;
-                        inputBufferPtrTemp->ackWaitTimeCount = inputBufferPtrTemp->ackTimeoutMs;
-                        inputBufferPtrTemp->retryCount = inputBufferPtrTemp->numberOfRetry;
-
-                        break;
-
-                    case ARNETWORK_FRAME_TYPE_DATA:
-                        /** pop the data sent */
-                        ARNETWORK_IOBuffer_PopData (inputBufferPtrTemp);
-                        break;
-
-                    case ARNETWORK_FRAME_TYPE_DATA_LOW_LATENCY:
-                        /** pop the data sent */
-                        ARNETWORK_IOBuffer_PopData (inputBufferPtrTemp);
-                        break;
-
-                    case ARNETWORK_FRAME_TYPE_ACK:
-                        /** pop the acknowledgement sent */
-                        ARNETWORK_IOBuffer_PopData (inputBufferPtrTemp);
-                        break;
-
-                    default:
-
-                        break;
+                        -- (inputBufferPtrTemp->ackWaitTimeCount);
                     }
-
-                    /** increment the sequence number */
-                    ++ (senderPtr->seq);
                 }
-                mustWait = 0;
+
+                else if ((!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBufferPtr)) && (inputBufferPtrTemp->waitTimeCount == 0))
+                {
+                    /** try to add the latest data of the input buffer in the sending buffer; callback with sent status */
+                    if (!ARNETWORK_Sender_AddToBuffer (senderPtr, inputBufferPtrTemp, senderPtr->seq))
+                    {
+                        inputBufferPtrTemp->waitTimeCount = inputBufferPtrTemp->sendingWaitTimeMs;
+
+                        switch (inputBufferPtrTemp->dataType)
+                        {
+                        case ARNETWORK_FRAME_TYPE_DATA_WITH_ACK:
+                            /**
+                             * reinitialize the input buffer parameters,
+                             * save the sequence wait for the acknowledgement,
+                             * and pass on waiting acknowledgement.
+                             */
+                            inputBufferPtrTemp->isWaitAck = 1;
+                            inputBufferPtrTemp->seqWaitAck = senderPtr->seq;
+                            inputBufferPtrTemp->ackWaitTimeCount = inputBufferPtrTemp->ackTimeoutMs;
+                            inputBufferPtrTemp->retryCount = inputBufferPtrTemp->numberOfRetry;
+                            break;
+
+                        case ARNETWORK_FRAME_TYPE_DATA:
+                            /** pop the data sent */
+                            ARNETWORK_IOBuffer_PopData (inputBufferPtrTemp);
+                            break;
+
+                        case ARNETWORK_FRAME_TYPE_DATA_LOW_LATENCY:
+                            /** pop the data sent */
+                            ARNETWORK_IOBuffer_PopData (inputBufferPtrTemp);
+                            break;
+
+                        case ARNETWORK_FRAME_TYPE_ACK:
+                            /** pop the acknowledgement sent */
+                            ARNETWORK_IOBuffer_PopData (inputBufferPtrTemp);
+                            break;
+
+                        default:
+                            ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_SENDER_TAG, "dataType: %d unknow \n", inputBufferPtrTemp->dataType);
+                            break;
+                        }
+
+                        /** increment the sequence number */
+                        ++ (senderPtr->seq);
+                    }
+                }
+
+                /** unlock the IOBuffer */
+                ARNETWORK_IOBuffer_Unlock(inputBufferPtrTemp);
             }
         }
         ARNETWORK_Sender_Send (senderPtr);
@@ -335,11 +346,20 @@ eARNETWORK_ERROR ARNETWORK_Sender_AckReceived (ARNETWORK_Sender_t *senderPtr, in
 
     if (inputBufferPtr != NULL)
     {
-        /**
-         *  Transmit the acknowledgment to the input buffer.
-         *     if the acknowledgment is suiarray the waiting data is popped
-         */
-        error = ARNETWORK_IOBuffer_AckReceived (inputBufferPtr, seqNumber);
+        /** lock the IOBuffer */
+        error = ARNETWORK_IOBuffer_Lock (inputBufferPtr);
+
+        if (error == ARNETWORK_OK)
+        {
+            /**
+             *  Transmit the acknowledgment to the input buffer.
+             *     if the acknowledgment is suiarray the waiting data is popped
+             */
+            error = ARNETWORK_IOBuffer_AckReceived (inputBufferPtr, seqNumber);
+
+            /** unlock the IOBuffer */
+            ARNETWORK_IOBuffer_Unlock (inputBufferPtr);
+        }
     }
     else
     {
@@ -396,9 +416,17 @@ eARNETWORK_ERROR ARNETWORK_Sender_Flush (ARNETWORK_Sender_t *senderPtr)
     for (inputIndex = 0; inputIndex < senderPtr->numberOfInputBuff && error == ARNETWORK_OK; ++inputIndex)
     {
         inputBufferTemp = senderPtr->inputBufferPtrArr[inputIndex];
+        /** lock the IOBuffer */
+        error = ARNETWORK_IOBuffer_Lock (inputBufferTemp);
 
-        /**  flush the IoBuffer */
-        error = ARNETWORK_IOBuffer_Flush (inputBufferTemp);
+        if (error == ARNETWORK_OK)
+        {
+            /**  flush the IoBuffer */
+            error = ARNETWORK_IOBuffer_Flush (inputBufferTemp);
+
+            /** unlock the IOBuffer */
+            ARNETWORK_IOBuffer_Unlock (inputBufferTemp);
+        }
     }
 
     return error;
@@ -440,7 +468,7 @@ void ARNETWORK_Sender_Send (ARNETWORK_Sender_t *senderPtr)
     }
 }
 
-eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, const ARNETWORK_IOBuffer_t *inputBufferPtr, int seqNum)
+eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, int seqNum)
 {
     /** -- add data to the sender buffer and callback with sent status -- */
 

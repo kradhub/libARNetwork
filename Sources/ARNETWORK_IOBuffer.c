@@ -13,6 +13,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include <libARSAL/ARSAL_Print.h>
 #include <libARSAL/ARSAL_Mutex.h>
@@ -86,7 +87,7 @@ ARNETWORK_IOBuffer_t* ARNETWORK_IOBuffer_New(const ARNETWORK_IOBufferParam_t *pa
         /** Initialize to default values */
         IOBufferPtr->dataDescriptorRBufferPtr = NULL;
         IOBufferPtr->dataCopyRBufferPtr = NULL;
-        ARSAL_Mutex_Init(&(IOBufferPtr->mutex));
+        ARSAL_Mutex_InitWithType(&(IOBufferPtr->mutex), ARSAL_MUTEX_TYPE_ERRORCHECK);
         ARSAL_Sem_Init(&(IOBufferPtr->outputSem), 0, 0);
         
         if(ARNETWORK_IOBufferParam_Check(paramPtr))
@@ -181,8 +182,6 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AckReceived(ARNETWORK_IOBuffer_t *IOBufferPt
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
     
-    ARSAL_Mutex_Lock(&(IOBufferPtr->mutex));
-    
     /** delete the data if the sequence number received is same as the sequence number expected */
     if(IOBufferPtr->isWaitAck && IOBufferPtr->seqWaitAck == seqNumber)
     {
@@ -194,8 +193,6 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AckReceived(ARNETWORK_IOBuffer_t *IOBufferPt
         error = ARNETWORK_ERROR_IOBUFFER_BAD_ACK;
     }
     
-    ARSAL_Mutex_Unlock(&(IOBufferPtr->mutex));
-    
     return error;
 }
 
@@ -206,24 +203,78 @@ int ARNETWORK_IOBuffer_IsWaitAck(ARNETWORK_IOBuffer_t *IOBufferPtr)
     /** local declarations */
     int isWaitAckCpy = 0;
     
-    ARSAL_Mutex_Lock(&(IOBufferPtr->mutex));
-    
     isWaitAckCpy = IOBufferPtr->isWaitAck;
-    
-    ARSAL_Mutex_Unlock(&(IOBufferPtr->mutex));
     
     return isWaitAckCpy;
 }
 
+eARNETWORK_ERROR ARNETWORK_IOBuffer_Lock( ARNETWORK_IOBuffer_t *IOBufferPtr)
+{
+    /** -- Lock the IOBuffer's mutex -- **/
+    
+    /** local declarations */
+    eARNETWORK_ERROR error = ARNETWORK_OK;
+    int lockingReturn = 0;
+    
+    /** lock the IOBuffer */
+    lockingReturn = ARSAL_Mutex_Lock(&(IOBufferPtr->mutex));
+    
+    if(lockingReturn != 0)
+    {
+        switch(lockingReturn)
+        {
+            case EDEADLK:
+                error = ARNETWORK_ERROR_MUTEX_DOUBLE_LOCK;
+                break;
+            
+            default:
+                error = ARNETWORK_ERROR_MUTEX;
+                ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_IOBUFFER_TAG, "locking return : %d unexpected\n", lockingReturn);
+                break;
+        }
+    }
+    
+    return error;
+}
+
+eARNETWORK_ERROR ARNETWORK_IOBuffer_Unlock( ARNETWORK_IOBuffer_t *IOBufferPtr)
+{
+    /** -- Unlock the IOBuffer's mutex -- **/
+    
+    /** local declarations */
+    eARNETWORK_ERROR error = ARNETWORK_OK;
+    int unlockingReturn = 0;
+    
+    /** unlock the IOBuffer if there is not correctly unlocked */
+    unlockingReturn = ARSAL_Mutex_Unlock(&(IOBufferPtr->mutex));
+    
+    if(unlockingReturn != 0)
+    {
+        switch(unlockingReturn)
+        {
+            case EDEADLK:
+                error = ARNETWORK_ERROR_MUTEX_DOUBLE_LOCK;
+                break;
+            
+            default:
+                error = ARNETWORK_ERROR_MUTEX;
+                ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_IOBUFFER_TAG, "unlocking return : %d unexpected\n", unlockingReturn);
+                break;
+        }
+    }
+    
+    return error;
+}
+
 eARNETWORK_ERROR ARNETWORK_IOBuffer_CancelAllData(ARNETWORK_IOBuffer_t *IOBufferPtr)
 {
-    /** -- cancel all remaining data */
+    /** -- cancel all remaining data -- */
     
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
     eARNETWORK_ERROR deleteError = ARNETWORK_OK;
     
-    /** pop all data with the ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL status --*/ 
+    /** pop all data with the ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL status */ 
     while(deleteError == ARNETWORK_OK)
     {
         deleteError = ARNETWORK_IOBuffer_PopDataWithCallBack(IOBufferPtr, ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL);
@@ -288,8 +339,6 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_Flush(ARNETWORK_IOBuffer_t *IOBufferPtr)
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
     
-    ARSAL_Mutex_Lock(&(IOBufferPtr->mutex));
-    
     /**  delete all data */
     while(error == ARNETWORK_OK)
     {
@@ -313,9 +362,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_Flush(ARNETWORK_IOBuffer_t *IOBufferPtr)
     ARSAL_Sem_Destroy(&(IOBufferPtr->outputSem));
     ARSAL_Sem_Init(&(IOBufferPtr->outputSem), 0, 0);
     
-    ARSAL_Mutex_Unlock(&(IOBufferPtr->mutex));
-    
-    return error; 
+    return error;
 }
 
 eARNETWORK_ERROR ARNETWORK_IOBuffer_AddData(ARNETWORK_IOBuffer_t *IOBufferPtr, uint8_t *dataPtr, int dataSize, void *customData, ARNETWORK_Manager_Callback_t callback, int doDataCopy)

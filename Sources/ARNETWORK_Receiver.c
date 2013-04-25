@@ -158,7 +158,7 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
     ARNETWORK_Frame_t frame ;
     ARNETWORK_IOBuffer_t* outBufferPtrTemp = NULL;
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    int ackSeqNumDAta = 0;
+    int ackSeqNumData = 0;
 
     while (receiverPtr->isAlive)
     {
@@ -173,69 +173,80 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                 switch (frame.type)
                 {
                 case ARNETWORK_FRAME_TYPE_ACK:
-                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG,"- TYPE: ARNETWORK_FRAME_TYPE_ACK | SEQ:%d | ID:%d", frame.seq, frame.ID);
+                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORK_FRAME_TYPE_ACK | SEQ:%d | ID:%d", frame.seq, frame.ID);
 
                     /** get the acknowledge sequence number from the data */
-                    memcpy (&ackSeqNumDAta, (uint32_t*)frame.dataPtr, sizeof(uint32_t));
+                    memcpy (&ackSeqNumData, (uint32_t*)frame.dataPtr, sizeof(uint32_t));
 
                     /** transmit the acknowledgement to the sender */
-                    error = ARNETWORK_Sender_AckReceived (receiverPtr->senderPtr, ARNETWORK_Manager_IDAckToIDInput(frame.ID), ackSeqNumDAta);
+                    error = ARNETWORK_Sender_AckReceived (receiverPtr->senderPtr, ARNETWORK_Manager_IDAckToIDInput (frame.ID), ackSeqNumData);
                     if (error != ARNETWORK_OK)
                     {
                         switch (error)
                         {
                         case ARNETWORK_ERROR_IOBUFFER_BAD_ACK:
-                            ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG,"Bad acknowledge, error: %s", ARNETWORK_Error_ToString (error));
+                            ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "Bad acknowledge, error: %s", ARNETWORK_Error_ToString (error));
                             break;
 
                         default:
-                            ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG,"acknowledge received, error: %s", ARNETWORK_Error_ToString (error));
+                            ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "Acknowledge received, error: %s", ARNETWORK_Error_ToString (error));
                             break;
                         }
                     }
-
                     break;
 
                 case ARNETWORK_FRAME_TYPE_DATA:
-                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG,"- TYPE: ARNETWORK_FRAME_TYPE_DATA | SEQ:%d | ID:%d", frame.seq, frame.ID);
+                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORK_FRAME_TYPE_DATA | SEQ:%d | ID:%d", frame.seq, frame.ID);
 
                     /** push the data received in the output buffer targeted */
                     outBufferPtrTemp = receiverPtr->outputBufferPtrMap[frame.ID];
 
                     if (outBufferPtrTemp != NULL)
                     {
-                        error = ARNETWORK_Receiver_CopyDataRecv (receiverPtr, outBufferPtrTemp, &frame);
-
-                        if (error != ARNETWORK_OK)
+                        /** lock the IOBuffer */
+                        error = ARNETWORK_IOBuffer_Lock(outBufferPtrTemp);
+                        if(error == ARNETWORK_OK)
                         {
-                            ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG,"data received, error: %s", ARNETWORK_Error_ToString (error));
+                            error = ARNETWORK_Receiver_CopyDataRecv(receiverPtr, outBufferPtrTemp, &frame);
+
+                            /** unlock the IOBuffer */
+                            ARNETWORK_IOBuffer_Unlock(outBufferPtrTemp);
+
+                            if(error != ARNETWORK_OK)
+                            {
+                                ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "data received, error: %s", ARNETWORK_Error_ToString (error));
+                            }
                         }
-
                     }
-
                     break;
 
                 case ARNETWORK_FRAME_TYPE_DATA_LOW_LATENCY:
-                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG,"- TYPE: ARNETWORK_FRAME_TYPE_DATA_LOW_LATENCY | SEQ:%d | ID:%d", frame.seq, frame.ID);
+                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORK_FRAME_TYPE_DATA_LOW_LATENCY | SEQ:%d | ID:%d", frame.seq, frame.ID);
 
                     /** push the data received in the output buffer targeted */
                     outBufferPtrTemp = receiverPtr->outputBufferPtrMap[frame.ID];
 
                     if (outBufferPtrTemp != NULL)
                     {
-                        error = ARNETWORK_Receiver_CopyDataRecv (receiverPtr, outBufferPtrTemp, &frame);
-
-                        if (error != ARNETWORK_OK)
+                        /** lock the IOBuffer */
+                        error = ARNETWORK_IOBuffer_Lock(outBufferPtrTemp);
+                        if(error == ARNETWORK_OK)
                         {
-                            ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG,"data received, error: %s", ARNETWORK_Error_ToString (error));
+                            error = ARNETWORK_Receiver_CopyDataRecv(receiverPtr, outBufferPtrTemp, &frame);
+
+                            /** unlock the IOBuffer */
+                            ARNETWORK_IOBuffer_Unlock(outBufferPtrTemp);
+
+                            if(error != ARNETWORK_OK)
+                            {
+                                ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "data received, error: %s", ARNETWORK_Error_ToString (error));
+                            }
                         }
-
                     }
-
                     break;
 
                 case ARNETWORK_FRAME_TYPE_DATA_WITH_ACK:
-                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG,"- TYPE: ARNETWORK_FRAME_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d", frame.seq, frame.ID);
+                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORK_FRAME_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d", frame.seq, frame.ID);
 
                     /**
                      * push the data received in the output buffer targeted,
@@ -248,30 +259,40 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                         /** OutBuffer->seqWaitAck used to save the last seq */
                         if (frame.seq != outBufferPtrTemp->seqWaitAck)
                         {
-                            error = ARNETWORK_Receiver_CopyDataRecv (receiverPtr, outBufferPtrTemp, &frame);
-                            if (error == ARNETWORK_OK)
+                            /** lock the IOBuffer */
+                            error = ARNETWORK_IOBuffer_Lock(outBufferPtrTemp);
+                            if(error == ARNETWORK_OK)
                             {
-                                outBufferPtrTemp->seqWaitAck = frame.seq;
-                            }
-                            else
-                            {
-                                ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG,"data acknowledgeed received, error: %s", ARNETWORK_Error_ToString (error));
+                                /** OutBuffer->seqWaitAck used to save the last seq */
+                                if(frame.seq != outBufferPtrTemp->seqWaitAck)
+                                {
+                                    error = ARNETWORK_Receiver_CopyDataRecv( receiverPtr, outBufferPtrTemp, &frame);
+                                    if( error == ARNETWORK_OK)
+                                    {
+                                        outBufferPtrTemp->seqWaitAck = frame.seq;
+                                    }
+                                    else
+                                    {
+                                        ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "data acknowledged received, error: %s", ARNETWORK_Error_ToString (error));
+                                    }
+                                }
+
+                                /** unlock the IOBuffer */
+                                ARNETWORK_IOBuffer_Unlock(outBufferPtrTemp);
+
+                                /** sending ack even if the seq is not correct */
+                                error = ARNETWORK_Receiver_ReturnACK(receiverPtr, frame.ID, frame.seq);
+                                if( error != ARNETWORK_OK)
+                                {
+                                    ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "ReturnACK, error: %d occurred \n", error);
+                                }
                             }
                         }
-
-                        /** sending ack even if the seq is not correct */
-                        error = ARNETWORK_Receiver_ReturnACK (receiverPtr, frame.ID, frame.seq);
-                        if (error != ARNETWORK_OK)
-                        {
-                            ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG,"ReturnACK, error: %s", ARNETWORK_Error_ToString (error));
-                        }
-
                     }
-
                     break;
 
                 default:
-                    ARSAL_PRINT (ARSAL_PRINT_WARNING, ARNETWORK_RECEIVER_TAG,"!!! command type: %d not known  !!!", frame.type);
+                    ARSAL_PRINT (ARSAL_PRINT_WARNING, ARNETWORK_RECEIVER_TAG, "!!! command type: %d not known  !!!", frame.type);
                     break;
                 }
                 /** get the next frame*/

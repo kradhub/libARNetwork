@@ -41,7 +41,11 @@ typedef struct
     int ackWaitTimeCount; /**< Counter of time to wait before to consider a timeout without receiving an acknowledgement*/
     int retryCount; /**< Counter of sending retry remaining before to consider a failure*/
     
-    ARSAL_Mutex_t mutex;  /**< Mutex to take before to use the ringBuffer*/
+    ARSAL_Mutex_t mutex;  /**< Mutex to take before to use the IOBuffer. 
+                            *   @warning This mutex is not managed by the IOBuffer itself but by the user
+                            *   @see ARNETWORK_IOBuffer_Lock()
+                            *   @see ARNETWORK_IOBuffer_Unlock()
+                            **/
     ARSAL_Sem_t outputSem; /**< Semaphore used, by the outputs, to know when a data is ready to be read */
 
 }ARNETWORK_IOBuffer_t;
@@ -76,6 +80,7 @@ static inline int ARNETWORK_IOBuffer_CanCopyData(ARNETWORK_IOBuffer_t *IOBufferP
 
 /**
  *  @brief Receive an acknowledgement to a IOBuffer.
+ *  @warning The IOBuffer mutex must lock before the calling of this function and unlock after.
  *  @details If the IOBuffer is waiting about an acknowledgement and seqNum is equal to the sequence number waited, the inOutBuffer pops the last data and delete its is waiting acknowledgement.
  *  @param[in] IOBufferPtr Pointer on the input or output buffer
  *  @param[in] seqNumber sequence number of the acknowledgement
@@ -91,9 +96,23 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AckReceived( ARNETWORK_IOBuffer_t *IOBufferP
 int ARNETWORK_IOBuffer_IsWaitAck( ARNETWORK_IOBuffer_t *IOBufferPtr );
 
 /**
+ *  @brief Lock the IOBuffer's mutex.
+ *  @param IOBufferPtr Pointer on the IOBuffer.
+ *  @return error equal to ARNETWORK_OK if the data are correctly locked, otherwise see eARNETWORK_ERROR
+**/
+eARNETWORK_ERROR ARNETWORK_IOBuffer_Lock( ARNETWORK_IOBuffer_t *IOBufferPtr);
+
+/**
+ *  @brief Unlock the IOBuffer's mutex.
+ *  @param IOBufferPtr Pointer on the IOBuffer.
+ *  @return error equal to ARNETWORK_OK if the data are correctly locked, otherwise see eARNETWORK_ERROR
+**/
+eARNETWORK_ERROR ARNETWORK_IOBuffer_Unlock( ARNETWORK_IOBuffer_t *IOBufferPtr);
+
+/**
  *  @brief cancel all remaining data.
  *  @warning the IOBuffer must store ARNETWORK_DataDescriptor_t
- *  @param IOBufferPtr Pointer on the IOBuffer using varaible size data
+ *  @param IOBufferPtr Pointer on the IOBuffer.
  *  @return error equal to ARNETWORK_OK if the data are correctly free otherwise see eARNETWORK_ERROR
 **/
 eARNETWORK_ERROR ARNETWORK_IOBuffer_CancelAllData(ARNETWORK_IOBuffer_t *IOBufferPtr);
@@ -115,6 +134,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_PopDataWithCallBack(ARNETWORK_IOBuffer_t *IO
 
 /**
  *  @brief flush the IOBuffer
+ *  @warning The IOBuffer mutex must lock before the calling of this function and unlock after.
  *  @param IOBufferPtr Pointer on the input or output buffer
  *  @return eARNETWORK_ERROR
 **/

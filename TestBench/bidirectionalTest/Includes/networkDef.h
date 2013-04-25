@@ -26,7 +26,7 @@ typedef enum
     ID_INT_DATA_WITH_ACK, //manager ->
     ID_DEPORT_DATA_ACK,//manager ->
     ID_DEPORT_DATA,//manager ->
-    ID_KEEP_ALIVE, //manager ->
+    ID_DATA_LOW_LATENCY, //manager ->
     ID_CHAR_DATA_2, //manager <-
     ID_INT_DATA_WITH_ACK_2, //manager <-
     ID_DEPORT_DATA_ACK_2,//manager <-

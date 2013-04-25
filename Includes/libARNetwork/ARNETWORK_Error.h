@@ -21,6 +21,8 @@ typedef enum
     ARNETWORK_ERROR_BUFFER_SIZE, /**< Insufficient free space in the buffer */
     ARNETWORK_ERROR_BUFFER_EMPTY, /**< Buffer is empty, nothing was read */
     ARNETWORK_ERROR_SEMAPHORE, /**< Error when using a semaphore */
+    ARNETWORK_ERROR_MUTEX, /**< Error when using a mutex */
+    ARNETWORK_ERROR_MUTEX_DOUBLE_LOCK, /**< A mutex is already locked by the same thread */
     ARNETWORK_ERROR_MANAGER = -2000, /**< Unknown ARNETWORK_Manager error */
     ARNETWORK_ERROR_MANAGER_NEW_IOBUFFER, /**< IOBuffer creation error */
     ARNETWORK_ERROR_MANAGER_NEW_SENDER, /**< Sender creation error */

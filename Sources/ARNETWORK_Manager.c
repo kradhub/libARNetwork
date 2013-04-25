@@ -336,18 +336,43 @@ eARNETWORK_ERROR ARNETWORK_Manager_Flush (ARNETWORK_Manager_t *managerPtr)
 
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
+    ARNETWORK_IOBuffer_t *IOBufferPtrTemp = NULL;
     int ii = 0;
 
     /** Flush all output buffers including the buffers of acknowledgement */
     for (ii = 0; ii< managerPtr->numberOfOutput && error == ARNETWORK_OK; ++ii)
     {
-        error = ARNETWORK_IOBuffer_Flush (managerPtr->outputBufferPtrArr[ii]);
+        IOBufferPtrTemp = managerPtr->outputBufferPtrArr[ii];
+
+        /** lock the IOBuffer */
+        error = ARNETWORK_IOBuffer_Lock (IOBufferPtrTemp);
+
+        if (error == ARNETWORK_OK)
+        {
+            /** flush the IOBuffer*/
+            error = ARNETWORK_IOBuffer_Flush (IOBufferPtrTemp);
+
+            /** unlock the IOBuffer */
+            ARNETWORK_IOBuffer_Unlock (IOBufferPtrTemp);
+        }
     }
 
     /** Flush the input buffers but not the buffers of acknowledgement already flushed */
     for (ii = 0; ii< managerPtr->numberOfInputWithoutAck && error == ARNETWORK_OK; ++ii)
     {
-        error = ARNETWORK_IOBuffer_Flush (managerPtr->inputBufferPtrArr[ii]);
+        IOBufferPtrTemp = managerPtr->outputBufferPtrArr[ii];
+
+        /** lock the IOBuffer */
+        error = ARNETWORK_IOBuffer_Lock (IOBufferPtrTemp);
+
+        if (error == ARNETWORK_OK)
+        {
+            /** flush the IOBuffer*/
+            error = ARNETWORK_IOBuffer_Flush (IOBufferPtrTemp);
+
+            /** unlock the IOBuffer */
+            ARNETWORK_IOBuffer_Unlock (IOBufferPtrTemp);
+        }
     }
 
     return error;
@@ -383,8 +408,15 @@ eARNETWORK_ERROR ARNETWORK_Manager_SendData (ARNETWORK_Manager_t *managerPtr, in
 
     if (error == ARNETWORK_OK)
     {
+        /** lock the IOBuffer */
+        error = ARNETWORK_IOBuffer_Lock(inputBufferPtr);
+    }
+
+    if(error == ARNETWORK_OK)
+    {
         /** add the data in the inputBuffer */
         error = ARNETWORK_IOBuffer_AddData (inputBufferPtr, dataPtr, dataSize, customData, callback, doDataCopy);
+        ARNETWORK_IOBuffer_Unlock(inputBufferPtr);
     }
 
     if (error == ARNETWORK_OK)
@@ -444,9 +476,20 @@ eARNETWORK_ERROR ARNETWORK_Manager_ReadData (ARNETWORK_Manager_t *managerPtr, in
         }
     }
 
+    /** read data */
+
+    if (error == ARNETWORK_OK)
+    {
+        /** lock the IOBuffer */
+        error = ARNETWORK_IOBuffer_Lock (outputBufferPtr);
+    }
+
     if (error == ARNETWORK_OK)
     {
         error = ARNETWORK_IOBuffer_ReadData (outputBufferPtr, dataPtr, dataLimitSize, readSizePtr);
+
+        /** unlock the IOBuffer */
+        ARNETWORK_IOBuffer_Unlock (outputBufferPtr);
     }
 
     return error;
@@ -498,9 +541,20 @@ eARNETWORK_ERROR ARNETWORK_Manager_TryReadData (ARNETWORK_Manager_t *managerPtr,
         }
     }
 
+    /** read data */
+
+    if (error == ARNETWORK_OK)
+    {
+        /** lock the IOBuffer */
+        error = ARNETWORK_IOBuffer_Lock (outputBufferPtr);
+    }
+
     if (error == ARNETWORK_OK)
     {
         error = ARNETWORK_IOBuffer_ReadData (outputBufferPtr, dataPtr, dataLimitSize, readSizePtr);
+
+        /** unlock the IOBuffer */
+        ARNETWORK_IOBuffer_Unlock (outputBufferPtr);
     }
 
     return error;
@@ -556,9 +610,20 @@ eARNETWORK_ERROR ARNETWORK_Manager_ReadDataWithTimeout (ARNETWORK_Manager_t *man
         }
     }
 
+    /** read data */
+
+    if (error == ARNETWORK_OK)
+    {
+        /** lock the IOBuffer */
+        error = ARNETWORK_IOBuffer_Lock (outputBufferPtr);
+    }
+
     if (error == ARNETWORK_OK)
     {
         error = ARNETWORK_IOBuffer_ReadData (outputBufferPtr, dataPtr, dataLimitSize, readSizePtr);
+
+        /** unlock the IOBuffer */
+        ARNETWORK_IOBuffer_Unlock (outputBufferPtr);
     }
 
     return error;

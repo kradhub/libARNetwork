@@ -39,6 +39,7 @@ typedef enum
 
 /**
  *  @brief callback use when the data are sent or have a timeout
+ *  @warning the callback can't call the ARNETWORK's functions
  *  @param[in] IoBufferId identifier of the IoBuffer is calling back
  *  @param[in] dataPtr pointer on the data
  *  @param[in] customData custom data

@@ -47,6 +47,12 @@ char* ARNETWORK_Error_ToString (eARNETWORK_ERROR error)
     case ARNETWORK_ERROR_SEMAPHORE:
         return "Error when using a semaphore";
         break;
+    case ARNETWORK_ERROR_MUTEX:
+        return "Error when using a mutex";
+        break;
+    case ARNETWORK_ERROR_MUTEX_DOUBLE_LOCK:
+        return "A mutex is already locked by the same thread";
+        break;
     case ARNETWORK_ERROR_MANAGER:
         return "Unknown ARNETWORK_Manager error";
         break;

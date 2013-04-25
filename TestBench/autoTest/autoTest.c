@@ -696,6 +696,7 @@ eARNETWORK_MANAGER_CALLBACK_RETURN AUTOTEST_DataCallback(int OutBufferId, uint8_
     {
         case ARNETWORK_MANAGER_CALLBACK_STATUS_SENT :
             printf(" sent --\n");
+            
             break;
             
         case ARNETWORK_MANAGER_CALLBACK_STATUS_ACK_RECEIVED :

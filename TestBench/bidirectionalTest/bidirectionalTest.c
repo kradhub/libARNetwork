@@ -177,10 +177,10 @@ int main(int argc, char *argv[])
     paramNetworkL1[3].sendingWaitTimeMs = 2;
     paramNetworkL1[3].numberOfCell = 5;
     
-    /** input ID_KEEP_ALIVE char */
+    /** input ID_DATA_LOW_LATENCY char */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL1[4]) );
-    paramNetworkL1[4].ID = ID_KEEP_ALIVE;
-    paramNetworkL1[4].dataType = ARNETWORK_FRAME_TYPE_KEEP_ALIVE;
+    paramNetworkL1[4].ID = ID_DATA_LOW_LATENCY;
+    paramNetworkL1[4].dataType = ARNETWORK_FRAME_TYPE_DATA_LOW_LATENCY;
     paramNetworkL1[4].sendingWaitTimeMs = 100;
     paramNetworkL1[4].numberOfCell = 1;
     paramNetworkL1[4].dataCopyMaxSize = sizeof(int);
