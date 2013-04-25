@@ -87,7 +87,7 @@ ARNETWORK_IOBuffer_t* ARNETWORK_IOBuffer_New(const ARNETWORK_IOBufferParam_t *pa
         /** Initialize to default values */
         IOBufferPtr->dataDescriptorRBufferPtr = NULL;
         IOBufferPtr->dataCopyRBufferPtr = NULL;
-        ARSAL_Mutex_InitWithType(&(IOBufferPtr->mutex), ARSAL_MUTEX_TYPE_ERRORCHECK);
+        ARSAL_Mutex_Init(&(IOBufferPtr->mutex));
         ARSAL_Sem_Init(&(IOBufferPtr->outputSem), 0, 0);
         
         if(ARNETWORK_IOBufferParam_Check(paramPtr))
