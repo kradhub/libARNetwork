@@ -19,7 +19,7 @@
 // Note: ^J character is the newline character, C-q C-j in emacs
 //
 
-const char *const ARNETWORK_Error_ToString (eARNETWORK_ERROR error)
+char* ARNETWORK_Error_ToString (eARNETWORK_ERROR error)
 {
     switch (error)
     {
