@@ -184,7 +184,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeNew(JNIEnv *env, jobject 
     }
     
     /** print error */
-    if(error == ARNETWORK_OK)
+    if(error != ARNETWORK_OK)
     {
         ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_JNIMANGER_TAG, " error: %d occurred \n", error);
     }
