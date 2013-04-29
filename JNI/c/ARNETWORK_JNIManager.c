@@ -46,7 +46,7 @@ typedef struct
  *  @return eARNETWORK_MANAGER_CALLBACK_RETURN
  *  @see eARNETWORK_MANAGER_CALLBACK_STATUS
 **/
-eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManger_Callback_t(int IOBufferID,  uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status);
+eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManager_Callback_t(int IOBufferID,  uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status);
 
 /**
  *  @brief free the global references used by the callback
@@ -364,7 +364,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendData(JNIEnv *env, job
     if(error == ARNETWORK_OK)
     {
         /** send the data */
-        error = ARNETWORK_Manager_SendData( managerPtr, inputBufferID, dataPtr, dataSize, callbackDataPtr, &(ARNETWORK_JNIManger_Callback_t), doDataCopy);
+        error = ARNETWORK_Manager_SendData( managerPtr, inputBufferID, dataPtr, dataSize, callbackDataPtr, &(ARNETWORK_JNIManager_Callback_t), doDataCopy);
     }
     
     return error;
@@ -552,7 +552,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadDataWithTimeout(JNIEn
     return error;
 }
 
-eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManger_Callback_t(int IOBufferID, uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status)
+eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManager_Callback_t(int IOBufferID, uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status)
 {
     /** callback */
     
