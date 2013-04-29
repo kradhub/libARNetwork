@@ -65,7 +65,7 @@ typedef struct ARNETWORK_Manager_t ARNETWORK_Manager_t;
  *  @param[in] inputParamArr array of the parameters of creation of the inputs. The array must contain as many parameters as the number of input buffer.
  *  @param[in] numberOfOutput Number of output buffer
  *  @param[in] outputParamArr array of the parameters of creation of the outputs. The array must contain as many parameters as the number of output buffer.
- *  @param[out] errorPtr pointor on the error output.
+ *  @param[out] errorPtr pointer on the error output.
  *  @return Pointer on the new Manager
  *  @note This creator adds for all output, one other IOBuffer for storing the acknowledgment to return.
  * These new buffers are added in the input and output buffer arrays.
@@ -99,7 +99,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_SocketsInit(ARNETWORK_Manager_t *managerPtr, 
  *  @pre The sockets must be initialized through ARNETWORK_Manager_SocketsInit().
  *  @post Before join the thread calling this function, ARNETWORK_Manager_Stop() must be called.
  *  @note This function send the data stored in the input buffer through ARNETWORK_Manager_SendFixedSizeData().
- *  @param data thread datas of type ARNETWORK_Manager_t*
+ *  @param data thread data of type ARNETWORK_Manager_t*
  *  @return NULL
  *  @see ARNETWORK_Manager_SocketsInit()
  *  @see ARNETWORK_Manager_Stop()
@@ -144,7 +144,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_Flush(ARNETWORK_Manager_t *managerPtr);
  *  @param[in] dataSize size of the data to send
  *  @param[in] customData custom data sent to the callback
  *  @param[in] callback pointer on the callback to call when the data is sent or an error occurred
- *  @param[in] doDataCopy indocator to copy the data in the ARNETWORK_Manager
+ *  @param[in] doDataCopy indicator to copy the data in the ARNETWORK_Manager
  *  @return error eARNETWORK_ERROR
  */
 eARNETWORK_ERROR ARNETWORK_Manager_SendData(ARNETWORK_Manager_t *managerPtr, int inputBufferID, uint8_t *dataPtr, int dataSize, void *customData, ARNETWORK_Manager_Callback_t callback, int doDataCopy);

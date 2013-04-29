@@ -258,7 +258,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_SocketsInit (ARNETWORK_Manager_t *managerPtr,
     eARNETWORK_ERROR error = ARNETWORK_OK;
 
     /** check paratemters*/
-    if (managerPtr == NULL || addr== NULL)
+    if (managerPtr == NULL || addr == NULL)
     {
         error = ARNETWORK_ERROR_BAD_PARAMETER;
     }
