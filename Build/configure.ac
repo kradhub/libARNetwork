@@ -179,7 +179,7 @@ libARSAL/ARSAL_Socket.h libARSAL/ARSAL_Time.h],,
 	AC_MSG_ERROR(The libARSAL headers are required in order to build the library !
 - Use --with-libARSALInstallDir or --with-libARSALIncludeDir to indicate a specific include path.))
 
-# Checks for libSAL.h
+# Checks for libARNetWork_OSSpecific.h
 AC_CHECK_HEADERS([libARNetwork_OSSpecific/ARNETWORK_OSSPECIFIC_Manager.h libARNetwork_OSSpecific/ARNETWORK_OSSPECIFIC_Error.h],,
 	AC_MSG_ERROR(The libARNetwork_OSSpecific headers are required in order to build the library !
 - Use --with-libARNetworkOSSpecificInstallDir or --with-libARNetworkOSSpecificIncludeDir to indicate a specific include path.))
