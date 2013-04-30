@@ -3,7 +3,7 @@
  *  @brief manage the data received
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
-**/
+ */
 
 #ifndef _ARNETWORK_RECEIVER_PRIVATE_H_
 #define _ARNETWORK_RECEIVER_PRIVATE_H_
@@ -16,20 +16,22 @@
  *  @brief receiver manager
  *  @warning before to be used, the receiver must be created through ARNETWORK_Receiver_New().
  *  @post after its using, the receiver must be deleted through ARNETWORK_Receiver_Delete().
-**/
+ */
 typedef struct
 {
     ARNETWORK_Buffer_t *receivingBufferPtr; /**< Pointer on the data buffer used to store the data received*/
     ARNETWORK_Sender_t *senderPtr; /**< Pointer on the sender which waits the acknowledgments*/
-    ARNETWORK_IOBuffer_t **outpuBufferPtrArr; /**< address of the array of pointers of output buffer*/
+    ARNETWORK_IOBuffer_t **outputBufferPtrArr; /**< address of the array of pointers of output buffer*/
     int numberOfOutputBuff; /**< Number of output buffer*/
+    ARNETWORK_IOBuffer_t **internalOutputBufferPtrArr; /**< address of the array of pointers of internal output buffer*/
+    int numberOfInternalOutputBuff; /**< Number of internal output buffer*/
     int socket; /**< receiving Socket. Must be accessed through ARNETWORK_Receiver_Bind()*/
     ARNETWORK_IOBuffer_t** outputBufferPtrMap; /**< address of the array storing the outputBuffers by their identifier */
-    
+
     uint8_t* readingPointer; /** head of reading on the RecvBuffer */
-    
+
     int isAlive; /**< Indicator of aliving used for kill the thread calling the ARNETWORK_Receiver_ThreadRun function (1 = alive | 0 = dead). Must be accessed through ARNETWORK_Receiver_Stop()*/
-    
+
 }ARNETWORK_Receiver_t;
 
 /**
@@ -42,7 +44,7 @@ typedef struct
  *  @param[in] outputBufferPtrMap address of the array storing the outputBuffers by their identifier
  *  @return Pointer on the new receiver
  *  @see ARNETWORK_Receiver_Delete()
-**/
+ */
 ARNETWORK_Receiver_t* ARNETWORK_Receiver_New(unsigned int recvBufferSize, unsigned int numberOfOutputBuff, ARNETWORK_IOBuffer_t **outputBufferPtrArr, ARNETWORK_IOBuffer_t **outputBufferPtrMap);
 
 /**
@@ -50,7 +52,7 @@ ARNETWORK_Receiver_t* ARNETWORK_Receiver_New(unsigned int recvBufferSize, unsign
  *  @warning This function free memory
  *  @param receiverPtrAddr address of the pointer on the Receiver to delete
  *  @see ARNETWORK_Receiver_New()
-**/
+ */
 void ARNETWORK_Receiver_Delete(ARNETWORK_Receiver_t **receiverPtrAddr);
 
 /**
@@ -65,7 +67,7 @@ void ARNETWORK_Receiver_Delete(ARNETWORK_Receiver_t **receiverPtrAddr);
  *  @see ARNETWORK_Receiver_Bind()
  *  @see ARNETWORK_Receiver_Stop()
  *  @see ARNETWORK_Receiver_Read()
-**/
+ */
 void* ARNETWORK_Receiver_ThreadRun(void *data);
 
 /**
@@ -73,7 +75,7 @@ void* ARNETWORK_Receiver_ThreadRun(void *data);
  *  @details Used to kill the thread calling ARNETWORK_Receiver_ThreadRun().
  *  @param receiverPtr pointer on the Receiver
  *  @see ARNETWORK_Receiver_ThreadRun()
-**/
+ */
 void ARNETWORK_Receiver_Stop(ARNETWORK_Receiver_t *receiverPtr);
 
 /**
@@ -83,28 +85,27 @@ void ARNETWORK_Receiver_Stop(ARNETWORK_Receiver_t *receiverPtr);
  *  @param[in] seq sequence number of the command to acknowledged
  *  @return eARNETWORK_ERROR
  *  @see ARNETWORK_Receiver_New()
-**/
+ */
 eARNETWORK_ERROR ARNETWORK_Receiver_ReturnACK(ARNETWORK_Receiver_t *receiverPtr, int ID, uint32_t seq);
 
 /**
  *  @brief receiving data present on the socket
- *  @warning this function is blocking. the timeout set on the socket allows unblock this function. 
+ *  @warning this function is blocking. the timeout set on the socket allows unblock this function.
  *  @pre The socket of the receiver must be initialized through ARNETWORK_Receiver_Bind().
  *  @param receiverPtr the pointer on the Receiver
  *  @return size of the data read.
  *  @see ARNETWORK_Receiver_Bind()
-**/
+ */
 int ARNETWORK_Receiver_Read(ARNETWORK_Receiver_t *receiverPtr);
 
 /**
- *  @brief Bind the Receiver' socket in UDP to a port. the socket will be used to receive the data. 
+ *  @brief Bind the Receiver' socket in UDP to a port. the socket will be used to receive the data.
  *  @param receiverPtr the pointer on the Receiver
  *  @param[in] port port on which the data will be received.
  *  @param[in] timeoutSec timeout in seconds set on the socket to limit the time of blocking of the function ARNETWORK_Receiver_Read().
  *  @return error equal to ARNETWORK_OK if the Bind if successful otherwise equal to 1.
  *  @see ARNETWORK_Receiver_Bind()
-**/
+ */
 eARNETWORK_ERROR ARNETWORK_Receiver_Bind(ARNETWORK_Receiver_t *receiverPtr, unsigned short port, int timeoutSec);
 
 #endif /** _ARNETWORK_RECEIVER_PRIVATE_H_ */
-

@@ -103,7 +103,7 @@ ARNETWORK_Receiver_t* ARNETWORK_Receiver_New (unsigned int recvBufferSize, unsig
         receiverPtr->senderPtr = NULL;
 
         receiverPtr->numberOfOutputBuff = numberOfOutputBuff;
-        receiverPtr->outpuBufferPtrArr = outputBufferPtrArr;
+        receiverPtr->outputBufferPtrArr = outputBufferPtrArr;
 
         receiverPtr->outputBufferPtrMap = outputBufferPtrMap;
 
@@ -159,6 +159,7 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
     ARNETWORK_IOBuffer_t* outBufferPtrTemp = NULL;
     eARNETWORK_ERROR error = ARNETWORK_OK;
     int ackSeqNumData = 0;
+    struct timeval now;
 
     while (receiverPtr->isAlive)
     {
@@ -169,6 +170,26 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
             error = ARNETWORK_Receiver_GetFrame (receiverPtr, &frame);
             while (error == ARNETWORK_OK)
             {
+                /* Special handling of internal frames */
+                if (frame.ID < ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX)
+                {
+                    switch (frame.ID)
+                    {
+                    case ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PING:
+                        /* Ping, send the corresponding pong */
+                        ARNETWORK_Sender_SendPong (receiverPtr->senderPtr, (struct timeval *)frame.dataPtr);
+                        break;
+                    case ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PONG:
+                        /* Pong, tells the sender that we got a response */
+                        gettimeofday (&now, NULL);
+                        ARNETWORK_Sender_GotPingAck (receiverPtr->senderPtr, (struct timeval *)frame.dataPtr, &now);
+                        break;
+                    default:
+                        /* Do nothing as we don't know how to handle it */
+                        break;
+                    }
+                }
+
                 /** management by the command type */
                 switch (frame.type)
                 {

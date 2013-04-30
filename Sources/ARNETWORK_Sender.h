@@ -11,6 +11,21 @@
 #include "ARNETWORK_IOBuffer.h"
 #include "ARNETWORK_Buffer.h"
 
+#include <libARSAL/ARSAL_Time.h>
+
+/**
+ * Minimum time between two ping requests
+ * This avoid using too much bandwidth on fast networks
+ */
+#define ARNETWORK_SENDER_MINIMUM_TIME_BETWEEN_PINGS_MS (10)
+
+/**
+ * Ping timeout
+ * If the ping was not acknowledged at this point, a new ping will be sent
+ * And the last measure latency will be set to -1
+ */
+#define ARNETWORK_SENDER_PING_TIMEOUT_MS (1000)
+
 /**
  *  @brief sending manager
  *  @warning before to be used the sender must be created through ARNETWORK_Sender_New()
@@ -22,6 +37,8 @@ typedef struct
 
     ARNETWORK_IOBuffer_t **inputBufferPtrArr; /**< address of the array of pointers of input buffer*/
     int numberOfInputBuff;
+    ARNETWORK_IOBuffer_t **internalInputBufferPtrArr; /**< address of the array of pointers of internal input buffer*/
+    int numberOfInternalInputBuff;
     int socket; /**< sending Socket. Must be accessed through ARNETWORK_Sender_Connect()*/
     ARNETWORK_IOBuffer_t **inputBufferPtrMap; /**< address of the array storing the inputBuffers by their identifier */
 
@@ -30,6 +47,12 @@ typedef struct
 
     int isAlive; /**< Indicator of aliving used for kill the thread calling the ARNETWORK_Sender_ThreadRun function (1 = alive | 0 = dead). Must be accessed through ARNETWORK_Sender_Stop()*/
     int seq; /** sequence number of sending */
+
+    ARSAL_Mutex_t pingMutex; /**< Mutex to lock all ping-related values */
+    struct timeval pingStartTime; /**< Start timestamp of the current running ping */
+    int lastPingValue; /**< Latency, in ms, determined by the last ping */
+    int isPingRunning; /**< Boolean-like. 1 if a ping is in progress, else 0 */
+
 }ARNETWORK_Sender_t;
 
 /**
@@ -43,7 +66,7 @@ typedef struct
  *  @return Pointer on the new sender
  *  @see ARNETWORK_Sender_Delete()
  */
-ARNETWORK_Sender_t* ARNETWORK_Sender_New (unsigned int sendingBufferSize, unsigned int numberOfInputBuffer, ARNETWORK_IOBuffer_t **inputBufferPtrArr, ARNETWORK_IOBuffer_t **inputBufferPtrMap);
+ARNETWORK_Sender_t* ARNETWORK_Sender_New (unsigned int sendingBufferSize, unsigned int numberOfInputBuffer, ARNETWORK_IOBuffer_t **inputBufferPtrArr, unsigned int numberOfInternalInputBuffer, ARNETWORK_IOBuffer_t **internalInputBufferPtrArr, ARNETWORK_IOBuffer_t **inputBufferPtrMap);
 
 /**
  *  @brief Delete the sender
@@ -66,6 +89,16 @@ void ARNETWORK_Sender_Delete (ARNETWORK_Sender_t **senderPtrAddr);
  *  @see ARNETWORK_Sender_Stop()
  */
 void* ARNETWORK_Sender_ThreadRun (void* data);
+
+/**
+ * @brief Process a buffer in the send loop
+ * This function is called internally by the ARNETWORK_Sender_ThreadRun() function.
+ * It should not be called anywhere else (not thread safe, not reentrant ...)
+ * @param senderPtr the pointer on the Sender
+ * @param buffer the buffer to process
+ * @param hasWaited flag to indicate that a milisecond has passed since the last call for this buffer
+ */
+void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *buffer, int hasWaited);
 
 /**
  *  @brief Stop the sending
@@ -113,5 +146,31 @@ eARNETWORK_ERROR ARNETWORK_Sender_Flush (ARNETWORK_Sender_t *senderPtr);
  *  @param senderPtr the pointer on the Sender
  */
 void ARNETWORK_Sender_Reset (ARNETWORK_Sender_t *senderPtr);
+
+/**
+ * @brief Gets the estimated sender latency
+ * @param senderPtr the pointer on the Sender
+ * @return The estimated latency in ms, or a negative value in case of an error
+ */
+int ARNETWORK_Sender_GetPing (ARNETWORK_Sender_t *senderPtr);
+
+/**
+ * @brief Called by the Reader -> Signal that we got a reply to the ping
+ *
+ * The startTime parameter is a way to check that we are getting a
+ * reply to the 'good' ping
+ *
+ * @param senderPtr the pointer on the Sender
+ * @param startTime The start time contained into the ping packet.
+ * @param endTime The timestamp of the reception of the ping reply
+ */
+void ARNETWORK_Sender_GotPingAck (ARNETWORK_Sender_t *senderPtr, struct timeval *startTime, struct timeval *endTime);
+
+/**
+ * @brief Send a ping reply (a pong)
+ *
+ * @param data The timestamp that was included in the ping request
+ */
+void ARNETWORK_Sender_SendPong (ARNETWORK_Sender_t *senderPtr, struct timeval *data);
 
 #endif /** _ARNETWORK_SENDER_PRIVATE_H_ */

@@ -200,4 +200,15 @@ eARNETWORK_ERROR ARNETWORK_Manager_FlushInputBuffer(ARNETWORK_Manager_t *manager
  */
 eARNETWORK_ERROR ARNETWORK_Manager_FlushOutputBuffer(ARNETWORK_Manager_t *managerPtr, int outBufferID);
 
-#endif /** _ARNETWORK_MANAGER_H_ */
+/**
+ * @brief Gets the estimated latency of the ARNETWORK_Manager
+ *
+ * This function returns the maximum value between the last internal ping result,
+ * and the current ping timer. This allows a greater reactivity for ping spikes
+ *
+ * @param managerPtr Pointer to the ARNETWORK_Manager_t
+ * @return The estimated latency in ms, or a negative value if we couldn't determine it
+ */
+int ARNETWORK_Manager_GetEstimatedLatency (ARNETWORK_Manager_t *managerPtr);
+
+#endif /* _ARNETWORK_MANAGER_H_ */
