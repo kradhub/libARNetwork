@@ -82,7 +82,7 @@ int ARNETWORK_IOBufferParam_Check (const ARNETWORK_IOBufferParam_t *IOBufferPara
         (IOBufferParamPtr->ID >= ARNETWORK_IOBUFFER_ID_MIN) &&
         (IOBufferParamPtr->ID <= ARNETWORK_IOBUFFER_ID_MAX) &&
         (IOBufferParamPtr->dataType != ARNETWORK_FRAME_TYPE_UNINITIALIZED) &&
-        (IOBufferParamPtr->sendingWaitTimeMs > 0) &&
+        (IOBufferParamPtr->sendingWaitTimeMs >= 0) &&
         (IOBufferParamPtr->ackTimeoutMs >= -1) &&
         (IOBufferParamPtr->numberOfRetry >= -1))
     {
@@ -94,13 +94,13 @@ int ARNETWORK_IOBufferParam_Check (const ARNETWORK_IOBufferParam_t *IOBufferPara
 values expected: \n\
     - %d <= ID <= %d (value set: %d)\n\
     - dataType != %d (value set: %d)\n\
-    - sendingWaitTimeMs > 0 (value set: %d)\n\
+    - sendingWaitTimeMs >= 0 (value set: %d)\n\
     - ackTimeoutMs > 0 or -1 if not used (value set: %d)\n\
     - numberOfRetry > 0 or -1 if not used  (value set: %d)\n\
     - numberOfCell > 0 (value set: %d)\n\
     - dataCopyMaxSize >= 0 (value set: %d)\n\
     - isOverwriting = 0 or 1 (value set: %d)",
-                     ARNETWORK_IOBUFFER_ID_MIN, ARNETWORK_IOBUFFER_ID_MAX, IOBufferParamPtr->ID, 
+                     ARNETWORK_IOBUFFER_ID_MIN, ARNETWORK_IOBUFFER_ID_MAX, IOBufferParamPtr->ID,
                      ARNETWORK_FRAME_TYPE_UNINITIALIZED, IOBufferParamPtr->dataType,
                      IOBufferParamPtr->sendingWaitTimeMs,
                      IOBufferParamPtr->ackTimeoutMs,
