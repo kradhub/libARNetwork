@@ -8,6 +8,8 @@
 #ifndef _ARNETWORK_SENDER_PRIVATE_H_
 #define _ARNETWORK_SENDER_PRIVATE_H_
 
+#include <libARNetworkAL/ARNETWORKAL_Manager.h>
+
 #include "ARNETWORK_IOBuffer.h"
 #include "ARNETWORK_Buffer.h"
 
@@ -33,13 +35,13 @@
  */
 typedef struct
 {
+    ARNETWORKAL_Manager_t *networkALManager;
     ARNETWORK_Buffer_t *sendingBufferPtr; /**< Pointer on the data buffer to send*/
 
     ARNETWORK_IOBuffer_t **inputBufferPtrArr; /**< address of the array of pointers of input buffer*/
     int numberOfInputBuff;
     ARNETWORK_IOBuffer_t **internalInputBufferPtrArr; /**< address of the array of pointers of internal input buffer*/
     int numberOfInternalInputBuff;
-    int socket; /**< sending Socket. Must be accessed through ARNETWORK_Sender_Connect()*/
     ARNETWORK_IOBuffer_t **inputBufferPtrMap; /**< address of the array storing the inputBuffers by their identifier */
 
     ARSAL_Mutex_t nextSendMutex; /**< Mutex for the nextSendCond condition */
@@ -59,14 +61,14 @@ typedef struct
  *  @brief Create a new sender
  *  @warning This function allocate memory
  *  @post ARNETWORK_Sender_Delete() must be called to delete the sender and free the memory allocated
- *  @param[in] sendingBufferSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
+ *  @param[in] ARNetworkAL Manager to push data and send data. Must not be NULL !!!
  *  @param[in] numberOfInputBuffer Number of input buffer
  *  @param[in] inputBufferPtrArr address of the array of the pointers on the input buffers
  *  @param[in] inputBufferPtrMap address of the array storing the inputBuffers by their identifier
  *  @return Pointer on the new sender
  *  @see ARNETWORK_Sender_Delete()
  */
-ARNETWORK_Sender_t* ARNETWORK_Sender_New (unsigned int sendingBufferSize, unsigned int numberOfInputBuffer, ARNETWORK_IOBuffer_t **inputBufferPtrArr, unsigned int numberOfInternalInputBuffer, ARNETWORK_IOBuffer_t **internalInputBufferPtrArr, ARNETWORK_IOBuffer_t **inputBufferPtrMap);
+ARNETWORK_Sender_t* ARNETWORK_Sender_New (ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInputBuffer, ARNETWORK_IOBuffer_t **inputBufferPtrArr, unsigned int numberOfInternalInputBuffer, ARNETWORK_IOBuffer_t **internalInputBufferPtrArr, ARNETWORK_IOBuffer_t **inputBufferPtrMap);
 
 /**
  *  @brief Delete the sender
@@ -80,12 +82,10 @@ void ARNETWORK_Sender_Delete (ARNETWORK_Sender_t **senderPtrAddr);
  *  @brief Manage the sending of the data on the sender' socket
  *  @warning This function must be called by a specific thread.
  *  @warning At the end of this function the socket of the sender is closed.
- *  @pre The socket of the sender must be initialized through ARNETWORK_Sender_Connect().
  *  @post Before join the thread calling this function, ARNETWORK_Sender_Stop() must be called.
  *  @note This function sends the data present in the input buffers according to their parameters.
  *  @param data thread datas of type ARNETWORK_Sender_t*
  *  @return NULL
- *  @see ARNETWORK_Sender_Connect()
  *  @see ARNETWORK_Sender_Stop()
  */
 void* ARNETWORK_Sender_ThreadRun (void* data);
@@ -118,21 +118,11 @@ void ARNETWORK_Sender_SignalNewData (ARNETWORK_Sender_t *senderPtr);
  *  @brief Receive an acknowledgment fo a data.
  *  @details Called by a libARNetwork/receiver to transmit an acknowledgment.
  *  @param senderPtr the pointer on the Sender
- *  @param[in] ID identifier of the command with ARNETWORK_FRAME_TYPE_ACK type received by the libARNetwork/receiver
+ *  @param[in] ID identifier of the command with ARNETWORKAL_FRAME_TYPE_ACK type received by the libARNetwork/receiver
  *  @param[in] seqNumber sequence number of the acknowledgment
  *  @return error equal to ARNETWORK_OK if the data has been correctly acknowledged otherwise equal to 1.
  */
 eARNETWORK_ERROR ARNETWORK_Sender_AckReceived (ARNETWORK_Sender_t *senderPtr, int ID, int seqNumber);
-
-/**
- *  @brief Connect the socket in UDP to a port of an address. the socket will be used to send the data.
- *  @warning Must be called before the start of the thread running ARNETWORK_Sender_ThreadRun().
- *  @param senderPtr the pointer on the Sender
- *  @param[in] addr address of connection at which the data will be sent.
- *  @param[in] port port on which the data will be sent.
- *  @return error equal to ARNETWORK_OK if the connection if successful otherwise equal to 1.
- */
-eARNETWORK_ERROR ARNETWORK_Sender_Connect (ARNETWORK_Sender_t *senderPtr, const char *addr, int port);
 
 /**
  *  @brief flush all IoBuffers of the Sender

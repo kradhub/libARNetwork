@@ -20,10 +20,11 @@
 
 #include <libARNetwork/ARNETWORK_Error.h>
 #include "ARNETWORK_RingBuffer.h"
-#include <libARNetwork/ARNETWORK_Frame.h>
 #include "ARNETWORK_DataDescriptor.h"
 #include <libARNetwork/ARNETWORK_Manager.h>
 #include "ARNETWORK_IOBuffer.h"
+
+#include <libARNetworkAL/ARNETWORKAL_Frame.h>
 
 /*****************************************
  *

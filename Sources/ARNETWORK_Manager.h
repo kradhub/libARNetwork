@@ -12,6 +12,7 @@
 #include "ARNETWORK_Sender.h"
 #include "ARNETWORK_Receiver.h"
 #include <libARNetwork/ARNETWORK_Manager.h>
+#include <libARNetworkAL/ARNETWORKAL_Manager.h>
 
 #define ARNETWORK_MANAGER_ACK_ID_OFFSET 128 /**< offset to add to the ID number of the IOBuffer to get the ID of its acknowledgement IOBuffer */
 #define ARNETWORK_MANAGER_IOBUFFER_MAP_SIZE 256 /**< size of the map storing the IOBuffers */
@@ -47,6 +48,7 @@ static inline int ARNETWORK_Manager_IDAckToIDInput (int ID)
  */
 struct ARNETWORK_Manager_t
 {
+    ARNETWORKAL_Manager_t *networkALManager; /**< Pointer on the OS specific manager */
     ARNETWORK_Sender_t *senderPtr; /**< Pointer on the sender */
     ARNETWORK_Receiver_t *receiverPtr; /**< Pointer on the receiver */
     ARNETWORK_IOBuffer_t **inputBufferPtrArr; /**< Address of the array storing the input buffer */

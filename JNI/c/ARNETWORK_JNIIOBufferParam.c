@@ -6,8 +6,8 @@
 **/
 
 #include <libARNetwork/ARNETWORK_Error.h>
-#include <libARNetwork/ARNETWORK_Frame.h>
 #include <libARNetwork/ARNETWORK_IOBufferParam.h>
+#include <libARNetworkAL/ARNETWORKAL_Frame.h>
 #include <jni.h>
 #include <stdlib.h>
 

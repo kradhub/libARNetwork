@@ -26,7 +26,7 @@
 #include <libARSAL/ARSAL_Endianness.h>
 
 #include <libARNetwork/ARNETWORK_Error.h>
-#include <libARNetwork/ARNETWORK_Frame.h>
+#include <libARNetworkAL/ARNETWORKAL_Frame.h>
 #include "ARNETWORK_Buffer.h"
 #include "ARNETWORK_DataDescriptor.h"
 #include "ARNETWORK_Manager.h"
@@ -51,24 +51,6 @@
  *****************************************/
 
 /**
- *  @brief get the next Frame of the receiving buffer
- *  @param receiverPtr the pointer on the receiver
- *  @param[out] framePtr pointer where store the frame
- *  @return eARNETWORK_ERROR
- *  @pre only call by ARNETWORK_Sender_ThreadRun()
- *  @see ARNETWORK_Sender_ThreadRun()
- */
-eARNETWORK_ERROR ARNETWORK_Receiver_GetFrame (ARNETWORK_Receiver_t *receiverPtr, ARNETWORK_Frame_t *framePtr);
-
-/**
- *  @brief get a Frame from an address
- *  @param[in] orgFrameAddr address where get the frame
- *  @param[out] framePtr pointer where store the frame
- *  @return eARNETWORK_ERROR
- */
-void ARNETWORK_Receiver_GetFrameFromAddr (uint8_t *orgFrameAddr, ARNETWORK_Frame_t *framePtr);
-
-/**
  *  @brief copy the data received to the output buffer
  *  @param receiverPtr the pointer on the receiver
  *  @param outputBufferPtr[in] pointer on the output buffer
@@ -77,7 +59,7 @@ void ARNETWORK_Receiver_GetFrameFromAddr (uint8_t *orgFrameAddr, ARNETWORK_Frame
  *  @pre only call by ARNETWORK_Sender_ThreadRun()
  *  @see ARNETWORK_Sender_ThreadRun()
  */
-eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv (ARNETWORK_Receiver_t *receiverPtr, ARNETWORK_IOBuffer_t *outputBufferPtr, ARNETWORK_Frame_t *framePtr);
+eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv (ARNETWORK_Receiver_t *receiverPtr, ARNETWORK_IOBuffer_t *outputBufferPtr, ARNETWORKAL_Frame_t *framePtr);
 
 /*****************************************
  *
@@ -86,7 +68,7 @@ eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv (ARNETWORK_Receiver_t *receiver
  *****************************************/
 
 
-ARNETWORK_Receiver_t* ARNETWORK_Receiver_New (unsigned int recvBufferSize, unsigned int numberOfOutputBuff, ARNETWORK_IOBuffer_t **outputBufferPtrArr, ARNETWORK_IOBuffer_t **outputBufferPtrMap)
+ARNETWORK_Receiver_t* ARNETWORK_Receiver_New (ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfOutputBuff, ARNETWORK_IOBuffer_t **outputBufferPtrArr, ARNETWORK_IOBuffer_t **outputBufferPtrMap)
 {
     /** -- Create a new receiver -- */
 
@@ -99,22 +81,25 @@ ARNETWORK_Receiver_t* ARNETWORK_Receiver_New (unsigned int recvBufferSize, unsig
 
     if (receiverPtr)
     {
-        receiverPtr->isAlive = 1;
-        receiverPtr->senderPtr = NULL;
-
-        receiverPtr->numberOfOutputBuff = numberOfOutputBuff;
-        receiverPtr->outputBufferPtrArr = outputBufferPtrArr;
-
-        receiverPtr->outputBufferPtrMap = outputBufferPtrMap;
-
-        receiverPtr->receivingBufferPtr = ARNETWORK_Buffer_New (recvBufferSize,1);
-        if (receiverPtr->receivingBufferPtr == NULL)
-        {
-            error = ARNETWORK_ERROR_NEW_BUFFER;
+    	if(networkALManager != NULL)
+    	{
+            receiverPtr->networkALManager = networkALManager;
         }
+        else
+        {
+            error = ARNETWORK_ERROR_BAD_PARAMETER;
+    	}
 
-        /** initialize the reading pointer to the start of the buffer  */
-        receiverPtr->readingPointer = receiverPtr->receivingBufferPtr->startPtr;
+    	if(error == ARNETWORK_OK)
+    	{
+			receiverPtr->isAlive = 1;
+			receiverPtr->senderPtr = NULL;
+
+			receiverPtr->numberOfOutputBuff = numberOfOutputBuff;
+			receiverPtr->outputBufferPtrArr = outputBufferPtrArr;
+
+			receiverPtr->outputBufferPtrMap = outputBufferPtrMap;
+    	}
 
         /** delete the receiver if an error occurred */
         if (error != ARNETWORK_OK)
@@ -140,8 +125,6 @@ void ARNETWORK_Receiver_Delete (ARNETWORK_Receiver_t **receiverPtrAddr)
 
         if (receiverPtr)
         {
-            ARNETWORK_Buffer_Delete (&(receiverPtr->receivingBufferPtr));
-
             free (receiverPtr);
             receiverPtr = NULL;
         }
@@ -155,25 +138,26 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
 
     /** local declarations */
     ARNETWORK_Receiver_t *receiverPtr = data;
-    ARNETWORK_Frame_t frame ;
+    ARNETWORKAL_Frame_t frame ;
     ARNETWORK_IOBuffer_t* outBufferPtrTemp = NULL;
     eARNETWORK_ERROR error = ARNETWORK_OK;
+    eARNETWORKAL_MANAGER_CALLBACK_RETURN result = ARNETWORKAL_MANAGER_CALLBACK_RETURN_DEFAULT;
     int ackSeqNumData = 0;
     struct timeval now;
 
     while (receiverPtr->isAlive)
     {
         /** wait a receipt */
-        if (ARNETWORK_Receiver_Read (receiverPtr) > 0)
+        if (receiverPtr->networkALManager->receivingCallback(receiverPtr->networkALManager) == ARNETWORKAL_MANAGER_CALLBACK_RETURN_DEFAULT)
         {
             /** for each frame present in the receiver buffer */
-            error = ARNETWORK_Receiver_GetFrame (receiverPtr, &frame);
-            while (error == ARNETWORK_OK)
+            result = receiverPtr->networkALManager->popNextFrameCallback(receiverPtr->networkALManager, &frame);
+            while ((result == ARNETWORKAL_MANAGER_CALLBACK_RETURN_DEFAULT) && (error == ARNETWORK_OK))
             {
                 /* Special handling of internal frames */
-                if (frame.ID < ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX)
+                if (frame.id < ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX)
                 {
-                    switch (frame.ID)
+                    switch (frame.id)
                     {
                     case ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PING:
                         /* Ping, send the corresponding pong */
@@ -193,14 +177,14 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                 /** management by the command type */
                 switch (frame.type)
                 {
-                case ARNETWORK_FRAME_TYPE_ACK:
-                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORK_FRAME_TYPE_ACK | SEQ:%d | ID:%d", frame.seq, frame.ID);
+                case ARNETWORKAL_FRAME_TYPE_ACK:
+                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORKAL_FRAME_TYPE_ACK | SEQ:%d | ID:%d", frame.seq, frame.id);
 
                     /** get the acknowledge sequence number from the data */
                     memcpy (&ackSeqNumData, (uint32_t*)frame.dataPtr, sizeof(uint32_t));
 
                     /** transmit the acknowledgement to the sender */
-                    error = ARNETWORK_Sender_AckReceived (receiverPtr->senderPtr, ARNETWORK_Manager_IDAckToIDInput (frame.ID), ackSeqNumData);
+                    error = ARNETWORK_Sender_AckReceived (receiverPtr->senderPtr, ARNETWORK_Manager_IDAckToIDInput (frame.id), ackSeqNumData);
                     if (error != ARNETWORK_OK)
                     {
                         switch (error)
@@ -216,11 +200,11 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                     }
                     break;
 
-                case ARNETWORK_FRAME_TYPE_DATA:
-                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORK_FRAME_TYPE_DATA | SEQ:%d | ID:%d", frame.seq, frame.ID);
+                case ARNETWORKAL_FRAME_TYPE_DATA:
+                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORKAL_FRAME_TYPE_DATA | SEQ:%d | ID:%d", frame.seq, frame.id);
 
                     /** push the data received in the output buffer targeted */
-                    outBufferPtrTemp = receiverPtr->outputBufferPtrMap[frame.ID];
+                    outBufferPtrTemp = receiverPtr->outputBufferPtrMap[frame.id];
 
                     if (outBufferPtrTemp != NULL)
                     {
@@ -241,11 +225,11 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                     }
                     break;
 
-                case ARNETWORK_FRAME_TYPE_DATA_LOW_LATENCY:
-                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORK_FRAME_TYPE_DATA_LOW_LATENCY | SEQ:%d | ID:%d", frame.seq, frame.ID);
+                case ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY:
+                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY | SEQ:%d | ID:%d", frame.seq, frame.id);
 
                     /** push the data received in the output buffer targeted */
-                    outBufferPtrTemp = receiverPtr->outputBufferPtrMap[frame.ID];
+                    outBufferPtrTemp = receiverPtr->outputBufferPtrMap[frame.id];
 
                     if (outBufferPtrTemp != NULL)
                     {
@@ -266,14 +250,14 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                     }
                     break;
 
-                case ARNETWORK_FRAME_TYPE_DATA_WITH_ACK:
-                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORK_FRAME_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d", frame.seq, frame.ID);
+                case ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK:
+                    ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK | SEQ:%d | ID:%d", frame.seq, frame.id);
 
                     /**
                      * push the data received in the output buffer targeted,
                      * save the sequence of the command and return an acknowledgement
                      */
-                    outBufferPtrTemp = receiverPtr->outputBufferPtrMap[frame.ID];
+                    outBufferPtrTemp = receiverPtr->outputBufferPtrMap[frame.id];
 
                     if (outBufferPtrTemp != NULL)
                     {
@@ -302,7 +286,7 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                                 ARNETWORK_IOBuffer_Unlock(outBufferPtrTemp);
 
                                 /** sending ack even if the seq is not correct */
-                                error = ARNETWORK_Receiver_ReturnACK(receiverPtr, frame.ID, frame.seq);
+                                error = ARNETWORK_Receiver_ReturnACK(receiverPtr, frame.id, frame.seq);
                                 if( error != ARNETWORK_OK)
                                 {
                                     ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "ReturnACK, error: %d occurred \n", error);
@@ -316,14 +300,12 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                     ARSAL_PRINT (ARSAL_PRINT_WARNING, ARNETWORK_RECEIVER_TAG, "!!! command type: %d not known  !!!", frame.type);
                     break;
                 }
+
                 /** get the next frame*/
-                error = ARNETWORK_Receiver_GetFrame (receiverPtr, &frame);
+                result = receiverPtr->networkALManager->popNextFrameCallback(receiverPtr->networkALManager, &frame);
             }
-            ARNETWORK_Buffer_Clean (receiverPtr->receivingBufferPtr);
         }
     }
-
-    ARSAL_Socket_Close (receiverPtr->socket);
 
     return NULL;
 }
@@ -334,73 +316,17 @@ void ARNETWORK_Receiver_Stop (ARNETWORK_Receiver_t *receiverPtr)
     receiverPtr->isAlive = 0;
 }
 
-eARNETWORK_ERROR ARNETWORK_Receiver_ReturnACK (ARNETWORK_Receiver_t *receiverPtr, int ID, uint32_t seq)
+eARNETWORK_ERROR ARNETWORK_Receiver_ReturnACK (ARNETWORK_Receiver_t *receiverPtr, int id, uint32_t seq)
 {
     /** -- return an acknowledgement -- */
 
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    ARNETWORK_IOBuffer_t* ACKIOBufferPtr = receiverPtr->outputBufferPtrMap[ARNETWORK_Manager_IDOutputToIDAck (ID)];
+    ARNETWORK_IOBuffer_t* ACKIOBufferPtr = receiverPtr->outputBufferPtrMap[ARNETWORK_Manager_IDOutputToIDAck (id)];
 
     if (ACKIOBufferPtr != NULL)
     {
         error = ARNETWORK_IOBuffer_AddData (ACKIOBufferPtr, (uint8_t*) &seq, sizeof(seq), NULL, NULL, 1);
-    }
-
-    return error;
-}
-
-int ARNETWORK_Receiver_Read (ARNETWORK_Receiver_t *receiverPtr)
-{
-    /** -- receiving data present on the socket -- */
-
-    /** local declarations */
-    int readDataSize =  ARSAL_Socket_Recv (receiverPtr->socket, receiverPtr->receivingBufferPtr->startPtr, receiverPtr->receivingBufferPtr->numberOfCell, 0);
-
-    if (readDataSize > 0)
-    {
-        receiverPtr->receivingBufferPtr->frontPtr = receiverPtr->receivingBufferPtr->startPtr + readDataSize;
-    }
-
-    return readDataSize;
-}
-
-eARNETWORK_ERROR ARNETWORK_Receiver_Bind (ARNETWORK_Receiver_t *receiverPtr, unsigned short port, int timeoutSec)
-{
-    /** -- receiving data present on the socket -- */
-
-    /** local declarations */
-    struct timeval timeout;
-    struct sockaddr_in recvSin;
-    eARNETWORK_ERROR error = ARNETWORK_OK;
-    int errorBind = 0;
-
-    /** socket initialization */
-    recvSin.sin_addr.s_addr = htonl (INADDR_ANY);
-    recvSin.sin_family = AF_INET;
-    recvSin.sin_port = htons (port);
-
-    receiverPtr->socket = ARSAL_Socket_Create (AF_INET, SOCK_DGRAM, 0);
-
-    /** set the socket timeout */
-    timeout.tv_sec = timeoutSec;
-    timeout.tv_usec = 0;
-    ARSAL_Socket_Setsockopt (receiverPtr->socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof (timeout));
-
-    errorBind = ARSAL_Socket_Bind (receiverPtr->socket, (struct sockaddr*)&recvSin, sizeof (recvSin));
-
-    if (errorBind !=0)
-    {
-        switch (errno)
-        {
-        case EACCES:
-            error = ARNETWORK_ERROR_SOCKET_PERMISSION_DENIED;
-            break;
-
-        default:
-            error = ARNETWORK_ERROR_SOCKET;
-            break;
-        }
     }
 
     return error;
@@ -411,90 +337,7 @@ eARNETWORK_ERROR ARNETWORK_Receiver_Bind (ARNETWORK_Receiver_t *receiverPtr, uns
  *             private implementation:
  *
  *****************************************/
-
-eARNETWORK_ERROR ARNETWORK_Receiver_GetFrame (ARNETWORK_Receiver_t *receiverPtr, ARNETWORK_Frame_t *framePtr)
-{
-    /** -- get a Frame of the receiving buffer -- */
-
-    /** local declarations */
-    eARNETWORK_ERROR error = ARNETWORK_OK;
-
-    /** if the receiving buffer not contain enough data for the frame head*/
-    if (receiverPtr->readingPointer > (receiverPtr->receivingBufferPtr->frontPtr - offsetof (ARNETWORK_Frame_t, dataPtr)))
-    {
-        if (receiverPtr->readingPointer == receiverPtr->receivingBufferPtr->frontPtr)
-        {
-            error = ARNETWORK_ERROR_RECEIVER_BUFFER_END;
-        }
-        else
-        {
-            error = ARNETWORK_ERROR_RECEIVER_BAD_FRAME;
-        }
-    }
-
-    if (error == ARNETWORK_OK)
-    {
-        /** get the frame from the reading address */
-        ARNETWORK_Receiver_GetFrameFromAddr (receiverPtr->readingPointer, framePtr);
-
-        /** if the receiving buffer not contain enough data for the full frame */
-        if (receiverPtr->readingPointer > (receiverPtr->receivingBufferPtr->frontPtr - framePtr->size))
-        {
-            error = ARNETWORK_ERROR_RECEIVER_BAD_FRAME;
-        }
-    }
-
-    if (error == ARNETWORK_OK)
-    {
-        /** offset the readingPointer on the next frame */
-        receiverPtr->readingPointer = receiverPtr->readingPointer + framePtr->size;
-    }
-    else
-    {
-        /** reset the reading pointer to the start of the buffer */
-        receiverPtr->readingPointer = receiverPtr->receivingBufferPtr->startPtr;
-
-        /** reset pFrame */
-        framePtr->type = ARNETWORK_FRAME_TYPE_UNINITIALIZED;
-        framePtr->ID = 0;
-        framePtr->seq = 0;
-        framePtr->size = 0;
-        framePtr->dataPtr = NULL;
-    }
-
-    return error;
-}
-
-void ARNETWORK_Receiver_GetFrameFromAddr (uint8_t *orgFrameAddr, ARNETWORK_Frame_t *framePtr)
-{
-    /** local declarations */
-    uint8_t *tempPtr = orgFrameAddr; /**< temporary pointer */
-
-    /** get type */
-    memcpy (&(framePtr->type), tempPtr, sizeof (uint8_t));
-    tempPtr += sizeof (uint8_t) ;
-
-    /** get id */
-    memcpy (&(framePtr->ID), tempPtr, sizeof (uint8_t));
-    tempPtr += sizeof (uint8_t);
-
-    /** get seq */
-    memcpy (&(framePtr->seq), tempPtr, sizeof (uint32_t));
-    tempPtr += sizeof (uint32_t);
-    /** convert the endianness */
-    framePtr->seq = dtohl (framePtr->seq);
-
-    /** get size */
-    memcpy (&(framePtr->size), tempPtr, sizeof (uint32_t));
-    tempPtr += sizeof(uint32_t);
-    /** convert the endianness */
-    framePtr->size = dtohl (framePtr->size);
-
-    /** get data address */
-    framePtr->dataPtr = tempPtr;
-}
-
-eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv (ARNETWORK_Receiver_t *receiverPtr, ARNETWORK_IOBuffer_t *outputBufferPtr, ARNETWORK_Frame_t *framePtr)
+eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv (ARNETWORK_Receiver_t *receiverPtr, ARNETWORK_IOBuffer_t *outputBufferPtr, ARNETWORKAL_Frame_t *framePtr)
 {
     /** -- copy the data received to the output buffer -- */
 
@@ -504,7 +347,7 @@ eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv (ARNETWORK_Receiver_t *receiver
     int dataSize = 0;
 
     /** get the data size*/
-    dataSize = framePtr->size - offsetof (ARNETWORK_Frame_t, dataPtr);
+    dataSize = framePtr->size - offsetof (ARNETWORKAL_Frame_t, dataPtr);
 
     /** if the output buffer can copy the data */
     if (ARNETWORK_IOBuffer_CanCopyData (outputBufferPtr))

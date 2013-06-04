@@ -8,7 +8,7 @@
 #ifndef _ARNETWORK_IOBUFFER_PRIVATE_H_
 #define _ARNETWORK_IOBUFFER_PRIVATE_H_
 
-#include <libARNetwork/ARNETWORK_Frame.h>
+#include <libARNetworkAL/ARNETWORKAL_Frame.h>
 #include "ARNETWORK_RingBuffer.h"
 #include <libARNetwork/ARNETWORK_IOBufferParam.h>
 #include <libARSAL/ARSAL_Mutex.h>
@@ -30,7 +30,7 @@ typedef struct
     int ID; /**< Identifier used to find the ioBuffer in a array*/
     ARNETWORK_RingBuffer_t *dataCopyRBufferPtr; /**< Pointer on the ringBuffer used to store the data copy */
     ARNETWORK_RingBuffer_t *dataDescriptorRBufferPtr; /**< Pointer on the ringBuffer used to store the data description */
-    eARNETWORK_FRAME_TYPE dataType; /**< Type of the data stored in the buffer*/
+    eARNETWORKAL_FRAME_TYPE dataType; /**< Type of the data stored in the buffer*/
     int sendingWaitTimeMs;  /**< Time in millisecond between 2 send when the InOutBuffer if used with a libARNetwork/sender*/
     int ackTimeoutMs; /**< Timeout in millisecond after retry to send the data when the InOutBuffer is used with a libARNetwork/sender*/
     int numberOfRetry; /**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libARNetwork/sender*/

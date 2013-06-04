@@ -23,9 +23,7 @@ public enum eARNETWORK_ERROR
     ARNETWORK_ERROR_NEW_BUFFER (-1996), /**< error during the buffer creation */
     ARNETWORK_ERROR_NEW_RINGBUFFER (-1995), /**< error during the RingBuffer creation */
     ARNETWORK_ERROR_IOBUFFER (-3000), /**< IoBuffer error unknown */ 
-    ARNETWORK_ERROR_IOBUFFER_BAD_ACK (-2999),  /**< the sequence number isn't same as that waiting */
-    ARNETWORK_ERROR_SOCKET (-4000),  /**< socket error unknown */
-    ARNETWORK_ERROR_SOCKET_PERMISSION_DENIED (-3999); /**< Permission denied */
+    ARNETWORK_ERROR_IOBUFFER_BAD_ACK (-2999);  /**< the sequence number isn't same as that waiting */
     
     private final int m_val;
     static HashMap<Integer, eARNETWORK_ERROR> errList;

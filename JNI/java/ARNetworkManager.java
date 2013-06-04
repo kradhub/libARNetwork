@@ -2,6 +2,7 @@ package com.parrot.arsdk.arnetwork;
 
 import android.util.Log;
 import com.parrot.arsdk.arsal.ARNativeData;
+import com.parrot.arsdk.arnetworkal.ARNetworkALManager;
 
 /**
  * Network manager allow to send and receive data acknowledged or not.
@@ -28,11 +29,10 @@ public abstract class ARNetworkManager
         
     }
     
-    private native long nativeNew( int recvBufferSize, int sendBufferSize, int numberOfInput, Object[] inputParamArray, int numberOfOutput, Object[] outputParamArray, int jerror );
+    private native long nativeNew(long jOSSpecificManagerPtr, int numberOfInput, Object[] inputParamArray, int numberOfOutput, Object[] outputParamArray, int jerror );
     
     private native int nativeDelete( long jManagerPtr);
-    private native int nativeSocketsInit( long jManagerPtr, String jaddr, int sendingPort, int receivingPort, int recvTimeoutSec );
-    
+        
     private native void nativeStop(long jManagerPtr);
     private native int nativeFlush(long jManagerPtr);
     
@@ -42,6 +42,7 @@ public abstract class ARNetworkManager
     private native int nativeReadDataWithTimeout( long jManagerPtr, int outputBufferID, ARNetworkDataRecv data, int timeoutMs);
     
     private long m_managerPtr;
+    
     private boolean m_initOk;
     
     public SendingRunnable m_sendingRunnable;
@@ -54,11 +55,11 @@ public abstract class ARNetworkManager
      *  @param inputParamArray array of the parameters of the input buffers
      *  @param outputParamArray array of the parameters of the output buffers
     **/
-    public ARNetworkManager(int recvBufferSize ,int sendBufferSize, ARNetworkIOBufferParam inputParamArray[], ARNetworkIOBufferParam outputParamArray[]) 
+    public ARNetworkManager(ARNetworkALManager osSpecificManager, ARNetworkIOBufferParam inputParamArray[], ARNetworkIOBufferParam outputParamArray[]) 
     {
         int error = eARNETWORK_ERROR.ARNETWORK_OK.ordinal();
         m_initOk = false;
-        m_managerPtr = nativeNew(recvBufferSize, sendBufferSize, inputParamArray.length, inputParamArray, outputParamArray.length, outputParamArray, error);
+        m_managerPtr = nativeNew(osSpecificManager.getManager(), inputParamArray.length, inputParamArray, outputParamArray.length, outputParamArray, error);
         
         Log.d (TAG, "Error:" + error );
         
@@ -68,7 +69,6 @@ public abstract class ARNetworkManager
             m_sendingRunnable = new SendingRunnable(m_managerPtr);
             m_receivingRunnable = new ReceivingRunnable(m_managerPtr);
         }
-
     }
     
     /**
@@ -95,27 +95,6 @@ public abstract class ARNetworkManager
         } finally {
             super.finalize ();
         }
-    }
-    
-    /**
-     *  Initialize UDP sockets of sending and receiving the data.
-     *  @param addr address of connection at which the data will be sent.
-     *  @param sendingPort port on which the data will be sent.
-     *  @param receivingPort port on which the data will be received.
-     *  @param recvTimeoutSec timeout in seconds set on the socket to limit the time of blocking of the function ARNETWORK_Receiver_Read().
-     *  @return error equal to ARNETWORK_OK if the initialization if successful otherwise see eARNETWORK_ERROR.
-    **/
-    public eARNETWORK_ERROR socketsInit (String addr, int sendingPort, int receivingPort, int recvTimeoutSec)
-    {
-        eARNETWORK_ERROR error = eARNETWORK_ERROR.ARNETWORK_OK;
-        
-        if(addr != null)
-        {
-            int intError = nativeSocketsInit( m_managerPtr, addr, sendingPort, receivingPort, recvTimeoutSec);
-            error =  eARNETWORK_ERROR.getErrorName(intError); 
-        }
-        
-        return error;
     }
     
     /**
@@ -319,7 +298,7 @@ class ReceivingRunnable implements Runnable
     **/
     ReceivingRunnable(long managerPtr)
     {
-      m_managerPtr = managerPtr;
+    	m_managerPtr = managerPtr;
     }
     
     /**
@@ -327,6 +306,6 @@ class ReceivingRunnable implements Runnable
     **/
     public void run()
     {
-       nativeReceivingThreadRun(m_managerPtr);
+    	nativeReceivingThreadRun(m_managerPtr);
     }
 }

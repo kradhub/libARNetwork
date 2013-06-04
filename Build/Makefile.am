@@ -5,7 +5,6 @@ ACLOCAL_AMFLAGS                                             =   -I m4
 
 # The list of header files that belong to the library (to be installed later)
 HEADER_FILES                                                =   ../Includes/libARNetwork/ARNETWORK_Manager.h          \
-                                                                ../Includes/libARNetwork/ARNETWORK_Frame.h            \
                                                                 ../Includes/libARNetwork/ARNETWORK_Error.h            \
                                                                 ../Includes/libARNetwork/ARNETWORK_IOBufferParam.h
 
@@ -48,18 +47,24 @@ ___TestBench_autoTest_autoTest_SOURCES                      =   ../TestBench/aut
 ___TestBench_bidirectionalTest_bidirectionalTest_SOURCES    =   ../TestBench/bidirectionalTest/bidirectionalTest.c
 ___TestBench_defaultTest_defaultTest_SOURCES                =   ../TestBench/defaultTest/defaultTest.c
 if DEBUG_MODE
-___TestBench_autoTest_autoTest_LDADD                        =   -larsal_dbg         \
+___TestBench_autoTest_autoTest_LDADD                        =   -larsal_dbg                 \
+                                                                -larnetworkal_dbg  \
                                                                 libarnetwork_dbg.la
-___TestBench_bidirectionalTest_bidirectionalTest_LDADD      =   -larsal_dbg         \
+___TestBench_bidirectionalTest_bidirectionalTest_LDADD      =   -larsal_dbg                 \
+                                                                -larnetworkal_dbg  \
                                                                 libarnetwork_dbg.la
-___TestBench_defaultTest_defaultTest_LDADD                  =   -larsal_dbg         \
+___TestBench_defaultTest_defaultTest_LDADD                  =   -larsal_dbg                 \
+                                                                -larnetworkal_dbg  \
                                                                 libarnetwork_dbg.la
 else
-___TestBench_autoTest_autoTest_LDADD                        =   -larsal         \
+___TestBench_autoTest_autoTest_LDADD                        =   -larsal                 \
+                                                                -larnetworkal  \
                                                                 libarnetwork.la
-___TestBench_bidirectionalTest_bidirectionalTest_LDADD      =   -larsal         \
+___TestBench_bidirectionalTest_bidirectionalTest_LDADD      =   -larsal                 \
+                                                                -larnetworkal  \
                                                                 libarnetwork.la
-___TestBench_defaultTest_defaultTest_LDADD                  =   -larsal         \
+___TestBench_defaultTest_defaultTest_LDADD                  =   -larsal                 \
+                                                                -larnetworkal  \
                                                                 libarnetwork.la
 endif
 

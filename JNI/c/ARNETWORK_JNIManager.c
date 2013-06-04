@@ -17,8 +17,9 @@
 #include <libARSAL/ARSAL_Print.h>
 
 #include <libARNetwork/ARNETWORK_Error.h>
-#include <libARNetwork/ARNETWORK_Frame.h>
 #include <libARNetwork/ARNETWORK_Manager.h>
+
+#include <libARNetworkAL/ARNETWORKAL_Frame.h>
 
 /**
  *  @brief data sent to the callbak 
@@ -87,10 +88,8 @@ JNI_OnLoad(JavaVM *VM, void *reserved)
 /**
  *  @brief Create a new manager
  *  @warning This function allocate memory
- *  @post ARNETWORK_Manager_SocketsInit() must be called to initialize the sockets, indicate on which address send the data, the sending port the receiving  port and the timeout. 
  *  @param env reference to the java environment
  *  @param obj reference to the object calling this function
- *  @param[in] recvBufferSize size in byte of the receiving buffer. ideally must be equal to the sum of the sizes of one data of all output buffers
  *  @param[in] sendBufferSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
  *  @param[in] numberOfInput Number of input buffer
  *  @param[in] inputParamArray array of the parameters of creation of the inputs. The array must contain as many parameters as the number of input buffer.
@@ -104,7 +103,7 @@ JNI_OnLoad(JavaVM *VM, void *reserved)
  * 
 **/
 JNIEXPORT jlong JNICALL
-Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeNew(JNIEnv *env, jobject obj, jint recvBufferSize, jint sendBufferSize, jint numberOfInput, jobjectArray inputParamArray, jint numberOfOutput, jobjectArray outputParamArray)
+Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeNew(JNIEnv *env, jobject obj, jlong jOSSpecificManagerPtr, jint numberOfInput, jobjectArray inputParamArray, jint numberOfOutput, jobjectArray outputParamArray)
 {
     /** -- Create a new manager -- */
     
@@ -179,8 +178,8 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeNew(JNIEnv *env, jobject 
     if(error == ARNETWORK_OK)
     {
         /** create the manager */
-        
-        managerPtr = ARNETWORK_Manager_New(recvBufferSize, sendBufferSize, numberOfInput, pArrParamInput, numberOfOutput, pArrParamOutput, &error); 
+        // TODO Add networkALManager object
+        managerPtr = ARNETWORK_Manager_New((ARNETWORKAL_Manager_t*) (intptr_t) jOSSpecificManagerPtr, numberOfInput, pArrParamInput, numberOfOutput, pArrParamOutput, &error);
     }
     
     /** print error */
@@ -210,43 +209,16 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeDelete(JNIEnv *env, jobje
 }
 
 /**
- *  @brief initialize UDP sockets of sending and receiving the data.
- *  @param env reference to the java environment
- *  @param obj reference to the object calling this function
- *  @param jManagerPtr adress of the ARNETWORK_Manager_t
- *  @param[in] jaddr address of connection at which the data will be sent.
- *  @param[in] sendingPort port on which the data will be sent.
- *  @param[in] recvPort port on which the data will be received.
- *  @param[in] recvTimeoutSec timeout in seconds set on the socket to limit the time of blocking of the function ARNETWORK_Receiver_Read().
- *  @return error equal to ARNETWORK_OK if the Bind if successful otherwise see eARNETWORK_ERROR.
-**/
-JNIEXPORT jint JNICALL
-Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSocketsInit(JNIEnv *env, jobject obj, jlong jManagerPtr, jstring jaddr, jint sendingPort, jint recvPort, jint recvTimeoutSec)
-{
-    /** -- initialize UDP sockets of sending and receiving the data. -- */
-    
-    /** local declarations */
-    ARNETWORK_Manager_t *managerPtr = (ARNETWORK_Manager_t*) (intptr_t) jManagerPtr;
-    const char *nativeString = (*env)->GetStringUTFChars(env, jaddr, 0);
-    eARNETWORK_ERROR error = ARNETWORK_OK;
-    
-    error = ARNETWORK_Manager_SocketsInit(managerPtr, nativeString, sendingPort, recvPort, recvTimeoutSec);
-    (*env)->ReleaseStringUTFChars( env, jaddr, nativeString );
-    
-    return error;
-}
-
-/**
  *  @brief Manage the sending of the data 
  *  @warning This function must be called by a specific thread.
- *  @pre The sockets must be initialized through nativeSocketsInit().
+ *  @pre The OS specific Manager need to be defined and initialized with a network type nativeInitWiFiNetwork()
  *  @post Before join the thread calling this function, nativeStop() must be called.
  *  @note This function send the data stored in the input buffer through ARNETWORK_Manager_SendFixedSizeData().
  *  @param env reference to the java environment
  *  @param obj reference to the object calling this function
  *  @param jManagerPtr adress of the ARNETWORK_Manager_t
  *  @return NULL
- *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSocketsInit()
+ *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkALManager_nativeInitWiFiNetwork()
  *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStop()
 **/
 JNIEXPORT jint JNICALL
@@ -263,14 +235,14 @@ Java_com_parrot_arsdk_arnetwork_SendingRunnable_nativeSendingThreadRun(JNIEnv *e
 /**
  *  @brief Manage the reception of the data.
  *  @warning This function must be called by a specific thread.
- *  @pre The socket of the receiver must be initialized through nativeSocketsInit().
+ *  @pre The OS specific Manager need to be defined and initialized with a network type nativeInitWiFiNetwork()
  *  @post Before join the thread calling this function, nativeStop() must be called.
  *  @note This function receives the data through ARNETWORK_Manager_ReadFixedSizeData() and stores them in the output buffers according to their parameters.
  *  @param env reference to the java environment
  *  @param obj reference to the object calling this function
  *  @param jManagerPtr adress of the ARNETWORK_Manager_t
  *  @return NULL
- *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSocketsInit()
+ *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkALManager_nativeInitWiFiNetwork()
  *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStop()
 **/
 JNIEXPORT jint JNICALL

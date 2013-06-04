@@ -8,7 +8,7 @@
 #ifndef _ARNETWORK_IOBUFFERPARAM_H_
 #define _ARNETWORK_IOBUFFERPARAM_H_
 
-#include <libARNetwork/ARNETWORK_Frame.h>
+#include <libARNetworkAL/ARNETWORKAL_Frame.h>
 #include <libARNetwork/ARNETWORK_Error.h>
 
 /*****************************************
@@ -31,7 +31,7 @@
 typedef struct
 {
     int ID; /**< Identifier used to find the IOBuffer in a list - Valid range : 10-127 */
-    eARNETWORK_FRAME_TYPE dataType; /**< Type of the data stored in the buffer*/
+    eARNETWORKAL_FRAME_TYPE dataType; /**< Type of the data stored in the buffer*/
     int sendingWaitTimeMs; /**< Time in millisecond between 2 send when the IOBuffer is used with a ARNetwork_Sender */
     int ackTimeoutMs; /**< Timeout in millisecond before retry to send the data waiting an acknowledgement when the InOutBuffer is used with a ARNetwork_Sender*/
     int numberOfRetry; /**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a ARNetwork_Sender*/

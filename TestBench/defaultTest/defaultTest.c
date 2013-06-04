@@ -17,6 +17,7 @@
 #include <libARSAL/ARSAL_Thread.h>
 
 #include <libARNetwork/ARNETWORK_Manager.h>
+#include <libARNetworkAL/ARNETWORKAL_Manager.h>
 
 #include <unistd.h>
 #include <signal.h>
@@ -70,8 +71,11 @@ int main(int argc, char *argv[])
     int sendPort = 0;
     int recvPort = 0;
     ARNETWORK_Manager_t *managerPtr = NULL;
+    ARNETWORKAL_Manager_t *networkALManagerPtr = NULL;
+    
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    int connectError = 1;
+    eARNETWORKAL_ERROR specificError = ARNETWORKAL_OK;
+    eARNETWORKAL_ERROR connectError = ARNETWORKAL_OK;
     char IpAddress[16];
     
     ARSAL_Thread_t thread_send1;
@@ -107,20 +111,29 @@ int main(int argc, char *argv[])
         }
     }
     
-    managerPtr = ARNETWORK_Manager_New( RECV_BUFF_SIZE, SEND_BUFF_SIZE, 0, NULL, 0,NULL, &error);
-    
-    if(error == ARNETWORK_OK)
+    networkALManagerPtr = ARNETWORKAL_Manager_New(&specificError);
+
+    if(specificError == ARNETWORKAL_OK)
     {
-        while( connectError != 0)
+        do
         {
             printf("repeater IP address ? : ");
             scanf("%s",IpAddress);
             
-            connectError = ARNETWORK_Manager_SocketsInit(managerPtr, IpAddress, sendPort, recvPort, RECV_TIMEOUT_MS);
-            
-            printf("    - connect error: %d \n", connectError );            
+            connectError = ARNETWORKAL_Manager_InitWiFiNetwork(networkALManagerPtr, IpAddress, sendPort, recvPort, RECV_TIMEOUT_MS);
+            printf("    - connect error: %d \n", connectError );
             printf("\n");
-        }
+        } while( connectError != ARNETWORKAL_OK);
+
+    }
+    
+    if(specificError == ARNETWORKAL_OK)
+    {
+        managerPtr = ARNETWORK_Manager_New(networkALManagerPtr, 0, NULL, 0, NULL, &error);
+    }
+    else
+    {
+        error = ARNETWORK_ERROR;
     }
     
     /** start threads */

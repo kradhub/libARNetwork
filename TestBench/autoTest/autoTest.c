@@ -21,7 +21,9 @@
 
 #include <string.h>
 
-#include <libARNetwork/ARNETWORK_Frame.h>
+#include <libARNetworkAL/ARNETWORKAL_Manager.h>
+#include <libARNetworkAL/ARNETWORKAL_Frame.h>
+
 #include <libARNetwork/ARNETWORK_Manager.h>
 #include <libARNetwork/ARNETWORK_IOBufferParam.h>
 
@@ -51,9 +53,6 @@
 #define AUTOTEST_PORT2 54321
 #define AUTOTEST_ADRR_IP "127.0.0.1"
 
-#define AUTOTEST_SENDING_BUFFER_SIZE 256
-#define AUTOTEST_RECEIVER_BUFFER_SIZE 256
-
 #define AUTOTEST_NUMBER_OF_INPUT_NET1 4
 #define AUTOTEST_NUMBER_OF_OUTPUT_NET1 4
 #define AUTOTEST_NUMBER_OF_INPUT_NET2 4
@@ -72,6 +71,7 @@ typedef enum
 
 typedef struct
 {
+    ARNETWORKAL_Manager_t *networkALManagerPtr;
     ARNETWORK_Manager_t *managerPtr;
 
     ARSAL_Thread_t managerSendingThread;
@@ -159,32 +159,47 @@ int main(int argc, char *argv[])
     ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, " -- libARNetwork TestBench auto --");
 
     /** create the Manager1 */
-    managerCheck1.managerPtr = ARNETWORK_Manager_New( AUTOTEST_RECEIVER_BUFFER_SIZE, AUTOTEST_SENDING_BUFFER_SIZE, AUTOTEST_NUMBER_OF_INPUT_NET1, paramInputNetwork1, AUTOTEST_NUMBER_OF_OUTPUT_NET1, paramOutputNetwork1, &error );
-    /** initialize the socket of the Manager1 */
-    if( error == ARNETWORK_OK )
+    /** Initialize the OS Specific Network */
+    eARNETWORKAL_ERROR specificError = ARNETWORKAL_OK;
+    managerCheck1.networkALManagerPtr = ARNETWORKAL_Manager_New(&specificError);
+    if(specificError == ARNETWORKAL_OK)
     {
-        error = ARNETWORK_Manager_SocketsInit(managerCheck1.managerPtr, AUTOTEST_ADRR_IP, AUTOTEST_PORT1, AUTOTEST_PORT2, AUTOTEST_RECEIVER_TIMEOUT_SEC);
-        if(error != ARNETWORK_OK)
+        specificError = ARNETWORKAL_Manager_InitWiFiNetwork(managerCheck1.networkALManagerPtr, AUTOTEST_ADRR_IP, AUTOTEST_PORT1, AUTOTEST_PORT2, AUTOTEST_RECEIVER_TIMEOUT_SEC);
+        if(specificError != ARNETWORKAL_OK)
         {
-            ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, "managerCheck1.managerPtr error initsocket = %s", ARNETWORK_Error_ToString (error));
+            ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, "Manager 1 : Can't init Wifi Network = %d", error);
         }
     }
-
-    /** create the Manager2 */
-    if( error == ARNETWORK_OK )
+    
+    if(specificError == ARNETWORKAL_OK)
     {
-        managerCheck2.managerPtr = ARNETWORK_Manager_New( AUTOTEST_RECEIVER_BUFFER_SIZE, AUTOTEST_SENDING_BUFFER_SIZE, AUTOTEST_NUMBER_OF_INPUT_NET2, paramInputNetwork2, AUTOTEST_NUMBER_OF_OUTPUT_NET2, paramOutputNetwork2, &error );
+        managerCheck1.managerPtr = ARNETWORK_Manager_New(managerCheck1.networkALManagerPtr, AUTOTEST_NUMBER_OF_INPUT_NET1, paramInputNetwork1, AUTOTEST_NUMBER_OF_OUTPUT_NET1, paramOutputNetwork1, &error );
     }
-    /** initialize the socket of the Manager2 */
-    if( error == ARNETWORK_OK )
+    else
     {
-        error = ARNETWORK_Manager_SocketsInit(managerCheck2.managerPtr, AUTOTEST_ADRR_IP, AUTOTEST_PORT2, AUTOTEST_PORT1, AUTOTEST_RECEIVER_TIMEOUT_SEC);
-        if(error != ARNETWORK_OK)
+        error = ARNETWORK_ERROR;
+    }
+    
+    /** Initialize the OS Specific Network */
+    managerCheck2.networkALManagerPtr = ARNETWORKAL_Manager_New(&specificError);
+    if(specificError == ARNETWORKAL_OK)
+    {
+        specificError = ARNETWORKAL_Manager_InitWiFiNetwork(managerCheck2.networkALManagerPtr, AUTOTEST_ADRR_IP, AUTOTEST_PORT2, AUTOTEST_PORT1, AUTOTEST_RECEIVER_TIMEOUT_SEC);
+        if(specificError != ARNETWORKAL_OK)
         {
-            ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, "managerCheck2.managerPtr error initsocket = %s", ARNETWORK_Error_ToString (error));
+            ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, "Manager 2 : Can't init Wifi Network = %d", error);
         }
     }
-
+    
+    if(specificError == ARNETWORKAL_OK)
+    {
+        managerCheck2.managerPtr = ARNETWORK_Manager_New( managerCheck2.networkALManagerPtr, AUTOTEST_NUMBER_OF_INPUT_NET2, paramInputNetwork2, AUTOTEST_NUMBER_OF_OUTPUT_NET2, paramOutputNetwork2, &error );
+    }
+    else
+    {
+        error = ARNETWORK_ERROR;
+    }
+    
     if( error == ARNETWORK_OK )
     {
         ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, "check start");
@@ -268,6 +283,9 @@ int main(int argc, char *argv[])
         {
             ARSAL_Thread_Join( managerCheck2.managerReceiverThread, NULL );
         }
+
+        ARNETWORKAL_Manager_CloseWiFiNetwork(managerCheck1.networkALManagerPtr);
+        ARNETWORKAL_Manager_CloseWiFiNetwork(managerCheck2.networkALManagerPtr);
     }
 
     /** print result */
@@ -355,7 +373,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     /** input ID_IOBUFFER_CHAR_DATA char */
     ARNETWORK_IOBufferParam_DefaultInit( &(inputArr1[0]) );
     inputArr1[0].ID = ID_IOBUFFER_CHAR_DATA;
-    inputArr1[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    inputArr1[0].dataType = ARNETWORKAL_FRAME_TYPE_DATA;
     inputArr1[0].numberOfCell = 1;
     inputArr1[0].dataCopyMaxSize = sizeof(char);
     inputArr1[0].isOverwriting = 1;
@@ -363,7 +381,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     /** input ID_IOBUFFER_INT_DATA_WITH_ACK int */
     ARNETWORK_IOBufferParam_DefaultInit( &(inputArr1[1]) );
     inputArr1[1].ID = ID_IOBUFFER_INT_DATA_WITH_ACK;
-    inputArr1[1].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    inputArr1[1].dataType = ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK;
     inputArr1[1].sendingWaitTimeMs = 2;
     inputArr1[1].ackTimeoutMs = 5;
     inputArr1[1].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER /*20*/;
@@ -373,14 +391,14 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     /** input ID_IOBUFFER_VARIABLE_SIZE_DATA */
     ARNETWORK_IOBufferParam_DefaultInit( &(inputArr1[2]) );
     inputArr1[2].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA;
-    inputArr1[2].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    inputArr1[2].dataType = ARNETWORKAL_FRAME_TYPE_DATA;
     inputArr1[2].sendingWaitTimeMs = 2;
     inputArr1[2].numberOfCell = 5;
 
     /** input ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK */
     ARNETWORK_IOBufferParam_DefaultInit( &(inputArr1[3]) );
     inputArr1[3].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK;
-    inputArr1[3].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    inputArr1[3].dataType = ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK;
     inputArr1[3].sendingWaitTimeMs = 2;
     inputArr1[3].ackTimeoutMs = 5;
     inputArr1[3].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER /*20*/;
@@ -391,7 +409,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     /** output ID_IOBUFFER_CHAR_DATA char */
     ARNETWORK_IOBufferParam_DefaultInit( &(outputArr1[0]) );
     outputArr1[0].ID = ID_IOBUFFER_CHAR_DATA;
-    outputArr1[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    outputArr1[0].dataType = ARNETWORKAL_FRAME_TYPE_DATA;
     outputArr1[0].numberOfCell = 1;
     outputArr1[0].dataCopyMaxSize = sizeof(char);
     outputArr1[0].isOverwriting = 1;
@@ -399,7 +417,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     /** output ID_IOBUFFER_INT_DATA_WITH_ACK int */
     ARNETWORK_IOBufferParam_DefaultInit( &(outputArr1[1]) );
     outputArr1[1].ID = ID_IOBUFFER_INT_DATA_WITH_ACK;
-    outputArr1[1].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    outputArr1[1].dataType = ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK;
     outputArr1[1].sendingWaitTimeMs = 2;
     outputArr1[1].ackTimeoutMs = 5;
     outputArr1[1].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER /*20*/;
@@ -409,7 +427,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     /** output ID_IOBUFFER_VARIABLE_SIZE_DATA */
     ARNETWORK_IOBufferParam_DefaultInit( &(outputArr1[2]) );
     outputArr1[2].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA;
-    outputArr1[2].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    outputArr1[2].dataType = ARNETWORKAL_FRAME_TYPE_DATA;
     outputArr1[2].sendingWaitTimeMs = 2;
     outputArr1[2].numberOfCell = 5;
     outputArr1[2].dataCopyMaxSize = sizeof(char) * 30; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -417,7 +435,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     /** output ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK */
     ARNETWORK_IOBufferParam_DefaultInit( &(outputArr1[3]) );
     outputArr1[3].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK;
-    outputArr1[3].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    outputArr1[3].dataType = ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK;
     outputArr1[3].sendingWaitTimeMs = 2;
     outputArr1[3].ackTimeoutMs = 5;
     outputArr1[3].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER/*20*/;
@@ -431,7 +449,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     /** input ID_IOBUFFER_CHAR_DATA char */
     ARNETWORK_IOBufferParam_DefaultInit( &(inputArr2[0]) );
     inputArr2[0].ID = ID_IOBUFFER_CHAR_DATA;
-    inputArr2[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    inputArr2[0].dataType = ARNETWORKAL_FRAME_TYPE_DATA;
     inputArr2[0].numberOfCell = 1;
     inputArr2[0].dataCopyMaxSize = sizeof(char);
     inputArr2[0].isOverwriting = 1;
@@ -439,7 +457,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     /** input ID_IOBUFFER_INT_DATA_WITH_ACK int */
     ARNETWORK_IOBufferParam_DefaultInit( &(inputArr2[1]) );
     inputArr2[1].ID = ID_IOBUFFER_INT_DATA_WITH_ACK;
-    inputArr2[1].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    inputArr2[1].dataType = ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK;
     inputArr2[1].sendingWaitTimeMs = 2;
     inputArr2[1].ackTimeoutMs = 5;
     inputArr2[1].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER/*20*/;
@@ -449,14 +467,14 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     /** input ID_IOBUFFER_VARIABLE_SIZE_DATA */
     ARNETWORK_IOBufferParam_DefaultInit( &(inputArr2[2]) );
     inputArr2[2].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA;
-    inputArr2[2].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    inputArr2[2].dataType = ARNETWORKAL_FRAME_TYPE_DATA;
     inputArr2[2].sendingWaitTimeMs = 2;
     inputArr2[2].numberOfCell = 5;
 
     /** input ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK */
     ARNETWORK_IOBufferParam_DefaultInit( &(inputArr2[3]) );
     inputArr2[3].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK;
-    inputArr2[3].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    inputArr2[3].dataType = ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK;
     inputArr2[3].sendingWaitTimeMs = 2;
     inputArr2[3].ackTimeoutMs = 5;
     inputArr2[3].numberOfRetry = ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER/*20*/;
@@ -467,7 +485,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     /**  output ID_IOBUFFER_CHAR_DATA int */
     ARNETWORK_IOBufferParam_DefaultInit( &(outputArr2[0]) );
     outputArr2[0].ID = ID_IOBUFFER_CHAR_DATA;
-    outputArr2[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    outputArr2[0].dataType = ARNETWORKAL_FRAME_TYPE_DATA;
     outputArr2[0].sendingWaitTimeMs = 3;
     outputArr2[0].numberOfCell = 1;
     outputArr2[0].dataCopyMaxSize = sizeof(char);
@@ -476,21 +494,21 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
     /** output ID_IOBUFFER_INT_DATA_WITH_ACK int */
     ARNETWORK_IOBufferParam_DefaultInit( &(outputArr2[1]) );
     outputArr2[1].ID = ID_IOBUFFER_INT_DATA_WITH_ACK;
-    outputArr2[1].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    outputArr2[1].dataType = ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK;
     outputArr2[1].numberOfCell = 5;
     outputArr2[1].dataCopyMaxSize = sizeof(int);
 
     /** output ID_IOBUFFER_VARIABLE_SIZE_DATA */
     ARNETWORK_IOBufferParam_DefaultInit( &(outputArr2[2]) );
     outputArr2[2].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA;
-    outputArr2[2].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    outputArr2[2].dataType = ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK;
     outputArr2[2].numberOfCell = 5;
     outputArr2[2].dataCopyMaxSize = sizeof(char) * 30; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     /** output ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK */
     ARNETWORK_IOBufferParam_DefaultInit( &(outputArr2[3]) );
     outputArr2[3].ID = ID_IOBUFFER_VARIABLE_SIZE_DATA_ACK;
-    outputArr2[3].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    outputArr2[3].dataType = ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK;
     outputArr2[3].numberOfCell = 5;
     outputArr2[3].dataCopyMaxSize = sizeof(char) * 30; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -500,7 +518,7 @@ void AUTOTEST_InitParamIOBuffer(ARNETWORK_IOBufferParam_t *inputArr1, ARNETWORK_
 void AUTOTEST_InitManagerCheck( AUTOTEST_ManagerCheck_t *managerCheckPtr )
 {
     /** -- intitialize the managerCheck -- */
-
+    managerCheckPtr->networkALManagerPtr = NULL;
     managerCheckPtr->managerPtr = NULL;
     managerCheckPtr->managerSendingThread = NULL;
     managerCheckPtr->managerReceiverThread = NULL;

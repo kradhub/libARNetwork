@@ -8,6 +8,7 @@
 #ifndef _ARNETWORK_RECEIVER_PRIVATE_H_
 #define _ARNETWORK_RECEIVER_PRIVATE_H_
 
+#include <libARNetworkAL/ARNETWORKAL_Manager.h>
 #include "ARNETWORK_IOBuffer.h"
 #include "ARNETWORK_Sender.h"
 #include "ARNETWORK_Buffer.h"
@@ -19,13 +20,12 @@
  */
 typedef struct
 {
-    ARNETWORK_Buffer_t *receivingBufferPtr; /**< Pointer on the data buffer used to store the data received*/
+	ARNETWORKAL_Manager_t *networkALManager;
     ARNETWORK_Sender_t *senderPtr; /**< Pointer on the sender which waits the acknowledgments*/
     ARNETWORK_IOBuffer_t **outputBufferPtrArr; /**< address of the array of pointers of output buffer*/
     int numberOfOutputBuff; /**< Number of output buffer*/
     ARNETWORK_IOBuffer_t **internalOutputBufferPtrArr; /**< address of the array of pointers of internal output buffer*/
     int numberOfInternalOutputBuff; /**< Number of internal output buffer*/
-    int socket; /**< receiving Socket. Must be accessed through ARNETWORK_Receiver_Bind()*/
     ARNETWORK_IOBuffer_t** outputBufferPtrMap; /**< address of the array storing the outputBuffers by their identifier */
 
     uint8_t* readingPointer; /** head of reading on the RecvBuffer */
@@ -45,7 +45,7 @@ typedef struct
  *  @return Pointer on the new receiver
  *  @see ARNETWORK_Receiver_Delete()
  */
-ARNETWORK_Receiver_t* ARNETWORK_Receiver_New(unsigned int recvBufferSize, unsigned int numberOfOutputBuff, ARNETWORK_IOBuffer_t **outputBufferPtrArr, ARNETWORK_IOBuffer_t **outputBufferPtrMap);
+ARNETWORK_Receiver_t* ARNETWORK_Receiver_New(ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfOutputBuff, ARNETWORK_IOBuffer_t **outputBufferPtrArr, ARNETWORK_IOBuffer_t **outputBufferPtrMap);
 
 /**
  *  @brief Delete the Receiver
@@ -59,14 +59,11 @@ void ARNETWORK_Receiver_Delete(ARNETWORK_Receiver_t **receiverPtrAddr);
  *  @brief Manage the reception of the data on the Receiver' socket.
  *  @warning This function must be called by a specific thread.
  *  @warning At the end of this function the socket of the receiver is closed.
- *  @pre The socket of the receiver must be initialized through ARNETWORK_Receiver_Bind().
  *  @post Before join the thread calling this function, ARNETWORK_Receiver_Stop() must be called.
- *  @note This function receives the data through ARNETWORK_Receiver_Read() and stores them in the output buffers according to their parameters.
+ *  @note This function receives the data through ARNETWORKAL_Manager_Receiving_Callback_t and stores them in the output buffers according to their parameters.
  *  @param data thread datas of type ARNETWORK_Receive_t*
  *  @return NULL
- *  @see ARNETWORK_Receiver_Bind()
  *  @see ARNETWORK_Receiver_Stop()
- *  @see ARNETWORK_Receiver_Read()
  */
 void* ARNETWORK_Receiver_ThreadRun(void *data);
 
@@ -87,25 +84,5 @@ void ARNETWORK_Receiver_Stop(ARNETWORK_Receiver_t *receiverPtr);
  *  @see ARNETWORK_Receiver_New()
  */
 eARNETWORK_ERROR ARNETWORK_Receiver_ReturnACK(ARNETWORK_Receiver_t *receiverPtr, int ID, uint32_t seq);
-
-/**
- *  @brief receiving data present on the socket
- *  @warning this function is blocking. the timeout set on the socket allows unblock this function.
- *  @pre The socket of the receiver must be initialized through ARNETWORK_Receiver_Bind().
- *  @param receiverPtr the pointer on the Receiver
- *  @return size of the data read.
- *  @see ARNETWORK_Receiver_Bind()
- */
-int ARNETWORK_Receiver_Read(ARNETWORK_Receiver_t *receiverPtr);
-
-/**
- *  @brief Bind the Receiver' socket in UDP to a port. the socket will be used to receive the data.
- *  @param receiverPtr the pointer on the Receiver
- *  @param[in] port port on which the data will be received.
- *  @param[in] timeoutSec timeout in seconds set on the socket to limit the time of blocking of the function ARNETWORK_Receiver_Read().
- *  @return error equal to ARNETWORK_OK if the Bind if successful otherwise equal to 1.
- *  @see ARNETWORK_Receiver_Bind()
- */
-eARNETWORK_ERROR ARNETWORK_Receiver_Bind(ARNETWORK_Receiver_t *receiverPtr, unsigned short port, int timeoutSec);
 
 #endif /** _ARNETWORK_RECEIVER_PRIVATE_H_ */

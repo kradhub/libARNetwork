@@ -29,7 +29,7 @@
 #define ARNETWORK_IOBUFFER_ID_DEFAULT -1
 #define ARNETWORK_IOBUFFER_ID_MIN 10
 #define ARNETWORK_IOBUFFER_ID_MAX 127
-#define ARNETWORK_IOBUFFER_DATA_TYPE_DEFAULT ARNETWORK_FRAME_TYPE_UNINITIALIZED
+#define ARNETWORK_IOBUFFER_DATA_TYPE_DEFAULT ARNETWORKAL_FRAME_TYPE_UNINITIALIZED
 #define ARNETWORK_IOBUFFER_SENDING_WAIT_TIME_DEFAULT 1
 #define ARNETWORK_IOBUFFER_ACK_TIMEOUT_MS_DEFAULT ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER
 #define ARNETWORK_IOBUFFER_NUMBER_OF_RETRY_DEFAULT ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER
@@ -81,7 +81,7 @@ int ARNETWORK_IOBufferParam_Check (const ARNETWORK_IOBufferParam_t *IOBufferPara
     if ((IOBufferParamPtr != NULL) &&
         (IOBufferParamPtr->ID >= ARNETWORK_IOBUFFER_ID_MIN) &&
         (IOBufferParamPtr->ID <= ARNETWORK_IOBUFFER_ID_MAX) &&
-        (IOBufferParamPtr->dataType != ARNETWORK_FRAME_TYPE_UNINITIALIZED) &&
+        (IOBufferParamPtr->dataType != ARNETWORKAL_FRAME_TYPE_UNINITIALIZED) &&
         (IOBufferParamPtr->sendingWaitTimeMs >= 0) &&
         (IOBufferParamPtr->ackTimeoutMs >= -1) &&
         (IOBufferParamPtr->numberOfRetry >= -1))
@@ -101,7 +101,7 @@ values expected: \n\
     - dataCopyMaxSize >= 0 (value set: %d)\n\
     - isOverwriting = 0 or 1 (value set: %d)",
                      ARNETWORK_IOBUFFER_ID_MIN, ARNETWORK_IOBUFFER_ID_MAX, IOBufferParamPtr->ID,
-                     ARNETWORK_FRAME_TYPE_UNINITIALIZED, IOBufferParamPtr->dataType,
+                     ARNETWORKAL_FRAME_TYPE_UNINITIALIZED, IOBufferParamPtr->dataType,
                      IOBufferParamPtr->sendingWaitTimeMs,
                      IOBufferParamPtr->ackTimeoutMs,
                      IOBufferParamPtr->numberOfRetry,

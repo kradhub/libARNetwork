@@ -94,54 +94,54 @@ AC_ARG_WITH([libARSALLibDir],
               fi])
 
 ##########################################################################
-# Define libARNetworkOSSpecific directories
+# Define libARNetworkAL directories
 ##########################################################################
-# get the directories of libARNetworkOSSpecific
-AC_ARG_WITH([libARNetworkOSSpecific],
-            AS_HELP_STRING([--with-libARNetworkOSSpecificInstallDir=DIR],[directory of the libARNetworkOSSpecific installation @<:@default=PREFIX@:>@]),
+# get the directories of libARNetworkAL
+AC_ARG_WITH([libARNetworkALInstallDir],
+            AS_HELP_STRING([--with-libARNetworkALInstallDir=DIR],[directory of the libARNetworkAL installation @<:@default=PREFIX@:>@]),
             [if test x$withval = xno; then
-              libARNetworkOSSpecificInstallDir=""
+              libARNetworkALInstallDir=""
             else
-              libARNetworkOSSpecificInstallDir="$withval"
+              libARNetworkALInstallDir="$withval"
             fi], 
             [if test x$prefix = xNONE; then
-              libARNetworkOSSpecificInstallDir=""
+              libARNetworkALInstallDir=""
             else
-              libARNetworkOSSpecificInstallDir="$prefix"
+              libARNetworkALInstallDir="$prefix"
             fi])
 
-AC_ARG_WITH([libARNetworkOSSpecificIncludeDir],
-            AS_HELP_STRING([--with-libARNetworkOSSpecificIncludeDir=DIR],[directory of the libARNetworkOSSpecific headers @<:@default=libARNetworkOSSpecificInstallDir/include@:>@]),
+AC_ARG_WITH([libARNetworkALIncludeDir],
+            AS_HELP_STRING([--with-libARNetworkALIncludeDir=DIR],[directory of the libARNetworkAL headers @<:@default=libARNetworkALInstallDir/include@:>@]),
             [if test x$withval = xno; then
-              [if test ! -z $libARNetworkOSSpecificInstallDir; then
-                 libARNetworkOSSpecificIncludeDir="$libARNetworkOSSpecificInstallDir/include"
+              [if test ! -z $libARNetworkALInstallDir; then
+                 libARNetworkALIncludeDir="$libARNetworkALInstallDir/include"
               else
-                 libARNetworkOSSpecificIncludeDir=""
+                 libARNetworkALIncludeDir=""
               fi]
             else
-              libARNetworkOSSpecificIncludeDir="$withval"
+              libARNetworkALIncludeDir="$withval"
             fi],
-              [if test ! -z $libARNetworkOSSpecificInstallDir; then
-                 libARNetworkOSSpecificIncludeDir="$libARNetworkOSSpecificInstallDir/include"
+              [if test ! -z $libARNetworkALInstallDir; then
+                 libARNetworkALIncludeDir="$libARNetworkALInstallDir/include"
               else
-                 libARNetworkOSSpecificIncludeDir=""
+                 libARNetworkALIncludeDir=""
               fi])
 
-AC_ARG_WITH([libARSALLibDir],
-            AS_HELP_STRING([--with-libARNetworkOSSpecificLibDir=DIR],[directory of the libARNetworkOSSpecific libraries @<:@default=libARNetworkOSSpecificInstallDir/lib@:>@]),
+AC_ARG_WITH([libARNetworkALLibDir],
+            AS_HELP_STRING([--with-libARNetworkALLibDir=DIR],[directory of the libARNetworkAL libraries @<:@default=libARNetworkALInstallDir/lib@:>@]),
             [if test x$withval = xno; then
-              [if test ! -z $libARNetworkOSSpecificInstallDir; then
-                libARNetworkOSSpecificLibDir="$libARNetworkOSSpecificInstallDir/lib"
+              [if test ! -z $libARNetworkALInstallDir; then
+                libARNetworkALLibDir="$libARNetworkALInstallDir/lib"
               else
-                libARNetworkOSSpecificLibDir=""
+                libARNetworkALLibDir=""
               fi]
             else
-              libARNetworkOSSpecificLibDir="$withval"
+              libARNetworkALLibDir="$withval"
             fi],
-              [if test ! -z $libARNetworkOSSpecificInstallDir; then
-                libARNetworkOSSpecificLibDir="$libARNetworkOSSpecificInstallDir/lib"
+              [if test ! -z $libARNetworkALInstallDir; then
+                libARNetworkALLibDir="$libARNetworkALInstallDir/lib"
               else
-                libARNetworkOSSpecificLibDir=""
+                libARNetworkALLibDir=""
               fi])
 
 ##########################################################################
@@ -150,13 +150,15 @@ AC_ARG_WITH([libARSALLibDir],
 
 # include local headers first
 CFLAGS+=" -I$srcdir/../Includes -I$srcdir/../Sources"
+
 # add the headers directory of libARSAL
 if test ! -z $libARSALIncludeDir; then
   CFLAGS+=" -I$libARSALIncludeDir"
 fi
-# add the headers directory of libARNetworkOSSpecific
-if test ! -z $libARNetworkOSSpecificIncludeDir; then
-  CFLAGS+=" -I$libARNetworkOSSpecificIncludeDir"
+
+# add the headers directory of libARNetworkAL
+if test ! -z $libARNetworkALIncludeDir; then
+  CFLAGS+=" -I$libARNetworkALIncludeDir"
 fi
 
 CPPFLAGS="$CFLAGS"
@@ -167,6 +169,11 @@ CPPFLAGS="$CFLAGS"
 # add the binaries directory of libSal
 if test ! -z $libARSALLibDir; then
   LDFLAGS+=" -L$libARSALLibDir"
+fi
+
+# add the binaries directory of libARNetworkAL 
+if test ! -z $libARNetworkALLibDir; then
+  LDFLAGS+=" -L$libARNetworkALLibDir"
 fi
 
 ##########################################################################
@@ -180,9 +187,9 @@ libARSAL/ARSAL_Socket.h libARSAL/ARSAL_Time.h],,
 - Use --with-libARSALInstallDir or --with-libARSALIncludeDir to indicate a specific include path.))
 
 # Checks for libARNetWork_OSSpecific.h
-AC_CHECK_HEADERS([libARNetwork_OSSpecific/ARNETWORK_OSSPECIFIC_Manager.h libARNetwork_OSSpecific/ARNETWORK_OSSPECIFIC_Error.h],,
-	AC_MSG_ERROR(The libARNetwork_OSSpecific headers are required in order to build the library !
-- Use --with-libARNetworkOSSpecificInstallDir or --with-libARNetworkOSSpecificIncludeDir to indicate a specific include path.))
+AC_CHECK_HEADERS([libARNetworkAL/ARNETWORKAL_Manager.h libARNetworkAL/ARNETWORKAL_Error.h libARNetworkAL/ARNETWORKAL_Frame.h],,
+	AC_MSG_ERROR(The libARNetworkAL headers are required in order to build the library !
+- Use --with-libARNetworkALInstallDir or --with-libARNetworkALIncludeDir to indicate a specific include path.))
 
 ##########################################################################
 # Checks for programs.

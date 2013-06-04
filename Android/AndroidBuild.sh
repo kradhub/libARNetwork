@@ -17,15 +17,18 @@ LIBNAME_LOWER=$(echo $LIBNAME | tr [:upper:] [:lower:])
 
 # $3 is the action (release, debug, clean)
 
+# $4 will always be the --with-libARNetworkALInstallDir=... arg
+
 PREFIX=$1
 LIBARSALINSTALLDIR=$2
 CONFIGURATION=$(echo $3  | tr [:upper:] [:lower:])
+LIBARNETWORKALINSTALLDIR=$4
 
 echo "Building "$LIBNAME" with prefix : <"$PREFIX">"
 echo "And target : <"$CONFIGURATION">"
 
 # If any arg is missing, return
-if [ -z $PREFIX ] || [ -z $LIBARSALINSTALLDIR ] || [ -z $CONFIGURATION ]; then
+if [ -z $PREFIX ] || [ -z $LIBARSALINSTALLDIR ] || [ -z $LIBARNETWORKALINSTALLDIR ] || [ -z $CONFIGURATION ]; then
 	echo "Missing args !"
 	exit 1
 fi
@@ -49,7 +52,7 @@ if [ "xclean" = "x$CONFIGURATION" ]; then
 fi
 
 # Setup configure args
-CONF_ARGS="--prefix=$PREFIX --with-libARSALInstallDir=$LIBARSALINSTALLDIR --host=arm-linux-androideabi"
+CONF_ARGS="--prefix=$PREFIX --with-libARNetworkALInstallDir=$LIBARNETWORKALINSTALLDIR --with-libARSALInstallDir=$LIBARSALINSTALLDIR --host=arm-linux-androideabi"
 
 CURRINC_FOLDER=$LIBNAME
 

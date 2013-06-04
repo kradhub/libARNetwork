@@ -31,8 +31,6 @@ typedef enum
     ARNETWORK_ERROR_NEW_RINGBUFFER, /**< RingBuffer creation error */
     ARNETWORK_ERROR_IOBUFFER = -3000, /**< Unknown IOBuffer error */
     ARNETWORK_ERROR_IOBUFFER_BAD_ACK,  /**< Bad sequence number for the acknowledge */
-    ARNETWORK_ERROR_SOCKET = -4000,  /**< Unknown socket error */
-    ARNETWORK_ERROR_SOCKET_PERMISSION_DENIED, /**< Permission denied on a socket */
     ARNETWORK_ERROR_RECEIVER = -5000, /**< Unknown Receiver error */
     ARNETWORK_ERROR_RECEIVER_BUFFER_END, /**< Receiver buffer too small */
     ARNETWORK_ERROR_RECEIVER_BAD_FRAME, /**< Bad frame content on network */

@@ -25,8 +25,7 @@
 #include <libARSAL/ARSAL_Endianness.h>
 
 #include <libARNetwork/ARNETWORK_Error.h>
-#include <libARNetwork/ARNETWORK_Frame.h>
-#include "ARNETWORK_Buffer.h"
+#include <libARNetworkAL/ARNETWORKAL_Frame.h>
 #include "ARNETWORK_DataDescriptor.h"
 #include <libARNetwork/ARNETWORK_Manager.h>
 #include "ARNETWORK_Manager.h"
@@ -49,14 +48,6 @@
  *             private header:
  *
  *****************************************/
-
-/**
- *  @brief send the data
- *  @param senderPtr the pointer on the Sender
- *  @note only call by ARNETWORK_Sender_ThreadRun()
- *  @see ARNETWORK_Sender_ThreadRun()
- */
-void ARNETWORK_Sender_Send (ARNETWORK_Sender_t *senderPtr);
 
 /**
  *  @brief add data to the sender buffer and callback with sent status
@@ -99,7 +90,7 @@ void ARNETWORK_Sender_ManageIOBufferIsInRemovingStatus(ARNETWORK_IOBuffer_t *inp
  *
  *****************************************/
 
-ARNETWORK_Sender_t* ARNETWORK_Sender_New (unsigned int sendingBufferSize, unsigned int numberOfInputBuffer, ARNETWORK_IOBuffer_t **inputBufferPtrArr, unsigned int numberOfInternalInputBuffer, ARNETWORK_IOBuffer_t **internalInputBufferPtrArr, ARNETWORK_IOBuffer_t **inputBufferPtrMap)
+ARNETWORK_Sender_t* ARNETWORK_Sender_New (ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInputBuffer, ARNETWORK_IOBuffer_t **inputBufferPtrArr, unsigned int numberOfInternalInputBuffer, ARNETWORK_IOBuffer_t **internalInputBufferPtrArr, ARNETWORK_IOBuffer_t **inputBufferPtrMap)
 {
     /** -- Create a new sender -- */
 
@@ -112,21 +103,25 @@ ARNETWORK_Sender_t* ARNETWORK_Sender_New (unsigned int sendingBufferSize, unsign
 
     if (senderPtr)
     {
-        senderPtr->isAlive = 1;
-        senderPtr->numberOfInputBuff = numberOfInputBuffer;
-        senderPtr->inputBufferPtrArr = inputBufferPtrArr;
-        senderPtr->numberOfInternalInputBuff = numberOfInternalInputBuffer;
-        senderPtr->internalInputBufferPtrArr = internalInputBufferPtrArr;
-        senderPtr->inputBufferPtrMap = inputBufferPtrMap;
-        gettimeofday (&(senderPtr->pingStartTime), NULL);
-
-        /** Create the Sending buffer */
-        senderPtr->sendingBufferPtr = ARNETWORK_Buffer_New (sendingBufferSize, 1);
-
-        if (senderPtr->sendingBufferPtr == NULL)
+    	if(networkALManager != NULL)
+    	{
+            senderPtr->networkALManager = networkALManager;
+    	}
+        else
         {
-            error = ARNETWORK_ERROR_NEW_BUFFER;
+            error = ARNETWORK_ERROR_BAD_PARAMETER;
         }
+
+    	if(error == ARNETWORK_OK)
+    	{
+		    senderPtr->isAlive = 1;
+		    senderPtr->numberOfInputBuff = numberOfInputBuffer;
+		    senderPtr->inputBufferPtrArr = inputBufferPtrArr;
+		    senderPtr->numberOfInternalInputBuff = numberOfInternalInputBuffer;
+		    senderPtr->internalInputBufferPtrArr = internalInputBufferPtrArr;
+		    senderPtr->inputBufferPtrMap = inputBufferPtrMap;
+		    gettimeofday (&(senderPtr->pingStartTime), NULL);
+    	}
 
         /* Create the mutex/condition */
         if ( (error == ARNETWORK_OK) &&
@@ -134,11 +129,13 @@ ARNETWORK_Sender_t* ARNETWORK_Sender_New (unsigned int sendingBufferSize, unsign
         {
             error = ARNETWORK_ERROR_NEW_BUFFER;
         }
+
         if ( (error == ARNETWORK_OK) &&
              (ARSAL_Cond_Init (&(senderPtr->nextSendCond)) != 0))
         {
             error = ARNETWORK_ERROR_NEW_BUFFER;
         }
+
         if ( (error == ARNETWORK_OK) &&
              (ARSAL_Mutex_Init (&(senderPtr->pingMutex)) != 0))
         {
@@ -174,7 +171,6 @@ void ARNETWORK_Sender_Delete (ARNETWORK_Sender_t **senderPtrAddr)
             ARSAL_Cond_Destroy (&(senderPtr->nextSendCond));
             ARSAL_Mutex_Destroy (&(senderPtr->nextSendMutex));
             ARSAL_Mutex_Destroy (&(senderPtr->pingMutex));
-            ARNETWORK_Buffer_Delete (&(senderPtr->sendingBufferPtr));
 
             free (senderPtr);
             senderPtr = NULL;
@@ -185,7 +181,7 @@ void ARNETWORK_Sender_Delete (ARNETWORK_Sender_t **senderPtrAddr)
 
 void* ARNETWORK_Sender_ThreadRun (void* data)
 {
-    /** -- Manage the sending of the data on the sender' socket -- */
+    /** -- Manage the sending of the data on the sender' -- */
 
     /** local declarations */
     ARNETWORK_Sender_t *senderPtr = data;
@@ -202,7 +198,7 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
         for (inputBufferIndex = 0; inputBufferIndex < senderPtr->numberOfInputBuff && mustWait == 1; ++inputBufferIndex)
         {
             inputBufferPtrTemp = senderPtr->inputBufferPtrArr[inputBufferIndex];
-            if (inputBufferPtrTemp->dataType == ARNETWORK_FRAME_TYPE_DATA_LOW_LATENCY)
+            if (inputBufferPtrTemp->dataType == ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY)
             {
                 error = ARNETWORK_IOBuffer_Lock(inputBufferPtrTemp);
                 if ((error == ARNETWORK_OK) &&
@@ -258,10 +254,8 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
             }
         }
 
-        ARNETWORK_Sender_Send (senderPtr);
+        senderPtr->networkALManager->sendingCallback(senderPtr->networkALManager);
     }
-
-    ARSAL_Socket_Close (senderPtr->socket);
 
     return NULL;
 }
@@ -331,7 +325,7 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
 
                 switch (buffer->dataType)
                 {
-                case ARNETWORK_FRAME_TYPE_DATA_WITH_ACK:
+                case ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK:
                     /**
                      * reinitialize the input buffer parameters,
                      * save the sequence wait for the acknowledgement,
@@ -343,17 +337,17 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
                     buffer->retryCount = buffer->numberOfRetry;
                     break;
 
-                case ARNETWORK_FRAME_TYPE_DATA:
+                case ARNETWORKAL_FRAME_TYPE_DATA:
                     /** pop the data sent */
                     ARNETWORK_IOBuffer_PopData (buffer);
                     break;
 
-                case ARNETWORK_FRAME_TYPE_DATA_LOW_LATENCY:
+                case ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY:
                     /** pop the data sent */
                     ARNETWORK_IOBuffer_PopData (buffer);
                     break;
 
-                case ARNETWORK_FRAME_TYPE_ACK:
+                case ARNETWORKAL_FRAME_TYPE_ACK:
                     /** pop the acknowledgement sent */
                     ARNETWORK_IOBuffer_PopData (buffer);
                     break;
@@ -419,40 +413,6 @@ eARNETWORK_ERROR ARNETWORK_Sender_AckReceived (ARNETWORK_Sender_t *senderPtr, in
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_Sender_Connect (ARNETWORK_Sender_t *senderPtr, const char *addr, int port)
-{
-    /** -- Connect the socket in UDP to a port of an address -- */
-
-    /** local declarations */
-    struct sockaddr_in sendSin;
-    eARNETWORK_ERROR error = ARNETWORK_OK;
-    int connectError;
-
-    sendSin.sin_addr.s_addr = inet_addr (addr);
-    sendSin.sin_family = AF_INET;
-    sendSin.sin_port = htons (port);
-
-    senderPtr->socket = ARSAL_Socket_Create (AF_INET, SOCK_DGRAM, 0);
-
-    connectError = ARSAL_Socket_Connect (senderPtr->socket, (struct sockaddr*) &sendSin, sizeof (sendSin));
-
-    if (connectError != 0)
-    {
-        switch (errno)
-        {
-        case EACCES:
-            error = ARNETWORK_ERROR_SOCKET_PERMISSION_DENIED;
-            break;
-
-        default:
-            error = ARNETWORK_ERROR_SOCKET;
-            break;
-        }
-    }
-
-    return error;
-}
-
 eARNETWORK_ERROR ARNETWORK_Sender_Flush (ARNETWORK_Sender_t *senderPtr)
 {
     /** -- Flush all IoBuffer -- */
@@ -501,31 +461,12 @@ void ARNETWORK_Sender_Reset (ARNETWORK_Sender_t *senderPtr)
  *
  *****************************************/
 
-void ARNETWORK_Sender_Send (ARNETWORK_Sender_t *senderPtr)
-{
-    /**  -- send the data -- */
-
-    /** local declarations */
-    int numberOfByteToCopy = 0;
-
-    if (!ARNETWORK_Buffer_IsEmpty (senderPtr->sendingBufferPtr))
-    {
-        numberOfByteToCopy = senderPtr->sendingBufferPtr->frontPtr - senderPtr->sendingBufferPtr->startPtr;
-
-        ARSAL_Socket_Send (senderPtr->socket, senderPtr->sendingBufferPtr->startPtr, numberOfByteToCopy, 0);
-
-        senderPtr->sendingBufferPtr->frontPtr = senderPtr->sendingBufferPtr->startPtr;
-    }
-}
-
 eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, int seqNum)
 {
     /** -- add data to the sender buffer and callback with sent status -- */
 
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    uint32_t droneEndianInt32 = 0;
-    int sizeNeed = 0;
     ARNETWORK_DataDescriptor_t dataDescriptor;
 
     /** pop data descriptor*/
@@ -533,47 +474,20 @@ eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, AR
 
     if (error == ARNETWORK_OK)
     {
-        /** calculate the size needed; (header size of the frame + size of the data) */
-        sizeNeed = offsetof (ARNETWORK_Frame_t, dataPtr) + dataDescriptor.dataSize;
-
-        /** check the free size */
-        if (ARNETWORK_Buffer_GetFreeCellNumber (senderPtr->sendingBufferPtr) < sizeNeed)
-        {
-            error = ARNETWORK_ERROR_BUFFER_SIZE;
-        }
-    }
-
-    if (error == ARNETWORK_OK)
-    {
-        /** add type */
-        memcpy (senderPtr->sendingBufferPtr->frontPtr, &(inputBufferPtr->dataType), sizeof (uint8_t));
-        senderPtr->sendingBufferPtr->frontPtr += sizeof (uint8_t);
-
-        /** add id */
-        memcpy (senderPtr->sendingBufferPtr->frontPtr, &(inputBufferPtr->ID), sizeof (uint8_t));
-        senderPtr->sendingBufferPtr->frontPtr += sizeof (uint8_t);
-
-        /** add seq */
-        droneEndianInt32 =  htodl (seqNum);
-        memcpy (senderPtr->sendingBufferPtr->frontPtr, &(droneEndianInt32), sizeof (uint32_t));
-        senderPtr->sendingBufferPtr->frontPtr += sizeof (uint32_t);
-
-        /** add size */
-        droneEndianInt32 =  htodl (sizeNeed);
-        memcpy (senderPtr->sendingBufferPtr->frontPtr, &(droneEndianInt32), sizeof (uint32_t));
-        senderPtr->sendingBufferPtr->frontPtr += sizeof (uint32_t);
-
-        /** add data */
-        /** copy the data pointed by the data descriptor */
-        memcpy (senderPtr->sendingBufferPtr->frontPtr, dataDescriptor.dataPtr, dataDescriptor.dataSize);
-        /**increment the front of the Sending Buffer */
-        senderPtr->sendingBufferPtr->frontPtr += dataDescriptor.dataSize;
-
-        /** callback with sent status */
-        if (dataDescriptor.callback != NULL)
-        {
-            dataDescriptor.callback (inputBufferPtr->ID, dataDescriptor.dataPtr, dataDescriptor.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_SENT);
-        }
+    	ARNETWORKAL_Frame_t frame = { 0 };
+    	frame.type = inputBufferPtr->dataType;
+    	frame.id = inputBufferPtr->ID;
+    	frame.seq = seqNum;
+    	frame.size = offsetof (ARNETWORKAL_Frame_t, dataPtr) + dataDescriptor.dataSize;
+    	frame.dataPtr = dataDescriptor.dataPtr;
+    	if(senderPtr->networkALManager->pushNextFrameCallback(senderPtr->networkALManager, &frame) == ARNETWORKAL_MANAGER_CALLBACK_RETURN_DEFAULT)
+    	{
+			/** callback with sent status */
+			if (dataDescriptor.callback != NULL)
+			{
+				dataDescriptor.callback (inputBufferPtr->ID, dataDescriptor.dataPtr, dataDescriptor.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_SENT);
+			}
+    	}
     }
 
     return error;

@@ -77,12 +77,6 @@ char* ARNETWORK_Error_ToString (eARNETWORK_ERROR error)
     case ARNETWORK_ERROR_IOBUFFER_BAD_ACK:
         return "Bad sequence number for the acknowledge";
         break;
-    case ARNETWORK_ERROR_SOCKET:
-        return "Unknown socket error";
-        break;
-    case ARNETWORK_ERROR_SOCKET_PERMISSION_DENIED:
-        return "Permission denied on a socket";
-        break;
     case ARNETWORK_ERROR_RECEIVER:
         return "Unknown Receiver error";
         break;

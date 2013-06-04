@@ -17,6 +17,7 @@
 #include <libARSAL/ARSAL_Thread.h>
 
 #include <libARNetwork/ARNETWORK_Manager.h>
+#include <libARNetworkAL/ARNETWORKAL_Manager.h>
 
 #include <unistd.h>
 
@@ -96,8 +97,8 @@ void fixTerminal (int sig)
 
 int main(int argc, char *argv[])
 {
-    ARNETWORK_Manager_t* pManager1= NULL;
-    
+    ARNETWORK_Manager_t* pManager1 = NULL;
+    ARNETWORKAL_Manager_t *pOSSecificManager1 = NULL;
     char netType = 0;
     
     char cmdType = 0;
@@ -113,12 +114,13 @@ int main(int argc, char *argv[])
     int ii = 0;
     
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    
+    eARNETWORKAL_ERROR specificError = ARNETWORKAL_OK;
+    eARNETWORKAL_ERROR connectError = ARNETWORKAL_OK;
+
     char IpAddress[16];
     int sendPort = 0;
     int recvPort = 0;
     int scanfReturn = 0;
-    int connectError = -1;
     
     int id_ioBuff_char;
     int id_ioBuff_intAck;
@@ -145,7 +147,7 @@ int main(int argc, char *argv[])
     /** input ID_CHAR_DATA char */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL1[0]) );
     paramNetworkL1[0].ID = ID_CHAR_DATA;
-    paramNetworkL1[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    paramNetworkL1[0].dataType = ARNETWORKAL_FRAME_TYPE_DATA;
     paramNetworkL1[0].sendingWaitTimeMs = 3;
     paramNetworkL1[0].numberOfCell = 1;
     paramNetworkL1[0].dataCopyMaxSize = sizeof(char);
@@ -154,7 +156,7 @@ int main(int argc, char *argv[])
     /** input ID_INT_DATA_WITH_ACK int */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL1[1]) );
     paramNetworkL1[1].ID = ID_INT_DATA_WITH_ACK;
-    paramNetworkL1[1].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    paramNetworkL1[1].dataType = ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK;
     paramNetworkL1[1].sendingWaitTimeMs = 2;
     paramNetworkL1[1].ackTimeoutMs = 10;
     paramNetworkL1[1].numberOfRetry = 5;
@@ -164,7 +166,7 @@ int main(int argc, char *argv[])
     /** input ID_DEPORT_DATA_ACK  */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL1[2]) );
     paramNetworkL1[2].ID = ID_DEPORT_DATA_ACK;
-    paramNetworkL1[2].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    paramNetworkL1[2].dataType = ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK;
     paramNetworkL1[2].sendingWaitTimeMs = 2;
     paramNetworkL1[2].ackTimeoutMs = 10;
     paramNetworkL1[2].numberOfRetry = 5;
@@ -173,14 +175,14 @@ int main(int argc, char *argv[])
     /** input ID_DEPORT_DATA */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL1[3]) );
     paramNetworkL1[3].ID = ID_DEPORT_DATA;
-    paramNetworkL1[3].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    paramNetworkL1[3].dataType = ARNETWORKAL_FRAME_TYPE_DATA;
     paramNetworkL1[3].sendingWaitTimeMs = 2;
     paramNetworkL1[3].numberOfCell = 5;
     
     /** input ID_DATA_LOW_LATENCY char */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL1[4]) );
     paramNetworkL1[4].ID = ID_DATA_LOW_LATENCY;
-    paramNetworkL1[4].dataType = ARNETWORK_FRAME_TYPE_DATA_LOW_LATENCY;
+    paramNetworkL1[4].dataType = ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY;
     paramNetworkL1[4].sendingWaitTimeMs = 100;
     paramNetworkL1[4].numberOfCell = 1;
     paramNetworkL1[4].dataCopyMaxSize = sizeof(int);
@@ -189,7 +191,7 @@ int main(int argc, char *argv[])
     /**  ID_CHAR_DATA_2 int */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL2[0]) );
     paramNetworkL2[0].ID = ID_CHAR_DATA_2;
-    paramNetworkL2[0].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    paramNetworkL2[0].dataType = ARNETWORKAL_FRAME_TYPE_DATA;
     paramNetworkL2[0].sendingWaitTimeMs = 3;
     paramNetworkL2[0].numberOfCell = 1;
     paramNetworkL2[0].dataCopyMaxSize = sizeof(char);
@@ -198,7 +200,7 @@ int main(int argc, char *argv[])
     /**  ID_INT_DATA_WITH_ACK_2 char */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL2[1]) );
     paramNetworkL2[1].ID = ID_INT_DATA_WITH_ACK_2;
-    paramNetworkL2[1].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    paramNetworkL2[1].dataType = ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK;
     paramNetworkL2[1].sendingWaitTimeMs = 2;
     paramNetworkL2[1].ackTimeoutMs = 10;
     paramNetworkL2[1].numberOfRetry = -1 /*5*/;
@@ -209,7 +211,7 @@ int main(int argc, char *argv[])
     /** input ID_DEPORT_DATA_ACK_2  */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL2[2]) );
     paramNetworkL2[2].ID = ID_DEPORT_DATA_ACK_2;
-    paramNetworkL2[2].dataType = ARNETWORK_FRAME_TYPE_DATA_WITH_ACK;
+    paramNetworkL2[2].dataType = ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK;
     paramNetworkL2[2].sendingWaitTimeMs = 2;
     paramNetworkL2[2].ackTimeoutMs = 10;
     paramNetworkL2[2].numberOfRetry = -1 /*5*/;
@@ -218,11 +220,19 @@ int main(int argc, char *argv[])
     /** input ID_DEPORT_DATA_2 */
     ARNETWORK_IOBufferParam_DefaultInit( &(paramNetworkL2[3]) );
     paramNetworkL2[3].ID = ID_DEPORT_DATA_2;
-    paramNetworkL2[3].dataType = ARNETWORK_FRAME_TYPE_DATA;
+    paramNetworkL2[3].dataType = ARNETWORKAL_FRAME_TYPE_DATA;
     paramNetworkL2[3].sendingWaitTimeMs = 2;
     paramNetworkL2[3].numberOfCell = 5;   
                 
     printf("\n ~~ This soft sends data and repeater ack ~~ \n \n");
+    
+    /** Initialize the OS Specific Network */
+    pOSSecificManager1 = ARNETWORKAL_Manager_New(&specificError);
+    if(specificError != ARNETWORKAL_OK)
+    {
+        printf("Error during OS specific creation : %d\n", specificError);
+        return ARNETWORK_ERROR;
+    }
     
     while(netType == 0)
     {
@@ -232,8 +242,6 @@ int main(int argc, char *argv[])
         switch(netType)
         {
             case '1':
-                pManager1 = ARNETWORK_Manager_New(RECV_BUFF_SIZE, SEND_BUFF_SIZE, NB_OF_INPUT_L1, paramNetworkL1, NB_OF_INPUT_L2,paramNetworkL2, &error);
-                
                 id_ioBuff_char = ID_CHAR_DATA;
                 id_ioBuff_intAck = ID_INT_DATA_WITH_ACK;
                 id_ioBuff_deportDataAck = ID_DEPORT_DATA_ACK;
@@ -249,8 +257,6 @@ int main(int argc, char *argv[])
                 break;
             
             case '2':
-                pManager1 = ARNETWORK_Manager_New(RECV_BUFF_SIZE, SEND_BUFF_SIZE, NB_OF_INPUT_L2, paramNetworkL2, NB_OF_INPUT_L1 ,paramNetworkL1, &error);
-                
                 id_ioBuff_char = ID_CHAR_DATA_2;
                 id_ioBuff_intAck = ID_INT_DATA_WITH_ACK_2;
                 id_ioBuff_deportDataAck = ID_DEPORT_DATA_ACK_2;
@@ -271,6 +277,31 @@ int main(int argc, char *argv[])
         }
     }    
     
+    do
+    {
+        printf("repeater IP address ? : ");
+        scanfReturn = scanf("%s",IpAddress);
+        
+        connectError = ARNETWORKAL_Manager_InitWiFiNetwork(pOSSecificManager1, IpAddress, sendPort, recvPort, RECV_TIMEOUT_MS);
+        printf("    - connect error: %d \n", connectError);
+        printf("\n");
+    }
+    while((scanfReturn != 1) || (connectError != ARNETWORKAL_OK));
+
+    switch(netType)
+    {
+        case 1 :
+            pManager1 = ARNETWORK_Manager_New(pOSSecificManager1, NB_OF_INPUT_L1, paramNetworkL1, NB_OF_INPUT_L2,paramNetworkL2, &error);
+            break;
+
+        case 2 :
+            pManager1 = ARNETWORK_Manager_New(pOSSecificManager1, NB_OF_INPUT_L2, paramNetworkL2, NB_OF_INPUT_L1 ,paramNetworkL1, &error);
+            break;
+            
+        default:
+            break;
+    }
+    
     if(error == ARNETWORK_OK)
     {
         printThread1.pManager = pManager1;
@@ -279,18 +310,6 @@ int main(int argc, char *argv[])
     {
         printf("manager error ");
         printThread1.pManager = NULL;
-    }
-    
-    while(scanfReturn != 1 || connectError != 0)
-    {
-        printf("repeater IP address ? : ");
-        scanfReturn = scanf("%s",IpAddress);
-        
-        connectError = ARNETWORK_Manager_SocketsInit( pManager1, IpAddress, sendPort,
-                                                    recvPort, RECV_TIMEOUT_MS );
-        
-        printf("    - connect error: %d \n", connectError );            
-        printf("\n");
     }
     
     while ( ((chData = getchar()) != '\n') && chData != EOF)
@@ -422,6 +441,8 @@ int main(int argc, char *argv[])
     ARSAL_Thread_Join(thread_send1, NULL);
     ARSAL_Thread_Join(thread_recv1, NULL);
     ARSAL_Thread_Join(thread_printBuff, NULL);
+
+    ARNETWORKAL_Manager_CloseWiFiNetwork(pOSSecificManager1);
 
     /** delete */
     ARSAL_Thread_Destroy(&thread_send1);
