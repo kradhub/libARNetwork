@@ -81,25 +81,25 @@ ARNETWORK_Receiver_t* ARNETWORK_Receiver_New (ARNETWORKAL_Manager_t *networkALMa
 
     if (receiverPtr)
     {
-    	if(networkALManager != NULL)
-    	{
+        if(networkALManager != NULL)
+        {
             receiverPtr->networkALManager = networkALManager;
         }
         else
         {
             error = ARNETWORK_ERROR_BAD_PARAMETER;
-    	}
+        }
 
-    	if(error == ARNETWORK_OK)
-    	{
-			receiverPtr->isAlive = 1;
-			receiverPtr->senderPtr = NULL;
+        if(error == ARNETWORK_OK)
+        {
+            receiverPtr->isAlive = 1;
+            receiverPtr->senderPtr = NULL;
 
-			receiverPtr->numberOfOutputBuff = numberOfOutputBuff;
-			receiverPtr->outputBufferPtrArr = outputBufferPtrArr;
+            receiverPtr->numberOfOutputBuff = numberOfOutputBuff;
+            receiverPtr->outputBufferPtrArr = outputBufferPtrArr;
 
-			receiverPtr->outputBufferPtrMap = outputBufferPtrMap;
-    	}
+            receiverPtr->outputBufferPtrMap = outputBufferPtrMap;
+        }
 
         /** delete the receiver if an error occurred */
         if (error != ARNETWORK_OK)
@@ -161,17 +161,21 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                     {
                     case ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PING:
                         /* Ping, send the corresponding pong */
+                    {
                         struct timeval dataTime;
                         memcpy (&dataTime, frame.dataPtr, sizeof (struct timeval));
                         ARNETWORK_Sender_SendPong (receiverPtr->senderPtr, &dataTime);
-                        break;
+                    }
+                    break;
                     case ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PONG:
                         /* Pong, tells the sender that we got a response */
+                    {
                         struct timeval dataTime;
                         memcpy (&dataTime, frame.dataPtr, sizeof (struct timeval));
                         gettimeofday (&now, NULL);
                         ARNETWORK_Sender_GotPingAck (receiverPtr->senderPtr, &dataTime, &now);
-                        break;
+                    }
+                    break;
                     default:
                         /* Do nothing as we don't know how to handle it */
                         break;
