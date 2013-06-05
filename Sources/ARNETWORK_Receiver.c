@@ -161,12 +161,16 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                     {
                     case ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PING:
                         /* Ping, send the corresponding pong */
-                        ARNETWORK_Sender_SendPong (receiverPtr->senderPtr, (struct timeval *)frame.dataPtr);
+                        struct timeval dataTime;
+                        memcpy (&dataTime, frame.dataPtr, sizeof (struct timeval));
+                        ARNETWORK_Sender_SendPong (receiverPtr->senderPtr, &dataTime);
                         break;
                     case ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PONG:
                         /* Pong, tells the sender that we got a response */
+                        struct timeval dataTime;
+                        memcpy (&dataTime, frame.dataPtr, sizeof (struct timeval));
                         gettimeofday (&now, NULL);
-                        ARNETWORK_Sender_GotPingAck (receiverPtr->senderPtr, (struct timeval *)frame.dataPtr, &now);
+                        ARNETWORK_Sender_GotPingAck (receiverPtr->senderPtr, &dataTime, &now);
                         break;
                     default:
                         /* Do nothing as we don't know how to handle it */
