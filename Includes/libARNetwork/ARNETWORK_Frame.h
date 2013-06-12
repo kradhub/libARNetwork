@@ -21,7 +21,7 @@ typedef enum
     ARNETWORK_FRAME_TYPE_DATA_LOW_LATENCY, /**< Low latency data type. Should only be used when needed */
     ARNETWORK_FRAME_TYPE_DATA_WITH_ACK, /**< Data that should have an acknowledge type. This type can have a long latency */
     ARNETWORK_FRAME_TYPE_MAX, /**< Unused, iterator maximum value */
-}eARNETWORK_FRAME_TYPE;
+} eARNETWORK_FRAME_TYPE;
 
 /**
  *  @brief frame send by the ARNETWORK_Manager
