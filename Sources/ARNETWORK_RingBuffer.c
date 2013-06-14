@@ -196,7 +196,7 @@ eARNETWORK_ERROR ARNETWORK_RingBuffer_Front(ARNETWORK_RingBuffer_t *ringBufferPt
     }
     else
     {
-        error = ARNETWORK_ERROR_BUFFER_SIZE;
+        error = ARNETWORK_ERROR_BUFFER_EMPTY;
     }
 
     ARSAL_Mutex_Unlock(&(ringBufferPtr->mutex));
