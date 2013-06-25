@@ -83,6 +83,6 @@ void ARNETWORK_Receiver_Stop(ARNETWORK_Receiver_t *receiverPtr);
  *  @return eARNETWORK_ERROR
  *  @see ARNETWORK_Receiver_New()
  */
-eARNETWORK_ERROR ARNETWORK_Receiver_ReturnACK(ARNETWORK_Receiver_t *receiverPtr, int ID, uint32_t seq);
+eARNETWORK_ERROR ARNETWORK_Receiver_ReturnACK(ARNETWORK_Receiver_t *receiverPtr, int identifer, uint8_t seq);
 
 #endif /** _ARNETWORK_RECEIVER_PRIVATE_H_ */

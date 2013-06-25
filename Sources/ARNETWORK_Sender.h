@@ -122,7 +122,7 @@ void ARNETWORK_Sender_SignalNewData (ARNETWORK_Sender_t *senderPtr);
  *  @param[in] seqNumber sequence number of the acknowledgment
  *  @return error equal to ARNETWORK_OK if the data has been correctly acknowledged otherwise equal to 1.
  */
-eARNETWORK_ERROR ARNETWORK_Sender_AckReceived (ARNETWORK_Sender_t *senderPtr, int ID, int seqNumber);
+eARNETWORK_ERROR ARNETWORK_Sender_AckReceived (ARNETWORK_Sender_t *senderPtr, int identifier, uint8_t seqNumber);
 
 /**
  *  @brief flush all IoBuffers of the Sender

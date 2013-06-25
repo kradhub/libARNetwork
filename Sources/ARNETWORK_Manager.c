@@ -171,7 +171,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New(ARNETWORKAL_Manager_t *networkALManag
     if (error == ARNETWORK_OK)
     {
         /** Allocate the output buffer map  storing the IOBuffer by their identifier */
-        managerPtr->outputBufferPtrMap = calloc (ARNETWORK_MANAGER_IOBUFFER_MAP_SIZE, sizeof (ARNETWORK_IOBuffer_t*));
+        managerPtr->outputBufferPtrMap = calloc (managerPtr->networkALManager->maxIds, sizeof (ARNETWORK_IOBuffer_t*));
         if (managerPtr->outputBufferPtrMap == NULL)
         {
             error = ARNETWORK_ERROR_ALLOC;
@@ -181,7 +181,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New(ARNETWORKAL_Manager_t *networkALManag
     if (error == ARNETWORK_OK)
     {
         /** Allocate the input buffer map  storing the IOBuffer by their identifier */
-        managerPtr->inputBufferPtrMap = calloc (ARNETWORK_MANAGER_IOBUFFER_MAP_SIZE, sizeof (ARNETWORK_IOBuffer_t*));
+        managerPtr->inputBufferPtrMap = calloc (managerPtr->networkALManager->maxIds, sizeof (ARNETWORK_IOBuffer_t*));
         if (managerPtr->inputBufferPtrMap == NULL)
         {
             error = ARNETWORK_ERROR_ALLOC;
@@ -732,8 +732,8 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
     {
         /** check parameters */
         /** -   all output buffer must have the ability to copy */
-        /** -   id must be within range [ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX; ARNETWORK_MANAGER_ACK_ID_OFFSET[ */
-        if ((outputParamArr[outputIndex].ID >= ARNETWORK_MANAGER_ACK_ID_OFFSET) ||
+        /** -   id must be within range [ackIdOffset;ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX] */
+        if ((outputParamArr[outputIndex].ID >= (managerPtr->networkALManager->maxIds / 2)) ||
             (outputParamArr[outputIndex].ID <  ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX) ||
             (outputParamArr[outputIndex].dataCopyMaxSize == 0))
         {
@@ -754,7 +754,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
         {
             /** Create the buffer of acknowledgement associated with the output buffer */
 
-            paramNewACK.ID = ARNETWORK_Manager_IDOutputToIDAck (outputParamArr[outputIndex].ID);
+            paramNewACK.ID = ARNETWORK_Manager_IDOutputToIDAck (managerPtr->networkALManager, outputParamArr[outputIndex].ID);
             indexAckOutput = managerPtr->numberOfOutputWithoutAck + outputIndex;
 
             managerPtr->outputBufferPtrArr[indexAckOutput] = ARNETWORK_IOBuffer_New (&paramNewACK, 1);
@@ -782,7 +782,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
         /** check parameters: */
         /** -   id is smaller than the id acknowledge offset */
         /** -   dataCopyMaxSize isn't too big */
-        if ((inputParamArr[inputIndex].ID >= ARNETWORK_MANAGER_ACK_ID_OFFSET) ||
+        if ((inputParamArr[inputIndex].ID >= (managerPtr->networkALManager->maxIds / 2)) ||
             (inputParamArr[inputIndex].dataCopyMaxSize >= (sendBufferSize - offsetof (ARNETWORKAL_Frame_t, dataPtr))))
         {
             error = ARNETWORK_ERROR_BAD_PARAMETER;

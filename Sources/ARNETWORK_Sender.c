@@ -58,7 +58,7 @@
  *  @note only call by ARNETWORK_Sender_ThreadRun()
  *  @see ARNETWORK_Sender_ThreadRun()
  */
-eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, int seqNum);
+eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, uint8_t seqNum);
 
 /**
  *  @brief call the Callback this timeout status
@@ -245,7 +245,7 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
 
         ARSAL_Mutex_Unlock (&(senderPtr->pingMutex));
 
-        for (inputBufferIndex = 0; inputBufferIndex < ARNETWORK_MANAGER_IOBUFFER_MAP_SIZE; inputBufferIndex++)
+        for (inputBufferIndex = 0; inputBufferIndex < senderPtr->networkALManager->maxIds ; inputBufferIndex++)
         {
             inputBufferPtrTemp = senderPtr->inputBufferPtrMap[inputBufferIndex];
             if (inputBufferPtrTemp != NULL)
@@ -332,7 +332,7 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
                      * and pass on waiting acknowledgement.
                      */
                     buffer->isWaitAck = 1;
-                    buffer->seqWaitAck = senderPtr->seq;
+                    buffer->seqWaitAck = (int)senderPtr->seq;
                     buffer->ackWaitTimeCount = buffer->ackTimeoutMs;
                     buffer->retryCount = buffer->numberOfRetry;
                     break;
@@ -378,7 +378,7 @@ void ARNETWORK_Sender_SignalNewData (ARNETWORK_Sender_t *senderPtr)
     ARSAL_Cond_Signal (&(senderPtr->nextSendCond));
 }
 
-eARNETWORK_ERROR ARNETWORK_Sender_AckReceived (ARNETWORK_Sender_t *senderPtr, int ID, int seqNumber)
+eARNETWORK_ERROR ARNETWORK_Sender_AckReceived (ARNETWORK_Sender_t *senderPtr, int identifier, uint8_t seqNumber)
 {
     /** -- Receive an acknowledgment fo a data -- */
 
@@ -386,7 +386,7 @@ eARNETWORK_ERROR ARNETWORK_Sender_AckReceived (ARNETWORK_Sender_t *senderPtr, in
     ARNETWORK_IOBuffer_t *inputBufferPtr = NULL;
     eARNETWORK_ERROR error = ARNETWORK_OK;
 
-    inputBufferPtr = senderPtr->inputBufferPtrMap[ID];
+    inputBufferPtr = senderPtr->inputBufferPtrMap[identifier];
 
     if (inputBufferPtr != NULL)
     {
@@ -461,7 +461,7 @@ void ARNETWORK_Sender_Reset (ARNETWORK_Sender_t *senderPtr)
  *
  *****************************************/
 
-eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, int seqNum)
+eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, uint8_t seqNum)
 {
     /** -- add data to the sender buffer and callback with sent status -- */
 

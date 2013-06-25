@@ -87,7 +87,7 @@ static inline int ARNETWORK_IOBuffer_CanCopyData(ARNETWORK_IOBuffer_t *IOBufferP
  *  @param[in] seqNumber sequence number of the acknowledgement
  *  @return error equal to ARNETWORK_OK if the data has been correctly acknowledged otherwise equal to 1
  */
-eARNETWORK_ERROR ARNETWORK_IOBuffer_AckReceived( ARNETWORK_IOBuffer_t *IOBufferPtr, int seqNumber );
+eARNETWORK_ERROR ARNETWORK_IOBuffer_AckReceived( ARNETWORK_IOBuffer_t *IOBufferPtr, uint8_t seqNumber );
 
 /**
  *  @brief Get if the IOBuffer is waiting an acknowledgement.

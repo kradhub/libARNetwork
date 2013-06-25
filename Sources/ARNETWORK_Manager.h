@@ -14,9 +14,6 @@
 #include <libARNetwork/ARNETWORK_Manager.h>
 #include <libARNetworkAL/ARNETWORKAL_Manager.h>
 
-#define ARNETWORK_MANAGER_ACK_ID_OFFSET 128 /**< offset to add to the ID number of the IOBuffer to get the ID of its acknowledgement IOBuffer */
-#define ARNETWORK_MANAGER_IOBUFFER_MAP_SIZE 256 /**< size of the map storing the IOBuffers */
-
 typedef enum {
     ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PING = 0, /**< Ping buffer id - ping requests */
     ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PONG, /**< Pong buffer id - ping reply */
@@ -28,9 +25,9 @@ typedef enum {
  *  @param[in] ID identifier of the output buffer waiting an acknowledgment.
  *  @return identifier of the output buffer storing the acknowledgment.
  */
-static inline int ARNETWORK_Manager_IDOutputToIDAck (int ID)
+static inline int ARNETWORK_Manager_IDOutputToIDAck (ARNETWORKAL_Manager_t *alManager, int identifier)
 {
-    return ID + ARNETWORK_MANAGER_ACK_ID_OFFSET;
+    return identifier + (alManager->maxIds / 2);
 }
 
 /**
@@ -38,9 +35,9 @@ static inline int ARNETWORK_Manager_IDOutputToIDAck (int ID)
  *  @param[in] ID identifier of the output buffer storing the acknowledgment.
  *  @return identifier of the output buffer waiting an acknowledgment.
  */
-static inline int ARNETWORK_Manager_IDAckToIDInput (int ID)
+static inline int ARNETWORK_Manager_IDAckToIDInput (ARNETWORKAL_Manager_t *alManager, int identifier)
 {
-    return ID - ARNETWORK_MANAGER_ACK_ID_OFFSET;
+    return identifier - (alManager->maxIds / 2);
 }
 
 /**

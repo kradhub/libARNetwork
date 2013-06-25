@@ -142,7 +142,7 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
     ARNETWORK_IOBuffer_t* outBufferPtrTemp = NULL;
     eARNETWORK_ERROR error = ARNETWORK_OK;
     eARNETWORKAL_MANAGER_CALLBACK_RETURN result = ARNETWORKAL_MANAGER_CALLBACK_RETURN_DEFAULT;
-    int ackSeqNumData = 0;
+    uint8_t ackSeqNumData = 0;
     struct timeval now;
 
     while (receiverPtr->isAlive)
@@ -189,10 +189,10 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                     ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORKAL_FRAME_TYPE_ACK | SEQ:%d | ID:%d", frame.seq, frame.id);
 
                     /** get the acknowledge sequence number from the data */
-                    memcpy (&ackSeqNumData, (uint32_t*)frame.dataPtr, sizeof(uint32_t));
+                    memcpy (&ackSeqNumData, (uint8_t*)frame.dataPtr, sizeof(uint8_t));
 
                     /** transmit the acknowledgement to the sender */
-                    error = ARNETWORK_Sender_AckReceived (receiverPtr->senderPtr, ARNETWORK_Manager_IDAckToIDInput (frame.id), ackSeqNumData);
+                    error = ARNETWORK_Sender_AckReceived (receiverPtr->senderPtr, ARNETWORK_Manager_IDAckToIDInput (receiverPtr->networkALManager, frame.id), ackSeqNumData);
                     if (error != ARNETWORK_OK)
                     {
                         switch (error)
@@ -282,7 +282,7 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                                     error = ARNETWORK_Receiver_CopyDataRecv( receiverPtr, outBufferPtrTemp, &frame);
                                     if( error == ARNETWORK_OK)
                                     {
-                                        outBufferPtrTemp->seqWaitAck = frame.seq;
+                                        outBufferPtrTemp->seqWaitAck = (int)frame.seq;
                                     }
                                     else
                                     {
@@ -324,13 +324,12 @@ void ARNETWORK_Receiver_Stop (ARNETWORK_Receiver_t *receiverPtr)
     receiverPtr->isAlive = 0;
 }
 
-eARNETWORK_ERROR ARNETWORK_Receiver_ReturnACK (ARNETWORK_Receiver_t *receiverPtr, int id, uint32_t seq)
+eARNETWORK_ERROR ARNETWORK_Receiver_ReturnACK (ARNETWORK_Receiver_t *receiverPtr, int id, uint8_t seq)
 {
     /** -- return an acknowledgement -- */
-
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    ARNETWORK_IOBuffer_t* ACKIOBufferPtr = receiverPtr->outputBufferPtrMap[ARNETWORK_Manager_IDOutputToIDAck (id)];
+    ARNETWORK_IOBuffer_t* ACKIOBufferPtr = receiverPtr->outputBufferPtrMap[ARNETWORK_Manager_IDOutputToIDAck (receiverPtr->networkALManager, id)];
 
     if (ACKIOBufferPtr != NULL)
     {
