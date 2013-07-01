@@ -1,5 +1,7 @@
 package com.parrot.arsdk.arnetwork;
 
+import com.parrot.arsdk.arnetworkal.ARNETWORKAL_FRAME_TYPE_ENUM;
+
 /**
  *  Used to set the parameters of a new ioBuffer
  **/
@@ -29,7 +31,7 @@ public class ARNetworkIOBufferParam
      *  @param dataType Type of the data stored in the buffer
      *  @param numberOfCell Maximum number of data can be stored in the buffer
      **/
-    public ARNetworkIOBufferParam( int ID, ARNETWORK_FRAME_TYPE_ENUM dataType, int numberOfCell )
+    public ARNetworkIOBufferParam( int ID, ARNETWORKAL_FRAME_TYPE_ENUM dataType, int numberOfCell )
         {
             /** allocate a C  IOBufferParam*/
             m_IOBufferParamPtr = nativeNew();
