@@ -103,25 +103,25 @@ ARNETWORK_Sender_t* ARNETWORK_Sender_New (ARNETWORKAL_Manager_t *networkALManage
 
     if (senderPtr)
     {
-    	if(networkALManager != NULL)
-    	{
+        if(networkALManager != NULL)
+        {
             senderPtr->networkALManager = networkALManager;
-    	}
+        }
         else
         {
             error = ARNETWORK_ERROR_BAD_PARAMETER;
         }
 
-    	if(error == ARNETWORK_OK)
-    	{
-		    senderPtr->isAlive = 1;
-		    senderPtr->numberOfInputBuff = numberOfInputBuffer;
-		    senderPtr->inputBufferPtrArr = inputBufferPtrArr;
-		    senderPtr->numberOfInternalInputBuff = numberOfInternalInputBuffer;
-		    senderPtr->internalInputBufferPtrArr = internalInputBufferPtrArr;
-		    senderPtr->inputBufferPtrMap = inputBufferPtrMap;
-		    gettimeofday (&(senderPtr->pingStartTime), NULL);
-    	}
+        if(error == ARNETWORK_OK)
+        {
+            senderPtr->isAlive = 1;
+            senderPtr->numberOfInputBuff = numberOfInputBuffer;
+            senderPtr->inputBufferPtrArr = inputBufferPtrArr;
+            senderPtr->numberOfInternalInputBuff = numberOfInternalInputBuffer;
+            senderPtr->internalInputBufferPtrArr = internalInputBufferPtrArr;
+            senderPtr->inputBufferPtrMap = inputBufferPtrMap;
+            gettimeofday (&(senderPtr->pingStartTime), NULL);
+        }
 
         /* Create the mutex/condition */
         if ( (error == ARNETWORK_OK) &&
@@ -474,20 +474,20 @@ eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, AR
 
     if (error == ARNETWORK_OK)
     {
-    	ARNETWORKAL_Frame_t frame = { 0 };
-    	frame.type = inputBufferPtr->dataType;
-    	frame.id = inputBufferPtr->ID;
-    	frame.seq = seqNum;
-    	frame.size = offsetof (ARNETWORKAL_Frame_t, dataPtr) + dataDescriptor.dataSize;
-    	frame.dataPtr = dataDescriptor.dataPtr;
-    	if(senderPtr->networkALManager->pushNextFrameCallback(senderPtr->networkALManager, &frame) == ARNETWORKAL_MANAGER_CALLBACK_RETURN_DEFAULT)
-    	{
-			/** callback with sent status */
-			if (dataDescriptor.callback != NULL)
-			{
-				dataDescriptor.callback (inputBufferPtr->ID, dataDescriptor.dataPtr, dataDescriptor.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_SENT);
-			}
-    	}
+        ARNETWORKAL_Frame_t frame = { 0 };
+        frame.type = inputBufferPtr->dataType;
+        frame.id = inputBufferPtr->ID;
+        frame.seq = seqNum;
+        frame.size = offsetof (ARNETWORKAL_Frame_t, dataPtr) + dataDescriptor.dataSize;
+        frame.dataPtr = dataDescriptor.dataPtr;
+        if(senderPtr->networkALManager->pushNextFrameCallback(senderPtr->networkALManager, &frame) == ARNETWORKAL_MANAGER_CALLBACK_RETURN_DEFAULT)
+        {
+            /** callback with sent status */
+            if (dataDescriptor.callback != NULL)
+            {
+                dataDescriptor.callback (inputBufferPtr->ID, dataDescriptor.dataPtr, dataDescriptor.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_SENT);
+            }
+        }
     }
 
     return error;
