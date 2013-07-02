@@ -188,8 +188,8 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                 case ARNETWORKAL_FRAME_TYPE_ACK:
 
                     /** get the acknowledge sequence number from the data */
-                    memcpy (&ackSeqNumData, (uint8_t*)frame.dataPtr, sizeof(uint8_t));
-                        ARSAL_PRINT (ARSAL_PRINT_WARNING, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORKAL_FRAME_TYPE_ACK | SEQ:%d | ID:%d | seq ack : %d", frame.seq, frame.id, ackSeqNumData);
+                    memcpy (&ackSeqNumData, frame.dataPtr, sizeof(uint8_t));
+                    ARSAL_PRINT (ARSAL_PRINT_WARNING, ARNETWORK_RECEIVER_TAG, "- TYPE: ARNETWORKAL_FRAME_TYPE_ACK | SEQ:%d | ID:%d | SEQ ACK : %d", frame.seq, frame.id, ackSeqNumData);
                     /** transmit the acknowledgement to the sender */
                     error = ARNETWORK_Sender_AckReceived (receiverPtr->senderPtr, ARNETWORK_Manager_IDAckToIDInput (receiverPtr->networkALManager, frame.id), ackSeqNumData);
                     if (error != ARNETWORK_OK)
@@ -197,7 +197,7 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                         switch (error)
                         {
                         case ARNETWORK_ERROR_IOBUFFER_BAD_ACK:
-                            ARSAL_PRINT (ARSAL_PRINT_WARNING, ARNETWORK_RECEIVER_TAG, "Bad acknowledge, error: %s", ARNETWORK_Error_ToString (error));
+                            ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "Bad acknowledge, error: %s", ARNETWORK_Error_ToString (error));
                             break;
 
                         default:
