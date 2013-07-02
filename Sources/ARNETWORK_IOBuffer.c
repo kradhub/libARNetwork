@@ -110,7 +110,8 @@ ARNETWORK_IOBuffer_t* ARNETWORK_IOBuffer_New(const ARNETWORK_IOBufferParam_t *pa
             }
 
             IOBufferPtr->isWaitAck = 0;
-            IOBufferPtr->seqWaitAck = 0;
+            IOBufferPtr->seqWaitAck = 255;
+            IOBufferPtr->seq = 0;
             IOBufferPtr->waitTimeCount = paramPtr->sendingWaitTimeMs;
             IOBufferPtr->ackWaitTimeCount = paramPtr->ackTimeoutMs;
             IOBufferPtr->retryCount = 0;
@@ -355,7 +356,8 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_Flush(ARNETWORK_IOBuffer_t *IOBufferPtr)
 
     /** state reset */
     IOBufferPtr->isWaitAck = 0;
-    IOBufferPtr->seqWaitAck = 0;
+    IOBufferPtr->seqWaitAck = 255;
+    IOBufferPtr->seq = 0;
     IOBufferPtr->waitTimeCount = IOBufferPtr->sendingWaitTimeMs;
     IOBufferPtr->ackWaitTimeCount = IOBufferPtr->ackTimeoutMs;
     IOBufferPtr->retryCount = 0;

@@ -37,6 +37,7 @@ typedef struct
 
     int isWaitAck; /**< Indicator of waiting an acknowledgement  (1 = true | 0 = false). Must be accessed through ARNETWORK_IOBuffer_IsWaitAck()*/
     uint8_t seqWaitAck; /**< Sequence number of the acknowledge waiting if used with a libARNetwork/sender or of the last command stored if used with a libARNetwork/reveiver*/
+    uint8_t seq; /**< Sequence number for data sent from this buffer */
     int waitTimeCount; /**< Counter of time to wait before the next sending*/
     int ackWaitTimeCount; /**< Counter of time to wait before to consider a timeout without receiving an acknowledgement*/
     int retryCount; /**< Counter of sending retry remaining before to consider a failure*/

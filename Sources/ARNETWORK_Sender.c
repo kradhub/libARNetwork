@@ -41,7 +41,6 @@
 
 #define ARNETWORK_SENDER_TAG "ARNETWORK_Sender"
 #define ARNETWORK_SENDER_MILLISECOND 1
-#define ARNETWORK_SENDER_FIRST_SEQ 0 /**< first sequence number sent */
 
 /*****************************************
  *
@@ -53,12 +52,12 @@
  *  @brief add data to the sender buffer and callback with sent status
  *  @param senderPtr the pointer on the Sender
  *  @param inputBufferPtr Pointer on the input buffer
- *  @param seqNum sequence number
+ *  @param isRetry Don't increment sequence number for retries
  *  @return error eARNETWORK_ERROR
  *  @note only call by ARNETWORK_Sender_ThreadRun()
  *  @see ARNETWORK_Sender_ThreadRun()
  */
-eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, uint8_t seqNum);
+eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, int isRetry);
 
 /**
  *  @brief call the Callback this timeout status
@@ -156,8 +155,6 @@ ARNETWORK_Sender_t* ARNETWORK_Sender_New (ARNETWORKAL_Manager_t *networkALManage
             ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_SENDER_TAG, "error: %s", ARNETWORK_Error_ToString (error));
             ARNETWORK_Sender_Delete (&senderPtr);
         }
-
-        senderPtr->seq = ARNETWORK_SENDER_FIRST_SEQ;
     }
 
     return senderPtr;
@@ -310,7 +307,7 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
                 {
                     /** if there is a timeout, retry to send the data */
 
-                    error = ARNETWORK_Sender_AddToBuffer (senderPtr, buffer, buffer->seqWaitAck);
+                    error = ARNETWORK_Sender_AddToBuffer (senderPtr, buffer, 1);
                     if (error == ARNETWORK_OK)
                     {
                         /** reset the timeout counter*/
@@ -335,7 +332,7 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
         else if ((!ARNETWORK_RingBuffer_IsEmpty (buffer->dataDescriptorRBufferPtr)) && (buffer->waitTimeCount == 0))
         {
             /** try to add the latest data of the input buffer in the sending buffer; callback with sent status */
-            if (!ARNETWORK_Sender_AddToBuffer (senderPtr, buffer, senderPtr->seq))
+            if (!ARNETWORK_Sender_AddToBuffer (senderPtr, buffer, 0))
             {
                 buffer->waitTimeCount = buffer->sendingWaitTimeMs;
 
@@ -348,7 +345,7 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
                      * and pass on waiting acknowledgement.
                      */
                     buffer->isWaitAck = 1;
-                    buffer->seqWaitAck = senderPtr->seq;
+                    buffer->seqWaitAck = buffer->seq;
                     buffer->ackWaitTimeCount = buffer->ackTimeoutMs;
                     buffer->retryCount = buffer->numberOfRetry;
                     break;
@@ -372,9 +369,7 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
                     ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_SENDER_TAG, "dataType: %d unknow \n", buffer->dataType);
                     break;
                 }
-
-                /** increment the sequence number */
-                ++ (senderPtr->seq);
+                buffer->seq++;
             }
         }
 
@@ -466,9 +461,6 @@ void ARNETWORK_Sender_Reset (ARNETWORK_Sender_t *senderPtr)
 
     /** flush all IoBuffer */
     ARNETWORK_Sender_Flush (senderPtr);
-
-    /** reset */
-    senderPtr->seq = ARNETWORK_SENDER_FIRST_SEQ;
 }
 
 /*****************************************
@@ -477,7 +469,7 @@ void ARNETWORK_Sender_Reset (ARNETWORK_Sender_t *senderPtr)
  *
  *****************************************/
 
-eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, uint8_t seqNum)
+eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, int isRetry)
 {
     /** -- add data to the sender buffer and callback with sent status -- */
 
@@ -493,7 +485,14 @@ eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, AR
         ARNETWORKAL_Frame_t frame = { 0 };
         frame.type = inputBufferPtr->dataType;
         frame.id = inputBufferPtr->ID;
-        frame.seq = seqNum;
+        if (isRetry == 1)
+        {
+            frame.seq = inputBufferPtr->seqWaitAck;
+        }
+        else
+        {
+            frame.seq = inputBufferPtr->seq;
+        }
         frame.size = offsetof (ARNETWORKAL_Frame_t, dataPtr) + dataDescriptor.dataSize;
         frame.dataPtr = dataDescriptor.dataPtr;
         if(senderPtr->networkALManager->pushNextFrameCallback(senderPtr->networkALManager, &frame) == ARNETWORKAL_MANAGER_CALLBACK_RETURN_DEFAULT)

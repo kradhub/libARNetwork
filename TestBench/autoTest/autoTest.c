@@ -712,35 +712,35 @@ eARNETWORK_MANAGER_CALLBACK_RETURN AUTOTEST_DataCallback(int OutBufferId, uint8_
     /** local declarations */
     int retry = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
 
-    ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, " -- AUTOTEST_DataCallback status: %d",status);
+    ARSAL_PRINT (ARSAL_PRINT_DEBUG, AUTOTEST_TAG, " -- AUTOTEST_DataCallback status: %d",status);
 
     switch(status)
     {
     case ARNETWORK_MANAGER_CALLBACK_STATUS_SENT :
-        ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, " sent --");
+        ARSAL_PRINT (ARSAL_PRINT_DEBUG, AUTOTEST_TAG, " sent --");
 
         break;
 
     case ARNETWORK_MANAGER_CALLBACK_STATUS_ACK_RECEIVED :
-        ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, " ack received --");
+        ARSAL_PRINT (ARSAL_PRINT_DEBUG, AUTOTEST_TAG, " ack received --");
         break;
 
     case ARNETWORK_MANAGER_CALLBACK_STATUS_TIMEOUT :
         retry = ARNETWORK_MANAGER_CALLBACK_RETURN_RETRY;
-        ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, " timeout retry --");
+        ARSAL_PRINT (ARSAL_PRINT_DEBUG, AUTOTEST_TAG, " timeout retry --");
         break;
 
     case ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL :
-        ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, " cancel --");
+        ARSAL_PRINT (ARSAL_PRINT_DEBUG, AUTOTEST_TAG, " cancel --");
         break;
 
     case ARNETWORK_MANAGER_CALLBACK_STATUS_FREE :
         free(dataPtr);
-        ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, " free --");
+        ARSAL_PRINT (ARSAL_PRINT_DEBUG, AUTOTEST_TAG, " free --");
         break;
 
     default:
-        ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, " default --");
+        ARSAL_PRINT (ARSAL_PRINT_DEBUG, AUTOTEST_TAG, " default --");
         break;
     }
 

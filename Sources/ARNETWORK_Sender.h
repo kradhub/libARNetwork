@@ -48,7 +48,6 @@ typedef struct
     ARSAL_Cond_t nextSendCond; /**< Condition to wait on to force synchronous send */
 
     int isAlive; /**< Indicator of aliving used for kill the thread calling the ARNETWORK_Sender_ThreadRun function (1 = alive | 0 = dead). Must be accessed through ARNETWORK_Sender_Stop()*/
-    uint8_t seq; /** sequence number of sending */
 
     ARSAL_Mutex_t pingMutex; /**< Mutex to lock all ping-related values */
     struct timeval pingStartTime; /**< Start timestamp of the current running ping */
