@@ -41,7 +41,7 @@
 
 #define ARNETWORK_SENDER_TAG "ARNETWORK_Sender"
 #define ARNETWORK_SENDER_MILLISECOND 1
-#define ARNETWORK_SENDER_FIRST_SEQ 1 /**< first sequence number sent */
+#define ARNETWORK_SENDER_FIRST_SEQ 0 /**< first sequence number sent */
 
 /*****************************************
  *
@@ -332,7 +332,7 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
                      * and pass on waiting acknowledgement.
                      */
                     buffer->isWaitAck = 1;
-                    buffer->seqWaitAck = (int)senderPtr->seq;
+                    buffer->seqWaitAck = senderPtr->seq;
                     buffer->ackWaitTimeCount = buffer->ackTimeoutMs;
                     buffer->retryCount = buffer->numberOfRetry;
                     break;

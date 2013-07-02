@@ -185,7 +185,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AckReceived(ARNETWORK_IOBuffer_t *IOBufferPt
     eARNETWORK_ERROR error = ARNETWORK_OK;
 
     /** delete the data if the sequence number received is same as the sequence number expected */
-    if((uint8_t)IOBufferPtr->isWaitAck && IOBufferPtr->seqWaitAck == seqNumber)
+    if(IOBufferPtr->isWaitAck && IOBufferPtr->seqWaitAck == seqNumber)
     {
         IOBufferPtr->isWaitAck = 0;
         error = ARNETWORK_IOBuffer_PopDataWithCallBack(IOBufferPtr, ARNETWORK_MANAGER_CALLBACK_STATUS_ACK_RECEIVED);
