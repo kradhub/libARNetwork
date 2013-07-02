@@ -29,6 +29,8 @@
  *
 ******************************************/
 
+#define TEST_PING_DELAY (0) // Use default value
+
 #define PORT1 12345
 #define PORT2 54321
 
@@ -129,7 +131,7 @@ int main(int argc, char *argv[])
     
     if(specificError == ARNETWORKAL_OK)
     {
-        managerPtr = ARNETWORK_Manager_New(networkALManagerPtr, 0, NULL, 0, NULL, &error);
+        managerPtr = ARNETWORK_Manager_New(networkALManagerPtr, 0, NULL, 0, NULL, TEST_PING_DELAY, &error);
     }
     else
     {

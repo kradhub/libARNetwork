@@ -62,6 +62,7 @@ typedef struct ARNETWORK_Manager_t ARNETWORK_Manager_t;
  *  @param[in] inputParamArr array of the parameters of creation of the inputs. The array must contain as many parameters as the number of input buffer.
  *  @param[in] numberOfOutput Number of output buffer
  *  @param[in] outputParamArr array of the parameters of creation of the outputs. The array must contain as many parameters as the number of output buffer.
+ *  @param[in] pingDelayMs Minimum amount of time (ms) between two pings. Put a negative value to disable ping, and zero to use default value
  *  @param[out] errorPtr pointer on the error output.
  *  @return Pointer on the new Manager
  *  @note This creator adds for all output, one other IOBuffer for storing the acknowledgment to return.
@@ -69,7 +70,7 @@ typedef struct ARNETWORK_Manager_t ARNETWORK_Manager_t;
  *  @warning The identifiers of the IoBuffer should not exceed the value 128.
  *  @see ARNETWORK_Manager_Delete()
  */
-ARNETWORK_Manager_t* ARNETWORK_Manager_New(ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInput, ARNETWORK_IOBufferParam_t *inputParamArr, unsigned int numberOfOutput, ARNETWORK_IOBufferParam_t *outputParamArr, eARNETWORK_ERROR *errorPtr);
+ARNETWORK_Manager_t* ARNETWORK_Manager_New(ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInput, ARNETWORK_IOBufferParam_t *inputParamArr, unsigned int numberOfOutput, ARNETWORK_IOBufferParam_t *outputParamArr, int pingDelayMs, eARNETWORK_ERROR *errorPtr);
 
 /**
  *  @brief Delete the Manager

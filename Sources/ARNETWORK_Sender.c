@@ -90,7 +90,7 @@ void ARNETWORK_Sender_ManageIOBufferIsInRemovingStatus(ARNETWORK_IOBuffer_t *inp
  *
  *****************************************/
 
-ARNETWORK_Sender_t* ARNETWORK_Sender_New (ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInputBuffer, ARNETWORK_IOBuffer_t **inputBufferPtrArr, unsigned int numberOfInternalInputBuffer, ARNETWORK_IOBuffer_t **internalInputBufferPtrArr, ARNETWORK_IOBuffer_t **inputBufferPtrMap)
+ARNETWORK_Sender_t* ARNETWORK_Sender_New (ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInputBuffer, ARNETWORK_IOBuffer_t **inputBufferPtrArr, unsigned int numberOfInternalInputBuffer, ARNETWORK_IOBuffer_t **internalInputBufferPtrArr, ARNETWORK_IOBuffer_t **inputBufferPtrMap, int pingDelayMs)
 {
     /** -- Create a new sender -- */
 
@@ -120,6 +120,14 @@ ARNETWORK_Sender_t* ARNETWORK_Sender_New (ARNETWORKAL_Manager_t *networkALManage
             senderPtr->numberOfInternalInputBuff = numberOfInternalInputBuffer;
             senderPtr->internalInputBufferPtrArr = internalInputBufferPtrArr;
             senderPtr->inputBufferPtrMap = inputBufferPtrMap;
+            if (pingDelayMs == 0)
+            {
+                senderPtr->minTimeBetweenPings = ARNETWORK_SENDER_MINIMUM_TIME_BETWEEN_PINGS_MS;
+            }
+            else
+            {
+                senderPtr->minTimeBetweenPings = pingDelayMs;
+            }
             gettimeofday (&(senderPtr->pingStartTime), NULL);
         }
 
@@ -217,30 +225,38 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
         }
 
         /** Process internal input buffers */
-        /*
-         *   - Send a new ping if:
-         *      - We're not waiting for a ping, AND the previous one was sent more than
-         *        ARNETWORK_SENDER_MINIMUM_TIME_BETWEEN_PINGS_MS ago
-         *      - The previous ping was sent more than ARNETWORK_SENDER_PING_TIMEOUT_MS ago
-         */
         gettimeofday (&now, NULL);
         ARSAL_Mutex_Lock (&(senderPtr->pingMutex));
         timeDiffMs = ARSAL_Time_ComputeMsTimeDiff (&(senderPtr->pingStartTime), &now);
-        if (((senderPtr->isPingRunning == 0) &&
-             (timeDiffMs > ARNETWORK_SENDER_MINIMUM_TIME_BETWEEN_PINGS_MS)) ||
-            (timeDiffMs > ARNETWORK_SENDER_PING_TIMEOUT_MS))
+        /* Send only new pings if ping function is active (min time > 0) */
+        if (senderPtr->minTimeBetweenPings > 0)
         {
-            if (timeDiffMs > ARNETWORK_SENDER_PING_TIMEOUT_MS)
+            int maxWaitTime = senderPtr->minTimeBetweenPings;
+            if (ARNETWORK_SENDER_PING_TIMEOUT_MS > maxWaitTime)
             {
-                senderPtr->lastPingValue = -1;
+                maxWaitTime = ARNETWORK_SENDER_PING_TIMEOUT_MS;
             }
-            inputBufferPtrTemp = senderPtr->inputBufferPtrMap[ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PING];
-            ARNETWORK_IOBuffer_Lock (inputBufferPtrTemp);
-            ARNETWORK_IOBuffer_AddData (inputBufferPtrTemp, (uint8_t *)&now, sizeof (now), NULL, NULL, 1);
-            ARNETWORK_IOBuffer_Unlock (inputBufferPtrTemp);
-            senderPtr->pingStartTime.tv_sec = now.tv_sec;
-            senderPtr->pingStartTime.tv_usec = now.tv_usec;
-            senderPtr->isPingRunning = 1;
+
+            /* Send new ping if :
+             *  -> DT > minTimeBetweenPings AND we're not waiting for a ping
+             *  -> DT > maxWaitTime
+             */
+            if (((senderPtr->isPingRunning == 0) &&
+                 (timeDiffMs > senderPtr->minTimeBetweenPings)) ||
+                (timeDiffMs > maxWaitTime))
+            {
+                if (timeDiffMs > ARNETWORK_SENDER_PING_TIMEOUT_MS)
+                {
+                    senderPtr->lastPingValue = -1;
+                }
+                inputBufferPtrTemp = senderPtr->inputBufferPtrMap[ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PING];
+                ARNETWORK_IOBuffer_Lock (inputBufferPtrTemp);
+                ARNETWORK_IOBuffer_AddData (inputBufferPtrTemp, (uint8_t *)&now, sizeof (now), NULL, NULL, 1);
+                ARNETWORK_IOBuffer_Unlock (inputBufferPtrTemp);
+                senderPtr->pingStartTime.tv_sec = now.tv_sec;
+                senderPtr->pingStartTime.tv_usec = now.tv_usec;
+                senderPtr->isPingRunning = 1;
+            }
         }
 
         ARSAL_Mutex_Unlock (&(senderPtr->pingMutex));

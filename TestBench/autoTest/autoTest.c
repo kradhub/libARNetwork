@@ -37,6 +37,8 @@
 
 #define AUTOTEST_TAG "Autotest"
 
+#define AUTOTEST_PING_DELAY (0) // Use default value
+
 #define AUTOTEST_NUMBER_DATA_SENT 26
 #define AUTOTEST_SENDING_SLEEP_TIME_US 5000
 #define AUTOTEST_READING_SLEEP_TIME_US 1000
@@ -173,7 +175,7 @@ int main(int argc, char *argv[])
     
     if(specificError == ARNETWORKAL_OK)
     {
-        managerCheck1.managerPtr = ARNETWORK_Manager_New(managerCheck1.networkALManagerPtr, AUTOTEST_NUMBER_OF_INPUT_NET1, paramInputNetwork1, AUTOTEST_NUMBER_OF_OUTPUT_NET1, paramOutputNetwork1, &error );
+        managerCheck1.managerPtr = ARNETWORK_Manager_New(managerCheck1.networkALManagerPtr, AUTOTEST_NUMBER_OF_INPUT_NET1, paramInputNetwork1, AUTOTEST_NUMBER_OF_OUTPUT_NET1, paramOutputNetwork1, AUTOTEST_PING_DELAY, &error );
     }
     else
     {
@@ -193,7 +195,7 @@ int main(int argc, char *argv[])
     
     if(specificError == ARNETWORKAL_OK)
     {
-        managerCheck2.managerPtr = ARNETWORK_Manager_New( managerCheck2.networkALManagerPtr, AUTOTEST_NUMBER_OF_INPUT_NET2, paramInputNetwork2, AUTOTEST_NUMBER_OF_OUTPUT_NET2, paramOutputNetwork2, &error );
+        managerCheck2.managerPtr = ARNETWORK_Manager_New( managerCheck2.networkALManagerPtr, AUTOTEST_NUMBER_OF_INPUT_NET2, paramInputNetwork2, AUTOTEST_NUMBER_OF_OUTPUT_NET2, paramOutputNetwork2, AUTOTEST_PING_DELAY, &error );
     }
     else
     {

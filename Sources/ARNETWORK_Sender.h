@@ -16,7 +16,7 @@
 #include <libARSAL/ARSAL_Time.h>
 
 /**
- * Minimum time between two ping requests
+ * Default minimum time between two ping requests
  * This avoid using too much bandwidth on fast networks
  */
 #define ARNETWORK_SENDER_MINIMUM_TIME_BETWEEN_PINGS_MS (10)
@@ -54,6 +54,7 @@ typedef struct
     struct timeval pingStartTime; /**< Start timestamp of the current running ping */
     int lastPingValue; /**< Latency, in ms, determined by the last ping */
     int isPingRunning; /**< Boolean-like. 1 if a ping is in progress, else 0 */
+    int minTimeBetweenPings; /**< Minimum time to wait between pings. Negative value mean no ping */
 
 }ARNETWORK_Sender_t;
 
@@ -65,10 +66,11 @@ typedef struct
  *  @param[in] numberOfInputBuffer Number of input buffer
  *  @param[in] inputBufferPtrArr address of the array of the pointers on the input buffers
  *  @param[in] inputBufferPtrMap address of the array storing the inputBuffers by their identifier
+ *  @param[in] pingDelayMs minimum time between pings. Negative value means no ping.
  *  @return Pointer on the new sender
  *  @see ARNETWORK_Sender_Delete()
  */
-ARNETWORK_Sender_t* ARNETWORK_Sender_New (ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInputBuffer, ARNETWORK_IOBuffer_t **inputBufferPtrArr, unsigned int numberOfInternalInputBuffer, ARNETWORK_IOBuffer_t **internalInputBufferPtrArr, ARNETWORK_IOBuffer_t **inputBufferPtrMap);
+ARNETWORK_Sender_t* ARNETWORK_Sender_New (ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInputBuffer, ARNETWORK_IOBuffer_t **inputBufferPtrArr, unsigned int numberOfInternalInputBuffer, ARNETWORK_IOBuffer_t **internalInputBufferPtrArr, ARNETWORK_IOBuffer_t **inputBufferPtrMap, int pingDelayMs);
 
 /**
  *  @brief Delete the sender

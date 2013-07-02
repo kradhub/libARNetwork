@@ -69,7 +69,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
  *
  *****************************************/
 
-ARNETWORK_Manager_t* ARNETWORK_Manager_New(ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInput, ARNETWORK_IOBufferParam_t *inputParamArr, unsigned int numberOfOutput, ARNETWORK_IOBufferParam_t *outputParamArr, eARNETWORK_ERROR *errorPtr)
+ARNETWORK_Manager_t* ARNETWORK_Manager_New(ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInput, ARNETWORK_IOBufferParam_t *inputParamArr, unsigned int numberOfOutput, ARNETWORK_IOBufferParam_t *outputParamArr, int pingDelayMs, eARNETWORK_ERROR *errorPtr)
 {
     /** -- Create a new Manager -- */
 
@@ -197,7 +197,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New(ARNETWORKAL_Manager_t *networkALManag
     if (error == ARNETWORK_OK)
     {
         /** Create the Sender */
-        managerPtr->senderPtr = ARNETWORK_Sender_New (managerPtr->networkALManager, managerPtr->numberOfInput, managerPtr->inputBufferPtrArr, managerPtr->numberOfInternalInputs, managerPtr->internalInputBufferPtrArr, managerPtr->inputBufferPtrMap);
+        managerPtr->senderPtr = ARNETWORK_Sender_New (managerPtr->networkALManager, managerPtr->numberOfInput, managerPtr->inputBufferPtrArr, managerPtr->numberOfInternalInputs, managerPtr->internalInputBufferPtrArr, managerPtr->inputBufferPtrMap, pingDelayMs);
         if (managerPtr->senderPtr == NULL)
         {
             error = ARNETWORK_ERROR_MANAGER_NEW_SENDER;
