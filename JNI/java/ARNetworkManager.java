@@ -1,6 +1,6 @@
 package com.parrot.arsdk.arnetwork;
 
-import android.util.Log;
+import com.parrot.arsdk.arsal.ARSALPrint;
 import com.parrot.arsdk.arsal.ARNativeData;
 import com.parrot.arsdk.arnetworkal.ARNetworkALManager;
 
@@ -45,7 +45,7 @@ public abstract class ARNetworkManager
             m_initOk = false;
             m_managerPtr = nativeNew(osSpecificManager.getManager(), inputParamArray.length, inputParamArray, outputParamArray.length, outputParamArray, timeBetweenPingsMs, error);
 
-            Log.d (TAG, "Error:" + error );
+            ARSALPrint.d (TAG, "Error:" + error );
 
             if( m_managerPtr != 0 )
             {
