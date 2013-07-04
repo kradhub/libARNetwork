@@ -12,7 +12,7 @@ public abstract class ARNetworkManager
     private static final String TAG = "NetworkManager";
 
 
-    private native long nativeNew(long jOSSpecificManagerPtr, int numberOfInput, Object[] inputParamArray, int numberOfOutput, Object[] outputParamArray, int jerror );
+    private native long nativeNew(long jOSSpecificManagerPtr, int numberOfInput, Object[] inputParamArray, int numberOfOutput, Object[] outputParamArray, int timeBetweenPingsMs, int jerror );
 
     private native int nativeDelete( long jManagerPtr);
 
@@ -37,12 +37,13 @@ public abstract class ARNetworkManager
      *  @param sendBufferSize Size of the sending buffer
      *  @param inputParamArray array of the parameters of the input buffers
      *  @param outputParamArray array of the parameters of the output buffers
+     *  @param timeBetweenPingsMs Minimum time between two pings. A negative value means "no pings", Zero means "use default value"
      **/
-    public ARNetworkManager(ARNetworkALManager osSpecificManager, ARNetworkIOBufferParam inputParamArray[], ARNetworkIOBufferParam outputParamArray[])
+    public ARNetworkManager(ARNetworkALManager osSpecificManager, ARNetworkIOBufferParam inputParamArray[], ARNetworkIOBufferParam outputParamArray[], int timeBetweenPingsMs)
         {
             int error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK.ordinal();
             m_initOk = false;
-            m_managerPtr = nativeNew(osSpecificManager.getManager(), inputParamArray.length, inputParamArray, outputParamArray.length, outputParamArray, error);
+            m_managerPtr = nativeNew(osSpecificManager.getManager(), inputParamArray.length, inputParamArray, outputParamArray.length, outputParamArray, timeBetweenPingsMs, error);
 
             Log.d (TAG, "Error:" + error );
 
