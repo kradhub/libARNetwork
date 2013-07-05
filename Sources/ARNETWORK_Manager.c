@@ -42,7 +42,7 @@
  *****************************************/
 
 #define ARNETWORK_MANAGER_TAG "ARNETWORK_Manager"
-#define ARNETWORK_NETWORK_BUFFER_SIZE	1500
+#define ARNETWORK_NETWORK_BUFFER_SIZE   1500
 
 /*****************************************
  *
@@ -112,7 +112,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New(ARNETWORKAL_Manager_t *networkALManag
             error = ARNETWORK_ERROR_BAD_PARAMETER;
         }
     }
-    
+
     /**
      * For each output buffer a buffer of acknowledgement is add and referenced
      * in the output buffer list and the input buffer list.
@@ -287,7 +287,7 @@ void ARNETWORK_Manager_Delete (ARNETWORK_Manager_t **managerPtrAddr)
             managerPtr->outputBufferPtrMap = NULL;
 
             managerPtr->networkALManager = NULL;
-            
+
             free (managerPtr);
             managerPtr = NULL;
         }
@@ -783,6 +783,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
         /** -   id is smaller than the id acknowledge offset */
         /** -   dataCopyMaxSize isn't too big */
         if ((inputParamArr[inputIndex].ID >= (managerPtr->networkALManager->maxIds / 2)) ||
+            (inputParamArr[inputIndex].ID <  ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX) ||
             (inputParamArr[inputIndex].dataCopyMaxSize >= (sendBufferSize - offsetof (ARNETWORKAL_Frame_t, dataPtr))))
         {
             error = ARNETWORK_ERROR_BAD_PARAMETER;

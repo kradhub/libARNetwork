@@ -145,7 +145,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeNew(JNIEnv *env, jobject 
         {
             /** get obj */
             jIOBuffer = (*env)->GetObjectArrayElement(env, inputParamArray, ii);
-            fieldID = (*env)->GetFieldID(env, IOBufferParam_cls, "m_IOBufferParamPtr", "J" );
+            fieldID = (*env)->GetFieldID(env, IOBufferParam_cls, "cIOBufferParam", "J" );
 
             pArrParamInput[ii] = *( (ARNETWORK_IOBufferParam_t*) (intptr_t) (*env)->GetLongField(env, jIOBuffer, fieldID) );
         }
@@ -170,7 +170,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeNew(JNIEnv *env, jobject 
         {
             /** get obj */
             jIOBuffer = (*env)->GetObjectArrayElement(env, outputParamArray, ii);
-            fieldID = (*env)->GetFieldID(env, IOBufferParam_cls, "m_IOBufferParamPtr", "J");
+            fieldID = (*env)->GetFieldID(env, IOBufferParam_cls, "cIOBufferParam", "J");
 
             pArrParamOutput[ii] = *( (ARNETWORK_IOBufferParam_t*) (intptr_t) (*env)->GetLongField(env, jIOBuffer, fieldID) );
         }
@@ -186,7 +186,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeNew(JNIEnv *env, jobject 
     /** print error */
     if(error != ARNETWORK_OK)
     {
-        ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_JNIMANGER_TAG, " error: %d occurred \n", error);
+        ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_JNIMANGER_TAG, "error: %s", ARNETWORK_Error_ToString (error));
     }
 
     return (long) managerPtr;

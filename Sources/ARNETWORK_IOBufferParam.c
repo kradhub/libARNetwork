@@ -90,7 +90,7 @@ int ARNETWORK_IOBufferParam_Check (const ARNETWORK_IOBufferParam_t *IOBufferPara
     }
     else
     {
-        ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_IOBUFFER_PARAM_TAG," parameters for new IOBuffer are not correct. \n\
+        ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_IOBUFFER_PARAM_TAG, "Parameters for new IOBuffer are not correct. \n\
 values expected: \n\
     - %d <= ID <= %d (value set: %d)\n\
     - dataType != %d (value set: %d)\n\
