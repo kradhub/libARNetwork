@@ -84,7 +84,6 @@ public class ARNetworkIOBufferParamBuilder {
     }
 
     public ARNetworkIOBufferParam build () {
-        ARSALPrint.e(TAG, this.toString());
         return new ARNetworkIOBufferParam (ID,
                                            dataType,
                                            timeBetweenSendMs,
