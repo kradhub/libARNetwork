@@ -20,9 +20,9 @@ public abstract class ARNetworkManager
     private native int nativeFlush(long jManagerPtr);
 
     private native int nativeSendData( long jManagerPtr,int inputBufferID, ARNativeData ARData, long dataPtr, int dataSize, int doDataCopy);
-    private native int nativeReadData( long jManagerPtr, int outputBufferID, ARNetworkDataRecv data);
-    private native int nativeTryReadData( long jManagerPtr, int outputBufferID, ARNetworkDataRecv data);
-    private native int nativeReadDataWithTimeout( long jManagerPtr, int outputBufferID, ARNetworkDataRecv data, int timeoutMs);
+    private native int nativeReadData( long jManagerPtr, int outputBufferID, long dataPointer, int capacity, ARNativeData data);
+    private native int nativeTryReadData( long jManagerPtr, int outputBufferID, long dataPointer, int capacity, ARNativeData data);
+    private native int nativeReadDataWithTimeout( long jManagerPtr, int outputBufferID, long dataPointer, int capacity, ARNativeData data, int timeoutMs);
 
     private long m_managerPtr;
 
@@ -150,12 +150,12 @@ public abstract class ARNetworkManager
      *  @param data Data where store the reading
      *  @return error ARNETWORK_ERROR_ENUM type
      **/
-    public ARNETWORK_ERROR_ENUM readData(int outputBufferID, ARNetworkDataRecv data)
+    public ARNETWORK_ERROR_ENUM readData(int outputBufferID, ARNativeData data)
         {
             ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
             if(m_initOk == true)
             {
-                int intError = nativeReadData( m_managerPtr, outputBufferID, data);
+                int intError = nativeReadData( m_managerPtr, outputBufferID, data.getData (), data.getCapacity (), data);
                 error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
             }
             else
@@ -172,12 +172,12 @@ public abstract class ARNetworkManager
      *  @param data Data where store the reading
      *  @return error ARNETWORK_ERROR_ENUM type
      **/
-    public ARNETWORK_ERROR_ENUM tryReadData(int outputBufferID, ARNetworkDataRecv data)
+    public ARNETWORK_ERROR_ENUM tryReadData(int outputBufferID, ARNativeData data)
         {
             ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
             if(m_initOk == true)
             {
-                int intError = nativeTryReadData( m_managerPtr, outputBufferID, data);
+                int intError = nativeTryReadData( m_managerPtr, outputBufferID, data.getData (), data.getCapacity (), data);
                 error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
             }
             else
@@ -195,12 +195,12 @@ public abstract class ARNetworkManager
      *  @param timeoutMs maximum time in millisecond to wait if there is no data to read
      *  @return error ARNETWORK_ERROR_ENUM type
      **/
-    public ARNETWORK_ERROR_ENUM readDataWithTimeout(int outputBufferID, ARNetworkDataRecv data, int timeoutMs)
+    public ARNETWORK_ERROR_ENUM readDataWithTimeout(int outputBufferID, ARNativeData data, int timeoutMs)
         {
             ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
             if(m_initOk == true)
             {
-                int intError = nativeReadDataWithTimeout( m_managerPtr, outputBufferID, data, timeoutMs);
+                int intError = nativeReadDataWithTimeout( m_managerPtr, outputBufferID, data.getData (), data.getCapacity (), data, timeoutMs);
                 error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
             }
             else
