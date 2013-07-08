@@ -6,7 +6,7 @@ import com.parrot.arsdk.arnetworkal.ARNetworkALManager;
 
 /**
  * Network manager allow to send and receive data acknowledged or not.
- **/
+ */
 public abstract class ARNetworkManager
 {
     private static final String TAG = "NetworkManager";
@@ -32,13 +32,12 @@ public abstract class ARNetworkManager
     public ReceivingRunnable m_receivingRunnable;
 
     /**
-     *  Constructor
-     *  @param recvBufferSize Size of the reception buffer
-     *  @param sendBufferSize Size of the sending buffer
-     *  @param inputParamArray array of the parameters of the input buffers
-     *  @param outputParamArray array of the parameters of the output buffers
-     *  @param timeBetweenPingsMs Minimum time between two pings. A negative value means "no pings", Zero means "use default value"
-     **/
+     * Constructor
+     * @param osSpecificManager The ARNetworkALManager to use. Must be initialized and valid
+     * @param inputParamArray array of the parameters of the input buffers
+     * @param outputParamArray array of the parameters of the output buffers
+     * @param timeBetweenPingsMs Minimum time between two pings. A negative value means "no pings", Zero means "use default value"
+     */
     public ARNetworkManager(ARNetworkALManager osSpecificManager, ARNetworkIOBufferParam inputParamArray[], ARNetworkIOBufferParam outputParamArray[], int timeBetweenPingsMs)
         {
             int error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK.ordinal();
@@ -56,9 +55,8 @@ public abstract class ARNetworkManager
         }
 
     /**
-     *  Dispose
-     *  @post after this function the object must be not used more
-     **/
+     * Dispose
+     */
     public void dispose()
         {
             if(m_initOk == true)
@@ -70,8 +68,8 @@ public abstract class ARNetworkManager
         }
 
     /**
-     *  Destructor
-     **/
+     * Destructor
+     */
     public void finalize () throws Throwable
         {
             try {
@@ -82,11 +80,9 @@ public abstract class ARNetworkManager
         }
 
     /**
-     *  Stop the threads of sending and reception
-     *  @details Used to kill the threads calling ARNETWORK_Manager_SendingThreadRun() and ARNETWORK_Manager_ReceivingThreadRun().
-     *  @see ARNETWORK_Manager_SendingThreadRun()
-     *  @see ARNETWORK_Manager_ReceivingThreadRun()
-     **/
+     * Stop the threads of sending and reception<br>
+     * Used to kill the threads calling ARNETWORK_Manager_SendingThreadRun() and ARNETWORK_Manager_ReceivingThreadRun().
+     */
     public void stop()
         {
             if(m_initOk == true)
@@ -96,9 +92,9 @@ public abstract class ARNetworkManager
         }
 
     /**
-     *  Flush all buffers of the network manager
-     *  @return error ARNETWORK_ERROR_ENUM
-     **/
+     * Flush all buffers of the network manager
+     * @return error ARNETWORK_ERROR_ENUM
+     */
     public ARNETWORK_ERROR_ENUM Flush()
         {
             ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
@@ -116,12 +112,12 @@ public abstract class ARNetworkManager
         }
 
     /**
-     *  Add data to send
-     *  @param inputBufferID identifier of the input buffer in which the data must be stored
-     *  @param arData data to send
-     *  @param doDataCopy indocator to copy the data in the ARNETWORK_Manager
-     *  @return error ARNETWORK_ERROR_ENUM
-     **/
+     * Add data to send
+     * @param inputBufferID identifier of the input buffer in which the data must be stored
+     * @param arData data to send
+     * @param doDataCopy indocator to copy the data in the ARNETWORK_Manager
+     * @return error ARNETWORK_ERROR_ENUM
+     */
     public ARNETWORK_ERROR_ENUM sendData(int inputBufferID, ARNativeData arData, boolean doDataCopy)
         {
             ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
@@ -144,12 +140,12 @@ public abstract class ARNetworkManager
         }
 
     /**
-     *  Read data received
-     *  @warning blocking function
-     *  @param outputBufferID identifier of the output buffer in which the data must be read
-     *  @param data Data where store the reading
-     *  @return error ARNETWORK_ERROR_ENUM type
-     **/
+     * Read data received<br>
+     * Warning: This is a blocking function
+     * @param outputBufferID identifier of the output buffer in which the data must be read
+     * @param data Data where store the reading
+     * @return error ARNETWORK_ERROR_ENUM type
+     */
     public ARNETWORK_ERROR_ENUM readData(int outputBufferID, ARNativeData data)
         {
             ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
@@ -167,11 +163,11 @@ public abstract class ARNetworkManager
         }
 
     /**
-     *  try read data received (non-blocking function)
-     *  @param outputBufferID identifier of the output buffer in which the data must be read
-     *  @param data Data where store the reading
-     *  @return error ARNETWORK_ERROR_ENUM type
-     **/
+     * try read data received (non-blocking function)
+     * @param outputBufferID identifier of the output buffer in which the data must be read
+     * @param data Data where store the reading
+     * @return error ARNETWORK_ERROR_ENUM type
+     */
     public ARNETWORK_ERROR_ENUM tryReadData(int outputBufferID, ARNativeData data)
         {
             ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
@@ -189,12 +185,12 @@ public abstract class ARNetworkManager
         }
 
     /**
-     *  Read data received with timeout
-     *  @param outputBufferID identifier of the output buffer in which the data must be read
-     *  @param data Data where store the reading
-     *  @param timeoutMs maximum time in millisecond to wait if there is no data to read
-     *  @return error ARNETWORK_ERROR_ENUM type
-     **/
+     * Read data received with timeout
+     * @param outputBufferID identifier of the output buffer in which the data must be read
+     * @param data Data where store the reading
+     * @param timeoutMs maximum time in millisecond to wait if there is no data to read
+     * @return error ARNETWORK_ERROR_ENUM type
+     */
     public ARNETWORK_ERROR_ENUM readDataWithTimeout(int outputBufferID, ARNativeData data, int timeoutMs)
         {
             ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
@@ -212,37 +208,37 @@ public abstract class ARNetworkManager
         }
 
     /**
-     *  Get the pointer C on the network manager
-     *  @return  Pointer C on the network manager
-     **/
+     * Get the pointer C on the network manager
+     * @return  Pointer C on the network manager
+     */
     public long getManager ()
         {
             return m_managerPtr;
         }
 
     /**
-     *  Get is the Manager is correctly initialized and if it is usable
-     *  @return true is the Manager is usable
-     **/
+     * Get is the Manager is correctly initialized and if it is usable
+     * @return true is the Manager is usable
+     */
     public boolean isCorrectlyInitialized ()
         {
             return m_initOk;
         }
 
     /**
-     *  CallBack for the status of the data sent or free
-     *  @param IoBufferId identifier of the IoBuffer is calling back
-     *  @param data data sent
-     *  @param status reason of the callback
-     *  @return ARNETWORK_MANAGER_CALLBACK_RETURN_ENUM what do in timeout case
-     **/
-    public abstract int callback (int IoBuffer, ARNativeData data, int status);
+     * CallBack for the status of the data sent or free
+     * @param IoBufferId identifier of the IoBuffer is calling back
+     * @param data data sent
+     * @param status reason of the callback
+     * @return ARNETWORK_MANAGER_CALLBACK_RETURN_ENUM what do in timeout case
+     */
+    public abstract int callback (int IoBufferId, ARNativeData data, int status);
 
 }
 
 /**
- *  Sending Runnable
- **/
+ * Sending Runnable
+ */
 class SendingRunnable implements Runnable
 {
     private static native int nativeSendingThreadRun( long jManagerPtr);
@@ -250,17 +246,17 @@ class SendingRunnable implements Runnable
     long m_managerPtr;
 
     /**
-     *  Constructor
-     *  @param managerPtr Pointer C on the network manager
-     **/
+     * Constructor
+     * @param managerPtr Pointer C on the network manager
+     */
     SendingRunnable(long managerPtr)
         {
             m_managerPtr = managerPtr;
         }
 
     /**
-     *  Manage the sending of the data
-     **/
+     * Manage the sending of the data
+     */
     public void run()
         {
             nativeSendingThreadRun(m_managerPtr);
@@ -268,8 +264,8 @@ class SendingRunnable implements Runnable
 }
 
 /**
- *  Reception Runnable
- **/
+ * Reception Runnable
+ */
 class ReceivingRunnable implements Runnable
 {
     private static native int nativeReceivingThreadRun(long jManagerPtr);
@@ -277,17 +273,17 @@ class ReceivingRunnable implements Runnable
     long m_managerPtr;
 
     /**
-     *  Constructor
-     *  @param managerPtr Pointer C on the network manager
-     **/
+     * Constructor
+     * @param managerPtr Pointer C on the network manager
+     */
     ReceivingRunnable(long managerPtr)
         {
             m_managerPtr = managerPtr;
         }
 
     /**
-     *  Manage the reception of the data.
-     **/
+     * Manage the reception of the data.
+     */
     public void run()
         {
             nativeReceivingThreadRun(m_managerPtr);

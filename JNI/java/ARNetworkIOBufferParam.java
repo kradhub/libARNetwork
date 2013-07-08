@@ -52,7 +52,6 @@ public class ARNetworkIOBufferParam
 
     /**
      * Dispose NetworkIOBufferParam
-     * @post after this function the NetworkIOBufferParam must be not used more
      */
     public void dispose() {
         if(cIOBufferParam != 0) {
