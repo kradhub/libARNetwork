@@ -13,7 +13,7 @@ LOCAL_LIBRARIES := libARSAL
 LOCAL_EXPORT_LDLIBS := -larnetwork
 
 #Autotools variables
-LOCAL_AUTOTOOLS_CONFIGURE_ARGS := --with-libARSALInstallDir=""
+LOCAL_AUTOTOOLS_CONFIGURE_ARGS := --with-libARSALInstallDir="" --with-libARNetworkALInstallDir=""
 
 # User define command to be launch before configure step.
 # Generates files used by configure
