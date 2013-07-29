@@ -17,6 +17,9 @@
  *
  *****************************************/
 
+/**
+ * @brief Infinite value for the IOBufferParams
+ */
 #define ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER -1
 
 /*****************************************
