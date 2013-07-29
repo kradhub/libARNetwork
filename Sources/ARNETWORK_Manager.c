@@ -356,43 +356,18 @@ eARNETWORK_ERROR ARNETWORK_Manager_Flush (ARNETWORK_Manager_t *managerPtr)
 
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    ARNETWORK_IOBuffer_t *IOBufferPtrTemp = NULL;
     int ii = 0;
 
     /** Flush all output buffers including the buffers of acknowledgement */
     for (ii = 0; ii< managerPtr->numberOfOutput && error == ARNETWORK_OK; ++ii)
     {
-        IOBufferPtrTemp = managerPtr->outputBufferPtrArr[ii];
-
-        /** lock the IOBuffer */
-        error = ARNETWORK_IOBuffer_Lock (IOBufferPtrTemp);
-
-        if (error == ARNETWORK_OK)
-        {
-            /** flush the IOBuffer*/
-            error = ARNETWORK_IOBuffer_Flush (IOBufferPtrTemp);
-
-            /** unlock the IOBuffer */
-            ARNETWORK_IOBuffer_Unlock (IOBufferPtrTemp);
-        }
+        ARNETWORK_Manager_FlushOutputBuffer (managerPtr, ii);
     }
 
     /** Flush the input buffers but not the buffers of acknowledgement already flushed */
     for (ii = 0; ii< managerPtr->numberOfInputWithoutAck && error == ARNETWORK_OK; ++ii)
     {
-        IOBufferPtrTemp = managerPtr->outputBufferPtrArr[ii];
-
-        /** lock the IOBuffer */
-        error = ARNETWORK_IOBuffer_Lock (IOBufferPtrTemp);
-
-        if (error == ARNETWORK_OK)
-        {
-            /** flush the IOBuffer*/
-            error = ARNETWORK_IOBuffer_Flush (IOBufferPtrTemp);
-
-            /** unlock the IOBuffer */
-            ARNETWORK_IOBuffer_Unlock (IOBufferPtrTemp);
-        }
+        ARNETWORK_Manager_FlushInputBuffer (managerPtr, ii);
     }
 
     return error;
@@ -821,7 +796,17 @@ eARNETWORK_ERROR ARNETWORK_Manager_FlushInputBuffer (ARNETWORK_Manager_t *manage
         ARNETWORK_IOBuffer_t *buffer = managerPtr->inputBufferPtrMap[inBufferID];
         if (buffer != NULL)
         {
-            error = ARNETWORK_IOBuffer_Flush (buffer);
+            /** lock the IOBuffer */
+            error = ARNETWORK_IOBuffer_Lock (buffer);
+
+            if (error == ARNETWORK_OK)
+            {
+                /** flush the IOBuffer*/
+                error = ARNETWORK_IOBuffer_Flush (buffer);
+
+                /** unlock the IOBuffer */
+                ARNETWORK_IOBuffer_Unlock (buffer);
+            }
         }
         else
         {
@@ -841,9 +826,20 @@ eARNETWORK_ERROR ARNETWORK_Manager_FlushOutputBuffer (ARNETWORK_Manager_t *manag
     else
     {
         ARNETWORK_IOBuffer_t *buffer = managerPtr->outputBufferPtrMap[outBufferID];
+
         if (buffer != NULL)
         {
-            error = ARNETWORK_IOBuffer_Flush (buffer);
+            /** lock the IOBuffer */
+            error = ARNETWORK_IOBuffer_Lock (buffer);
+
+            if (error == ARNETWORK_OK)
+            {
+                /** flush the IOBuffer*/
+                error = ARNETWORK_IOBuffer_Flush (buffer);
+
+                /** unlock the IOBuffer */
+                ARNETWORK_IOBuffer_Unlock (buffer);
+            }
         }
         else
         {
