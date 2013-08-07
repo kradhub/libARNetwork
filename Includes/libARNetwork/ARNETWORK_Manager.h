@@ -84,7 +84,6 @@ void ARNETWORK_Manager_Delete(ARNETWORK_Manager_t **managerPtrAddr);
  *  @brief Manage the sending of the data
  *  @warning This function must be called in its own thread.
  *  @post Before join the thread calling this function, ARNETWORK_Manager_Stop() must be called.
- *  @note This function send the data stored in the input buffer through ARNETWORK_Manager_SendFixedSizeData().
  *  @param data thread data of type ARNETWORK_Manager_t*
  *  @return NULL
  *  @see ARNETWORK_Manager_Stop()
@@ -95,11 +94,9 @@ void* ARNETWORK_Manager_SendingThreadRun(void *data);
  *  @brief Manage the reception of the data.
  *  @warning This function must be called by a specific thread.
  *  @post Before join the thread calling this function, ARNETWORK_Manager_Stop() must be called.
- *  @note This function receives the data through ARNETWORK_Manager_ReadFixedSizeData() and stores them in the output buffers according to their parameters.
  *  @param data thread datas of type ARNETWORK_Manager_t*
  *  @return NULL
  *  @see ARNETWORK_Manager_Stop()
- *  @see ARNETWORK_Manager_ReadFixedSizeData()
  */
 void* ARNETWORK_Manager_ReceivingThreadRun(void *data);
 
@@ -134,7 +131,8 @@ eARNETWORK_ERROR ARNETWORK_Manager_SendData(ARNETWORK_Manager_t *managerPtr, int
 
 /**
  *  @brief Read data received in a IOBuffer using variable size data (blocking function)
- *  @warning blocking function
+ *  @warning This is a blocking function.
+ *  @warning Applications which need to close the manager should NOT use this function
  *  @param managerPtr pointer on the Manager
  *  @param[in] outputBufferID identifier of the output buffer in which the data must be read
  *  @param[out] dataPtr pointer on the data read
