@@ -3,13 +3,13 @@
  *  @brief libARNetwork TestBench automatic
  *  @date 05/18/2012
  *  @author maxime.maitre@parrot.com
- **/
+ */
 
 /*****************************************
  *
  *             include file :
  *
- ******************************************/
+ *****************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +33,7 @@
  *
  *             define :
  *
- ******************************************/
+ *****************************************/
 
 #define AUTOTEST_TAG "Autotest"
 
@@ -129,7 +129,7 @@ int AUTOTEST_CheckVariableSizeDataACK( AUTOTEST_ManagerCheck_t *managerCheckPtr,
  *
  *          implementation :
  *
- ******************************************/
+ *****************************************/
 
 int main(int argc, char *argv[])
 {
@@ -166,13 +166,13 @@ int main(int argc, char *argv[])
     managerCheck1.networkALManagerPtr = ARNETWORKAL_Manager_New(&specificError);
     if(specificError == ARNETWORKAL_OK)
     {
-        specificError = ARNETWORKAL_Manager_InitWiFiNetwork(managerCheck1.networkALManagerPtr, AUTOTEST_ADRR_IP, AUTOTEST_PORT1, AUTOTEST_PORT2, AUTOTEST_RECEIVER_TIMEOUT_SEC);
+        specificError = ARNETWORKAL_Manager_InitWifiNetwork(managerCheck1.networkALManagerPtr, AUTOTEST_ADRR_IP, AUTOTEST_PORT1, AUTOTEST_PORT2, AUTOTEST_RECEIVER_TIMEOUT_SEC);
         if(specificError != ARNETWORKAL_OK)
         {
             ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, "Manager 1 : Can't init Wifi Network = %d", error);
         }
     }
-    
+
     if(specificError == ARNETWORKAL_OK)
     {
         managerCheck1.managerPtr = ARNETWORK_Manager_New(managerCheck1.networkALManagerPtr, AUTOTEST_NUMBER_OF_INPUT_NET1, paramInputNetwork1, AUTOTEST_NUMBER_OF_OUTPUT_NET1, paramOutputNetwork1, AUTOTEST_PING_DELAY, &error );
@@ -181,18 +181,18 @@ int main(int argc, char *argv[])
     {
         error = ARNETWORK_ERROR;
     }
-    
+
     /** Initialize the OS Specific Network */
     managerCheck2.networkALManagerPtr = ARNETWORKAL_Manager_New(&specificError);
     if(specificError == ARNETWORKAL_OK)
     {
-        specificError = ARNETWORKAL_Manager_InitWiFiNetwork(managerCheck2.networkALManagerPtr, AUTOTEST_ADRR_IP, AUTOTEST_PORT2, AUTOTEST_PORT1, AUTOTEST_RECEIVER_TIMEOUT_SEC);
+        specificError = ARNETWORKAL_Manager_InitWifiNetwork(managerCheck2.networkALManagerPtr, AUTOTEST_ADRR_IP, AUTOTEST_PORT2, AUTOTEST_PORT1, AUTOTEST_RECEIVER_TIMEOUT_SEC);
         if(specificError != ARNETWORKAL_OK)
         {
             ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, "Manager 2 : Can't init Wifi Network = %d", error);
         }
     }
-    
+
     if(specificError == ARNETWORKAL_OK)
     {
         managerCheck2.managerPtr = ARNETWORK_Manager_New( managerCheck2.networkALManagerPtr, AUTOTEST_NUMBER_OF_INPUT_NET2, paramInputNetwork2, AUTOTEST_NUMBER_OF_OUTPUT_NET2, paramOutputNetwork2, AUTOTEST_PING_DELAY, &error );
@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
     {
         error = ARNETWORK_ERROR;
     }
-    
+
     if( error == ARNETWORK_OK )
     {
         ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, "check start");
@@ -286,8 +286,8 @@ int main(int argc, char *argv[])
             ARSAL_Thread_Join( managerCheck2.managerReceiverThread, NULL );
         }
 
-        ARNETWORKAL_Manager_CloseWiFiNetwork(managerCheck1.networkALManagerPtr);
-        ARNETWORKAL_Manager_CloseWiFiNetwork(managerCheck2.networkALManagerPtr);
+        ARNETWORKAL_Manager_CloseWifiNetwork(managerCheck1.networkALManagerPtr);
+        ARNETWORKAL_Manager_CloseWifiNetwork(managerCheck2.networkALManagerPtr);
     }
 
     /** print result */

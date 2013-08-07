@@ -212,14 +212,14 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeDelete(JNIEnv *env, jobje
 /**
  *  @brief Manage the sending of the data
  *  @warning This function must be called by a specific thread.
- *  @pre The OS specific Manager need to be defined and initialized with a network type nativeInitWiFiNetwork()
+ *  @pre The OS specific Manager need to be defined and initialized with a network type nativeInitWifiNetwork()
  *  @post Before join the thread calling this function, nativeStop() must be called.
  *  @note This function send the data stored in the input buffer through ARNETWORK_Manager_SendFixedSizeData().
  *  @param env reference to the java environment
  *  @param obj reference to the object calling this function
  *  @param jManagerPtr adress of the ARNETWORK_Manager_t
  *  @return NULL
- *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkALManager_nativeInitWiFiNetwork()
+ *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkALManager_nativeInitWifiNetwork()
  *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStop()
  */
 JNIEXPORT jint JNICALL
@@ -236,14 +236,14 @@ Java_com_parrot_arsdk_arnetwork_SendingRunnable_nativeSendingThreadRun(JNIEnv *e
 /**
  *  @brief Manage the reception of the data.
  *  @warning This function must be called by a specific thread.
- *  @pre The OS specific Manager need to be defined and initialized with a network type nativeInitWiFiNetwork()
+ *  @pre The OS specific Manager need to be defined and initialized with a network type nativeInitWifiNetwork()
  *  @post Before join the thread calling this function, nativeStop() must be called.
  *  @note This function receives the data through ARNETWORK_Manager_ReadFixedSizeData() and stores them in the output buffers according to their parameters.
  *  @param env reference to the java environment
  *  @param obj reference to the object calling this function
  *  @param jManagerPtr adress of the ARNETWORK_Manager_t
  *  @return NULL
- *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkALManager_nativeInitWiFiNetwork()
+ *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkALManager_nativeInitWifiNetwork()
  *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStop()
  */
 JNIEXPORT jint JNICALL
