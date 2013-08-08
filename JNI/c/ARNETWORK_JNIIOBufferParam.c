@@ -1,8 +1,8 @@
 /**
- *  @file IOBufferParam_wrapper.c
- *  @brief JNI into between the ARNETWORK_IOBufferParam.h and NetworkIOBufferParam.java
- *  @date 01/18/2013
- *  @author maxime.maitre@parrot.com
+ * @file IOBufferParam_wrapper.c
+ * @brief JNI into between the ARNETWORK_IOBufferParam.h and NetworkIOBufferParam.java
+ * @date 01/18/2013
+ * @author maxime.maitre@parrot.com
  **/
 
 #include <libARNetwork/ARNETWORK_Error.h>

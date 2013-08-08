@@ -1,8 +1,8 @@
 /**
- *  @file ARNETWORK_IOBufferParam.c
- *  @brief prameters used to set the parameters of a new IOBuffer
- *  @date 28/09/2012
- *  @author maxime.maitre@parrot.com
+ * @file ARNETWORK_IOBufferParam.c
+ * @brief prameters used to set the parameters of a new IOBuffer
+ * @date 28/09/2012
+ * @author maxime.maitre@parrot.com
  **/
 
 /*****************************************

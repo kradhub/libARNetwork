@@ -1,8 +1,8 @@
 /**
  *	@file common.h
- *  @brief simul common file
- *  @date 05/18/2012
- *  @author maxime.maitre@parrot.com
+ * @brief simul common file
+ * @date 05/18/2012
+ * @author maxime.maitre@parrot.com
 **/
 
 #ifndef _NETWORK_DEF_H_

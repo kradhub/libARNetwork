@@ -1,8 +1,8 @@
 /**
- *  @file ARNETWORK_Manager.h
- *  @brief network manager allow to send data acknowledged or not.
- *  @date 05/18/2012
- *  @author maxime.maitre@parrot.com
+ * @file ARNETWORK_Manager.h
+ * @brief network manager allow to send data acknowledged or not.
+ * @date 05/18/2012
+ * @author maxime.maitre@parrot.com
  */
 
 #ifndef _NETWORK_MANAGER_PRIVATE_H_
@@ -21,9 +21,9 @@ typedef enum {
 } eARNETWORK_MANAGER_INTERNAL_BUFFER_ID;
 
 /**
- *  @brief get the identifier of the output buffer storing the acknowledgment for an output buffer storing data acknowledged.
- *  @param[in] ID identifier of the output buffer waiting an acknowledgment.
- *  @return identifier of the output buffer storing the acknowledgment.
+ * @brief get the identifier of the output buffer storing the acknowledgment for an output buffer storing data acknowledged.
+ * @param[in] ID identifier of the output buffer waiting an acknowledgment.
+ * @return identifier of the output buffer storing the acknowledgment.
  */
 static inline int ARNETWORK_Manager_IDOutputToIDAck (ARNETWORKAL_Manager_t *alManager, int identifier)
 {
@@ -31,9 +31,9 @@ static inline int ARNETWORK_Manager_IDOutputToIDAck (ARNETWORKAL_Manager_t *alMa
 }
 
 /**
- *  @brief get the identifier of the output buffer storing data acknowledged for an output buffer storing acknowledgments.
- *  @param[in] ID identifier of the output buffer storing the acknowledgment.
- *  @return identifier of the output buffer waiting an acknowledgment.
+ * @brief get the identifier of the output buffer storing data acknowledged for an output buffer storing acknowledgments.
+ * @param[in] ID identifier of the output buffer storing the acknowledgment.
+ * @return identifier of the output buffer waiting an acknowledgment.
  */
 static inline int ARNETWORK_Manager_IDAckToIDInput (ARNETWORKAL_Manager_t *alManager, int identifier)
 {
@@ -41,7 +41,7 @@ static inline int ARNETWORK_Manager_IDAckToIDInput (ARNETWORKAL_Manager_t *alMan
 }
 
 /**
- *  @brief network manager allow to send data acknowledged or not.
+ * @brief network manager allow to send data acknowledged or not.
  */
 struct ARNETWORK_Manager_t
 {

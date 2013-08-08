@@ -1,8 +1,8 @@
 /**
- *  @file ARNETWORK_DataDescriptor.h
- *  @brief ARNETWORK_DataDescriptor_t used by ARNETWORK_IOBuffer_t
- *  @date 05/18/2012
- *  @author maxime.maitre@parrot.com
+ * @file ARNETWORK_DataDescriptor.h
+ * @brief ARNETWORK_DataDescriptor_t used by ARNETWORK_IOBuffer_t
+ * @date 05/18/2012
+ * @author maxime.maitre@parrot.com
 **/
 
 #ifndef _ARNETWORK_DATADESCRIPTOR_PRIVATE_H_
@@ -24,7 +24,7 @@
 ******************************************/
 
 /**
- *  @brief data sent by the network manager
+ * @brief data sent by the network manager
 **/
 typedef struct  
 {

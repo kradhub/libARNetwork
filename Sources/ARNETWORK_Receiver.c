@@ -1,8 +1,8 @@
 /**
- *  @file ARNETWORK_Receiver.c
- *  @brief manage the data received
- *  @date 28/09/2012
- *  @author maxime.maitre@parrot.com
+ * @file ARNETWORK_Receiver.c
+ * @brief manage the data received
+ * @date 28/09/2012
+ * @author maxime.maitre@parrot.com
  **/
 
 /*****************************************
@@ -51,13 +51,13 @@
  *****************************************/
 
 /**
- *  @brief copy the data received to the output buffer
- *  @param receiverPtr the pointer on the receiver
- *  @param outputBufferPtr[in] pointer on the output buffer
- *  @param framePtr[in] pointer on the frame received
- *  @return eARNETWORK_ERROR.
- *  @pre only call by ARNETWORK_Sender_ThreadRun()
- *  @see ARNETWORK_Sender_ThreadRun()
+ * @brief copy the data received to the output buffer
+ * @param receiverPtr the pointer on the receiver
+ * @param outputBufferPtr[in] pointer on the output buffer
+ * @param framePtr[in] pointer on the frame received
+ * @return eARNETWORK_ERROR.
+ * @pre only call by ARNETWORK_Sender_ThreadRun()
+ * @see ARNETWORK_Sender_ThreadRun()
  */
 eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv (ARNETWORK_Receiver_t *receiverPtr, ARNETWORK_IOBuffer_t *outputBufferPtr, ARNETWORKAL_Frame_t *framePtr);
 

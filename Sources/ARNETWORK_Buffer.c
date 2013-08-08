@@ -1,8 +1,8 @@
 /**
- *  @file ARNETWORK_Buffer.c
- *  @brief basic buffer
- *  @date 28/09/2012
- *  @author maxime.maitre@parrot.com
+ * @file ARNETWORK_Buffer.c
+ * @brief basic buffer
+ * @date 28/09/2012
+ * @author maxime.maitre@parrot.com
 **/
 
 /*****************************************

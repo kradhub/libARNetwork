@@ -1,8 +1,8 @@
 /**
- *  @file main.h
- *  @brief libARNetwork TestBench automatic
- *  @date 05/18/2012
- *  @author maxime.maitre@parrot.com
+ * @file main.h
+ * @brief libARNetwork TestBench automatic
+ * @date 05/18/2012
+ * @author maxime.maitre@parrot.com
  */
 
 /*****************************************

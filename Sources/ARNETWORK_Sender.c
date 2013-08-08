@@ -1,8 +1,8 @@
 /**
- *  @file ARNETWORK_Sender.c
- *  @brief manage the data sending
- *  @date 28/09/2012
- *  @author maxime.maitre@parrot.com
+ * @file ARNETWORK_Sender.c
+ * @brief manage the data sending
+ * @date 28/09/2012
+ * @author maxime.maitre@parrot.com
  */
 
 /*****************************************
@@ -49,33 +49,33 @@
  *****************************************/
 
 /**
- *  @brief add data to the sender buffer and callback with sent status
- *  @param senderPtr the pointer on the Sender
- *  @param inputBufferPtr Pointer on the input buffer
- *  @param isRetry Don't increment sequence number for retries
- *  @return error eARNETWORK_ERROR
- *  @note only call by ARNETWORK_Sender_ThreadRun()
- *  @see ARNETWORK_Sender_ThreadRun()
+ * @brief add data to the sender buffer and callback with sent status
+ * @param senderPtr the pointer on the Sender
+ * @param inputBufferPtr Pointer on the input buffer
+ * @param isRetry Don't increment sequence number for retries
+ * @return error eARNETWORK_ERROR
+ * @note only call by ARNETWORK_Sender_ThreadRun()
+ * @see ARNETWORK_Sender_ThreadRun()
  */
 eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, int isRetry);
 
 /**
- *  @brief call the Callback this timeout status
- *  @param senderPtr the pointer on the Sender
- *  @param inputBufferPtr Pointer on the input buffer
- *  @return eARNETWORK_MANAGER_CALLBACK_RETURN
- *  @note only call by ARNETWORK_Sender_ThreadRun()
- *  @see ARNETWORK_Sender_ThreadRun()
+ * @brief call the Callback this timeout status
+ * @param senderPtr the pointer on the Sender
+ * @param inputBufferPtr Pointer on the input buffer
+ * @return eARNETWORK_MANAGER_CALLBACK_RETURN
+ * @note only call by ARNETWORK_Sender_ThreadRun()
+ * @see ARNETWORK_Sender_ThreadRun()
  */
 eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_Sender_TimeOutCallback (ARNETWORK_Sender_t *senderPtr, const ARNETWORK_IOBuffer_t *inputBufferPtr);
 
 /**
- *  @brief manage the return of the callback
- *  @param senderPtr the pointer on the Sender
- *  @param[in] inputBufferPtr Pointer on the input buffer
- *  @param[in] callbackReturn return of the callback
- *  @note only call by ARNETWORK_Sender_ThreadRun()
- *  @see ARNETWORK_Sender_ThreadRun()
+ * @brief manage the return of the callback
+ * @param senderPtr the pointer on the Sender
+ * @param[in] inputBufferPtr Pointer on the input buffer
+ * @param[in] callbackReturn return of the callback
+ * @note only call by ARNETWORK_Sender_ThreadRun()
+ * @see ARNETWORK_Sender_ThreadRun()
  */
 void ARNETWORK_Sender_ManageTimeOut (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *inputBufferPtr, eARNETWORK_MANAGER_CALLBACK_RETURN callbackReturn);
 

@@ -1,8 +1,8 @@
 /**
- *  @file ARNETWORK_IOBufferParam.h
- *  @brief prameters used to set the parameters of a new IOBuffer
- *  @date 05/18/2012
- *  @author maxime.maitre@parrot.com
+ * @file ARNETWORK_IOBufferParam.h
+ * @brief prameters used to set the parameters of a new IOBuffer
+ * @date 05/18/2012
+ * @author maxime.maitre@parrot.com
  */
 
 #ifndef _ARNETWORK_IOBUFFERPARAM_H_
@@ -29,7 +29,7 @@
  *****************************************/
 
 /**
- *  @brief used to set the parameters of a new In Out Buffer
+ * @brief used to set the parameters of a new In Out Buffer
  */
 typedef struct
 {
@@ -46,17 +46,17 @@ typedef struct
 }ARNETWORK_IOBufferParam_t;
 
 /**
- *  @brief initialization of the IOBufferParam with default parameters
- *  @pre before to use the IOBufferParam the paramaters useful must be set.
- *  @param[in,out] IOBufferParamPtr Pointer on the parameters for the new input or output buffer
- *  @return error of eARNETWORK_ERROR type
+ * @brief initialization of the IOBufferParam with default parameters
+ * @pre before to use the IOBufferParam the paramaters useful must be set.
+ * @param[in,out] IOBufferParamPtr Pointer on the parameters for the new input or output buffer
+ * @return error of eARNETWORK_ERROR type
  */
 eARNETWORK_ERROR ARNETWORK_IOBufferParam_DefaultInit (ARNETWORK_IOBufferParam_t *IOBufferParamPtr);
 
 /**
- *  @brief check the values of the IOBufferParam
- *  @param[in] IOBufferParamPtr Pointer on the parameters for the new input or output buffer
- *  @return 1 if the IOBufferParam is usable for create a new ioBuffer else 0
+ * @brief check the values of the IOBufferParam
+ * @param[in] IOBufferParamPtr Pointer on the parameters for the new input or output buffer
+ * @return 1 if the IOBufferParam is usable for create a new ioBuffer else 0
  */
 int ARNETWORK_IOBufferParam_Check (const ARNETWORK_IOBufferParam_t *IOBufferParamPtr);
 

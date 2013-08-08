@@ -1,8 +1,8 @@
 /**
- *  @file ARNETWORK_JNIManager.c
- *  @brief JNI between the ARNETWORK_Manager.h and ARNETWORK_Manager.java
- *  @date 01/18/2013
- *  @author maxime.maitre@parrot.com
+ * @file ARNETWORK_JNIManager.c
+ * @brief JNI between the ARNETWORK_Manager.h and ARNETWORK_Manager.java
+ * @date 01/18/2013
+ * @author maxime.maitre@parrot.com
  */
 
 /*****************************************
@@ -22,7 +22,7 @@
 #include <libARNetworkAL/ARNETWORKAL_Frame.h>
 
 /**
- *  @brief data sent to the callbak
+ * @brief data sent to the callbak
  */
 typedef struct
 {
@@ -39,21 +39,21 @@ typedef struct
 #define ARNETWORK_JNIMANGER_TAG "JNIManager" /** tag used by the print of the file */
 
 /**
- *  @brief call back use when the data are sent or have a timeout
- *  @param[in] IOBufferID identifier of the IoBuffer is calling back
- *  @param[in] dataPtr pointer on the data
- *  @param[in] customData pointer on a custom data
- *  @param[in] status indicating the reason of the callback. eARNETWORK_MANAGER_CALLBACK_STATUS type
- *  @return eARNETWORK_MANAGER_CALLBACK_RETURN
- *  @see eARNETWORK_MANAGER_CALLBACK_STATUS
+ * @brief call back use when the data are sent or have a timeout
+ * @param[in] IOBufferID identifier of the IoBuffer is calling back
+ * @param[in] dataPtr pointer on the data
+ * @param[in] customData pointer on a custom data
+ * @param[in] status indicating the reason of the callback. eARNETWORK_MANAGER_CALLBACK_STATUS type
+ * @return eARNETWORK_MANAGER_CALLBACK_RETURN
+ * @see eARNETWORK_MANAGER_CALLBACK_STATUS
  */
 eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManager_Callback_t(int IOBufferID,  uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status);
 
 /**
- *  @brief free the global references used by the callback
- *  @param[in] env java environment
- *  @param[in] callbackDataPtrAddr address of the pointer on the callbackData storing the global references
- *  @warning this funtion free the callbackData and set callbackDataPtrAddr to NULL
+ * @brief free the global references used by the callback
+ * @param[in] env java environment
+ * @param[in] callbackDataPtrAddr address of the pointer on the callbackData storing the global references
+ * @warning this funtion free the callbackData and set callbackDataPtrAddr to NULL
  */
 void ARNETWORK_JNIManager_FreeCallbackData(JNIEnv *env, ARNETWORK_JNIManager_CallbackData_t **callbackDataPtrAddr);
 
@@ -68,11 +68,11 @@ static JavaVM* gARNETWORK_JNIManager_VM = NULL; /** reference to the java virtua
 static jmethodID nativeDataSetUsed_id = 0;
 
 /**
- *  @brief save the reference to the java virtual machine
- *  @note this function is automatically call on the JNI startup
- *  @param[in] VM reference to the java virtual machine
- *  @param[in] reserved data reserved
- *  @return JNI version
+ * @brief save the reference to the java virtual machine
+ * @note this function is automatically call on the JNI startup
+ * @param[in] VM reference to the java virtual machine
+ * @param[in] reserved data reserved
+ * @return JNI version
  */
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *VM, void *reserved)
@@ -87,20 +87,20 @@ JNI_OnLoad(JavaVM *VM, void *reserved)
 }
 
 /**
- *  @brief Create a new manager
- *  @warning This function allocate memory
- *  @param env reference to the java environment
- *  @param obj reference to the object calling this function
- *  @param[in] sendBufferSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
- *  @param[in] numberOfInput Number of input buffer
- *  @param[in] inputParamArray array of the parameters of creation of the inputs. The array must contain as many parameters as the number of input buffer.
- *  @param[in] numberOfOutput Number of output buffer
- *  @param[in] outputParamArray array of the parameters of creation of the outputs. The array must contain as many parameters as the number of output buffer.
- *  @return Pointer on the ARNETWORK_Manager_t.
- *  @note This creator adds for all output, one other IOBuffer for storing the acknowledgment to return.
+ * @brief Create a new manager
+ * @warning This function allocate memory
+ * @param env reference to the java environment
+ * @param obj reference to the object calling this function
+ * @param[in] sendBufferSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
+ * @param[in] numberOfInput Number of input buffer
+ * @param[in] inputParamArray array of the parameters of creation of the inputs. The array must contain as many parameters as the number of input buffer.
+ * @param[in] numberOfOutput Number of output buffer
+ * @param[in] outputParamArray array of the parameters of creation of the outputs. The array must contain as many parameters as the number of output buffer.
+ * @return Pointer on the ARNETWORK_Manager_t.
+ * @note This creator adds for all output, one other IOBuffer for storing the acknowledgment to return.
  * These new buffers are added in the input and output buffer arrays.
- *  @warning The identifiers of the IoBuffer should not exceed the value 128.
- *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeDelete()
+ * @warning The identifiers of the IoBuffer should not exceed the value 128.
+ * @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeDelete()
  *
  */
 JNIEXPORT jlong JNICALL
@@ -193,12 +193,12 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeNew(JNIEnv *env, jobject 
 }
 
 /**
- *  @brief Delete the Manager
- *  @warning This function free memory
- *  @param env reference to the java environment
- *  @param obj reference to the object calling this function
- *  @param jManagerPtr adress of the ARNETWORK_Manager_t
- *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeNew()
+ * @brief Delete the Manager
+ * @warning This function free memory
+ * @param env reference to the java environment
+ * @param obj reference to the object calling this function
+ * @param jManagerPtr adress of the ARNETWORK_Manager_t
+ * @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeNew()
  */
 JNIEXPORT void JNICALL
 Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeDelete(JNIEnv *env, jobject obj, jlong jManagerPtr)
@@ -210,17 +210,17 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeDelete(JNIEnv *env, jobje
 }
 
 /**
- *  @brief Manage the sending of the data
- *  @warning This function must be called by a specific thread.
- *  @pre The OS specific Manager need to be defined and initialized with a network type nativeInitWifiNetwork()
- *  @post Before join the thread calling this function, nativeStop() must be called.
- *  @note This function send the data stored in the input buffer through ARNETWORK_Manager_SendFixedSizeData().
- *  @param env reference to the java environment
- *  @param obj reference to the object calling this function
- *  @param jManagerPtr adress of the ARNETWORK_Manager_t
- *  @return NULL
- *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkALManager_nativeInitWifiNetwork()
- *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStop()
+ * @brief Manage the sending of the data
+ * @warning This function must be called by a specific thread.
+ * @pre The OS specific Manager need to be defined and initialized with a network type nativeInitWifiNetwork()
+ * @post Before join the thread calling this function, nativeStop() must be called.
+ * @note This function send the data stored in the input buffer through ARNETWORK_Manager_SendFixedSizeData().
+ * @param env reference to the java environment
+ * @param obj reference to the object calling this function
+ * @param jManagerPtr adress of the ARNETWORK_Manager_t
+ * @return NULL
+ * @see Java_com_parrot_arsdk_arnetwork_ARNetworkALManager_nativeInitWifiNetwork()
+ * @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStop()
  */
 JNIEXPORT jint JNICALL
 Java_com_parrot_arsdk_arnetwork_SendingRunnable_nativeSendingThreadRun(JNIEnv *env, jobject obj, jlong jManagerPtr)
@@ -234,17 +234,17 @@ Java_com_parrot_arsdk_arnetwork_SendingRunnable_nativeSendingThreadRun(JNIEnv *e
 }
 
 /**
- *  @brief Manage the reception of the data.
- *  @warning This function must be called by a specific thread.
- *  @pre The OS specific Manager need to be defined and initialized with a network type nativeInitWifiNetwork()
- *  @post Before join the thread calling this function, nativeStop() must be called.
- *  @note This function receives the data through ARNETWORK_Manager_ReadFixedSizeData() and stores them in the output buffers according to their parameters.
- *  @param env reference to the java environment
- *  @param obj reference to the object calling this function
- *  @param jManagerPtr adress of the ARNETWORK_Manager_t
- *  @return NULL
- *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkALManager_nativeInitWifiNetwork()
- *  @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStop()
+ * @brief Manage the reception of the data.
+ * @warning This function must be called by a specific thread.
+ * @pre The OS specific Manager need to be defined and initialized with a network type nativeInitWifiNetwork()
+ * @post Before join the thread calling this function, nativeStop() must be called.
+ * @note This function receives the data through ARNETWORK_Manager_ReadFixedSizeData() and stores them in the output buffers according to their parameters.
+ * @param env reference to the java environment
+ * @param obj reference to the object calling this function
+ * @param jManagerPtr adress of the ARNETWORK_Manager_t
+ * @return NULL
+ * @see Java_com_parrot_arsdk_arnetwork_ARNetworkALManager_nativeInitWifiNetwork()
+ * @see Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStop()
  */
 JNIEXPORT jint JNICALL
 Java_com_parrot_arsdk_arnetwork_ReceivingRunnable_nativeReceivingThreadRun(JNIEnv *env, jobject obj, jlong jManagerPtr)
@@ -258,13 +258,13 @@ Java_com_parrot_arsdk_arnetwork_ReceivingRunnable_nativeReceivingThreadRun(JNIEn
 }
 
 /**
- *  @brief stop the threads of sending and reception
- *  @details Used to kill the threads calling nativeSendingThreadRun() and nativeReceivingThreadRun().
- *  @param env reference to the java environment
- *  @param obj reference to the object calling this function
- *  @param jManagerPtr adress of the ARNETWORK_Manager_t
- *  @see Java_com_parrot_arsdk_arnetwork_SendingRunnable_nativeSendingThreadRun()
- *  @see Java_com_parrot_arsdk_arnetwork_ReceivingRunnable_nativeReceivingThreadRun()
+ * @brief stop the threads of sending and reception
+ * @details Used to kill the threads calling nativeSendingThreadRun() and nativeReceivingThreadRun().
+ * @param env reference to the java environment
+ * @param obj reference to the object calling this function
+ * @param jManagerPtr adress of the ARNETWORK_Manager_t
+ * @see Java_com_parrot_arsdk_arnetwork_SendingRunnable_nativeSendingThreadRun()
+ * @see Java_com_parrot_arsdk_arnetwork_ReceivingRunnable_nativeReceivingThreadRun()
  */
 JNIEXPORT void JNICALL
 Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStop(JNIEnv *env, jobject obj, jlong jManagerPtr)
@@ -278,9 +278,9 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStop(JNIEnv *env, jobject
 }
 
 /**
- *  @brief Flush all buffers of the network manager
- *  @param managerPtr pointer on the Manager
- *  @return error eARNETWORK_ERROR
+ * @brief Flush all buffers of the network manager
+ * @param managerPtr pointer on the Manager
+ * @return error eARNETWORK_ERROR
  */
 JNIEXPORT jint JNICALL
 Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeFlush(JNIEnv *env, jobject obj, jlong jManagerPtr)
@@ -294,16 +294,16 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeFlush(JNIEnv *env, jobjec
 }
 
 /**
- *  @brief Add data to send in a IOBuffer
- *  @param env reference to the java environment
- *  @param obj reference to the object calling this function
- *  @param jManagerPtr adress of the ARNETWORK_Manager_t
- *  @param[in] inputBufferID identifier of the input buffer in which the data must be stored
- *  @param[in] ARData ARNativeData to send
- *  @param[in] jdataPtr array of byte to send ( use arData.getData() )
- *  @param[in] dataSize size of the data to send ( use arData.getDataSize() )
- *  @param[in] doDataCopy indocator to copy the data in the ARNETWORK_Manager
- *  @return error eARNETWORK_ERROR
+ * @brief Add data to send in a IOBuffer
+ * @param env reference to the java environment
+ * @param obj reference to the object calling this function
+ * @param jManagerPtr adress of the ARNETWORK_Manager_t
+ * @param[in] inputBufferID identifier of the input buffer in which the data must be stored
+ * @param[in] ARData ARNativeData to send
+ * @param[in] jdataPtr array of byte to send ( use arData.getData() )
+ * @param[in] dataSize size of the data to send ( use arData.getDataSize() )
+ * @param[in] doDataCopy indocator to copy the data in the ARNETWORK_Manager
+ * @return error eARNETWORK_ERROR
  */
 JNIEXPORT jint JNICALL
 Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendData(JNIEnv *env, jobject obj, jlong jManagerPtr, jint inputBufferID, jobject ARData, jlong jdataPtr, jint dataSize, jint doDataCopy)
@@ -344,16 +344,16 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendData(JNIEnv *env, job
 }
 
 /**
- *  @brief Read data received in a IOBuffer
- *  @warning blocking function
- *  @param env reference to the java environment
- *  @param obj reference to the object calling this function
- *  @param jManagerPtr adress of the ARNETWORK_Manager_t
- *  @param outputBufferID identifier of the output buffer in which the data must be read
- *  @param data pointer to the ARNativeData allocated memory
- *  @param capacity capacity of the ARNativeData allocated memory
- *  @param nativeData ARNativeData object (to set the used size)
- *  @return error eARNETWORK_ERROR type
+ * @brief Read data received in a IOBuffer
+ * @warning blocking function
+ * @param env reference to the java environment
+ * @param obj reference to the object calling this function
+ * @param jManagerPtr adress of the ARNETWORK_Manager_t
+ * @param outputBufferID identifier of the output buffer in which the data must be read
+ * @param data pointer to the ARNativeData allocated memory
+ * @param capacity capacity of the ARNativeData allocated memory
+ * @param nativeData ARNativeData object (to set the used size)
+ * @return error eARNETWORK_ERROR type
  */
 JNIEXPORT jint JNICALL
 Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadData(JNIEnv *env, jobject obj, jlong jManagerPtr, jint outputBufferID, jlong data, jint capacity, jobject nativeData)
@@ -394,15 +394,15 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadData(JNIEnv *env, job
 }
 
 /**
- *  @brief try to read data received in a IOBuffer (non-blocking function)
- *  @param env reference to the java environment
- *  @param obj reference to the object calling this function
- *  @param jManagerPtr adress of the ARNETWORK_Manager_t
- *  @param outputBufferID identifier of the output buffer in which the data must be read
- *  @param data pointer to the ARNativeData allocated memory
- *  @param capacity capacity of the ARNativeData allocated memory
- *  @param nativeData ARNativeData object (to set the used size)
- *  @return error eARNETWORK_ERROR type
+ * @brief try to read data received in a IOBuffer (non-blocking function)
+ * @param env reference to the java environment
+ * @param obj reference to the object calling this function
+ * @param jManagerPtr adress of the ARNETWORK_Manager_t
+ * @param outputBufferID identifier of the output buffer in which the data must be read
+ * @param data pointer to the ARNativeData allocated memory
+ * @param capacity capacity of the ARNativeData allocated memory
+ * @param nativeData ARNativeData object (to set the used size)
+ * @return error eARNETWORK_ERROR type
  */
 JNIEXPORT jint JNICALL
 Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeTryReadData(JNIEnv *env, jobject obj, jlong jManagerPtr, jint outputBufferID, jlong data, jint capacity, jobject nativeData)
@@ -443,16 +443,16 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeTryReadData(JNIEnv *env, 
 }
 
 /**
- *  @brief Read, with timeout, a data received in IOBuffer
- *  @param env reference to the java environment
- *  @param obj reference to the object calling this function
- *  @param jManagerPtr adress of the ARNETWORK_Manager_t
- *  @param outputBufferID identifier of the output buffer in which the data must be read
- *  @param data pointer to the ARNativeData allocated memory
- *  @param capacity capacity of the ARNativeData allocated memory
- *  @param nativeData ARNativeData object (to set the used size)
- *  @param timeoutMs maximum time in millisecond to wait if there is no data to read
- *  @return error eARNETWORK_ERROR type
+ * @brief Read, with timeout, a data received in IOBuffer
+ * @param env reference to the java environment
+ * @param obj reference to the object calling this function
+ * @param jManagerPtr adress of the ARNETWORK_Manager_t
+ * @param outputBufferID identifier of the output buffer in which the data must be read
+ * @param data pointer to the ARNativeData allocated memory
+ * @param capacity capacity of the ARNativeData allocated memory
+ * @param nativeData ARNativeData object (to set the used size)
+ * @param timeoutMs maximum time in millisecond to wait if there is no data to read
+ * @return error eARNETWORK_ERROR type
  */
 JNIEXPORT jint JNICALL
 Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadDataWithTimeout(JNIEnv *env, jobject obj, jlong jManagerPtr, jint outputBufferID, jlong data, jint capacity, jobject nativeData, jint timeoutMs)

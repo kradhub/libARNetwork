@@ -1,8 +1,8 @@
 /**
- *  @file ARNETWORK_RingBuffer.c
- *  @brief Ring buffer, multithread safe with overwriting possibility.
- *  @date 28/09/2012
- *  @author maxime.maitre@parrot.com
+ * @file ARNETWORK_RingBuffer.c
+ * @brief Ring buffer, multithread safe with overwriting possibility.
+ * @date 28/09/2012
+ * @author maxime.maitre@parrot.com
  **/
 
 /*****************************************

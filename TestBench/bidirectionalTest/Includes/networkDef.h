@@ -1,8 +1,8 @@
 /**
- *  @file common.h
- *  @brief simul common file
- *  @date 05/18/2012
- *  @author maxime.maitre@parrot.com
+ * @file common.h
+ * @brief simul common file
+ * @date 05/18/2012
+ * @author maxime.maitre@parrot.com
 **/
 
 #ifndef _ARNETWORK_DEF_H_

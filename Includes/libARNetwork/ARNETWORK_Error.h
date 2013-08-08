@@ -1,15 +1,15 @@
 /**
- *  @file ARNETWORK_Error.h
- *  @brief libARNetwork errors known.
- *  @date 05/18/2012
- *  @author maxime.maitre@parrot.com
+ * @file ARNETWORK_Error.h
+ * @brief libARNetwork errors known.
+ * @date 05/18/2012
+ * @author maxime.maitre@parrot.com
  */
 
 #ifndef _ARNETWORK_ERROR_H_
 #define _ARNETWORK_ERROR_H_
 
 /**
- *  @brief libARNetwork errors known.
+ * @brief libARNetwork errors known.
  */
 typedef enum
 {

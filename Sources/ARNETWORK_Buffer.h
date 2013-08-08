@@ -1,17 +1,17 @@
 /**
- *  @file ARNETWORK_Buffer.h
- *  @brief basic buffer
- *  @date 05/18/2012
- *  @author maxime.maitre@parrot.com
+ * @file ARNETWORK_Buffer.h
+ * @brief basic buffer
+ * @date 05/18/2012
+ * @author maxime.maitre@parrot.com
 **/
 
 #ifndef _ARNETWORK_BUFFER_PRIVATE_H_
 #define _ARNETWORK_BUFFER_PRIVATE_H_
 
 /**
- *  @brief basic buffer 
- *  @warning before to be used the buffer must be created through ARNETWORK_Buffer_New()
- *  @post after its using the buffer must be deleted through ARNETWORK_Buffer_Delete()
+ * @brief basic buffer 
+ * @warning before to be used the buffer must be created through ARNETWORK_Buffer_New()
+ * @post after its using the buffer must be deleted through ARNETWORK_Buffer_Delete()
 **/
 typedef struct
 {
@@ -23,28 +23,28 @@ typedef struct
 }ARNETWORK_Buffer_t;
 
 /**
- *  @brief Create a new buffer
- *  @warning This function allocate memory
- *  @param[in] numberOfCell Maximum number of data cell of the buffer
- *  @param[in] cellSize size of one data cell of the buffe
- *  @post ARNETWORK_Buffer_Delete() must be called to delete the buffer and free the memory allocated
- *  @return Pointer on the new buffer
- *  @see ARNETWORK_Buffer_Delete()
+ * @brief Create a new buffer
+ * @warning This function allocate memory
+ * @param[in] numberOfCell Maximum number of data cell of the buffer
+ * @param[in] cellSize size of one data cell of the buffe
+ * @post ARNETWORK_Buffer_Delete() must be called to delete the buffer and free the memory allocated
+ * @return Pointer on the new buffer
+ * @see ARNETWORK_Buffer_Delete()
 **/
 ARNETWORK_Buffer_t* ARNETWORK_Buffer_New(unsigned int numberOfCell, unsigned int cellSize);
 
 /**
- *  @brief Delete the buffer
- *  @warning This function free memory
- *  @param bufferPtrAddr address of the pointer on the buffer to delete
- *  @see ARNETWORK_Buffer_New()
+ * @brief Delete the buffer
+ * @warning This function free memory
+ * @param bufferPtrAddr address of the pointer on the buffer to delete
+ * @see ARNETWORK_Buffer_New()
 **/
 void ARNETWORK_Buffer_Delete(ARNETWORK_Buffer_t **bufferPtrAddr);
 
 /**
- *  @brief Return the number of free cell of the buffer
- *  @param bufferPtr pointer on the buffer
- *  @return number of free cell of the buffer 
+ * @brief Return the number of free cell of the buffer
+ * @param bufferPtr pointer on the buffer
+ * @return number of free cell of the buffer 
 **/
 static inline unsigned int ARNETWORK_Buffer_GetFreeCellNumber(const ARNETWORK_Buffer_t *bufferPtr)
 {
@@ -52,9 +52,9 @@ static inline unsigned int ARNETWORK_Buffer_GetFreeCellNumber(const ARNETWORK_Bu
 }
 
 /**
- *  @brief Check if the buffer is empty
- *  @param bufferPtr pointer on the buffer
- *  @return equal 1 if the buffer is empty else 0
+ * @brief Check if the buffer is empty
+ * @param bufferPtr pointer on the buffer
+ * @return equal 1 if the buffer is empty else 0
 **/
 static inline int ARNETWORK_Buffer_IsEmpty(ARNETWORK_Buffer_t *bufferPtr)
 {
@@ -62,8 +62,8 @@ static inline int ARNETWORK_Buffer_IsEmpty(ARNETWORK_Buffer_t *bufferPtr)
 }
 
 /**
- *  @brief Clean the buffer
- *  @param bufferPtr pointer on the buffer
+ * @brief Clean the buffer
+ * @param bufferPtr pointer on the buffer
 **/
 static inline void ARNETWORK_Buffer_Clean(ARNETWORK_Buffer_t *bufferPtr)
 {
@@ -71,14 +71,14 @@ static inline void ARNETWORK_Buffer_Clean(ARNETWORK_Buffer_t *bufferPtr)
 }
 
 /**
- *  @brief Print the state of the buffer
- *  @param bufferPtr pointer on the buffer
+ * @brief Print the state of the buffer
+ * @param bufferPtr pointer on the buffer
 **/
 void ARNETWORK_Buffer_Print(ARNETWORK_Buffer_t *bufferPtr);
 
 /**
- *  @brief Print the contents of the buffer
- *  @param bufferPtr pointer on the buffer
+ * @brief Print the contents of the buffer
+ * @param bufferPtr pointer on the buffer
 **/
 void ARNETWORK_Buffer_DataPrint(ARNETWORK_Buffer_t *bufferPtr);
 

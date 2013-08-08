@@ -1,8 +1,8 @@
 /**
- *  @file ARNETWORK_IOBuffer.c
- *  @brief input or output buffer, used by ARNetwork_Receiver or ARNetwork_Sender
- *  @date 28/09/2012
- *  @author maxime.maitre@parrot.com
+ * @file ARNETWORK_IOBuffer.c
+ * @brief input or output buffer, used by ARNetwork_Receiver or ARNetwork_Sender
+ * @date 28/09/2012
+ * @author maxime.maitre@parrot.com
  **/
 
 /*****************************************
@@ -35,10 +35,10 @@
 #define ARNETWORK_IOBUFFER_TAG "ARNETWORK_IOBuffer"
 
 /**
- *  @brief free the data pointed by the data descriptor
- *  @param IOBufferPtr Pointer on the IOBuffer
- *  @param dataDescriptorPtr Pointer on the data descriptor of the data to free
- *  @return error equal to ARNETWORK_OK if the data are correctly deleted otherwise see eARNETWORK_ERROR
+ * @brief free the data pointed by the data descriptor
+ * @param IOBufferPtr Pointer on the IOBuffer
+ * @param dataDescriptorPtr Pointer on the data descriptor of the data to free
+ * @return error equal to ARNETWORK_OK if the data are correctly deleted otherwise see eARNETWORK_ERROR
  **/
 static inline eARNETWORK_ERROR ARNETWORK_IOBuffer_FreeData(ARNETWORK_IOBuffer_t *IOBufferPtr, ARNETWORK_DataDescriptor_t *dataDescriptorPtr)
 {

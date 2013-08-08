@@ -1,8 +1,8 @@
 /**
- *  @file bidirectionalTest.h
- *  @brief Test
- *  @date 05/18/2012
- *  @author maxime.maitre@parrot.com
+ * @file bidirectionalTest.h
+ * @brief Test
+ * @date 05/18/2012
+ * @author maxime.maitre@parrot.com
  */
 
 /*****************************************

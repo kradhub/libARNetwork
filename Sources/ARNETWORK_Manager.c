@@ -1,8 +1,8 @@
 /**
- *  @file ARNETWORK_Manager.c
- *  @brief network manager allow to send data acknowledged or not.
- *  @date 28/09/2012
- *  @author maxime.maitre@parrot.com
+ * @file ARNETWORK_Manager.c
+ * @brief network manager allow to send data acknowledged or not.
+ * @date 28/09/2012
+ * @author maxime.maitre@parrot.com
  */
 
 /*****************************************
@@ -51,15 +51,15 @@
  *****************************************/
 
 /**
- *  @brief create manager's IOBuffers.
- *  @warning only call by ARNETWORK_Manager_New()
- *  @pre managerPtr->outputBufferPtrArr and managerPtr->inputBufferPtrArr must be allocated and not set to NULL.
- *  @param managerPtr pointer on the Manager
- *  @param[in] inputParamArr array of the parameters of creation of the inputs. The array must contain as many parameters as the number of input buffer.
- *  @param[in] outputParamArr array of the parameters of creation of the outputs. The array must contain as many parameters as the number of output buffer.
- *  @param[in] sendBufferSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
- *  @return error equal to ARNETWORK_OK if the IOBuffer are correctly created otherwise see eARNETWORK_ERROR.
- *  @see ARNETWORK_Manager_New()
+ * @brief create manager's IOBuffers.
+ * @warning only call by ARNETWORK_Manager_New()
+ * @pre managerPtr->outputBufferPtrArr and managerPtr->inputBufferPtrArr must be allocated and not set to NULL.
+ * @param managerPtr pointer on the Manager
+ * @param[in] inputParamArr array of the parameters of creation of the inputs. The array must contain as many parameters as the number of input buffer.
+ * @param[in] outputParamArr array of the parameters of creation of the outputs. The array must contain as many parameters as the number of output buffer.
+ * @param[in] sendBufferSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
+ * @return error equal to ARNETWORK_OK if the IOBuffer are correctly created otherwise see eARNETWORK_ERROR.
+ * @see ARNETWORK_Manager_New()
  */
 eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerPtr, ARNETWORK_IOBufferParam_t *inputParamArr, ARNETWORK_IOBufferParam_t *outputParamArr, unsigned int sendBufferSize);
 
