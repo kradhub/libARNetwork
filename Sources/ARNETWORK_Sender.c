@@ -267,7 +267,7 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
             }
         }
 
-        senderPtr->networkALManager->sendingCallback(senderPtr->networkALManager);
+        senderPtr->networkALManager->send(senderPtr->networkALManager);
     }
 
     return NULL;
@@ -495,7 +495,7 @@ eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, AR
         }
         frame.size = offsetof (ARNETWORKAL_Frame_t, dataPtr) + dataDescriptor.dataSize;
         frame.dataPtr = dataDescriptor.dataPtr;
-        if(senderPtr->networkALManager->pushNextFrameCallback(senderPtr->networkALManager, &frame) == ARNETWORKAL_MANAGER_CALLBACK_RETURN_DEFAULT)
+        if(senderPtr->networkALManager->pushFrame(senderPtr->networkALManager, &frame) == ARNETWORKAL_MANAGER_RETURN_DEFAULT)
         {
             /** callback with sent status */
             if (dataDescriptor.callback != NULL)

@@ -19,8 +19,8 @@
  * must create and initialize an @ref ARNETWORKAL_Manager_t.
  *
  * @note Providing an uninitialized @ref ARNETWORKAL_Manager_t, which
- * will be initialized by the application BEFORE any ARNetwork send/read call
- * will also work, but is not the advised behavior.
+ * will be initialized by the application BEFORE the ARNetwork threads are
+ * started will also work, but is not the advised behavior.
  *
  * @see <a href="../../libARNetworkAL/html/index.html" target="_blank">ARNetworkAL Documentation</a>
  *

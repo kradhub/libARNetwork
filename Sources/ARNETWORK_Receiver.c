@@ -141,18 +141,18 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
     ARNETWORKAL_Frame_t frame ;
     ARNETWORK_IOBuffer_t* outBufferPtrTemp = NULL;
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    eARNETWORKAL_MANAGER_CALLBACK_RETURN result = ARNETWORKAL_MANAGER_CALLBACK_RETURN_DEFAULT;
+    eARNETWORKAL_MANAGER_RETURN result = ARNETWORKAL_MANAGER_RETURN_DEFAULT;
     uint8_t ackSeqNumData = 0;
     struct timeval now;
 
     while (receiverPtr->isAlive)
     {
         /** wait a receipt */
-        if (receiverPtr->networkALManager->receivingCallback(receiverPtr->networkALManager) == ARNETWORKAL_MANAGER_CALLBACK_RETURN_DEFAULT)
+        if (receiverPtr->networkALManager->receive(receiverPtr->networkALManager) == ARNETWORKAL_MANAGER_RETURN_DEFAULT)
         {
             /** for each frame present in the receiver buffer */
-            result = receiverPtr->networkALManager->popNextFrameCallback(receiverPtr->networkALManager, &frame);
-            while ((result == ARNETWORKAL_MANAGER_CALLBACK_RETURN_DEFAULT))
+            result = receiverPtr->networkALManager->popFrame(receiverPtr->networkALManager, &frame);
+            while ((result == ARNETWORKAL_MANAGER_RETURN_DEFAULT))
             {
                 /* Special handling of internal frames */
                 if (frame.id < ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX)
@@ -305,7 +305,7 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                 }
 
                 /** get the next frame*/
-                result = receiverPtr->networkALManager->popNextFrameCallback(receiverPtr->networkALManager, &frame);
+                result = receiverPtr->networkALManager->popFrame(receiverPtr->networkALManager, &frame);
             }
         }
     }
