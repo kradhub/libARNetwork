@@ -33,6 +33,8 @@
  ******************************************/
 
 #define ARNETWORK_IOBUFFER_TAG "ARNETWORK_IOBuffer"
+#define ARNETWORK_IOBUFFER_MAXSEQVALUE (256)
+#define ARNETWORK_IOBUFFER_DELTASEQ (-10)
 
 /**
  * @brief free the data pointed by the data descriptor
@@ -110,8 +112,10 @@ ARNETWORK_IOBuffer_t* ARNETWORK_IOBuffer_New(const ARNETWORK_IOBufferParam_t *pa
             }
 
             IOBufferPtr->isWaitAck = 0;
-            IOBufferPtr->seqWaitAck = 255;
             IOBufferPtr->seq = 0;
+            IOBufferPtr->alreadyHadData = 0;
+            IOBufferPtr->nbPackets = 0;
+            IOBufferPtr->nbNetwork = 0;
             IOBufferPtr->waitTimeCount = paramPtr->sendingWaitTimeMs;
             IOBufferPtr->ackWaitTimeCount = paramPtr->ackTimeoutMs;
             IOBufferPtr->retryCount = 0;
@@ -186,7 +190,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AckReceived(ARNETWORK_IOBuffer_t *IOBufferPt
     eARNETWORK_ERROR error = ARNETWORK_OK;
 
     /** delete the data if the sequence number received is same as the sequence number expected */
-    if(IOBufferPtr->isWaitAck && IOBufferPtr->seqWaitAck == seqNumber)
+    if(IOBufferPtr->isWaitAck && IOBufferPtr->seq == seqNumber)
     {
         IOBufferPtr->isWaitAck = 0;
         error = ARNETWORK_IOBuffer_PopDataWithCallBack(IOBufferPtr, ARNETWORK_MANAGER_CALLBACK_STATUS_ACK_RECEIVED);
@@ -356,8 +360,8 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_Flush(ARNETWORK_IOBuffer_t *IOBufferPtr)
 
     /** state reset */
     IOBufferPtr->isWaitAck = 0;
-    IOBufferPtr->seqWaitAck = 255;
     IOBufferPtr->seq = 0;
+    IOBufferPtr->alreadyHadData = 0;
     IOBufferPtr->waitTimeCount = IOBufferPtr->sendingWaitTimeMs;
     IOBufferPtr->ackWaitTimeCount = IOBufferPtr->ackTimeoutMs;
     IOBufferPtr->retryCount = 0;
@@ -421,6 +425,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AddData(ARNETWORK_IOBuffer_t *IOBufferPtr, u
         {
             /** push dataDescriptor in the IOBufferPtr */
             error = ARNETWORK_RingBuffer_PushBack(IOBufferPtr->dataDescriptorRBufferPtr, (uint8_t*) &dataDescriptor);
+            IOBufferPtr->alreadyHadData = 1;
         }
     }
     else
@@ -429,6 +434,29 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AddData(ARNETWORK_IOBuffer_t *IOBufferPtr, u
     }
 
     return error;
+}
+
+int ARNETWORK_IOBuffer_ShouldAcceptData (ARNETWORK_IOBuffer_t *IOBufferPtr, uint8_t seqnum)
+{
+    int retVal = -1;
+    int maxDelta = ARNETWORK_IOBUFFER_DELTASEQ;
+    if (IOBufferPtr == NULL)
+    {
+        return retVal;
+    }
+
+    if (IOBufferPtr->alreadyHadData == 0)
+    {
+        return 1; // Accept any data, regardless of its sequence number
+    }
+
+    retVal = seqnum - IOBufferPtr->seq;
+    if (retVal < maxDelta)// If the packet is more than 10 seq old, it might be a loopback
+    {
+        retVal += ARNETWORK_IOBUFFER_MAXSEQVALUE;
+    }
+    // All other cases should keep their value.
+    return retVal;
 }
 
 eARNETWORK_ERROR ARNETWORK_IOBuffer_ReadData(ARNETWORK_IOBuffer_t *IOBufferPtr, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr)
@@ -470,4 +498,17 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_ReadData(ARNETWORK_IOBuffer_t *IOBufferPtr, 
     }
 
     return error;
+}
+
+int ARNETWORK_IOBuffer_GetEstimatedMissPercentage (ARNETWORK_IOBuffer_t *IOBufferPtr)
+{
+    if (IOBufferPtr == NULL)
+    {
+        return ARNETWORK_ERROR_BAD_PARAMETER;
+    }
+    /* Get the number of missed packets */
+    int nbMissed = IOBufferPtr->nbNetwork - IOBufferPtr->nbPackets;
+    /* Convert it to percentage missed */
+    if (IOBufferPtr->nbNetwork == 0) { return 0; } // Avoid divide by zero
+    return (100 * nbMissed) / IOBufferPtr->nbNetwork;
 }

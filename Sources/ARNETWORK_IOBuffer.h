@@ -36,8 +36,10 @@ typedef struct
     int numberOfRetry; /**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a libARNetwork/sender*/
 
     int isWaitAck; /**< Indicator of waiting an acknowledgement  (1 = true | 0 = false). Must be accessed through ARNETWORK_IOBuffer_IsWaitAck()*/
-    uint8_t seqWaitAck; /**< Sequence number of the acknowledge waiting if used with a libARNetwork/sender or of the last command stored if used with a libARNetwork/reveiver*/
-    uint8_t seq; /**< Sequence number for data sent from this buffer */
+    int alreadyHadData; /**< Init flag (to avoid sequence number conflicts) */
+    uint8_t seq; /**< Sequence number for data sent from this buffer or last sequence number received */
+    uint32_t nbPackets; /**< Number of packets sent/received since the creation of the buffer */
+    uint32_t nbNetwork; /**< Total number of packets sent/received, including misses (based on sequence numbers) */
     int waitTimeCount; /**< Counter of time to wait before the next sending*/
     int ackWaitTimeCount; /**< Counter of time to wait before to consider a timeout without receiving an acknowledgement*/
     int retryCount; /**< Counter of sending retry remaining before to consider a failure*/
@@ -155,6 +157,16 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_Flush(ARNETWORK_IOBuffer_t *IOBufferPtr);
 eARNETWORK_ERROR ARNETWORK_IOBuffer_AddData(ARNETWORK_IOBuffer_t *IOBufferPtr, uint8_t *dataPtr, int dataSize, void *customData, ARNETWORK_Manager_Callback_t callback, int doDataCopy);
 
 /**
+ * @brief Asks an IOBuffer if it should accept a data with the given sequence number
+ * @param IOBufferPtr Pointer on the output buffer
+ * @param[in] seqnum The new sequence number
+ * @warning This function behavior is undefined on input buffers
+ * @note The negative return value of this funtion is NOT an eARNETWORK_ERROR enum value !
+ * @return A positive number (equal to seqnum - IOBufferPtr.seq [+ loopback if needed]) if the data should be accepted, a negative number otherwise.
+ */
+int ARNETWORK_IOBuffer_ShouldAcceptData (ARNETWORK_IOBuffer_t *IOBufferPtr, uint8_t seqnum);
+
+/**
  * @brief read data received in a IOBuffer
  * @warning the data read is pop
  * @param IOBufferPtr Pointer on the input or output buffer
@@ -164,5 +176,13 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AddData(ARNETWORK_IOBuffer_t *IOBufferPtr, u
  * @return error eARNETWORK_ERROR type
  */
 eARNETWORK_ERROR ARNETWORK_IOBuffer_ReadData(ARNETWORK_IOBuffer_t *IOBufferPtr, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr);
+
+/**
+ * @brief Gets the estimated miss percentage of the buffer
+ * This functions behavior is undefined on input buffer
+ * @param IOBufferPtr Pointer to the ARNETWORK_IOBuffer_t
+ * @return Estimated miss percentage [0-100]. A negative value is an error (@ref eARNETWORK_ERROR)
+ */
+int ARNETWORK_IOBuffer_GetEstimatedMissPercentage (ARNETWORK_IOBuffer_t *IOBufferPtr);
 
 #endif /** _ARNETWORK_IOBUFFER_PRIVATE_H_ */

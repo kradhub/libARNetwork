@@ -345,7 +345,6 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
                      * and pass on waiting acknowledgement.
                      */
                     buffer->isWaitAck = 1;
-                    buffer->seqWaitAck = buffer->seq;
                     buffer->ackWaitTimeCount = buffer->ackTimeoutMs;
                     buffer->retryCount = buffer->numberOfRetry;
                     break;
@@ -369,7 +368,6 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
                     ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_SENDER_TAG, "dataType: %d unknow \n", buffer->dataType);
                     break;
                 }
-                buffer->seq++;
             }
         }
 
@@ -483,16 +481,13 @@ eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, AR
     if (error == ARNETWORK_OK)
     {
         ARNETWORKAL_Frame_t frame = { 0 };
+        if (isRetry == 0)
+        {
+            inputBufferPtr->seq++;
+        }
         frame.type = inputBufferPtr->dataType;
         frame.id = inputBufferPtr->ID;
-        if (isRetry == 1)
-        {
-            frame.seq = inputBufferPtr->seqWaitAck;
-        }
-        else
-        {
-            frame.seq = inputBufferPtr->seq;
-        }
+        frame.seq = inputBufferPtr->seq;
         frame.size = offsetof (ARNETWORKAL_Frame_t, dataPtr) + dataDescriptor.dataSize;
         frame.dataPtr = dataDescriptor.dataPtr;
         if(senderPtr->networkALManager->pushFrame(senderPtr->networkALManager, &frame) == ARNETWORKAL_MANAGER_RETURN_DEFAULT)

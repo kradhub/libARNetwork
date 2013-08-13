@@ -858,3 +858,49 @@ int ARNETWORK_Manager_GetEstimatedLatency (ARNETWORK_Manager_t *managerPtr)
     }
     return result;
 }
+
+int ARNETWORK_Manager_GetEstimatedMissPercentage (ARNETWORK_Manager_t *managerPtr, int outBufferID)
+{
+    eARNETWORK_ERROR error = ARNETWORK_OK;
+    int result = 0;
+    if (managerPtr == NULL)
+    {
+        error = ARNETWORK_ERROR_BAD_PARAMETER;
+    }
+    else
+    {
+        ARNETWORK_IOBuffer_t *buffer = managerPtr->outputBufferPtrMap[outBufferID];
+
+        if (buffer != NULL)
+        {
+            /** lock the IOBuffer */
+            error = ARNETWORK_IOBuffer_Lock (buffer);
+
+            if (error == ARNETWORK_OK)
+            {
+                /** Gets the buffer estimated miss percentage */
+                result = ARNETWORK_IOBuffer_GetEstimatedMissPercentage (buffer);
+                if (result < 0)
+                {
+                    error = (eARNETWORK_ERROR)result;
+                }
+
+                /** unlock the IOBuffer */
+                ARNETWORK_IOBuffer_Unlock (buffer);
+            }
+        }
+        else
+        {
+            error = ARNETWORK_ERROR_BAD_PARAMETER;
+        }
+    }
+
+    if (error != ARNETWORK_OK)
+    {
+        return (int)error;
+    }
+    else
+    {
+        return result;
+    }
+}

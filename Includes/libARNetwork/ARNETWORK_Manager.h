@@ -193,4 +193,12 @@ eARNETWORK_ERROR ARNETWORK_Manager_FlushOutputBuffer(ARNETWORK_Manager_t *manage
  */
 int ARNETWORK_Manager_GetEstimatedLatency (ARNETWORK_Manager_t *managerPtr);
 
+/**
+ * @brief Gets the estimated miss percentage of an output buffer
+ * @param managerPtr Pointer to the ARNETWORK_Manager_t
+ * @param outBufferID Identifier of the buffer
+ * @return Estimated miss percentage [0-100]. A negative value is an error (@ref eARNETWORK_ERROR)
+ */
+int ARNETWORK_Manager_GetEstimatedMissPercentage (ARNETWORK_Manager_t *managerPtr, int outBufferID);
+
 #endif /* _ARNETWORK_MANAGER_H_ */

@@ -219,7 +219,14 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                         error = ARNETWORK_IOBuffer_Lock(outBufferPtrTemp);
                         if(error == ARNETWORK_OK)
                         {
-                            error = ARNETWORK_Receiver_CopyDataRecv(receiverPtr, outBufferPtrTemp, &frame);
+                            if (ARNETWORK_IOBuffer_ShouldAcceptData (outBufferPtrTemp, frame.seq) > 0)
+                            {
+                                error = ARNETWORK_Receiver_CopyDataRecv(receiverPtr, outBufferPtrTemp, &frame);
+                            }
+                            else
+                            {
+                                ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "Received an old frame for buffer %d", outBufferPtrTemp->ID);
+                            }
 
                             /** unlock the IOBuffer */
                             ARNETWORK_IOBuffer_Unlock(outBufferPtrTemp);
@@ -244,7 +251,14 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                         error = ARNETWORK_IOBuffer_Lock(outBufferPtrTemp);
                         if(error == ARNETWORK_OK)
                         {
-                            error = ARNETWORK_Receiver_CopyDataRecv(receiverPtr, outBufferPtrTemp, &frame);
+                            if (ARNETWORK_IOBuffer_ShouldAcceptData (outBufferPtrTemp, frame.seq) > 0)
+                            {
+                                error = ARNETWORK_Receiver_CopyDataRecv(receiverPtr, outBufferPtrTemp, &frame);
+                            }
+                            else
+                            {
+                                ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "Received an old frame for buffer %d", outBufferPtrTemp->ID);
+                            }
 
                             /** unlock the IOBuffer */
                             ARNETWORK_IOBuffer_Unlock(outBufferPtrTemp);
@@ -273,19 +287,19 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                         if(error == ARNETWORK_OK)
                         {
                             /** OutBuffer->seqWaitAck used to save the last seq */
-                            if(frame.seq != outBufferPtrTemp->seqWaitAck)
+                            if (ARNETWORK_IOBuffer_ShouldAcceptData (outBufferPtrTemp, frame.seq) > 0)
                             {
-                                error = ARNETWORK_Receiver_CopyDataRecv( receiverPtr, outBufferPtrTemp, &frame);
-                                if( error == ARNETWORK_OK)
-                                {
-                                    outBufferPtrTemp->seqWaitAck = frame.seq;
-                                }
-                                else
-                                {
-                                    ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "data acknowledged received, error: %s", ARNETWORK_Error_ToString (error));
-                                }
+                                error = ARNETWORK_Receiver_CopyDataRecv(receiverPtr, outBufferPtrTemp, &frame);
+                            }
+                            else
+                            {
+                                ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "Received an old frame for buffer %d", outBufferPtrTemp->ID);
                             }
 
+                            if(error != ARNETWORK_OK)
+                            {
+                                ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "data acknowledged received, error: %s", ARNETWORK_Error_ToString (error));
+                            }
                             /** unlock the IOBuffer */
                             ARNETWORK_IOBuffer_Unlock(outBufferPtrTemp);
 
@@ -348,6 +362,8 @@ eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv (ARNETWORK_Receiver_t *receiver
     int semError = 0;
     int dataSize = 0;
 
+    int nbNew = ARNETWORK_IOBuffer_ShouldAcceptData (outputBufferPtr, framePtr->seq);
+
     /** get the data size*/
     dataSize = framePtr->size - offsetof (ARNETWORKAL_Frame_t, dataPtr);
 
@@ -365,6 +381,10 @@ eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv (ARNETWORK_Receiver_t *receiver
 
     if (error == ARNETWORK_OK)
     {
+        /** Keep buffer "miss count" accurate */
+        outputBufferPtr->nbPackets++;
+        outputBufferPtr->nbNetwork += nbNew;
+        outputBufferPtr->seq = framePtr->seq;
         /** post a semaphore to indicate data ready to be read */
         semError = ARSAL_Sem_Post (&(outputBufferPtr->outputSem));
 
