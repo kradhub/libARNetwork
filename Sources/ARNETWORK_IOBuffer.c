@@ -360,7 +360,6 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_Flush(ARNETWORK_IOBuffer_t *IOBufferPtr)
 
     /** state reset */
     IOBufferPtr->isWaitAck = 0;
-    IOBufferPtr->seq = 0;
     IOBufferPtr->alreadyHadData = 0;
     IOBufferPtr->waitTimeCount = IOBufferPtr->sendingWaitTimeMs;
     IOBufferPtr->ackWaitTimeCount = IOBufferPtr->ackTimeoutMs;
