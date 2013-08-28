@@ -119,6 +119,7 @@ ARNETWORK_Sender_t* ARNETWORK_Sender_New (ARNETWORKAL_Manager_t *networkALManage
             senderPtr->numberOfInternalInputBuff = numberOfInternalInputBuffer;
             senderPtr->internalInputBufferPtrArr = internalInputBufferPtrArr;
             senderPtr->inputBufferPtrMap = inputBufferPtrMap;
+            senderPtr->minimumTimeBetweenSendsMs = ARNETWORK_SENDER_MILLISECOND;
             if (pingDelayMs == 0)
             {
                 senderPtr->minTimeBetweenPings = ARNETWORK_SENDER_MINIMUM_TIME_BETWEEN_PINGS_MS;
@@ -217,7 +218,7 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
         if (mustWait == 1)
         {
             ARSAL_Mutex_Lock (&(senderPtr->nextSendMutex));
-            ARSAL_Cond_Timedwait (&(senderPtr->nextSendCond), &(senderPtr->nextSendMutex), ARNETWORK_SENDER_MILLISECOND);
+            ARSAL_Cond_Timedwait (&(senderPtr->nextSendCond), &(senderPtr->nextSendMutex), senderPtr->minimumTimeBetweenSendsMs);
             ARSAL_Mutex_Unlock (&(senderPtr->nextSendMutex));
         }
 
@@ -285,7 +286,14 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
         /** decrement the time to wait */
         if ((buffer->waitTimeCount > 0) && (hasWaited == 1))
         {
-            -- (buffer->waitTimeCount);
+            if (senderPtr->minimumTimeBetweenSendsMs > buffer->waitTimeCount)
+            {
+                buffer->waitTimeCount = 0;
+            }
+            else
+            {
+                buffer->waitTimeCount -= senderPtr->minimumTimeBetweenSendsMs;
+            }
         }
 
         if (ARNETWORK_IOBuffer_IsWaitAck (buffer))
@@ -325,7 +333,14 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
             /** decrement the time to wait before considering as a timeout */
             if ((buffer->ackWaitTimeCount > 0) && (hasWaited == 1))
             {
-                -- (buffer->ackWaitTimeCount);
+                if (senderPtr->minimumTimeBetweenSendsMs > buffer->ackWaitTimeCount)
+                {
+                    buffer->ackWaitTimeCount = 0;
+                }
+                else
+                {
+                    buffer->ackWaitTimeCount -= senderPtr->minimumTimeBetweenSendsMs;
+                }
             }
         }
 

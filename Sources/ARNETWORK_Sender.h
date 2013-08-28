@@ -55,6 +55,8 @@ typedef struct
     int isPingRunning; /**< Boolean-like. 1 if a ping is in progress, else 0 */
     int minTimeBetweenPings; /**< Minimum time to wait between pings. Negative value mean no ping */
 
+    int minimumTimeBetweenSendsMs; /**< Minimum time to wait between network sends */
+
 }ARNETWORK_Sender_t;
 
 /**

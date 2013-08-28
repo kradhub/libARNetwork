@@ -201,4 +201,15 @@ int ARNETWORK_Manager_GetEstimatedLatency (ARNETWORK_Manager_t *managerPtr);
  */
 int ARNETWORK_Manager_GetEstimatedMissPercentage (ARNETWORK_Manager_t *managerPtr, int outBufferID);
 
+/**
+ * @brief Sets the minimum time between two network sends for the given ARNETWORK_Manager_t
+ * Default value is 1ms
+ * @warning The @ref ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY buffers are not affected by this setting
+ * @warning Setting a bad minimum time can result in erratic behavior of the library
+ * @param managerPtr Pointer to the ARNETWORK_Manager_t
+ * @param minimumTimeMs Minimum time, in miliseconds, between two network sends
+ * @return error eARNETWORK_ERROR type
+ */
+eARNETWORK_ERROR ARNETWORK_Manager_SetMinimumTimeBetweenSends (ARNETWORK_Manager_t *managerPtr, int minimumTimeMs);
+
 #endif /* _ARNETWORK_MANAGER_H_ */

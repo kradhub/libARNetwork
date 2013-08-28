@@ -904,3 +904,15 @@ int ARNETWORK_Manager_GetEstimatedMissPercentage (ARNETWORK_Manager_t *managerPt
         return result;
     }
 }
+
+
+eARNETWORK_ERROR ARNETWORK_Manager_SetMinimumTimeBetweenSends (ARNETWORK_Manager_t *managerPtr, int minimumTimeMs)
+{
+    if ((managerPtr == NULL) ||
+        (managerPtr->senderPtr == NULL))
+    {
+        return ARNETWORK_ERROR_BAD_PARAMETER;
+    }
+    managerPtr->senderPtr->minimumTimeBetweenSendsMs = minimumTimeMs;
+    return ARNETWORK_OK;
+}
