@@ -266,6 +266,9 @@ int main(int argc, char *argv[])
 
         ARSAL_PRINT (ARSAL_PRINT_WARNING, AUTOTEST_TAG, "wait ...");
 
+        ARNETWORKAL_Manager_SignalWifiNetwork(managerCheck1.networkALManagerPtr);
+        ARNETWORKAL_Manager_SignalWifiNetwork(managerCheck2.networkALManagerPtr);
+
         /** kill all threads */
         if(managerCheck1.managerSendingThread != NULL)
         {
