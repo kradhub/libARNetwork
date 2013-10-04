@@ -152,7 +152,7 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
         {
             /** for each frame present in the receiver buffer */
             result = receiverPtr->networkALManager->popFrame(receiverPtr->networkALManager, &frame);
-            while ((result == ARNETWORKAL_MANAGER_RETURN_DEFAULT))
+            while (result == ARNETWORKAL_MANAGER_RETURN_DEFAULT)
             {
                 /* Special handling of internal frames */
                 if (frame.id < ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX)
