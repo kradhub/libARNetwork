@@ -32,10 +32,27 @@
 
 /*****************************************
  *
- *             implementation :
+ *             internal functions :
  *
  ******************************************/
 
+/* Normalize indices if they are both larger than the entire buffer size
+ * so that they do not overflow. */
+static inline void normalize_indices(ARNETWORK_RingBuffer_t *ringBufferPtr)
+{
+    size_t buffer_size = ringBufferPtr->cellSize * ringBufferPtr->numberOfCell;
+    if (ringBufferPtr->indexInput >= buffer_size && ringBufferPtr->indexOutput >= buffer_size)
+    {
+        ringBufferPtr->indexInput %= buffer_size;
+        ringBufferPtr->indexOutput %= buffer_size;
+    }
+}
+
+/*****************************************
+ *
+ *             implementation :
+ *
+ ******************************************/
 
 ARNETWORK_RingBuffer_t* ARNETWORK_RingBuffer_New(unsigned int numberOfCell, unsigned int cellSize)
 {
@@ -129,6 +146,7 @@ eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBackWithSize(ARNETWORK_RingBuffer_t *r
         }
 
         ringBufferPtr->indexInput += ringBufferPtr->cellSize;
+        normalize_indices(ringBufferPtr);
     }
     else
     {
@@ -166,6 +184,7 @@ eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFrontWithSize(ARNETWORK_RingBuffer_t *r
             memcpy(dataPopPtr, bufferPtr, dataSize);
         }
         (ringBufferPtr->indexOutput) += ringBufferPtr->cellSize;
+        normalize_indices(ringBufferPtr);
     }
     else
     {
