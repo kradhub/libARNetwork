@@ -341,12 +341,18 @@ void* ARNETWORK_Manager_ReceivingThreadRun (void *data)
 void ARNETWORK_Manager_Stop (ARNETWORK_Manager_t *managerPtr)
 {
     /** -- stop the threads of sending and reception -- */
-
+    
     /** check paratemters */
     if (managerPtr != NULL)
     {
         ARNETWORK_Sender_Stop (managerPtr->senderPtr);
         ARNETWORK_Receiver_Stop (managerPtr->receiverPtr);
+        
+        /* unlock all functions of the networkAL to permit to join the threads */
+        if (managerPtr->networkALManager->unlock != NULL)
+        {
+            managerPtr->networkALManager->unlock (managerPtr->networkALManager);
+        }
     }
 }
 
