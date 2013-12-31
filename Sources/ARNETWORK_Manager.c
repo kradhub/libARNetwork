@@ -386,6 +386,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_SendData (ARNETWORK_Manager_t *managerPtr, in
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
     ARNETWORK_IOBuffer_t *inputBufferPtr = NULL;
+    int bufferWasEmpty = 0;
 
     /** check paratemters:
      *  -   the manager ponter is not NUL
@@ -415,6 +416,11 @@ eARNETWORK_ERROR ARNETWORK_Manager_SendData (ARNETWORK_Manager_t *managerPtr, in
 
     if(error == ARNETWORK_OK)
     {
+        bufferWasEmpty = ARNETWORK_RingBuffer_IsEmpty(inputBufferPtr->dataDescriptorRBufferPtr);
+    }
+
+    if(error == ARNETWORK_OK)
+    {
         /** add the data in the inputBuffer */
         error = ARNETWORK_IOBuffer_AddData (inputBufferPtr, dataPtr, dataSize, customData, callback, doDataCopy);
         ARNETWORK_IOBuffer_Unlock(inputBufferPtr);
@@ -422,7 +428,8 @@ eARNETWORK_ERROR ARNETWORK_Manager_SendData (ARNETWORK_Manager_t *managerPtr, in
 
     if (error == ARNETWORK_OK)
     {
-        if (inputBufferPtr->dataType == ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY)
+        if ((inputBufferPtr->dataType == ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY) ||
+            (bufferWasEmpty > 0))
         {
             ARNETWORK_Sender_SignalNewData (managerPtr->senderPtr);
         }

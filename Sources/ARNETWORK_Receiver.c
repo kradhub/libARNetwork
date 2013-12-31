@@ -307,7 +307,7 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                             error = ARNETWORK_Receiver_ReturnACK(receiverPtr, frame.id, frame.seq);
                             if( error != ARNETWORK_OK)
                             {
-                                ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "ReturnACK, error: %d occurred \n", error);
+                                ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "ReturnACK, error: %s", ARNETWORK_Error_ToString(error));
                             }
                         }
                     }

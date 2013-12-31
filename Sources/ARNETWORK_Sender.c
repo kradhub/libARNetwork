@@ -194,36 +194,56 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
     int inputBufferIndex = 0;
     ARNETWORK_IOBuffer_t *inputBufferPtrTemp = NULL; /**< pointer of the input buffer in processing */
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    int mustWait = 1;
+    int waitTimeMs = 0;
     struct timeval now;
+    struct timeval sleepStart;
+    int sleepDurationMs = 0;
     int timeDiffMs;
 
     while (senderPtr->isAlive)
     {
-        mustWait = 1;
-        for (inputBufferIndex = 0; inputBufferIndex < senderPtr->numberOfInputBuff && mustWait == 1; ++inputBufferIndex)
+        waitTimeMs = 500;
+        for (inputBufferIndex = 0; inputBufferIndex < senderPtr->numberOfInputBuff && waitTimeMs > 0; ++inputBufferIndex)
         {
             inputBufferPtrTemp = senderPtr->inputBufferPtrArr[inputBufferIndex];
-            if (inputBufferPtrTemp->dataType == ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY)
+            error = ARNETWORK_IOBuffer_Lock(inputBufferPtrTemp);
+            switch (inputBufferPtrTemp->dataType)
             {
-                error = ARNETWORK_IOBuffer_Lock(inputBufferPtrTemp);
+            case ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY:
                 if ((error == ARNETWORK_OK) &&
                     (!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBufferPtr)))
                 {
-                    mustWait = 0;
+                    waitTimeMs = 0;
                 }
-                ARNETWORK_IOBuffer_Unlock(inputBufferPtrTemp);
+                break;
+            default:
+                if ((error == ARNETWORK_OK) &&
+                    (!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBufferPtr)))
+                {
+                    if (inputBufferPtrTemp->sendingWaitTimeMs < waitTimeMs)
+                    {
+                        waitTimeMs = inputBufferPtrTemp->sendingWaitTimeMs;
+                    }
+                }
+                break;
             }
+            ARNETWORK_IOBuffer_Unlock(inputBufferPtrTemp);
         }
-        if (mustWait == 1)
+        gettimeofday(&sleepStart, NULL);
+        if (waitTimeMs > 0)
         {
+            if (waitTimeMs < senderPtr->minimumTimeBetweenSendsMs)
+            {
+                waitTimeMs = senderPtr->minimumTimeBetweenSendsMs;
+            }
             ARSAL_Mutex_Lock (&(senderPtr->nextSendMutex));
-            ARSAL_Cond_Timedwait (&(senderPtr->nextSendCond), &(senderPtr->nextSendMutex), senderPtr->minimumTimeBetweenSendsMs);
+            ARSAL_Cond_Timedwait (&(senderPtr->nextSendCond), &(senderPtr->nextSendMutex), waitTimeMs);
             ARSAL_Mutex_Unlock (&(senderPtr->nextSendMutex));
         }
 
         /** Process internal input buffers */
         gettimeofday (&now, NULL);
+        sleepDurationMs = ARSAL_Time_ComputeMsTimeDiff (&sleepStart, &now);
         ARSAL_Mutex_Lock (&(senderPtr->pingMutex));
         timeDiffMs = ARSAL_Time_ComputeMsTimeDiff (&(senderPtr->pingStartTime), &now);
         /* Send only new pings if ping function is active (min time > 0) */
@@ -264,7 +284,7 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
             inputBufferPtrTemp = senderPtr->inputBufferPtrMap[inputBufferIndex];
             if (inputBufferPtrTemp != NULL)
             {
-                ARNETWORK_Sender_ProcessBufferToSend (senderPtr, inputBufferPtrTemp, mustWait);
+                ARNETWORK_Sender_ProcessBufferToSend (senderPtr, inputBufferPtrTemp, (waitTimeMs > 0) ? sleepDurationMs : 0);
             }
         }
 
@@ -274,7 +294,7 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
     return NULL;
 }
 
-void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *buffer, int hasWaited)
+void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IOBuffer_t *buffer, int hasWaitedMs)
 {
     eARNETWORK_MANAGER_CALLBACK_RETURN callbackReturn = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
     eARNETWORK_ERROR error = ARNETWORK_OK;
@@ -284,15 +304,15 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
     if(error == ARNETWORK_OK)
     {
         /** decrement the time to wait */
-        if ((buffer->waitTimeCount > 0) && (hasWaited == 1))
+        if ((buffer->waitTimeCount > 0) && (hasWaitedMs > 0))
         {
-            if (senderPtr->minimumTimeBetweenSendsMs > buffer->waitTimeCount)
+            if (hasWaitedMs > buffer->waitTimeCount)
             {
                 buffer->waitTimeCount = 0;
             }
             else
             {
-                buffer->waitTimeCount -= senderPtr->minimumTimeBetweenSendsMs;
+                buffer->waitTimeCount -= hasWaitedMs;
             }
         }
 
@@ -331,15 +351,15 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
             }
 
             /** decrement the time to wait before considering as a timeout */
-            if ((buffer->ackWaitTimeCount > 0) && (hasWaited == 1))
+            if ((buffer->ackWaitTimeCount > 0) && (hasWaitedMs > 0))
             {
-                if (senderPtr->minimumTimeBetweenSendsMs > buffer->ackWaitTimeCount)
+                if (hasWaitedMs > buffer->ackWaitTimeCount)
                 {
                     buffer->ackWaitTimeCount = 0;
                 }
                 else
                 {
-                    buffer->ackWaitTimeCount -= senderPtr->minimumTimeBetweenSendsMs;
+                    buffer->ackWaitTimeCount -= hasWaitedMs;
                 }
             }
         }
