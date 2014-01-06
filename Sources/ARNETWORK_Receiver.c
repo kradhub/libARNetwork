@@ -342,7 +342,12 @@ eARNETWORK_ERROR ARNETWORK_Receiver_ReturnACK (ARNETWORK_Receiver_t *receiverPtr
 
     if (ACKIOBufferPtr != NULL)
     {
+        int isEmpty = ARNETWORK_RingBuffer_IsEmpty(ACKIOBufferPtr->dataDescriptorRBufferPtr);
         error = ARNETWORK_IOBuffer_AddData (ACKIOBufferPtr, (uint8_t*) &seq, sizeof(seq), NULL, NULL, 1);
+        if (error == ARNETWORK_OK && isEmpty > 0)
+        {
+            ARNETWORK_Sender_SignalNewData (receiverPtr->senderPtr);
+        }
     }
 
     return error;

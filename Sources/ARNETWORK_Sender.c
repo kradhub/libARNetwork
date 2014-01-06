@@ -220,9 +220,9 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
                 if ((error == ARNETWORK_OK) &&
                     (!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBufferPtr)))
                 {
-                    if (inputBufferPtrTemp->sendingWaitTimeMs < waitTimeMs)
+                    if (inputBufferPtrTemp->waitTimeCount < waitTimeMs)
                     {
-                        waitTimeMs = inputBufferPtrTemp->sendingWaitTimeMs;
+                        waitTimeMs = inputBufferPtrTemp->waitTimeCount;
                     }
                 }
                 break;
