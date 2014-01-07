@@ -5,6 +5,8 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(m4)
 
+m4_include([../../ARBuildUtils/Utils/m4/ARSDK.m4])
+
 # automake initialisation and check for minimal automake API version 1.9
 AM_INIT_AUTOMAKE
 
@@ -24,10 +26,10 @@ AC_MSG_RESULT([$debugit])
 
 if test x"$debugit" = x"yes"; then
     AC_DEFINE([DEBUG],[],[Debug Mode])
-    CFLAGS+=" -g -Wall -Werror -Wno-uninitialized -O0"
+    LOCAL_CFLAGS+=" -g -Wall -Werror -Wno-uninitialized -O0"
 else
     AC_DEFINE([NDEBUG],[],[No-debug Mode])
-    CFLAGS+=" -O3"
+    LOCAL_CFLAGS+=" -O3"
 fi
 AM_CONDITIONAL([DEBUG_MODE], [test "$debugit" = "yes"])
 
@@ -43,153 +45,20 @@ AC_ARG_ENABLE([so-version],
 AC_MSG_RESULT([$sover])
 
 ##########################################################################
-# Define libARSAL directories
-##########################################################################
-# get the directories of libARSAL
-AC_ARG_WITH([libARSALInstallDir],
-            AS_HELP_STRING([--with-libARSALInstallDir=DIR],[directory of the libARSAL installation @<:@default=PREFIX@:>@]),
-            [if test x$withval = xno; then
-              libARSALInstallDir=""
-            else
-              libARSALInstallDir="$withval"
-            fi], 
-            [if test x$prefix = xNONE; then
-              libARSALInstallDir=""
-            else
-              libARSALInstallDir="$prefix"
-            fi])
-
-AC_ARG_WITH([libARSALIncludeDir],
-            AS_HELP_STRING([--with-libARSALIncludeDir=DIR],[directory of the libARSAL headers @<:@default=libARSALInstallDir/include@:>@]),
-            [if test x$withval = xno; then
-              [if test ! -z $libARSALInstallDir; then
-                 libARSALIncludeDir="$libARSALInstallDir/include"
-              else
-                 libARSALIncludeDir=""
-              fi]
-            else
-              libARSALIncludeDir="$withval"
-            fi],
-              [if test ! -z $libARSALInstallDir; then
-                 libARSALIncludeDir="$libARSALInstallDir/include"
-              else
-                 libARSALIncludeDir=""
-              fi])
-
-AC_ARG_WITH([libARSALLibDir],
-            AS_HELP_STRING([--with-libARSALLibDir=DIR],[directory of the libARSAL libraries @<:@default=libARSALInstallDir/lib@:>@]),
-            [if test x$withval = xno; then
-              [if test ! -z $libARSALInstallDir; then
-                libARSALLibDir="$libARSALInstallDir/lib"
-              else
-                libARSALLibDir=""
-              fi]
-            else
-              libARSALLibDir="$withval"
-            fi],
-              [if test ! -z $libARSALInstallDir; then
-                libARSALLibDir="$libARSALInstallDir/lib"
-              else
-                libARSALLibDir=""
-              fi])
-
-##########################################################################
-# Define libARNetworkAL directories
-##########################################################################
-# get the directories of libARNetworkAL
-AC_ARG_WITH([libARNetworkALInstallDir],
-            AS_HELP_STRING([--with-libARNetworkALInstallDir=DIR],[directory of the libARNetworkAL installation @<:@default=PREFIX@:>@]),
-            [if test x$withval = xno; then
-              libARNetworkALInstallDir=""
-            else
-              libARNetworkALInstallDir="$withval"
-            fi], 
-            [if test x$prefix = xNONE; then
-              libARNetworkALInstallDir=""
-            else
-              libARNetworkALInstallDir="$prefix"
-            fi])
-
-AC_ARG_WITH([libARNetworkALIncludeDir],
-            AS_HELP_STRING([--with-libARNetworkALIncludeDir=DIR],[directory of the libARNetworkAL headers @<:@default=libARNetworkALInstallDir/include@:>@]),
-            [if test x$withval = xno; then
-              [if test ! -z $libARNetworkALInstallDir; then
-                 libARNetworkALIncludeDir="$libARNetworkALInstallDir/include"
-              else
-                 libARNetworkALIncludeDir=""
-              fi]
-            else
-              libARNetworkALIncludeDir="$withval"
-            fi],
-              [if test ! -z $libARNetworkALInstallDir; then
-                 libARNetworkALIncludeDir="$libARNetworkALInstallDir/include"
-              else
-                 libARNetworkALIncludeDir=""
-              fi])
-
-AC_ARG_WITH([libARNetworkALLibDir],
-            AS_HELP_STRING([--with-libARNetworkALLibDir=DIR],[directory of the libARNetworkAL libraries @<:@default=libARNetworkALInstallDir/lib@:>@]),
-            [if test x$withval = xno; then
-              [if test ! -z $libARNetworkALInstallDir; then
-                libARNetworkALLibDir="$libARNetworkALInstallDir/lib"
-              else
-                libARNetworkALLibDir=""
-              fi]
-            else
-              libARNetworkALLibDir="$withval"
-            fi],
-              [if test ! -z $libARNetworkALInstallDir; then
-                libARNetworkALLibDir="$libARNetworkALInstallDir/lib"
-              else
-                libARNetworkALLibDir=""
-              fi])
-
-##########################################################################
 # Define includes directories
 ##########################################################################
 
 # include local headers first
-CFLAGS+=" -I$srcdir/../Includes -I$srcdir/../Sources"
+LOCAL_CFLAGS+=" -I$srcdir/../Includes -I$srcdir/../Sources"
 
-# add the headers directory of libARSAL
-if test ! -z $libARSALIncludeDir; then
-  CFLAGS+=" -I$libARSALIncludeDir"
-fi
+CPPFLAGS+="$LOCAL_CFLAGS"
+CFLAGS+="$LOCAL_CFLAGS"
+OBJCFLAGS+="$LOCAL_CFLAGS"
 
-# add the headers directory of libARNetworkAL
-if test ! -z $libARNetworkALIncludeDir; then
-  CFLAGS+=" -I$libARNetworkALIncludeDir"
-fi
+# Add libARxxx deps
 
-CPPFLAGS="$CFLAGS"
-##########################################################################
-# Define binaries directories
-##########################################################################
-
-# add the binaries directory of libSal
-if test ! -z $libARSALLibDir; then
-  LDFLAGS+=" -L$libARSALLibDir"
-fi
-
-# add the binaries directory of libARNetworkAL 
-if test ! -z $libARNetworkALLibDir; then
-  LDFLAGS+=" -L$libARNetworkALLibDir"
-fi
-
-##########################################################################
-# Check headers
-##########################################################################
-
-# Checks for libSAL.h
-AC_CHECK_HEADERS([libARSAL/ARSAL_Print.h libARSAL/ARSAL_Thread.h libARSAL/ARSAL_Mutex.h \
-libARSAL/ARSAL_Socket.h libARSAL/ARSAL_Time.h],,
-	AC_MSG_ERROR(The libARSAL headers are required in order to build the library !
-- Use --with-libARSALInstallDir or --with-libARSALIncludeDir to indicate a specific include path.))
-
-# Checks for libARNetWork_OSSpecific.h
-AC_CHECK_HEADERS([libARNetworkAL/ARNETWORKAL_Manager.h libARNetworkAL/ARNETWORKAL_Error.h libARNetworkAL/ARNETWORKAL_Frame.h],,
-	AC_MSG_ERROR(The libARNetworkAL headers are required in order to build the library !
-- Use --with-libARNetworkALInstallDir or --with-libARNetworkALIncludeDir to indicate a specific include path.))
+AR_DEPENDS([libARSAL], [Y], [libARSAL/ARSAL.h])
+AR_DEPENDS([libARNetworkAL], [Y], [libARNetworkAL/ARNetworkAL.h])
 
 ##########################################################################
 # Checks for programs.
