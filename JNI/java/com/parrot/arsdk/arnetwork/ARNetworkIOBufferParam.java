@@ -24,6 +24,15 @@ public class ARNetworkIOBufferParam
     private native void nativeSetIsOverwriting(long jIOBufferParamPtr, boolean over);
 
     private long cIOBufferParam;
+    
+    private int id;
+    private ARNETWORKAL_FRAME_TYPE_ENUM dataType;
+    private int timeBetweenSend;
+    private int ackTimeoutMs;
+    private int numberOfRetry;
+    private int numberOfCell;
+    private int copyMaxSize;
+    private boolean isOverwriting;
 
     /**
      * Constructor
@@ -48,6 +57,15 @@ public class ARNetworkIOBufferParam
         nativeSetNumberOfCell (cIOBufferParam, numberOfCell);
         nativeSetDataCopyMaxSize (cIOBufferParam, dataCopyMaxSize);
         nativeSetIsOverwriting (cIOBufferParam, isOverwriting);
+        
+        this.id = id;
+        this.dataType = dataType;
+        this.timeBetweenSend = timeBetweenSend;
+        this.ackTimeoutMs = ackTimeoutMs;
+        this.numberOfRetry = numberOfRetry;
+        this.numberOfCell = numberOfCell;
+        this.copyMaxSize = copyMaxSize;
+        this.isOverwriting = isOverwriting;
     }
 
     /**
@@ -77,4 +95,45 @@ public class ARNetworkIOBufferParam
     public long getNativePointer () {
         return cIOBufferParam;
     }
+    
+    public int getId ()
+    {
+        return this.id;
+    }
+    
+    public ARNETWORKAL_FRAME_TYPE_ENUM getDataType ()
+    {
+        return this.dataType;
+    }
+    
+    public int getTimeBetweenSend ()
+    {
+        return this.timeBetweenSend;
+    }
+    
+    public int getAckTimeoutMs ()
+    {
+        return this.ackTimeoutMs;
+    }
+    
+    public int getNumberOfRetry ()
+    {
+        return this.numberOfRetry;
+    }
+    
+    public int getNumberOfCell ()
+    {
+        return this.numberOfCell;
+    }
+    
+    public int getCopyMaxSize ()
+    {
+        return this.copyMaxSize;
+    }
+    
+    public boolean getIsOverwriting ()
+    {
+        return this.isOverwriting;
+    }
+    
 }
