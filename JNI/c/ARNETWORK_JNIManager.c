@@ -27,7 +27,8 @@
 typedef struct
 {
     jobject jManager; /**< manager sent the data */
-    jobject jARData; /**< java native data*/
+    jobject jARData; /**< java data*/
+    jobject jCustomData; /**< java custom data*/
 }ARNETWORK_JNIManager_CallbackData_t;
 
 /*****************************************
@@ -37,6 +38,11 @@ typedef struct
  *****************************************/
 
 #define ARNETWORK_JNIMANGER_TAG "JNIManager" /** tag used by the print of the file */
+
+static JavaVM* gARNETWORK_JNIManager_VM = NULL; /** reference to the java virtual machine */
+
+static jmethodID ARNETWORK_JNIMANGER_ARMANGER_METHOD_CALLBACK;
+static jmethodID ARNETWORK_JNIMANGER_ARNATIVE_DATA_METHOD_SETUSEDSIZE;
 
 /**
  * @brief call back use when the data are sent or have a timeout
@@ -63,10 +69,6 @@ void ARNETWORK_JNIManager_FreeCallbackData(JNIEnv *env, ARNETWORK_JNIManager_Cal
  *
  *****************************************/
 
-
-static JavaVM* gARNETWORK_JNIManager_VM = NULL; /** reference to the java virtual machine */
-static jmethodID nativeDataSetUsed_id = 0;
-
 /**
  * @brief save the reference to the java virtual machine
  * @note this function is automatically call on the JNI startup
@@ -84,6 +86,28 @@ JNI_OnLoad(JavaVM *VM, void *reserved)
 
     /** Return the JNI version */
     return JNI_VERSION_1_6;
+}
+
+JNIEXPORT void JNICALL
+Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStaticInit (JNIEnv *env, jclass class)
+{
+    /* local declarations */
+    jclass jARNetworkManagerCls = NULL;
+    jclass jARNativeDataCls = NULL;
+    
+    /* get ARNetworkManager */
+    jARNetworkManagerCls = (*env)->FindClass(env, "com/parrot/arsdk/arnetwork/ARNetworkManager");
+    
+    ARNETWORK_JNIMANGER_ARMANGER_METHOD_CALLBACK = (*env)->GetMethodID(env, jARNetworkManagerCls, "callback", "(ILcom/parrot/arsdk/arsal/ARNativeData;Ljava/lang/Object;I)I" );
+    
+    /* get jARNativeDataCls */
+    jARNativeDataCls = (*env)->FindClass(env, "com/parrot/arsdk/arsal/ARNativeData");
+    
+    ARNETWORK_JNIMANGER_ARNATIVE_DATA_METHOD_SETUSEDSIZE = (*env)->GetMethodID (env, jARNativeDataCls, "setUsedSize", "(I)Z");
+    
+    /* cleanup */
+    (*env)->DeleteLocalRef (env, jARNetworkManagerCls);
+    (*env)->DeleteLocalRef (env, jARNativeDataCls);
 }
 
 /**
@@ -302,11 +326,12 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeFlush(JNIEnv *env, jobjec
  * @param[in] ARData ARNativeData to send
  * @param[in] jdataPtr array of byte to send ( use arData.getData() )
  * @param[in] dataSize size of the data to send ( use arData.getDataSize() )
+ * @param[in] customData custom data sent to the callback
  * @param[in] doDataCopy indocator to copy the data in the ARNETWORK_Manager
  * @return error eARNETWORK_ERROR
  */
 JNIEXPORT jint JNICALL
-Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendData(JNIEnv *env, jobject obj, jlong jManagerPtr, jint inputBufferID, jobject ARData, jlong jdataPtr, jint dataSize, jint doDataCopy)
+Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendData(JNIEnv *env, jobject obj, jlong jManagerPtr, jint inputBufferID, jobject ARData, jlong jdataPtr, jint dataSize, jobject customData, jint doDataCopy)
 {
     /** -- Add data to send in a IOBuffer using variable size data -- */
 
@@ -332,6 +357,9 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendData(JNIEnv *env, job
 
         /** create a global reference of the java ARnativeData object delete by the callback */
         callbackDataPtr->jARData = (*env)->NewGlobalRef(env, ARData);
+        
+        /** create a global reference of the java customData object delete by the callback */
+        callbackDataPtr->jCustomData = (*env)->NewGlobalRef(env, customData);
     }
 
     if(error == ARNETWORK_OK)
@@ -367,24 +395,9 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadData(JNIEnv *env, job
     uint8_t *dataPtr = (uint8_t *) (intptr_t) data;
     jboolean setRes = JNI_FALSE;
 
-    if (nativeDataSetUsed_id == 0)
-    {
-        jclass clz = (*env)->GetObjectClass (env, nativeData);
-        if (clz != 0)
-        {
-            nativeDataSetUsed_id = (*env)->GetMethodID (env, clz, "setUsedSize", "(I)Z");
-            (*env)->DeleteLocalRef (env, clz);
-        }
-        else
-        {
-            error = ARNETWORK_ERROR;
-            return error;
-        }
-    }
-
     error = ARNETWORK_Manager_ReadData( managerPtr, outputBufferID, dataPtr, capacity, &readSize );
 
-    setRes = (*env)->CallBooleanMethod (env, nativeData, nativeDataSetUsed_id, readSize);
+    setRes = (*env)->CallBooleanMethod (env, nativeData, ARNETWORK_JNIMANGER_ARNATIVE_DATA_METHOD_SETUSEDSIZE, readSize);
     if (setRes != JNI_TRUE)
     {
         error = ARNETWORK_ERROR_BUFFER_SIZE;
@@ -416,24 +429,9 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeTryReadData(JNIEnv *env, 
     uint8_t *dataPtr = (uint8_t *) (intptr_t) data;
     jboolean setRes = JNI_FALSE;
 
-    if (nativeDataSetUsed_id == 0)
-    {
-        jclass clz = (*env)->GetObjectClass (env, nativeData);
-        if (clz != 0)
-        {
-            nativeDataSetUsed_id = (*env)->GetMethodID (env, clz, "setUsedSize", "(I)Z");
-            (*env)->DeleteLocalRef (env, clz);
-        }
-        else
-        {
-            error = ARNETWORK_ERROR;
-            return error;
-        }
-    }
-
     error = ARNETWORK_Manager_TryReadData( managerPtr, outputBufferID, dataPtr, capacity, &readSize );
 
-    setRes = (*env)->CallBooleanMethod (env, nativeData, nativeDataSetUsed_id, readSize);
+    setRes = (*env)->CallBooleanMethod (env, nativeData, ARNETWORK_JNIMANGER_ARNATIVE_DATA_METHOD_SETUSEDSIZE, readSize);
     if (setRes != JNI_TRUE)
     {
         error = ARNETWORK_ERROR_BUFFER_SIZE;
@@ -466,24 +464,9 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadDataWithTimeout(JNIEn
     uint8_t *dataPtr = (uint8_t *) (intptr_t) data;
     jboolean setRes = JNI_FALSE;
 
-    if (nativeDataSetUsed_id == 0)
-    {
-        jclass clz = (*env)->GetObjectClass (env, nativeData);
-        if (clz != 0)
-        {
-            nativeDataSetUsed_id = (*env)->GetMethodID (env, clz, "setUsedSize", "(I)Z");
-            (*env)->DeleteLocalRef (env, clz);
-        }
-        else
-        {
-            error = ARNETWORK_ERROR;
-            return error;
-        }
-    }
-
     error = ARNETWORK_Manager_ReadDataWithTimeout( managerPtr, outputBufferID, dataPtr, capacity, &readSize, timeoutMs );
 
-    setRes = (*env)->CallBooleanMethod (env, nativeData, nativeDataSetUsed_id, readSize);
+    setRes = (*env)->CallBooleanMethod (env, nativeData, ARNETWORK_JNIMANGER_ARNATIVE_DATA_METHOD_SETUSEDSIZE, readSize);
     if (setRes != JNI_TRUE)
     {
         error = ARNETWORK_ERROR_BUFFER_SIZE;
@@ -501,8 +484,6 @@ eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManager_Callback_t(int IOBufferI
     eARNETWORK_ERROR error = ARNETWORK_OK;
     eARNETWORK_MANAGER_CALLBACK_RETURN callbackReturn = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
     int retry = 0;
-    jclass managerCLS =  NULL;
-    jmethodID jMethodCallback = 0;
     ARNETWORK_JNIManager_CallbackData_t *callbackDataPtr = (ARNETWORK_JNIManager_CallbackData_t*) customData;
 
     /** get the environment */
@@ -522,14 +503,7 @@ eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManager_Callback_t(int IOBufferI
     {
         /** send the callback java of the java manager */
 
-        /** get the manager class reference */
-        managerCLS = (*env)->GetObjectClass(env, callbackDataPtr->jManager);
-        jMethodCallback = (*env)->GetMethodID(env, managerCLS, "callback", "(ILcom/parrot/arsdk/arsal/ARNativeData;I)I" );
-
-        /** free the local reference on the class manager */
-        (*env)->DeleteLocalRef(env, managerCLS);
-
-        callbackReturn = (*env)->CallIntMethod(env, callbackDataPtr->jManager, jMethodCallback, IOBufferID, callbackDataPtr->jARData, status);
+        callbackReturn = (*env)->CallIntMethod(env, callbackDataPtr->jManager, ARNETWORK_JNIMANGER_ARMANGER_METHOD_CALLBACK, IOBufferID, callbackDataPtr->jARData, callbackDataPtr->jCustomData, status);
 
         switch(status)
         {
@@ -580,6 +554,9 @@ void ARNETWORK_JNIManager_FreeCallbackData (JNIEnv* env, ARNETWORK_JNIManager_Ca
 
             /** delete the java manager object reference */
             (*env)->DeleteGlobalRef( env, callbackDataPtr->jManager );
+            
+            /** delete the java customData object reference */
+            (*env)->DeleteGlobalRef( env, callbackDataPtr->jCustomData );
 
             /** the callback data */
             free(callbackDataPtr);

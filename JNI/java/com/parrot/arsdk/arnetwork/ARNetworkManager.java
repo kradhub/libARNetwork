@@ -11,6 +11,7 @@ public abstract class ARNetworkManager
 {
     private static final String TAG = "NetworkManager";
 
+    private static native void nativeStaticInit ();
 
     private native long nativeNew(long jOSSpecificManagerPtr, int numberOfInput, Object[] inputParamArray, int numberOfOutput, Object[] outputParamArray, int timeBetweenPingsMs, int jerror );
 
@@ -30,6 +31,11 @@ public abstract class ARNetworkManager
 
     public SendingRunnable m_sendingRunnable;
     public ReceivingRunnable m_receivingRunnable;
+    
+    static
+    {
+        nativeStaticInit();
+    }
 
     /**
      * Constructor
@@ -39,77 +45,77 @@ public abstract class ARNetworkManager
      * @param timeBetweenPingsMs Minimum time between two pings. A negative value means "no pings", Zero means "use default value"
      */
     public ARNetworkManager(ARNetworkALManager osSpecificManager, ARNetworkIOBufferParam inputParamArray[], ARNetworkIOBufferParam outputParamArray[], int timeBetweenPingsMs)
+    {
+        int error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK.ordinal();
+        m_initOk = false;
+        m_managerPtr = nativeNew(osSpecificManager.getManager(), inputParamArray.length, inputParamArray, outputParamArray.length, outputParamArray, timeBetweenPingsMs, error);
+
+        ARSALPrint.d (TAG, "Error:" + error );
+
+        if( m_managerPtr != 0 )
         {
-            int error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK.ordinal();
-            m_initOk = false;
-            m_managerPtr = nativeNew(osSpecificManager.getManager(), inputParamArray.length, inputParamArray, outputParamArray.length, outputParamArray, timeBetweenPingsMs, error);
-
-            ARSALPrint.d (TAG, "Error:" + error );
-
-            if( m_managerPtr != 0 )
-            {
-                m_initOk = true;
-                m_sendingRunnable = new SendingRunnable(m_managerPtr);
-                m_receivingRunnable = new ReceivingRunnable(m_managerPtr);
-            }
+            m_initOk = true;
+            m_sendingRunnable = new SendingRunnable(m_managerPtr);
+            m_receivingRunnable = new ReceivingRunnable(m_managerPtr);
         }
+    }
 
     /**
      * Dispose
      */
     public void dispose()
+    {
+        if(m_initOk == true)
         {
-            if(m_initOk == true)
-            {
-                nativeDelete(m_managerPtr);
-                m_managerPtr = 0;
-                m_initOk = false;
-            }
+            nativeDelete(m_managerPtr);
+            m_managerPtr = 0;
+            m_initOk = false;
         }
+    }
 
     /**
      * Destructor
      */
     public void finalize () throws Throwable
-        {
-            try {
-                dispose ();
-            } finally {
-                super.finalize ();
-            }
+    {
+        try {
+            dispose ();
+        } finally {
+            super.finalize ();
         }
+    }
 
     /**
      * Stop the threads of sending and reception<br>
      * Used to kill the threads calling ARNETWORK_Manager_SendingThreadRun() and ARNETWORK_Manager_ReceivingThreadRun().
      */
     public void stop()
+    {
+        if(m_initOk == true)
         {
-            if(m_initOk == true)
-            {
-                nativeStop(m_managerPtr);
-            }
+            nativeStop(m_managerPtr);
         }
+    }
 
     /**
      * Flush all buffers of the network manager
      * @return error ARNETWORK_ERROR_ENUM
      */
     public ARNETWORK_ERROR_ENUM Flush()
+    {
+        ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
+        if(m_initOk == true)
         {
-            ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
-            if(m_initOk == true)
-            {
-                int intError = nativeFlush( m_managerPtr );
-                error = ARNETWORK_ERROR_ENUM.getFromValue(intError);
-            }
-            else
-            {
-                error = ARNETWORK_ERROR_ENUM.ARNETWORK_ERROR_BAD_PARAMETER;
-            }
-
-            return error;
+            int intError = nativeFlush( m_managerPtr );
+            error = ARNETWORK_ERROR_ENUM.getFromValue(intError);
         }
+        else
+        {
+            error = ARNETWORK_ERROR_ENUM.ARNETWORK_ERROR_BAD_PARAMETER;
+        }
+
+        return error;
+    }
 
     /**
      * Add data to send
@@ -119,25 +125,25 @@ public abstract class ARNetworkManager
      * @return error ARNETWORK_ERROR_ENUM
      */
     public ARNETWORK_ERROR_ENUM sendData(int inputBufferID, ARNativeData arData, boolean doDataCopy)
+    {
+        ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
+
+        int doDataCopyInt = (doDataCopy) ? 1 : 0;
+
+        if(m_initOk == true)
         {
-            ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
-
-            int doDataCopyInt = (doDataCopy) ? 1 : 0;
-
-            if(m_initOk == true)
-            {
-                long dataPtr =  arData.getData();
-                int dataSize =  arData.getDataSize();
-                int intError = nativeSendData( m_managerPtr, inputBufferID, arData, dataPtr, dataSize, doDataCopyInt );
-                error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
-            }
-            else
-            {
-                error = ARNETWORK_ERROR_ENUM.ARNETWORK_ERROR_BAD_PARAMETER;
-            }
-
-            return error;
+            long dataPtr =  arData.getData();
+            int dataSize =  arData.getDataSize();
+            int intError = nativeSendData( m_managerPtr, inputBufferID, arData, dataPtr, dataSize, doDataCopyInt );
+            error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
         }
+        else
+        {
+            error = ARNETWORK_ERROR_ENUM.ARNETWORK_ERROR_BAD_PARAMETER;
+        }
+
+        return error;
+    }
 
     /**
      * Read data received<br>
@@ -147,20 +153,20 @@ public abstract class ARNetworkManager
      * @return error ARNETWORK_ERROR_ENUM type
      */
     public ARNETWORK_ERROR_ENUM readData(int outputBufferID, ARNativeData data)
+    {
+        ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
+        if(m_initOk == true)
         {
-            ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
-            if(m_initOk == true)
-            {
-                int intError = nativeReadData( m_managerPtr, outputBufferID, data.getData (), data.getCapacity (), data);
-                error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
-            }
-            else
-            {
-                error = ARNETWORK_ERROR_ENUM.ARNETWORK_ERROR_BAD_PARAMETER;
-            }
-
-            return error;
+            int intError = nativeReadData( m_managerPtr, outputBufferID, data.getData (), data.getCapacity (), data);
+            error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
         }
+        else
+        {
+            error = ARNETWORK_ERROR_ENUM.ARNETWORK_ERROR_BAD_PARAMETER;
+        }
+
+        return error;
+    }
 
     /**
      * try read data received (non-blocking function)
@@ -169,20 +175,20 @@ public abstract class ARNetworkManager
      * @return error ARNETWORK_ERROR_ENUM type
      */
     public ARNETWORK_ERROR_ENUM tryReadData(int outputBufferID, ARNativeData data)
+    {
+        ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
+        if(m_initOk == true)
         {
-            ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
-            if(m_initOk == true)
-            {
-                int intError = nativeTryReadData( m_managerPtr, outputBufferID, data.getData (), data.getCapacity (), data);
-                error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
-            }
-            else
-            {
-                error = ARNETWORK_ERROR_ENUM.ARNETWORK_ERROR_BAD_PARAMETER;
-            }
-
-            return error;
+            int intError = nativeTryReadData( m_managerPtr, outputBufferID, data.getData (), data.getCapacity (), data);
+            error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
         }
+        else
+        {
+            error = ARNETWORK_ERROR_ENUM.ARNETWORK_ERROR_BAD_PARAMETER;
+        }
+
+        return error;
+    }
 
     /**
      * Read data received with timeout
@@ -192,47 +198,65 @@ public abstract class ARNetworkManager
      * @return error ARNETWORK_ERROR_ENUM type
      */
     public ARNETWORK_ERROR_ENUM readDataWithTimeout(int outputBufferID, ARNativeData data, int timeoutMs)
+    {
+        ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
+        if(m_initOk == true)
         {
-            ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
-            if(m_initOk == true)
-            {
-                int intError = nativeReadDataWithTimeout( m_managerPtr, outputBufferID, data.getData (), data.getCapacity (), data, timeoutMs);
-                error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
-            }
-            else
-            {
-                error = ARNETWORK_ERROR_ENUM.ARNETWORK_ERROR_BAD_PARAMETER;
-            }
-
-            return error;
+            int intError = nativeReadDataWithTimeout( m_managerPtr, outputBufferID, data.getData (), data.getCapacity (), data, timeoutMs);
+            error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
         }
+        else
+        {
+            error = ARNETWORK_ERROR_ENUM.ARNETWORK_ERROR_BAD_PARAMETER;
+        }
+
+        return error;
+    }
 
     /**
      * Get the pointer C on the network manager
      * @return  Pointer C on the network manager
      */
     public long getManager ()
-        {
-            return m_managerPtr;
-        }
+    {
+        return m_managerPtr;
+    }
 
     /**
      * Get is the Manager is correctly initialized and if it is usable
      * @return true is the Manager is usable
      */
     public boolean isCorrectlyInitialized ()
-        {
-            return m_initOk;
-        }
+    {
+        return m_initOk;
+    }
 
     /**
      * CallBack for the status of the data sent or free
      * @param IoBufferId identifier of the IoBuffer is calling back
      * @param data data sent
      * @param status reason of the callback
+     * @param customData custom data
      * @return ARNETWORK_MANAGER_CALLBACK_RETURN_ENUM what do in timeout case
      */
-    public abstract int callback (int IoBufferId, ARNativeData data, int status);
+    public abstract ARNETWORK_MANAGER_CALLBACK_RETURN_ENUM onCallback (int IoBufferId, ARNativeData data, ARNETWORK_MANAGER_CALLBACK_STATUS_ENUM status, Object customData);
+    
+    /**
+     * CallBack for the status of the data sent or free
+     * @param IoBufferId identifier of the IoBuffer is calling back
+     * @param data data sent
+     * @param status reason of the callback
+     * @param customData custom data
+     * @return ARNETWORK_MANAGER_CALLBACK_RETURN_ENUM what do in timeout case
+     */
+    private int callback (int IoBufferId, ARNativeData data, int status, Object customData)
+    {
+        ARNETWORK_MANAGER_CALLBACK_STATUS_ENUM jStatus = ARNETWORK_MANAGER_CALLBACK_STATUS_ENUM.values()[status];
+        
+        ARNETWORK_MANAGER_CALLBACK_RETURN_ENUM retVal = onCallback (IoBufferId, data, jStatus, customData);
+        
+        return retVal.getValue();
+    }
 
 }
 
@@ -250,17 +274,17 @@ class SendingRunnable implements Runnable
      * @param managerPtr Pointer C on the network manager
      */
     SendingRunnable(long managerPtr)
-        {
-            m_managerPtr = managerPtr;
-        }
+    {
+        m_managerPtr = managerPtr;
+    }
 
     /**
      * Manage the sending of the data
      */
     public void run()
-        {
-            nativeSendingThreadRun(m_managerPtr);
-        }
+    {
+        nativeSendingThreadRun(m_managerPtr);
+    }
 }
 
 /**
@@ -277,15 +301,15 @@ class ReceivingRunnable implements Runnable
      * @param managerPtr Pointer C on the network manager
      */
     ReceivingRunnable(long managerPtr)
-        {
-            m_managerPtr = managerPtr;
-        }
+    {
+        m_managerPtr = managerPtr;
+    }
 
     /**
      * Manage the reception of the data.
      */
     public void run()
-        {
-            nativeReceivingThreadRun(m_managerPtr);
-        }
+    {
+        nativeReceivingThreadRun(m_managerPtr);
+    }
 }
