@@ -33,7 +33,8 @@ typedef enum
     ARNETWORK_MANAGER_CALLBACK_STATUS_ACK_RECEIVED, /**< acknowledged received */
     ARNETWORK_MANAGER_CALLBACK_STATUS_TIMEOUT, /**< timeout occurred, data not received; the callback must return what the network manager must do with the data. */
     ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL, /**< data will not sent */
-    ARNETWORK_MANAGER_CALLBACK_STATUS_FREE /**< free the data not sent; in case of variable size data, this data can be reused or freed. */
+    ARNETWORK_MANAGER_CALLBACK_STATUS_FREE, /**< free the data sent without Data Copy.*/
+    ARNETWORK_MANAGER_CALLBACK_STATUS_DONE, /**< the use of the data is done, the date will not more used */
 } eARNETWORK_MANAGER_CALLBACK_STATUS;
 
 /**
