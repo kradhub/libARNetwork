@@ -20,7 +20,7 @@ public abstract class ARNetworkManager
     private native void nativeStop(long jManagerPtr);
     private native int nativeFlush(long jManagerPtr);
 
-    private native int nativeSendData( long jManagerPtr,int inputBufferID, ARNativeData ARData, long dataPtr, int dataSize, int doDataCopy);
+    private native int nativeSendData( long jManagerPtr,int inputBufferID, ARNativeData ARData, long dataPtr, int dataSize, Object customData, int doDataCopy);
     private native int nativeReadData( long jManagerPtr, int outputBufferID, long dataPointer, int capacity, ARNativeData data);
     private native int nativeTryReadData( long jManagerPtr, int outputBufferID, long dataPointer, int capacity, ARNativeData data);
     private native int nativeReadDataWithTimeout( long jManagerPtr, int outputBufferID, long dataPointer, int capacity, ARNativeData data, int timeoutMs);
@@ -124,7 +124,7 @@ public abstract class ARNetworkManager
      * @param doDataCopy indocator to copy the data in the ARNETWORK_Manager
      * @return error ARNETWORK_ERROR_ENUM
      */
-    public ARNETWORK_ERROR_ENUM sendData(int inputBufferID, ARNativeData arData, boolean doDataCopy)
+    public ARNETWORK_ERROR_ENUM sendData(int inputBufferID, ARNativeData arData, Object customData,boolean doDataCopy)
     {
         ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
 
@@ -134,7 +134,7 @@ public abstract class ARNetworkManager
         {
             long dataPtr =  arData.getData();
             int dataSize =  arData.getDataSize();
-            int intError = nativeSendData( m_managerPtr, inputBufferID, arData, dataPtr, dataSize, doDataCopyInt );
+            int intError = nativeSendData (m_managerPtr, inputBufferID, arData, dataPtr, dataSize, customData, doDataCopyInt );
             error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
         }
         else
