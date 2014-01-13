@@ -209,6 +209,7 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
             error = ARNETWORK_IOBuffer_Lock(inputBufferPtrTemp);
             switch (inputBufferPtrTemp->dataType)
             {
+                // Low latency : no wait if any data available
             case ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY:
                 if ((error == ARNETWORK_OK) &&
                     (!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBufferPtr)))
@@ -216,6 +217,30 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
                     waitTimeMs = 0;
                 }
                 break;
+                // Acknowledged buffer :
+                //  - If waiting an ack, wait time = time before ack timeout
+                //  - If not waiting an ack and not empty, wait time = time before next send
+            case ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK:
+                if (error == ARNETWORK_OK)
+                {
+                    if (ARNETWORK_IOBuffer_IsWaitAck(inputBufferPtrTemp))
+                    {
+                        if (inputBufferPtrTemp->ackWaitTimeCount < waitTimeMs)
+                        {
+                            waitTimeMs = inputBufferPtrTemp->ackWaitTimeCount;
+                        }
+                    }
+                    else if (!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBufferPtr))
+                    {
+                        if (inputBufferPtrTemp->waitTimeCount < waitTimeMs)
+                        {
+                            waitTimeMs = inputBufferPtrTemp->waitTimeCount;
+                        }
+                    }
+                }
+                break;
+                // All non Ack buffers
+                //  - 
             default:
                 if ((error == ARNETWORK_OK) &&
                     (!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBufferPtr)))
@@ -318,6 +343,19 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
 
         if (ARNETWORK_IOBuffer_IsWaitAck (buffer))
         {
+            /** decrement the time to wait before considering as a timeout */
+            if ((buffer->ackWaitTimeCount > 0) && (hasWaitedMs > 0))
+            {
+                if (hasWaitedMs > buffer->ackWaitTimeCount)
+                {
+                    buffer->ackWaitTimeCount = 0;
+                }
+                else
+                {
+                    buffer->ackWaitTimeCount -= hasWaitedMs;
+                }
+            }
+
             if (buffer->ackWaitTimeCount == 0)
             {
                 if (buffer->retryCount == 0)
@@ -347,19 +385,6 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
                             -- (buffer->retryCount);
                         }
                     }
-                }
-            }
-
-            /** decrement the time to wait before considering as a timeout */
-            if ((buffer->ackWaitTimeCount > 0) && (hasWaitedMs > 0))
-            {
-                if (hasWaitedMs > buffer->ackWaitTimeCount)
-                {
-                    buffer->ackWaitTimeCount = 0;
-                }
-                else
-                {
-                    buffer->ackWaitTimeCount -= hasWaitedMs;
                 }
             }
         }
