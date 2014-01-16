@@ -98,7 +98,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStaticInit (JNIEnv *env, 
     /* get ARNetworkManager */
     jARNetworkManagerCls = (*env)->FindClass(env, "com/parrot/arsdk/arnetwork/ARNetworkManager");
     
-    ARNETWORK_JNIMANGER_ARMANGER_METHOD_CALLBACK = (*env)->GetMethodID(env, jARNetworkManagerCls, "callback", "(ILcom/parrot/arsdk/arsal/ARNativeData;Ljava/lang/Object;I)I" );
+    ARNETWORK_JNIMANGER_ARMANGER_METHOD_CALLBACK = (*env)->GetMethodID(env, jARNetworkManagerCls, "callback", "(ILcom/parrot/arsdk/arsal/ARNativeData;ILjava/lang/Object;)I" );
     
     /* get jARNativeDataCls */
     jARNativeDataCls = (*env)->FindClass(env, "com/parrot/arsdk/arsal/ARNativeData");
