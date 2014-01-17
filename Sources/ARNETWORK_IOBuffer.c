@@ -67,7 +67,10 @@ static inline eARNETWORK_ERROR ARNETWORK_IOBuffer_FreeData(ARNETWORK_IOBuffer_t 
     
     /** callback with done status */
     /** the date will not more used */
-    dataDescriptorPtr->callback(IOBufferPtr->ID, NULL, dataDescriptorPtr->customData, ARNETWORK_MANAGER_CALLBACK_STATUS_DONE);
+    if(dataDescriptorPtr->callback != NULL)
+    {
+        dataDescriptorPtr->callback(IOBufferPtr->ID, NULL, dataDescriptorPtr->customData, ARNETWORK_MANAGER_CALLBACK_STATUS_DONE);
+    }
     
     return error;
 }
