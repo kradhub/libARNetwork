@@ -342,16 +342,14 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendData(JNIEnv *env, job
     eARNETWORK_ERROR error = ARNETWORK_OK;
     ARNETWORK_Manager_t *managerPtr = (ARNETWORK_Manager_t*) (intptr_t) jManagerPtr;
 
-    /** if NO copy data create a custom data to send to the callback*/
-    if(!doDataCopy)
+    /** allocate the data send to the callback */
+    callbackDataPtr = malloc( sizeof(ARNETWORK_JNIManager_CallbackData_t) );
+    if(callbackDataPtr == NULL)
     {
-        /** allocate the data send to the callback */
-        callbackDataPtr = malloc( sizeof(ARNETWORK_JNIManager_CallbackData_t) );
-        if(callbackDataPtr == NULL)
-        {
-            error = ARNETWORK_ERROR_ALLOC;
-        }
-
+        error = ARNETWORK_ERROR_ALLOC;
+    }
+    else
+    {
         /** create a global reference of the java manager object delete by the callback */
         callbackDataPtr->jManager = (*env)->NewGlobalRef(env, obj);
 
@@ -491,19 +489,20 @@ eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManager_Callback_t(int IOBufferI
     {
         (*gARNETWORK_JNIManager_VM)->GetEnv(gARNETWORK_JNIManager_VM, (void **)&env, JNI_VERSION_1_6);
     }
-
+    
     /** check parameters:
      *  -   env is not null
      *  -   callbackDataPtr is not null
-     *  -   jManager is not null
      */
-    if(env != NULL &&
-       callbackDataPtr != NULL &&
-       callbackDataPtr->jManager != NULL)
+    if(env != NULL && callbackDataPtr != NULL)
     {
         /** send the callback java of the java manager */
 
-        callbackReturn = (*env)->CallIntMethod(env, callbackDataPtr->jManager, ARNETWORK_JNIMANGER_ARMANGER_METHOD_CALLBACK, IOBufferID, callbackDataPtr->jARData, callbackDataPtr->jCustomData, status);
+        if (callbackDataPtr->jManager != NULL)
+        {
+            /* java callback */
+            callbackReturn = (*env)->CallIntMethod(env, callbackDataPtr->jManager, ARNETWORK_JNIMANGER_ARMANGER_METHOD_CALLBACK, IOBufferID, callbackDataPtr->jARData,  status, callbackDataPtr->jCustomData);
+        }
 
         switch(status)
         {
@@ -520,6 +519,10 @@ eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManager_Callback_t(int IOBufferI
             break;
 
         case ARNETWORK_MANAGER_CALLBACK_STATUS_FREE :
+        
+            break;
+        
+        case ARNETWORK_MANAGER_CALLBACK_STATUS_DONE :
             ARNETWORK_JNIManager_FreeCallbackData (env, &callbackDataPtr);
             break;
 
@@ -551,12 +554,15 @@ void ARNETWORK_JNIManager_FreeCallbackData (JNIEnv* env, ARNETWORK_JNIManager_Ca
         {
             /** delete the java ARNativeData object reference */
             (*env)->DeleteGlobalRef( env, callbackDataPtr->jARData );
+            callbackDataPtr->jARData = NULL;
 
             /** delete the java manager object reference */
             (*env)->DeleteGlobalRef( env, callbackDataPtr->jManager );
+            callbackDataPtr->jManager = NULL;
             
             /** delete the java customData object reference */
             (*env)->DeleteGlobalRef( env, callbackDataPtr->jCustomData );
+            callbackDataPtr->jCustomData = NULL;
 
             /** the callback data */
             free(callbackDataPtr);

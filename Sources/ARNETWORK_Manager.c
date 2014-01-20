@@ -393,7 +393,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_SendData (ARNETWORK_Manager_t *managerPtr, in
      *  -   the data pointer is not NULL
      *  -   the callback is not NULL
      */
-    if ((managerPtr != NULL) &&(dataPtr != NULL) &&(callback != NULL))
+    if ((managerPtr != NULL) && (dataPtr != NULL) && (callback != NULL))
     {
         /** get the address of the inputBuffer */
         inputBufferPtr = managerPtr->inputBufferPtrMap[inputBufferID];
