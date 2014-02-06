@@ -42,7 +42,7 @@
  *****************************************/
 
 #define ARNETWORK_MANAGER_TAG "ARNETWORK_Manager"
-#define ARNETWORK_NETWORK_BUFFER_SIZE   1500
+#define ARNETWORK_NETWORK_BUFFER_SIZE   60000   //1500
 
 /*****************************************
  *
