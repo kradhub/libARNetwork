@@ -42,7 +42,6 @@
  *****************************************/
 
 #define ARNETWORK_MANAGER_TAG "ARNETWORK_Manager"
-#define ARNETWORK_NETWORK_BUFFER_SIZE   60000   //1500
 
 /*****************************************
  *
@@ -188,10 +187,16 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New(ARNETWORKAL_Manager_t *networkALManag
         }
     }
 
+    if ((error == ARNETWORK_OK) && (networkALManager->maxBufferSize == 0))
+    {
+        ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_MANAGER_TAG, "maxBufferSize is 0. Did you initialize ARNetworkAL correctly?");
+        error = ARNETWORK_ERROR_BAD_PARAMETER;
+    }
+
     if (error == ARNETWORK_OK)
     {
         /** Create manager's IOBuffers and stor it in the inputMap and outputMap*/
-        error = ARNETWORK_Manager_CreateIOBuffer (managerPtr, inputParamArr, outputParamArr, ARNETWORK_NETWORK_BUFFER_SIZE);
+        error = ARNETWORK_Manager_CreateIOBuffer (managerPtr, inputParamArr, outputParamArr, networkALManager->maxBufferSize);
     }
 
     if (error == ARNETWORK_OK)
@@ -785,8 +790,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
         /** -   id is smaller than the id acknowledge offset */
         /** -   dataCopyMaxSize isn't too big */
         if ((inputParamArr[inputIndex].ID >= (managerPtr->networkALManager->maxIds / 2)) ||
-            (inputParamArr[inputIndex].ID <  ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX) ||
-            (inputParamArr[inputIndex].dataCopyMaxSize >= (sendBufferSize - offsetof (ARNETWORKAL_Frame_t, dataPtr))))
+            (inputParamArr[inputIndex].ID <  ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX))
         {
             error = ARNETWORK_ERROR_BAD_PARAMETER;
         }
