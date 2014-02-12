@@ -790,7 +790,8 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
         /** -   id is smaller than the id acknowledge offset */
         /** -   dataCopyMaxSize isn't too big */
         if ((inputParamArr[inputIndex].ID >= (managerPtr->networkALManager->maxIds / 2)) ||
-            (inputParamArr[inputIndex].ID <  ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX))
+            (inputParamArr[inputIndex].ID <  ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX) ||
+            (inputParamArr[inputIndex].dataCopyMaxSize >= (managerPtr->networkALManager->maxBufferSize - offsetof(ARNETWORKAL_Frame_t, dataPtr))))
         {
             error = ARNETWORK_ERROR_BAD_PARAMETER;
         }
