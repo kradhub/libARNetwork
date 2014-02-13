@@ -22,6 +22,11 @@
  */
 #define ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER -1
 
+/**
+ * @brief Automatically use the maximum value for dataCopyMaxSize.
+ */
+#define ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX -1
+
 /*****************************************
  *
  *             IOBufferParam header:
@@ -39,8 +44,9 @@ typedef struct
     int ackTimeoutMs; /**< Timeout in millisecond before retry to send the data waiting an acknowledgement when the InOutBuffer is used with a ARNetwork_Sender*/
     int numberOfRetry; /**< Maximum number of retry of sending before to consider a failure when the InOutBuffer is used with a ARNetwork_Sender*/
 
-    unsigned int numberOfCell; /**< Maximum number of data stored*/
-    unsigned int dataCopyMaxSize; /**< Maximum Size, in byte, of the data copied in the buffer (the IOBuffer allocates a buffer of numberOfCell X dataCopyMaxSize )*/
+    int32_t numberOfCell; /**< Maximum number of data stored*/
+    int32_t dataCopyMaxSize; /**< Maximum Size, in byte, of the data copied in the buffer (the IOBuffer allocates a buffer of numberOfCell X dataCopyMaxSize ).
+                               A value of ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX automatically allocates the maximum size allowed by the underlying media. */
     int isOverwriting; /**< Indicator of overwriting possibility (1 = true | 0 = false)*/
 
 }ARNETWORK_IOBufferParam_t;
