@@ -728,20 +728,6 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
             error = ARNETWORK_ERROR_BAD_PARAMETER;
         }
 
-        /** Check for special (negative) values for dataCopyMaxSize. */
-        if (outputParamArr[outputIndex].dataCopyMaxSize < 0)
-        {
-            if (outputParamArr[outputIndex].dataCopyMaxSize == ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX)
-            {
-                /* Set dataCopyMaxSize to the maximum value allowed by ARNetworkAL (minus the size of the header). */
-                outputParamArr[outputIndex].dataCopyMaxSize = managerPtr->networkALManager->maxBufferSize - (sendBufferSize - offsetof (ARNETWORKAL_Frame_t, dataPtr));
-            }
-            else
-            {
-                error = ARNETWORK_ERROR_BAD_PARAMETER;
-            }
-        }
-
         if (error == ARNETWORK_OK)
         {
             /** Create the output buffer */
@@ -789,20 +775,6 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
             (inputParamArr[inputIndex].dataCopyMaxSize >= (sendBufferSize - offsetof (ARNETWORKAL_Frame_t, dataPtr))))
         {
             error = ARNETWORK_ERROR_BAD_PARAMETER;
-        }
-
-        /** Check for special (negative) values for dataCopyMaxSize. */
-        if (inputParamArr[inputIndex].dataCopyMaxSize < 0)
-        {
-            if (inputParamArr[inputIndex].dataCopyMaxSize == ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX)
-            {
-                /* Set dataCopyMaxSize to the maximum value allowed by ARNetworkAL (minus the size of the header). */
-                inputParamArr[inputIndex].dataCopyMaxSize = managerPtr->networkALManager->maxBufferSize - (sendBufferSize - offsetof (ARNETWORKAL_Frame_t, dataPtr));
-            }
-            else
-            {
-                error = ARNETWORK_ERROR_BAD_PARAMETER;
-            }
         }
 
         if (error == ARNETWORK_OK)
