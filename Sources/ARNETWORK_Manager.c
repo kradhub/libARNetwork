@@ -56,11 +56,10 @@
  * @param managerPtr pointer on the Manager
  * @param[in] inputParamArr array of the parameters of creation of the inputs. The array must contain as many parameters as the number of input buffer.
  * @param[in] outputParamArr array of the parameters of creation of the outputs. The array must contain as many parameters as the number of output buffer.
- * @param[in] sendBufferSize size in byte of the sending buffer. ideally must be equal to the sum of the sizes of one data of all input buffers
  * @return error equal to ARNETWORK_OK if the IOBuffer are correctly created otherwise see eARNETWORK_ERROR.
  * @see ARNETWORK_Manager_New()
  */
-eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerPtr, ARNETWORK_IOBufferParam_t *inputParamArr, ARNETWORK_IOBufferParam_t *outputParamArr, unsigned int sendBufferSize);
+eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerPtr, ARNETWORK_IOBufferParam_t *inputParamArr, ARNETWORK_IOBufferParam_t *outputParamArr);
 
 /*****************************************
  *
@@ -196,7 +195,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New(ARNETWORKAL_Manager_t *networkALManag
     if (error == ARNETWORK_OK)
     {
         /** Create manager's IOBuffers and stor it in the inputMap and outputMap*/
-        error = ARNETWORK_Manager_CreateIOBuffer (managerPtr, inputParamArr, outputParamArr, networkALManager->maxBufferSize);
+        error = ARNETWORK_Manager_CreateIOBuffer (managerPtr, inputParamArr, outputParamArr);
     }
 
     if (error == ARNETWORK_OK)
@@ -648,7 +647,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_ReadDataWithTimeout (ARNETWORK_Manager_t *man
  *
  *****************************************/
 
-eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerPtr, ARNETWORK_IOBufferParam_t *inputParamArr, ARNETWORK_IOBufferParam_t *outputParamArr, unsigned int sendBufferSize)
+eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerPtr, ARNETWORK_IOBufferParam_t *inputParamArr, ARNETWORK_IOBufferParam_t *outputParamArr)
 {
     /** -- Create manager's IoBuffers --*/
 
@@ -738,8 +737,8 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
         {
             if (outputParamArr[outputIndex].dataCopyMaxSize == ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX)
             {
-                /* Set dataCopyMaxSize to the maximum value allowed by ARNetworkAL (minus the size of the header). */
-                outputParamArr[outputIndex].dataCopyMaxSize = managerPtr->networkALManager->maxBufferSize - (sendBufferSize - offsetof (ARNETWORKAL_Frame_t, dataPtr));
+                /* Set dataCopyMaxSize to the maximum value allowed by ARNetworkAL. */
+                outputParamArr[outputIndex].dataCopyMaxSize = managerPtr->networkALManager->maxBufferSize;
             }
             else
             {
@@ -790,8 +789,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
         /** -   id is smaller than the id acknowledge offset */
         /** -   dataCopyMaxSize isn't too big */
         if ((inputParamArr[inputIndex].ID >= (managerPtr->networkALManager->maxIds / 2)) ||
-            (inputParamArr[inputIndex].ID <  ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX) ||
-            (inputParamArr[inputIndex].dataCopyMaxSize >= (managerPtr->networkALManager->maxBufferSize - offsetof(ARNETWORKAL_Frame_t, dataPtr))))
+            (inputParamArr[inputIndex].ID <  ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX))
         {
             error = ARNETWORK_ERROR_BAD_PARAMETER;
         }
@@ -802,12 +800,20 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
             if (inputParamArr[inputIndex].dataCopyMaxSize == ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX)
             {
                 /* Set dataCopyMaxSize to the maximum value allowed by ARNetworkAL (minus the size of the header). */
-                inputParamArr[inputIndex].dataCopyMaxSize = managerPtr->networkALManager->maxBufferSize - (sendBufferSize - offsetof (ARNETWORKAL_Frame_t, dataPtr));
+                inputParamArr[inputIndex].dataCopyMaxSize = managerPtr->networkALManager->maxBufferSize;
             }
             else
             {
+                /* Unknown special value. */
                 error = ARNETWORK_ERROR_BAD_PARAMETER;
             }
+        }
+
+        /* Check final buffer size. */
+        if (inputParamArr[inputIndex].dataCopyMaxSize > managerPtr->networkALManager->maxBufferSize)
+        {
+            ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_MANAGER_TAG, "Final dataCopyMaxSize is higher than tha maximum allowed data size (%d).", managerPtr->networkALManager->maxBufferSize);
+            error = ARNETWORK_ERROR_BAD_PARAMETER;
         }
 
         if (error == ARNETWORK_OK)
