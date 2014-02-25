@@ -58,6 +58,8 @@ struct ARNETWORK_Manager_t
     int numberOfInternalInputs; /**< Number of internal input buffers */
     ARNETWORK_IOBuffer_t **inputBufferPtrMap; /**< array storing the inputBuffers by their identifier */
     ARNETWORK_IOBuffer_t **outputBufferPtrMap; /**< array storing the outputBuffers by their identifier */
+    ARNETWORK_Manager_OnDisconnect_t onDisconnect; /**< Manager specific on disconnect function */
+    void *customData; /**< custom data sent to the callbacks */
 };
 
 #endif /** _NETWORK_MANAGER_PRIVATE_H_ */

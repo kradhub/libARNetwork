@@ -55,6 +55,12 @@ typedef eARNETWORK_MANAGER_CALLBACK_RETURN (*ARNETWORK_Manager_Callback_t) (int 
 typedef struct ARNETWORK_Manager_t ARNETWORK_Manager_t;
 
 /**
+ * @brief fuction called on disconnect
+ * @param manager The manager
+ */
+typedef void (*ARNETWORK_Manager_OnDisconnect_t) (ARNETWORK_Manager_t *manager, ARNETWORKAL_Manager_t *alManager, void *customData);
+
+/**
  * @brief Create a new Manager
  * @warning This function allocate memory
  * @post ARNETWORKAL_Manager_t must be created to initialize the network.
@@ -65,14 +71,16 @@ typedef struct ARNETWORK_Manager_t ARNETWORK_Manager_t;
  * @param[in] numberOfOutput Number of output buffer
  * @param[in] outputParamArr array of the parameters of creation of the outputs. The array must contain as many parameters as the number of output buffer.
  * @param[in] pingDelayMs Minimum amount of time (ms) between two pings. Put a negative value to disable ping, and zero to use default value
- * @param[out] errorPtr pointer on the error output.
- * @return Pointer on the new Manager
+ * @param[in] onDisconnectCallback fuction called on disconnect.
+ * @param[in] customData custom Data sent to the callbacks.
+ * @param[out] error error output.
+ * @return the new Manager
  * @note This creator adds for all output, one other IOBuffer for storing the acknowledgment to return.
  * These new buffers are added in the input and output buffer arrays.
  * @warning The identifiers of the IoBuffer should not exceed the value 128.
  * @see ARNETWORK_Manager_Delete()
  */
-ARNETWORK_Manager_t* ARNETWORK_Manager_New(ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInput, ARNETWORK_IOBufferParam_t *inputParamArr, unsigned int numberOfOutput, ARNETWORK_IOBufferParam_t *outputParamArr, int pingDelayMs, eARNETWORK_ERROR *errorPtr);
+ARNETWORK_Manager_t* ARNETWORK_Manager_New(ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInput, ARNETWORK_IOBufferParam_t *inputParamArr, unsigned int numberOfOutput, ARNETWORK_IOBufferParam_t *outputParamArr, int pingDelayMs, ARNETWORK_Manager_OnDisconnect_t onDisconnectCallback, void* customData, eARNETWORK_ERROR *error);
 
 /**
  * @brief Delete the Manager

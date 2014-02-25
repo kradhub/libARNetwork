@@ -25,6 +25,7 @@
 
 #include <libARNetwork/ARNETWORK_Error.h>
 #include <libARNetworkAL/ARNETWORKAL_Frame.h>
+#include <libARNetworkAL/ARNETWORKAL_Error.h>
 #include "ARNETWORK_RingBuffer.h"
 #include "ARNETWORK_DataDescriptor.h"
 #include <libARNetwork/ARNETWORK_IOBufferParam.h>
@@ -61,181 +62,231 @@
  */
 eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerPtr, ARNETWORK_IOBufferParam_t *inputParamArr, ARNETWORK_IOBufferParam_t *outputParamArr);
 
+/**
+ * @brief function called on disconnect
+ * @param manager The networkAL manager
+ * @param customData The custom Data
+ */
+void ARNETWORK_Manager_OnDisconnect (ARNETWORKAL_Manager_t *alManager, void *customData);
+
 /*****************************************
  *
  *             implementation :
  *
  *****************************************/
 
-ARNETWORK_Manager_t* ARNETWORK_Manager_New(ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInput, ARNETWORK_IOBufferParam_t *inputParamArr, unsigned int numberOfOutput, ARNETWORK_IOBufferParam_t *outputParamArr, int pingDelayMs, eARNETWORK_ERROR *errorPtr)
+ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALManager, unsigned int numberOfInput, ARNETWORK_IOBufferParam_t *inputParamArr, unsigned int numberOfOutput, ARNETWORK_IOBufferParam_t *outputParamArr, int pingDelayMs, ARNETWORK_Manager_OnDisconnect_t onDisconnectCallback, void* customData, eARNETWORK_ERROR *error)
 {
-    /** -- Create a new Manager -- */
+    /* -- Create a new Manager -- */
 
-    /** local declarations */
-    ARNETWORK_Manager_t *managerPtr = NULL;
-    eARNETWORK_ERROR error = ARNETWORK_OK;
-
-    /** Create the Manager */
-    managerPtr = malloc (sizeof (ARNETWORK_Manager_t));
-    if (managerPtr != NULL)
+    /* local declarations */
+    ARNETWORK_Manager_t *manager = NULL;
+    eARNETWORK_ERROR localError = ARNETWORK_OK;
+    eARNETWORKAL_ERROR errorAL = ARNETWORKAL_OK;
+    
+    /* check parameters */
+    if ((networkALManager == NULL) || (onDisconnectCallback == NULL))
     {
-        /** Initialize to default values */
-        managerPtr->networkALManager = NULL;
-        managerPtr->senderPtr = NULL;
-        managerPtr->receiverPtr = NULL;
-        managerPtr->inputBufferPtrArr = NULL;
-        managerPtr->outputBufferPtrArr = NULL;
-        managerPtr->internalInputBufferPtrArr = NULL;
-        managerPtr->numberOfOutput = 0;
-        managerPtr->numberOfOutputWithoutAck = 0;
-        managerPtr->numberOfInput = 0;
-        managerPtr->numberOfInputWithoutAck = 0;
-        managerPtr->numberOfInternalInputs = 0;
-        managerPtr->inputBufferPtrMap = NULL;
-        managerPtr->outputBufferPtrMap = NULL;
+        localError = ARNETWORK_ERROR_BAD_PARAMETER;
     }
-    else
+    /* No Else: the checking parameters sets localError to ARNETWORK_ERROR_BAD_PARAMETER and stop the processing */
+    
+    if (localError == ARNETWORK_OK)
     {
-        error = ARNETWORK_ERROR_ALLOC;
-    }
-
-    if (error == ARNETWORK_OK)
-    {
-        if(networkALManager != NULL)
+        /* Create the Manager */
+        manager = malloc (sizeof (ARNETWORK_Manager_t));
+        if (manager != NULL)
         {
-            managerPtr->networkALManager = networkALManager;
+            /* Initialize to default values */
+            manager->networkALManager = NULL;
+            manager->senderPtr = NULL;
+            manager->receiverPtr = NULL;
+            manager->inputBufferPtrArr = NULL;
+            manager->outputBufferPtrArr = NULL;
+            manager->internalInputBufferPtrArr = NULL;
+            manager->numberOfOutput = 0;
+            manager->numberOfOutputWithoutAck = 0;
+            manager->numberOfInput = 0;
+            manager->numberOfInputWithoutAck = 0;
+            manager->numberOfInternalInputs = 0;
+            manager->inputBufferPtrMap = NULL;
+            manager->outputBufferPtrMap = NULL;
+            manager->onDisconnect = onDisconnectCallback;
+            manager->customData = customData;
         }
         else
         {
-            error = ARNETWORK_ERROR_BAD_PARAMETER;
+            localError = ARNETWORK_ERROR_ALLOC;
         }
     }
+    /* No else: skipped by an error */ 
 
-    /**
+    if (localError == ARNETWORK_OK)
+    {
+        manager->networkALManager = networkALManager;
+        
+        /* set the onDisconnect callback */
+        errorAL = ARNETWORKAL_Manager_SetOnDisconnectCallback (networkALManager, &ARNETWORK_Manager_OnDisconnect, (void *) manager);
+        
+        /* Manage the networkAL error */
+        switch (errorAL)
+        {
+            case ARNETWORKAL_OK:
+                /* Do nothing : no error */
+                break;
+                
+            case ARNETWORKAL_ERROR_MANAGER_OPERATION_NOT_SUPPORTED:
+                /* setOnDisconnectCallback not supported by this networkALManager */
+                ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_MANAGER_TAG, "setOnDisconnectCallback not supported by this networkALManager");
+                break;
+            
+            case ARNETWORKAL_ERROR_BAD_PARAMETER:
+                /* bad parameter */
+                localError = ARNETWORK_ERROR_BAD_PARAMETER;
+                break;
+                
+            default:
+                ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_MANAGER_TAG, "error %d returned by setOnDisconnectCallback unexpected.", errorAL);
+                break;
+        }
+    }
+    /* No else: skipped by an error */ 
+
+    /*
      * For each output buffer a buffer of acknowledgement is add and referenced
      * in the output buffer list and the input buffer list.
      */
 
-    if (error == ARNETWORK_OK)
+    if (localError == ARNETWORK_OK)
     {
-        /**
+        /*
          * Allocate the output buffer list of size of the number of output plus the number of
          * buffer of acknowledgement. The size of the list is then two times the number of output.
          */
-        managerPtr->numberOfOutputWithoutAck = numberOfOutput;
-        managerPtr->numberOfOutput = 2 * numberOfOutput;
-        managerPtr->outputBufferPtrArr = calloc (managerPtr->numberOfOutput, sizeof (ARNETWORK_IOBuffer_t*));
-        if (managerPtr->outputBufferPtrArr == NULL)
+        manager->numberOfOutputWithoutAck = numberOfOutput;
+        manager->numberOfOutput = 2 * numberOfOutput;
+        manager->outputBufferPtrArr = calloc (manager->numberOfOutput, sizeof (ARNETWORK_IOBuffer_t*));
+        if (manager->outputBufferPtrArr == NULL)
         {
-            error = ARNETWORK_ERROR_ALLOC;
-            managerPtr->numberOfOutput = 0;
-            managerPtr->numberOfOutputWithoutAck = 0;
+            localError = ARNETWORK_ERROR_ALLOC;
+            manager->numberOfOutput = 0;
+            manager->numberOfOutputWithoutAck = 0;
         }
     }
+    /* No else: skipped by an error */ 
 
-    if (error == ARNETWORK_OK)
+    if (localError == ARNETWORK_OK)
     {
-        /**
+        /*
          * Allocate the input buffer list of size of the number of input plus the number of
          * buffer of acknowledgement.
          * The size of the list is then number of input plus the number of output.
          */
-        managerPtr->numberOfInputWithoutAck = numberOfInput;
-        managerPtr->numberOfInput = numberOfInput + numberOfOutput;
-        managerPtr->inputBufferPtrArr = calloc (managerPtr->numberOfInput, sizeof (ARNETWORK_IOBuffer_t*));
-        if (managerPtr->inputBufferPtrArr == NULL)
+        manager->numberOfInputWithoutAck = numberOfInput;
+        manager->numberOfInput = numberOfInput + numberOfOutput;
+        manager->inputBufferPtrArr = calloc (manager->numberOfInput, sizeof (ARNETWORK_IOBuffer_t*));
+        if (manager->inputBufferPtrArr == NULL)
         {
-            error = ARNETWORK_ERROR_ALLOC;
-            managerPtr->numberOfInput = 0;
-            managerPtr->numberOfInputWithoutAck = numberOfOutput;
+            localError = ARNETWORK_ERROR_ALLOC;
+            manager->numberOfInput = 0;
+            manager->numberOfInputWithoutAck = numberOfOutput;
         }
     }
+    /* No else: skipped by an error */ 
 
-    if (error == ARNETWORK_OK)
+    if (localError == ARNETWORK_OK)
     {
-        /**
+        /*
          * Allocate the internal input buffer list
          * Size is the number of internal buffers
          */
-        managerPtr->numberOfInternalInputs = ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX;
-        managerPtr->internalInputBufferPtrArr = calloc (managerPtr->numberOfInternalInputs, sizeof (ARNETWORK_IOBuffer_t*));
-        if (managerPtr->internalInputBufferPtrArr == NULL)
+        manager->numberOfInternalInputs = ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX;
+        manager->internalInputBufferPtrArr = calloc (manager->numberOfInternalInputs, sizeof (ARNETWORK_IOBuffer_t*));
+        if (manager->internalInputBufferPtrArr == NULL)
         {
-            error = ARNETWORK_ERROR_ALLOC;
-            managerPtr->numberOfInternalInputs = 0;
+            localError = ARNETWORK_ERROR_ALLOC;
+            manager->numberOfInternalInputs = 0;
         }
     }
+    /* No else: skipped by an error */ 
 
-    if (error == ARNETWORK_OK)
+    if (localError == ARNETWORK_OK)
     {
-        /** Allocate the output buffer map  storing the IOBuffer by their identifier */
-        managerPtr->outputBufferPtrMap = calloc (managerPtr->networkALManager->maxIds, sizeof (ARNETWORK_IOBuffer_t*));
-        if (managerPtr->outputBufferPtrMap == NULL)
+        /* Allocate the output buffer map  storing the IOBuffer by their identifier */
+        manager->outputBufferPtrMap = calloc (manager->networkALManager->maxIds, sizeof (ARNETWORK_IOBuffer_t*));
+        if (manager->outputBufferPtrMap == NULL)
         {
-            error = ARNETWORK_ERROR_ALLOC;
+            localError = ARNETWORK_ERROR_ALLOC;
         }
     }
+    /* No else: skipped by an error */ 
 
-    if (error == ARNETWORK_OK)
+    if (localError == ARNETWORK_OK)
     {
-        /** Allocate the input buffer map  storing the IOBuffer by their identifier */
-        managerPtr->inputBufferPtrMap = calloc (managerPtr->networkALManager->maxIds, sizeof (ARNETWORK_IOBuffer_t*));
-        if (managerPtr->inputBufferPtrMap == NULL)
+        /* Allocate the input buffer map  storing the IOBuffer by their identifier */
+        manager->inputBufferPtrMap = calloc (manager->networkALManager->maxIds, sizeof (ARNETWORK_IOBuffer_t*));
+        if (manager->inputBufferPtrMap == NULL)
         {
-            error = ARNETWORK_ERROR_ALLOC;
+            localError = ARNETWORK_ERROR_ALLOC;
         }
     }
+    /* No else: skipped by an error */ 
 
-    if ((error == ARNETWORK_OK) && (networkALManager->maxBufferSize == 0))
+    if ((localError == ARNETWORK_OK) && (networkALManager->maxBufferSize == 0))
     {
         ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_MANAGER_TAG, "maxBufferSize is 0. Did you initialize ARNetworkAL correctly?");
-        error = ARNETWORK_ERROR_BAD_PARAMETER;
+        localError = ARNETWORK_ERROR_BAD_PARAMETER;
     }
 
-    if (error == ARNETWORK_OK)
+    if (localError == ARNETWORK_OK)
     {
-        /** Create manager's IOBuffers and stor it in the inputMap and outputMap*/
-        error = ARNETWORK_Manager_CreateIOBuffer (managerPtr, inputParamArr, outputParamArr);
+        /* Create manager's IOBuffers and stor it in the inputMap and outputMap*/
+        localError = ARNETWORK_Manager_CreateIOBuffer (manager, inputParamArr, outputParamArr);
     }
+    /* No else: skipped by an error */ 
 
-    if (error == ARNETWORK_OK)
+    if (localError == ARNETWORK_OK)
     {
-        /** Create the Sender */
-        managerPtr->senderPtr = ARNETWORK_Sender_New (managerPtr->networkALManager, managerPtr->numberOfInput, managerPtr->inputBufferPtrArr, managerPtr->numberOfInternalInputs, managerPtr->internalInputBufferPtrArr, managerPtr->inputBufferPtrMap, pingDelayMs);
-        if (managerPtr->senderPtr == NULL)
+        /* Create the Sender */
+        manager->senderPtr = ARNETWORK_Sender_New (manager->networkALManager, manager->numberOfInput, manager->inputBufferPtrArr, manager->numberOfInternalInputs, manager->internalInputBufferPtrArr, manager->inputBufferPtrMap, pingDelayMs);
+        if (manager->senderPtr == NULL)
         {
-            error = ARNETWORK_ERROR_MANAGER_NEW_SENDER;
+            localError = ARNETWORK_ERROR_MANAGER_NEW_SENDER;
         }
     }
+    /* No else: skipped by an error */ 
 
-    if (error == ARNETWORK_OK)
+    if (localError == ARNETWORK_OK)
     {
-        /** Create the Receiver */
-        managerPtr->receiverPtr = ARNETWORK_Receiver_New (managerPtr->networkALManager, managerPtr->numberOfOutput, managerPtr->outputBufferPtrArr, managerPtr->outputBufferPtrMap);
-        if (managerPtr->receiverPtr != NULL)
+        /* Create the Receiver */
+        manager->receiverPtr = ARNETWORK_Receiver_New (manager->networkALManager, manager->numberOfOutput, manager->outputBufferPtrArr, manager->outputBufferPtrMap);
+        if (manager->receiverPtr != NULL)
         {
-            managerPtr->receiverPtr->senderPtr = managerPtr->senderPtr;
+            manager->receiverPtr->senderPtr = manager->senderPtr;
         }
         else
         {
-            error = ARNETWORK_ERROR_MANAGER_NEW_RECEIVER;
+            localError = ARNETWORK_ERROR_MANAGER_NEW_RECEIVER;
         }
     }
+    /* No else: skipped by an error */ 
 
-    /** delete the Manager if an error occurred */
-    if (error != ARNETWORK_OK)
+    /* delete the Manager if an error occurred */
+    if (localError != ARNETWORK_OK)
     {
-        ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_MANAGER_TAG, "error: %s", ARNETWORK_Error_ToString (error));
-        ARNETWORK_Manager_Delete (&managerPtr);
+        ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_MANAGER_TAG, "error: %s", ARNETWORK_Error_ToString (localError));
+        ARNETWORK_Manager_Delete (&manager);
     }
+    /* No else: skipped by an error */ 
 
-    /** return the error */
-    if (errorPtr != NULL)
+    /* return the error */
+    if (error != NULL)
     {
-        *errorPtr = error;
+        *error = localError;
     }
+    /* No else: error is nor returned */ 
 
-    return managerPtr;
+    return manager;
 }
 
 void ARNETWORK_Manager_Delete (ARNETWORK_Manager_t **managerPtrAddr)
@@ -957,7 +1008,6 @@ int ARNETWORK_Manager_GetEstimatedMissPercentage (ARNETWORK_Manager_t *managerPt
     }
 }
 
-
 eARNETWORK_ERROR ARNETWORK_Manager_SetMinimumTimeBetweenSends (ARNETWORK_Manager_t *managerPtr, int minimumTimeMs)
 {
     if ((managerPtr == NULL) ||
@@ -967,4 +1017,16 @@ eARNETWORK_ERROR ARNETWORK_Manager_SetMinimumTimeBetweenSends (ARNETWORK_Manager
     }
     managerPtr->senderPtr->minimumTimeBetweenSendsMs = minimumTimeMs;
     return ARNETWORK_OK;
+}
+
+void ARNETWORK_Manager_OnDisconnect (ARNETWORKAL_Manager_t *alManager, void *customData)
+{
+    /* -- function called on disconnect -- */
+    
+    ARNETWORK_Manager_t *manager = (ARNETWORK_Manager_t *)customData;
+    
+    if ((manager != NULL) && (alManager != NULL) && (manager->onDisconnect != NULL))
+    {
+        manager->onDisconnect (manager, alManager, manager->customData);
+    }
 }
