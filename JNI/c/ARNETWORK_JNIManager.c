@@ -37,31 +37,38 @@ typedef struct
  *
  *****************************************/
 
-#define ARNETWORK_JNIMANGER_TAG "JNIManager" /** tag used by the print of the file */
+#define ARNETWORK_JNIMANAGER_TAG "JNIManager" /** tag used by the print of the file */
 
 static JavaVM* gARNETWORK_JNIManager_VM = NULL; /** reference to the java virtual machine */
 
 static jmethodID ARNETWORK_JNIMANGER_ARMANGER_METHOD_CALLBACK;
+static jmethodID ARNETWORK_JNIMANGER_ARMANGER_METHOD_ONDISCONNECT;
 static jmethodID ARNETWORK_JNIMANGER_ARNATIVE_DATA_METHOD_SETUSEDSIZE;
 
 /**
  * @brief call back use when the data are sent or have a timeout
  * @param[in] IOBufferID identifier of the IoBuffer is calling back
- * @param[in] dataPtr pointer on the data
+ * @param[in] data the data which is the cause of the call 
  * @param[in] customData pointer on a custom data
  * @param[in] status indicating the reason of the callback. eARNETWORK_MANAGER_CALLBACK_STATUS type
  * @return eARNETWORK_MANAGER_CALLBACK_RETURN
  * @see eARNETWORK_MANAGER_CALLBACK_STATUS
  */
-eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManager_Callback_t(int IOBufferID,  uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status);
+eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManager_Callback (int IOBufferID,  uint8_t *data, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status);
 
 /**
  * @brief free the global references used by the callback
  * @param[in] env java environment
- * @param[in] callbackDataPtrAddr address of the pointer on the callbackData storing the global references
+ * @param[in] callbackData the callbackData storing the global references
  * @warning this funtion free the callbackData and set callbackDataPtrAddr to NULL
  */
-void ARNETWORK_JNIManager_FreeCallbackData(JNIEnv *env, ARNETWORK_JNIManager_CallbackData_t **callbackDataPtrAddr);
+void ARNETWORK_JNIManager_FreeCallbackData (JNIEnv *env, ARNETWORK_JNIManager_CallbackData_t **callbackData);
+
+/**
+ * @brief fuction called on disconnect
+ * @param manager The manager
+ */
+void ARNETWORK_JNIManager_OnDisconnect (ARNETWORK_Manager_t *manager, ARNETWORKAL_Manager_t *alManager, void *customData);
 
 /*****************************************
  *
@@ -79,7 +86,7 @@ void ARNETWORK_JNIManager_FreeCallbackData(JNIEnv *env, ARNETWORK_JNIManager_Cal
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *VM, void *reserved)
 {
-    ARSAL_PRINT(ARSAL_PRINT_DEBUG, ARNETWORK_JNIMANGER_TAG, "Library has been loaded");
+    ARSAL_PRINT(ARSAL_PRINT_DEBUG, ARNETWORK_JNIMANAGER_TAG, "Library has been loaded");
 
     /** Saving the reference to the java virtual machine */
     gARNETWORK_JNIManager_VM = VM;
@@ -98,7 +105,9 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStaticInit (JNIEnv *env, 
     /* get ARNetworkManager */
     jARNetworkManagerCls = (*env)->FindClass(env, "com/parrot/arsdk/arnetwork/ARNetworkManager");
     
-    ARNETWORK_JNIMANGER_ARMANGER_METHOD_CALLBACK = (*env)->GetMethodID(env, jARNetworkManagerCls, "callback", "(ILcom/parrot/arsdk/arsal/ARNativeData;ILjava/lang/Object;)I" );
+    ARNETWORK_JNIMANGER_ARMANGER_METHOD_CALLBACK = (*env)->GetMethodID (env, jARNetworkManagerCls, "callback", "(ILcom/parrot/arsdk/arsal/ARNativeData;ILjava/lang/Object;)I");
+    
+    ARNETWORK_JNIMANGER_ARMANGER_METHOD_ONDISCONNECT = (*env)->GetMethodID (env, jARNetworkManagerCls, "disconnectCallback", "()V");
     
     /* get jARNativeDataCls */
     jARNativeDataCls = (*env)->FindClass(env, "com/parrot/arsdk/arsal/ARNativeData");
@@ -120,7 +129,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStaticInit (JNIEnv *env, 
  * @param[in] inputParamArray array of the parameters of creation of the inputs. The array must contain as many parameters as the number of input buffer.
  * @param[in] numberOfOutput Number of output buffer
  * @param[in] outputParamArray array of the parameters of creation of the outputs. The array must contain as many parameters as the number of output buffer.
- * @return Pointer on the ARNETWORK_Manager_t.
+ * @return Pointer on the new network manager ARNETWORK_Manager_t.
  * @note This creator adds for all output, one other IOBuffer for storing the acknowledgment to return.
  * These new buffers are added in the input and output buffer arrays.
  * @warning The identifiers of the IoBuffer should not exceed the value 128.
@@ -128,16 +137,17 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeStaticInit (JNIEnv *env, 
  *
  */
 JNIEXPORT jlong JNICALL
-Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeNew(JNIEnv *env, jobject obj, jlong jOSSpecificManagerPtr, jint numberOfInput, jobjectArray inputParamArray, jint numberOfOutput, jobjectArray outputParamArray, jint timeBetweenPingsMs)
+Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeNew(JNIEnv *env, jobject obj, jlong jOSSpecificManager, jint numberOfInput, jobjectArray inputParamArray, jint numberOfOutput, jobjectArray outputParamArray, jint timeBetweenPingsMs)
 {
     /** -- Create a new manager -- */
 
     /** local declarations */
-    ARNETWORK_Manager_t *managerPtr = NULL;
+    ARNETWORK_Manager_t *manager = NULL;
     ARNETWORK_IOBufferParam_t* pArrParamInput = NULL;
     ARNETWORK_IOBufferParam_t* pArrParamOutput = NULL;
     int ii = 0;
     eARNETWORK_ERROR error = ARNETWORK_OK;
+    jobject jGlobalManager = NULL;
 
     jfieldID fieldID;
     jclass IOBufferParam_cls;
@@ -199,21 +209,23 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeNew(JNIEnv *env, jobject 
             pArrParamOutput[ii] = *( (ARNETWORK_IOBufferParam_t*) (intptr_t) (*env)->GetLongField(env, jIOBuffer, fieldID) );
         }
     }
-
+    
     if(error == ARNETWORK_OK)
     {
+        /** create a global reference of the java manager object delete by the callback */
+        jGlobalManager = (*env)->NewGlobalRef(env, obj);
+        
         /** create the manager */
-        // TODO Add networkALManager object
-        managerPtr = ARNETWORK_Manager_New((ARNETWORKAL_Manager_t*) (intptr_t) jOSSpecificManagerPtr, numberOfInput, pArrParamInput, numberOfOutput, pArrParamOutput, timeBetweenPingsMs, &error);
+        manager = ARNETWORK_Manager_New((ARNETWORKAL_Manager_t*) (intptr_t) jOSSpecificManager, numberOfInput, pArrParamInput, numberOfOutput, pArrParamOutput, timeBetweenPingsMs, &ARNETWORK_JNIManager_OnDisconnect, (void *) jGlobalManager, &error);
     }
 
     /** print error */
     if(error != ARNETWORK_OK)
     {
-        ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_JNIMANGER_TAG, "error: %s", ARNETWORK_Error_ToString (error));
+        ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_JNIMANAGER_TAG, "error: %s", ARNETWORK_Error_ToString (error));
     }
 
-    return (long) managerPtr;
+    return (long) manager;
 }
 
 /**
@@ -363,7 +375,7 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendData(JNIEnv *env, job
     if(error == ARNETWORK_OK)
     {
         /** send the data */
-        error = ARNETWORK_Manager_SendData( managerPtr, inputBufferID, dataPtr, dataSize, callbackDataPtr, &(ARNETWORK_JNIManager_Callback_t), doDataCopy);
+        error = ARNETWORK_Manager_SendData( managerPtr, inputBufferID, dataPtr, dataSize, callbackDataPtr, &(ARNETWORK_JNIManager_Callback), doDataCopy);
     }
 
     return error;
@@ -473,35 +485,54 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeReadDataWithTimeout(JNIEn
     return error;
 }
 
-eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManager_Callback_t(int IOBufferID, uint8_t *dataPtr, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status)
+eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManager_Callback (int IOBufferID, uint8_t *data, void *customData, eARNETWORK_MANAGER_CALLBACK_STATUS status)
 {
-    /** callback */
+    /* callback */
 
-    /** local declarations */
+    /* local declarations */
     JNIEnv* env = NULL;
+    jint getEnvResult = JNI_OK;
     eARNETWORK_ERROR error = ARNETWORK_OK;
     eARNETWORK_MANAGER_CALLBACK_RETURN callbackReturn = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
     int retry = 0;
-    ARNETWORK_JNIManager_CallbackData_t *callbackDataPtr = (ARNETWORK_JNIManager_CallbackData_t*) customData;
+    ARNETWORK_JNIManager_CallbackData_t *callbackData = (ARNETWORK_JNIManager_CallbackData_t*) customData;
 
-    /** get the environment */
-    if (gARNETWORK_JNIManager_VM != NULL)
+    /* check parameters:
+     *  -   callbackData is not null
+     */
+    if (callbackData == NULL)
     {
-        (*gARNETWORK_JNIManager_VM)->GetEnv(gARNETWORK_JNIManager_VM, (void **)&env, JNI_VERSION_1_6);
+        error = ARNETWORK_ERROR_BAD_PARAMETER;
+    }
+
+    if (error == ARNETWORK_OK)
+    {
+        /* get the environment */
+        if (gARNETWORK_JNIManager_VM != NULL)
+        {
+            getEnvResult = (*gARNETWORK_JNIManager_VM)->GetEnv(gARNETWORK_JNIManager_VM, (void **) &env, JNI_VERSION_1_6);
+        }
+        /* if no environment then attach the thread to the virtual machine */
+        if (getEnvResult == JNI_EDETACHED)
+        {
+            ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_JNIMANAGER_TAG, "attach the thread to the virtual machine ...");
+            (*gARNETWORK_JNIManager_VM)->AttachCurrentThread(gARNETWORK_JNIManager_VM, &env, NULL);
+        }
+        
+        if (env == NULL)
+        {
+            error = ARNETWORK_ERROR;
+        }
     }
     
-    /** check parameters:
-     *  -   env is not null
-     *  -   callbackDataPtr is not null
-     */
-    if(env != NULL && callbackDataPtr != NULL)
+    if (error == ARNETWORK_OK)
     {
-        /** send the callback java of the java manager */
+        /* send the callback java of the java manager */
 
-        if (callbackDataPtr->jManager != NULL)
+        if (callbackData->jManager != NULL)
         {
             /* java callback */
-            callbackReturn = (*env)->CallIntMethod(env, callbackDataPtr->jManager, ARNETWORK_JNIMANGER_ARMANGER_METHOD_CALLBACK, IOBufferID, callbackDataPtr->jARData,  status, callbackDataPtr->jCustomData);
+            callbackReturn = (*env)->CallIntMethod(env, callbackData->jManager, ARNETWORK_JNIMANGER_ARMANGER_METHOD_CALLBACK, IOBufferID, callbackData->jARData,  status, callbackData->jCustomData);
         }
 
         switch(status)
@@ -523,7 +554,7 @@ eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManager_Callback_t(int IOBufferI
             break;
         
         case ARNETWORK_MANAGER_CALLBACK_STATUS_DONE :
-            ARNETWORK_JNIManager_FreeCallbackData (env, &callbackDataPtr);
+            ARNETWORK_JNIManager_FreeCallbackData (env, &callbackData);
             break;
 
         default:
@@ -531,43 +562,99 @@ eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_JNIManager_Callback_t(int IOBufferI
             break;
         }
     }
-    else
+    
+    /* if the thread has been attached then detach the thread from the virtual machine */
+    if ((getEnvResult == JNI_EDETACHED) && (env != NULL))
     {
-        error = ARNETWORK_ERROR_BAD_PARAMETER;
+        (*gARNETWORK_JNIManager_VM)->DetachCurrentThread(gARNETWORK_JNIManager_VM);
     }
 
     return callbackReturn;
 }
 
-void ARNETWORK_JNIManager_FreeCallbackData (JNIEnv* env, ARNETWORK_JNIManager_CallbackData_t** callbackDataPtrAddr)
+void ARNETWORK_JNIManager_FreeCallbackData (JNIEnv* env, ARNETWORK_JNIManager_CallbackData_t** callbackData)
 {
-    /** -- free the global references of the callback -- */
+    /* -- free the global references of the callback -- */
 
-    /** local declarations */
-    ARNETWORK_JNIManager_CallbackData_t *callbackDataPtr = NULL;
+    /* local declarations */
+    ARNETWORK_JNIManager_CallbackData_t *callback = NULL;
 
-    if(callbackDataPtrAddr != NULL)
+    if(callbackData != NULL)
     {
-        callbackDataPtr = *callbackDataPtrAddr;
-
-        if(callbackDataPtr != NULL)
+        if((*callbackData) != NULL)
         {
-            /** delete the java ARNativeData object reference */
-            (*env)->DeleteGlobalRef( env, callbackDataPtr->jARData );
-            callbackDataPtr->jARData = NULL;
+            /* delete the java ARNativeData object reference */
+            (*env)->DeleteGlobalRef( env, (*callbackData)->jARData );
+            (*callbackData)->jARData = NULL;
 
-            /** delete the java manager object reference */
-            (*env)->DeleteGlobalRef( env, callbackDataPtr->jManager );
-            callbackDataPtr->jManager = NULL;
+            /* delete the java manager object reference */
+            (*env)->DeleteGlobalRef( env, (*callbackData)->jManager );
+            (*callbackData)->jManager = NULL;
             
-            /** delete the java customData object reference */
-            (*env)->DeleteGlobalRef( env, callbackDataPtr->jCustomData );
-            callbackDataPtr->jCustomData = NULL;
+            /* delete the java customData object reference */
+            (*env)->DeleteGlobalRef( env, (*callbackData)->jCustomData );
+            (*callbackData)->jCustomData = NULL;
 
-            /** the callback data */
-            free(callbackDataPtr);
-            callbackDataPtr = NULL;
+            /* the callback data */
+            free((*callbackData));
+            (*callbackData) = NULL;
         }
-        *callbackDataPtrAddr = NULL;
+        callbackData = NULL;
+    }
+}
+
+void ARNETWORK_JNIManager_OnDisconnect (ARNETWORK_Manager_t *manager, ARNETWORKAL_Manager_t *alManager, void *customData)
+{
+    /* -- function called on disconnect -- */
+    
+    /* local declarations */
+    JNIEnv *env = NULL;
+    jint getEnvResult = JNI_OK;
+    jobject jManager = (jobject) customData;
+    eARNETWORK_ERROR error = ARNETWORK_OK;
+    
+    if (jManager == NULL)
+    {
+        error = ARNETWORK_ERROR_BAD_PARAMETER;
+    }
+    
+    if (error == ARNETWORK_OK)
+    {
+        /* get the environment */
+        if (gARNETWORK_JNIManager_VM != NULL)
+        {
+            getEnvResult = (*gARNETWORK_JNIManager_VM)->GetEnv(gARNETWORK_JNIManager_VM, (void **) &env, JNI_VERSION_1_6);
+        }
+        /* if no environment then attach the thread to the virtual machine */
+        if (getEnvResult == JNI_EDETACHED)
+        {
+            ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_JNIMANAGER_TAG, "attach the thread to the virtual machine ...");
+            (*gARNETWORK_JNIManager_VM)->AttachCurrentThread(gARNETWORK_JNIManager_VM, &env, NULL);
+        }
+        
+        if (env == NULL)
+        {
+            error = ARNETWORK_ERROR;
+        }
+    }
+    
+    if (error == ARNETWORK_OK)
+    {
+        (*env)->CallVoidMethod (env, jManager, ARNETWORK_JNIMANGER_ARMANGER_METHOD_ONDISCONNECT);
+        
+        /* Delete the GlobalRef of the jManager */
+        (*env)->DeleteGlobalRef (env, jManager);
+        jManager = NULL;
+    }
+    
+    if (error != ARNETWORK_OK)
+    {
+        ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_JNIMANAGER_TAG, "error: %s", ARNETWORK_Error_ToString (error));
+    }
+    
+    /* if the thread has been attached then detach the thread from the virtual machine */
+    if ((getEnvResult == JNI_EDETACHED) && (env != NULL))
+    {
+        (*gARNETWORK_JNIManager_VM)->DetachCurrentThread(gARNETWORK_JNIManager_VM);
     }
 }

@@ -28,9 +28,11 @@ public abstract class ARNetworkManager
     private long m_managerPtr;
 
     private boolean m_initOk;
+    private ARNetworkALManager alManager;
 
     public SendingRunnable m_sendingRunnable;
     public ReceivingRunnable m_receivingRunnable;
+    
     
     static
     {
@@ -57,6 +59,7 @@ public abstract class ARNetworkManager
             m_initOk = true;
             m_sendingRunnable = new SendingRunnable(m_managerPtr);
             m_receivingRunnable = new ReceivingRunnable(m_managerPtr);
+            alManager = osSpecificManager;
         }
     }
 
@@ -257,7 +260,20 @@ public abstract class ARNetworkManager
         
         return retVal.getValue();
     }
-
+    
+    /**
+     * @brief function called on disconnect
+     * @param alManager The ARNetworkAL manager
+     */
+    public abstract void onDisconnect (ARNetworkALManager alManager);
+    
+    /**
+     * @brief function called on disconnect
+     */
+    private void disconnectCallback ()
+    {
+        onDisconnect (alManager);
+    }
 }
 
 /**
