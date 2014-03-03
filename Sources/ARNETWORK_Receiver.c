@@ -27,7 +27,6 @@
 
 #include <libARNetwork/ARNETWORK_Error.h>
 #include <libARNetworkAL/ARNETWORKAL_Frame.h>
-#include "ARNETWORK_Buffer.h"
 #include "ARNETWORK_DataDescriptor.h"
 #include "ARNETWORK_Manager.h"
 #include <libARNetwork/ARNETWORK_Manager.h>

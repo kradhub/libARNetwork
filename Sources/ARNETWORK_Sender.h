@@ -11,7 +11,6 @@
 #include <libARNetworkAL/ARNETWORKAL_Manager.h>
 
 #include "ARNETWORK_IOBuffer.h"
-#include "ARNETWORK_Buffer.h"
 
 #include <libARSAL/ARSAL_Time.h>
 
@@ -36,7 +35,6 @@
 typedef struct
 {
     ARNETWORKAL_Manager_t *networkALManager;
-    ARNETWORK_Buffer_t *sendingBufferPtr; /**< Pointer on the data buffer to send*/
 
     ARNETWORK_IOBuffer_t **inputBufferPtrArr; /**< address of the array of pointers of input buffer*/
     int numberOfInputBuff;

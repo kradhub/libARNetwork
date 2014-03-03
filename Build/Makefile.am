@@ -11,7 +11,6 @@ HEADER_FILES                                                =   ../Includes/libA
 
 # The sources to add to the library and to add to the source distribution
 SOURCE_FILES                                                =   $(HEADER_FILES)                         \
-                                                                ../Sources/ARNETWORK_Buffer.c           \
                                                                 ../Sources/ARNETWORK_RingBuffer.c       \
                                                                 ../Sources/ARNETWORK_DataDescriptor.h   \
                                                                 ../Sources/ARNETWORK_IOBufferParam.c    \
@@ -20,7 +19,6 @@ SOURCE_FILES                                                =   $(HEADER_FILES) 
                                                                 ../Sources/ARNETWORK_Receiver.c         \
                                                                 ../Sources/ARNETWORK_Manager.c          \
                                                                 ../Sources/ARNETWORK_Error.c            \
-                                                                ../Sources/ARNETWORK_Buffer.h           \
                                                                 ../Sources/ARNETWORK_RingBuffer.h       \
                                                                 ../Sources/ARNETWORK_IOBuffer.h         \
                                                                 ../Sources/ARNETWORK_Sender.h           \

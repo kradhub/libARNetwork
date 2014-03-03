@@ -11,7 +11,6 @@
 #include <libARNetworkAL/ARNETWORKAL_Manager.h>
 #include "ARNETWORK_IOBuffer.h"
 #include "ARNETWORK_Sender.h"
-#include "ARNETWORK_Buffer.h"
 
 /**
  * @brief receiver manager
