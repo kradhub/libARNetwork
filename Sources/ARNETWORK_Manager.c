@@ -85,7 +85,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
     eARNETWORKAL_ERROR errorAL = ARNETWORKAL_OK;
     
     /* check parameters */
-    if ((networkALManager == NULL) || (onDisconnectCallback == NULL))
+    if (networkALManager == NULL)
     {
         localError = ARNETWORK_ERROR_BAD_PARAMETER;
     }
