@@ -11,6 +11,18 @@
 #include <jni.h>
 #include <stdlib.h>
 
+JNIEXPORT int JNICALL
+Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeStaticGetInfiniteNumber (JNIEnv *env, jclass class)
+{
+    return ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER;
+}
+
+JNIEXPORT int JNICALL
+Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeStaticGetDataCopyMaxSizeUseMax (JNIEnv *env, jclass class)
+{
+    return ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX;
+}
+
 JNIEXPORT jlong JNICALL
 Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeNew(JNIEnv *env, jobject obj)
 {

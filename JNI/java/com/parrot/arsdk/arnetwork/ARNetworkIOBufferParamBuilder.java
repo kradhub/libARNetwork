@@ -28,8 +28,8 @@ public class ARNetworkIOBufferParamBuilder {
         this.ID = id;
         this.dataType = ARNETWORKAL_FRAME_TYPE_ENUM.ARNETWORKAL_FRAME_TYPE_DATA;
         this.timeBetweenSendMs = 1;
-        this.ackTimeoutMs = ARNetworkIOBufferParam.INFINITE_NUMBER;
-        this.numberOfRetry = ARNetworkIOBufferParam.INFINITE_NUMBER;
+        this.ackTimeoutMs = ARNetworkIOBufferParam.ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER;
+        this.numberOfRetry = ARNetworkIOBufferParam.ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER;
         this.numberOfCell = 1;
         this.dataCopyMaxSize = 0;
         this.isOverwriting = false;
@@ -93,5 +93,4 @@ public class ARNetworkIOBufferParamBuilder {
                                            dataCopyMaxSize,
                                            isOverwriting);
     }
-
 }

@@ -8,10 +8,21 @@ import com.parrot.arsdk.arsal.ARSALPrint;
  */
 public class ARNetworkIOBufferParam
 {
-    public static final int INFINITE_NUMBER = -1;
-
     private static final String TAG = ARNetworkIOBufferParam.class.getSimpleName ();
 
+    /**
+     * @brief Infinite value for the IOBufferParams
+     */
+    public static int ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER;
+
+    /**
+     * @brief Automatically use the maximum value for dataCopyMaxSize.
+     */
+    public static int ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX;
+
+    private native static int nativeStaticGetInfiniteNumber();
+    private native static int nativeStaticGetDataCopyMaxSizeUseMax();
+    
     private native long nativeNew();
     private native void nativeDelete(long jIOBufferParamPtr);
     private native void nativeSetId(long jIOBufferParamPtr, int ID);
@@ -33,7 +44,13 @@ public class ARNetworkIOBufferParam
     private int numberOfCell;
     private int copyMaxSize;
     private boolean isOverwriting;
-
+    
+    static
+    {
+        ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER = nativeStaticGetInfiniteNumber ();
+        ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX = nativeStaticGetDataCopyMaxSizeUseMax ();
+    }
+    
     /**
      * Constructor
      * @param id Identifier of the buffer
