@@ -54,16 +54,16 @@ typedef struct
 /**
  * @brief initialization of the IOBufferParam with default parameters
  * @pre before to use the IOBufferParam the paramaters useful must be set.
- * @param[in,out] IOBufferParamPtr Pointer on the parameters for the new input or output buffer
+ * @param[in,out] IOBufferParam parameters of the new input or output buffer
  * @return error of eARNETWORK_ERROR type
  */
-eARNETWORK_ERROR ARNETWORK_IOBufferParam_DefaultInit (ARNETWORK_IOBufferParam_t *IOBufferParamPtr);
+eARNETWORK_ERROR ARNETWORK_IOBufferParam_DefaultInit (ARNETWORK_IOBufferParam_t *IOBufferParam);
 
 /**
  * @brief check the values of the IOBufferParam
- * @param[in] IOBufferParamPtr Pointer on the parameters for the new input or output buffer
+ * @param[in] IOBufferParam Parameters of the new input or output buffer
  * @return 1 if the IOBufferParam is usable for create a new ioBuffer else 0
  */
-int ARNETWORK_IOBufferParam_Check (const ARNETWORK_IOBufferParam_t *IOBufferParamPtr);
+int ARNETWORK_IOBufferParam_Check (const ARNETWORK_IOBufferParam_t *IOBufferParam);
 
 #endif /** _ARNETWORK_IOBUFFERPARAM_H_ */

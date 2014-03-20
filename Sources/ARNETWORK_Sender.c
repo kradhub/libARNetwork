@@ -549,13 +549,13 @@ eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, AR
         frame.id = inputBufferPtr->ID;
         frame.seq = inputBufferPtr->seq;
         frame.size = offsetof (ARNETWORKAL_Frame_t, dataPtr) + dataDescriptor.dataSize;
-        frame.dataPtr = dataDescriptor.dataPtr;
+        frame.dataPtr = dataDescriptor.data;
         if(senderPtr->networkALManager->pushFrame(senderPtr->networkALManager, &frame) == ARNETWORKAL_MANAGER_RETURN_DEFAULT)
         {
             /** callback with sent status */
             if (dataDescriptor.callback != NULL)
             {
-                dataDescriptor.callback (inputBufferPtr->ID, dataDescriptor.dataPtr, dataDescriptor.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_SENT);
+                dataDescriptor.callback (inputBufferPtr->ID, dataDescriptor.data, dataDescriptor.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_SENT);
             }
         }
     }
@@ -577,7 +577,7 @@ eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_Sender_TimeOutCallback (ARNETWORK_S
     /** callback with timeout status*/
     if (dataDescriptor.callback != NULL)
     {
-        callbackRetrun = dataDescriptor.callback (inputBufferPtr->ID, dataDescriptor.dataPtr, dataDescriptor.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_TIMEOUT);
+        callbackRetrun = dataDescriptor.callback (inputBufferPtr->ID, dataDescriptor.data, dataDescriptor.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_TIMEOUT);
     }
 
     return callbackRetrun;

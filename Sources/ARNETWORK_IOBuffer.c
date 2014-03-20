@@ -61,7 +61,7 @@ static inline eARNETWORK_ERROR ARNETWORK_IOBuffer_FreeData(ARNETWORK_IOBuffer_t 
         /** callback with free status */
         if(dataDescriptorPtr->callback != NULL)
         {
-            dataDescriptorPtr->callback(IOBufferPtr->ID, dataDescriptorPtr->dataPtr, dataDescriptorPtr->customData, ARNETWORK_MANAGER_CALLBACK_STATUS_FREE);
+            dataDescriptorPtr->callback(IOBufferPtr->ID, dataDescriptorPtr->data, dataDescriptorPtr->customData, ARNETWORK_MANAGER_CALLBACK_STATUS_FREE);
         }
     }
     
@@ -336,7 +336,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_PopDataWithCallBack(ARNETWORK_IOBuffer_t *IO
         /** callback with the reason of the data popping */
         if(dataDescriptor.callback != NULL)
         {
-            dataDescriptor.callback(IOBufferPtr->ID, dataDescriptor.dataPtr, dataDescriptor.customData, callbackStatus);
+            dataDescriptor.callback(IOBufferPtr->ID, dataDescriptor.data, dataDescriptor.customData, callbackStatus);
         }
 
         /** free data */
@@ -389,7 +389,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AddData(ARNETWORK_IOBuffer_t *IOBufferPtr, u
     int numberOfFreeCell = 0;
 
     /** initialize dataDescriptor */
-    dataDescriptor.dataPtr = dataPtr;
+    dataDescriptor.data = dataPtr;
     dataDescriptor.dataSize = dataSize;
     dataDescriptor.customData = customData;
     dataDescriptor.callback = callback;
@@ -416,7 +416,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AddData(ARNETWORK_IOBuffer_t *IOBufferPtr, u
             if( (ARNETWORK_IOBuffer_CanCopyData(IOBufferPtr)) && (dataSize <= IOBufferPtr->dataCopyRBufferPtr->cellSize) )
             {
                 /** copy data in the dataCopyRBufferPtr and get the address of the data copy in descDataPtr */
-                error =  ARNETWORK_RingBuffer_PushBackWithSize(IOBufferPtr->dataCopyRBufferPtr, dataPtr, dataSize, &(dataDescriptor.dataPtr));
+                error =  ARNETWORK_RingBuffer_PushBackWithSize(IOBufferPtr->dataCopyRBufferPtr, dataPtr, dataSize, &(dataDescriptor.data));
 
                 /** set the flag to indicate the copy of the data */
                 dataDescriptor.isUsingDataCopy = 1;
@@ -483,7 +483,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_ReadData(ARNETWORK_IOBuffer_t *IOBufferPtr, 
         if(dataDescriptor.dataSize <= dataLimitSize)
         {
             /** data copy */
-            memcpy(dataPtr, dataDescriptor.dataPtr, dataDescriptor.dataSize);
+            memcpy(dataPtr, dataDescriptor.data, dataDescriptor.dataSize);
 
             /** set size of data read */
             readSize = dataDescriptor.dataSize;

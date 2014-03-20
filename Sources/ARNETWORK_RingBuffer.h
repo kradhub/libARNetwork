@@ -18,7 +18,7 @@
 **/
 typedef struct  
 {
-    uint8_t *dataBuffer; /**< Pointer on the data buffer*/
+    uint8_t *dataBuffer; /**< the data buffer*/
     unsigned int numberOfCell; /**< Maximum number of data stored*/
     unsigned int cellSize; /**< Size of one data in byte*/
     unsigned int isOverwriting; /**< Indicator of overwriting possibility (1 = true | 0 = false)*/
@@ -58,101 +58,101 @@ ARNETWORK_RingBuffer_t* ARNETWORK_RingBuffer_NewWithOverwriting(unsigned int num
 /**
  * @brief Delete the ring buffer
  * @warning This function free memory
- * @param ringBufferPtrAddr address of the pointer on the ring buffer to delete
+ * @param ringBuffer Pointer to the ring buffer to delete
  * @see ARNETWORK_RingBuffer_New()
  * @see ARNETWORK_RingBuffer_NewWithOverwriting()
 **/
-void ARNETWORK_RingBuffer_Delete(ARNETWORK_RingBuffer_t **ringBufferPtrAddr);
+void ARNETWORK_RingBuffer_Delete(ARNETWORK_RingBuffer_t **ringBuffer);
 
 /**
  * @brief Add the new data at the back of the ring buffer
- * @warning newDataPtr must be different of NULL
- * @param ringBufferPtr pointer on the ring buffer
- * @param[in] newDataPtr pointer on the data to add
+ * @warning newData must be different of NULL
+ * @param ringBuffer The ring buffer which will push back
+ * @param[in] newData pointer on the data to add
  * @return error eARNETWORK_ERROR
 **/
-eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBack(ARNETWORK_RingBuffer_t *ringBufferPtr, const uint8_t *newDataPtr);
+eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBack(ARNETWORK_RingBuffer_t *ringBuffer, const uint8_t *newData);
 
 /**
  * @brief Add the new data at the back of the ring buffer
- * @warning newDataPtr must be different of NULL
+ * @warning newData must be different of NULL
  * @warning data size must not be more than ring buffer's cell size
  * @note if data size is less than ring buffer's cell size, the bytes at the cell end are not set. 
- * @param ringBufferPtr pointer on the ring buffer
- * @param[in] newDataPtr pointer on the data to add
- * @param[in] dataSize size in byte of the data to copy from newDataPtr
- * @param[out] dataCopyPtrAddr address to return the pointer on the data copy in the ring buffer ; can be equal to NULL 
+ * @param ringBuffer the ring buffer which will push back
+ * @param[in] newData the data to add
+ * @param[in] dataSize size in byte of the data to copy from newData
+ * @param[out] dataCopy address to return the pointer on the data copy in the ring buffer ; can be equal to NULL 
  * @return error eARNETWORK_ERROR
 **/
-eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBackWithSize(ARNETWORK_RingBuffer_t *ringBufferPtr, const uint8_t *newDataPtr, int dataSize, uint8_t **dataCopyPtrAddr);
+eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBackWithSize(ARNETWORK_RingBuffer_t *ringBuffer, const uint8_t *newData, int dataSize, uint8_t **dataCopy);
 
 /**
  * @brief Pop the oldest data
- * @param ringBufferPtr pointer on the ring buffer
- * @param[out] dataPopPtr pointer on the data popped
+ * @param ringBuffer the ring buffer which will pop front
+ * @param[out] dataPop pointer on the data popped
  * @return error eARNETWORK_ERROR
 **/
-eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFront(ARNETWORK_RingBuffer_t *ringBufferPtr, uint8_t *dataPopPtr);
+eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFront(ARNETWORK_RingBuffer_t *ringBuffer, uint8_t *dataPop);
 
 /**
  * @brief Pop the oldest data
  * @warning dataSize must be less or equal of the ring buffer's cell size.
  * @note if data size is less than ring buffer's cell size, the bytes at the cell end are lost.
- * @param ringBufferPtr pointer on the ring buffer
- * @param[out] dataPopPtr pointer on the data popped
- * @param[in] dataSize size to copy from the front data to the dataPopPtr
+ * @param ringBuffer the ring buffer which will pop front
+ * @param[out] dataPop the data popped
+ * @param[in] dataSize size to copy from the front data to the dataPop
  * @return error eARNETWORK_ERROR
 **/
-eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFrontWithSize(ARNETWORK_RingBuffer_t *ringBufferPtr, uint8_t *dataPopPtr, int dataSize);
+eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFrontWithSize(ARNETWORK_RingBuffer_t *ringBuffer, uint8_t *dataPop, int dataSize);
 
 /**
  * @brief Return the number of free cell of the ring buffer
- * @param ringBufferPtr pointer on the ring buffer
+ * @param ringBuffer the ring buffer which will give the number of its free cells
  * @return number of free cell of the ring buffer 
 **/
-static inline int ARNETWORK_RingBuffer_GetFreeCellNumber(const ARNETWORK_RingBuffer_t *ringBufferPtr)
+static inline int ARNETWORK_RingBuffer_GetFreeCellNumber(const ARNETWORK_RingBuffer_t *ringBuffer)
 {
-    return ringBufferPtr->numberOfCell - ( (ringBufferPtr->indexInput - ringBufferPtr->indexOutput) / ringBufferPtr->cellSize );
+    return ringBuffer->numberOfCell - ( (ringBuffer->indexInput - ringBuffer->indexOutput) / ringBuffer->cellSize );
 }
 
 /**
  * @brief Check if the ring buffer is empty
- * @param ringBufferPtr pointer on the ring buffer
+ * @param ringBuffer the ring buffer which will check if it is empty
  * @return equal to 1 if the ring buffer is empty else 0
 **/
-static inline int ARNETWORK_RingBuffer_IsEmpty(const ARNETWORK_RingBuffer_t *ringBufferPtr)
+static inline int ARNETWORK_RingBuffer_IsEmpty(const ARNETWORK_RingBuffer_t *ringBuffer)
 {
-    return (ringBufferPtr->indexInput == ringBufferPtr->indexOutput) ? 1 : 0;
+    return (ringBuffer->indexInput == ringBuffer->indexOutput) ? 1 : 0;
 }
 
 /**
  * @brief Return a pointer on the front data
- * @param ringBufferPtr pointer on the ring buffer
- * @param[out] frontDataPtr pointer on the front data
+ * @param ringBuffer the ring buffer which will give its front data
+ * @param[out] frontData the front data
  * @return error eARNETWORK_ERROR
 **/
-eARNETWORK_ERROR ARNETWORK_RingBuffer_Front(ARNETWORK_RingBuffer_t *ringBufferPtr, uint8_t *frontDataPtr);
+eARNETWORK_ERROR ARNETWORK_RingBuffer_Front(ARNETWORK_RingBuffer_t *ringBuffer, uint8_t *frontData);
 
 /**
  * @brief Clean the ring buffer
- * @param ringBufferPtr pointer on the ring buffer
+ * @param ringBuffer the ring buffer to clean
 **/
-static inline void ARNETWORK_RingBuffer_Clean(ARNETWORK_RingBuffer_t *ringBufferPtr)
+static inline void ARNETWORK_RingBuffer_Clean(ARNETWORK_RingBuffer_t *ringBuffer)
 {
-    ringBufferPtr->indexInput = ringBufferPtr->indexOutput;
+    ringBuffer->indexInput = ringBuffer->indexOutput;
 }
 
 /**
  * @brief Print the state of the ring buffer
- * @param ringBufferPtr pointer on the ring buffer
+ * @param ringBuffer the ring buffer to print
 **/
-void ARNETWORK_RingBuffer_Print(ARNETWORK_RingBuffer_t *ringBufferPtr);
+void ARNETWORK_RingBuffer_Print(ARNETWORK_RingBuffer_t *ringBuffer);
 
 /**
  * @brief Print the contents of the ring buffer
- * @param ringBufferPtr pointer on the ring buffer
+ * @param ringBuffer the ring buffer which will print its data
 **/
-void ARNETWORK_RingBuffer_DataPrint(ARNETWORK_RingBuffer_t *ringBufferPtr);
+void ARNETWORK_RingBuffer_DataPrint(ARNETWORK_RingBuffer_t *ringBuffer);
 
 #endif /** _ARNETWORK_RINGBUFFER_PRIVATE_H_ */
 

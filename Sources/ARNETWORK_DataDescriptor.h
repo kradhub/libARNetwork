@@ -28,7 +28,7 @@
 **/
 typedef struct  
 {
-    uint8_t *dataPtr; /**< pointer on the data to send*/
+    uint8_t *data; /**< data to send*/
     int dataSize; /**< size of the data */
     void *customData; /**< custom data */
     ARNETWORK_Manager_Callback_t callback; /**< call back use when the data are sent or timeout occurred */
