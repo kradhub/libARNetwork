@@ -46,6 +46,7 @@ static inline void ARNETWORK_RingBuffer_NormalizeIndexes(ARNETWORK_RingBuffer_t 
         ringBuffer->indexInput %= buffer_size;
         ringBuffer->indexOutput %= buffer_size;
     }
+    /* No else: the Indexes are already normalized. */
 }
 
 /*****************************************
@@ -62,9 +63,9 @@ ARNETWORK_RingBuffer_t* ARNETWORK_RingBuffer_New(unsigned int numberOfCell, unsi
 
 ARNETWORK_RingBuffer_t* ARNETWORK_RingBuffer_NewWithOverwriting(unsigned int numberOfCell, unsigned int cellSize, int isOverwriting)
 {
-    /** -- Create a new ring buffer -- */
+    /* -- Create a new ring buffer -- */
 
-    /** local declarations */
+    /* local declarations */
     ARNETWORK_RingBuffer_t* ringBuffer =  malloc( sizeof(ARNETWORK_RingBuffer_t) );
 
     if(ringBuffer)
@@ -79,18 +80,21 @@ ARNETWORK_RingBuffer_t* ARNETWORK_RingBuffer_NewWithOverwriting(unsigned int num
 
         if( ringBuffer->dataBuffer == NULL)
         {
+            /* dataBuffer is not successfully allocated */
             ARNETWORK_RingBuffer_Delete(&ringBuffer);
         }
+        /* No else: dataBuffer is successfully allocated */
     }
+    /* No else: the ringBuffer is not successfully allocated; ringBuffer = NULL. */
 
     return ringBuffer;
 }
 
 void ARNETWORK_RingBuffer_Delete(ARNETWORK_RingBuffer_t **ringBuffer)
 {
-    /** -- Delete the ring buffer -- */
+    /* -- Delete the ring buffer -- */
 
-    if(ringBuffer != NULL)
+    if (ringBuffer != NULL)
     {
         if((*ringBuffer) != NULL)
         {
@@ -101,43 +105,47 @@ void ARNETWORK_RingBuffer_Delete(ARNETWORK_RingBuffer_t **ringBuffer)
             free(*ringBuffer);
             (*ringBuffer) = NULL;
         }
+        /* No else: No ringBuffer to delete */
     }
+    /* No else: Parameters check (stops the processing) */
 }
 
 eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBack(ARNETWORK_RingBuffer_t *ringBuffer, const uint8_t *newData) //inline ?
 {
-    /** -- Add the new data at the back of the ring buffer -- */
+    /* -- Add the new data at the back of the ring buffer -- */
 
     return ARNETWORK_RingBuffer_PushBackWithSize(ringBuffer, newData, ringBuffer->cellSize, NULL);
 }
 
 eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBackWithSize(ARNETWORK_RingBuffer_t *ringBuffer, const uint8_t *newData, int dataSize, uint8_t **dataCopy)
 {
-    /** -- Add the new data at the back of the ring buffer with specification of the data size -- */
+    /* -- Add the new data at the back of the ring buffer with specification of the data size -- */
 
-    /** local declarations */
+    /* local declarations */
     int error = ARNETWORK_OK;
     uint8_t* buffer = NULL;
 
     ARSAL_Mutex_Lock(&(ringBuffer->mutex));
 
-    /** check if the has enough free cell or the buffer is overwriting */
-    if( (ARNETWORK_RingBuffer_GetFreeCellNumber(ringBuffer)) || (ringBuffer->isOverwriting) )
+    /* check if the has enough free cell or the buffer is overwriting */
+    if ((ARNETWORK_RingBuffer_GetFreeCellNumber(ringBuffer)) || (ringBuffer->isOverwriting))
     {
-        if( !ARNETWORK_RingBuffer_GetFreeCellNumber(ringBuffer) )
+        if (!ARNETWORK_RingBuffer_GetFreeCellNumber(ringBuffer))
         {
             (ringBuffer->indexOutput) += ringBuffer->cellSize;
         }
+        /* No else: the ringBuffer is not full */
 
         buffer = ringBuffer->dataBuffer + ( ringBuffer->indexInput % (ringBuffer->numberOfCell * ringBuffer->cellSize) );
 
         memcpy(buffer, newData, dataSize);
 
-        /** return the pointer on the data copy in the ring buffer */
+        /* return the pointer on the data copy in the ring buffer */
         if(dataCopy != NULL)
         {
             *dataCopy = buffer;
         }
+        /* No else: data are not returned */
 
         ringBuffer->indexInput += ringBuffer->cellSize;
         ARNETWORK_RingBuffer_NormalizeIndexes(ringBuffer);
@@ -154,29 +162,30 @@ eARNETWORK_ERROR ARNETWORK_RingBuffer_PushBackWithSize(ARNETWORK_RingBuffer_t *r
 
 eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFront(ARNETWORK_RingBuffer_t *ringBuffer, uint8_t *dataPop) //see inline
 {
-    /** -- Pop the oldest data -- */
+    /* -- Pop the oldest data -- */
 
     return ARNETWORK_RingBuffer_PopFrontWithSize(ringBuffer, dataPop, ringBuffer->cellSize);
 }
 
 eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFrontWithSize(ARNETWORK_RingBuffer_t *ringBuffer, uint8_t *dataPop, int dataSize)
 {
-    /** -- Pop the oldest data -- */
+    /* -- Pop the oldest data -- */
 
-    /** local declarations */
+    /* local declarations */
     uint8_t *buffer = NULL;
     eARNETWORK_ERROR error = ARNETWORK_OK;
 
     ARSAL_Mutex_Lock(&(ringBuffer->mutex));
 
-    if( !ARNETWORK_RingBuffer_IsEmpty(ringBuffer) )
+    if (!ARNETWORK_RingBuffer_IsEmpty(ringBuffer))
     {
         if(dataPop != NULL)
         {
-            /** get the address of the front data */
+            /* get the address of the front data */
             buffer = ringBuffer->dataBuffer + (ringBuffer->indexOutput % (ringBuffer->numberOfCell * ringBuffer->cellSize));
             memcpy(dataPop, buffer, dataSize);
         }
+        /* No else: the data popped is not returned  */
         (ringBuffer->indexOutput) += ringBuffer->cellSize;
         ARNETWORK_RingBuffer_NormalizeIndexes(ringBuffer);
     }
@@ -192,15 +201,15 @@ eARNETWORK_ERROR ARNETWORK_RingBuffer_PopFrontWithSize(ARNETWORK_RingBuffer_t *r
 
 eARNETWORK_ERROR ARNETWORK_RingBuffer_Front(ARNETWORK_RingBuffer_t *ringBuffer, uint8_t *frontData)
 {
-    /** -- Return a pointer on the front data -- */
+    /* -- Return a pointer on the front data -- */
 
-    /** local declarations */
+    /* local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
     uint8_t *buffer = NULL;
 
     ARSAL_Mutex_Lock(&(ringBuffer->mutex));
 
-    /** get the address of the front data */
+    /* get the address of the front data */
     buffer = ringBuffer->dataBuffer + (ringBuffer->indexOutput % (ringBuffer->numberOfCell * ringBuffer->cellSize));
 
     if( !ARNETWORK_RingBuffer_IsEmpty(ringBuffer) )
@@ -219,7 +228,7 @@ eARNETWORK_ERROR ARNETWORK_RingBuffer_Front(ARNETWORK_RingBuffer_t *ringBuffer, 
 
 void ARNETWORK_RingBuffer_Print(ARNETWORK_RingBuffer_t *ringBuffer)
 {
-    /** -- Print the state of the ring buffer -- */
+    /* -- Print the state of the ring buffer -- */
 
     ARSAL_Mutex_Lock(&(ringBuffer->mutex));
 
@@ -238,23 +247,23 @@ void ARNETWORK_RingBuffer_Print(ARNETWORK_RingBuffer_t *ringBuffer)
 
 void ARNETWORK_RingBuffer_DataPrint(ARNETWORK_RingBuffer_t *ringBuffer)
 {
-    /** -- Print the contents of the ring buffer -- */
+    /* -- Print the contents of the ring buffer -- */
 
-    /** local declarations */
+    /* local declarations */
     uint8_t *byteIterator = NULL;
     int  cellIndex = 0;
     int  byteIndex = 0;
 
     ARSAL_Mutex_Lock(&(ringBuffer->mutex));
 
-    /** for all cell of the ringBuffer */
+    /* for all cell of the ringBuffer */
     for (cellIndex = ringBuffer->indexOutput ; cellIndex < ringBuffer->indexInput ; cellIndex += ringBuffer->cellSize )
     {
         byteIterator = ringBuffer->dataBuffer + (cellIndex % (ringBuffer->numberOfCell * ringBuffer->cellSize) );
 
         ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_RINGBUFFER_TAG,"    - 0x: ");
 
-        /** for all byte of the cell */
+        /* for all byte of the cell */
         for(byteIndex = 0 ; byteIndex < ringBuffer->cellSize ; ++byteIndex)
         {
             ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_RINGBUFFER_TAG,"%2x | ",*((uint8_t*)byteIterator));
