@@ -212,7 +212,7 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
                 // Low latency : no wait if any data available
             case ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY:
                 if ((error == ARNETWORK_OK) &&
-                    (!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBufferPtr)))
+                    (!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBuffer)))
                 {
                     waitTimeMs = 0;
                 }
@@ -230,7 +230,7 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
                             waitTimeMs = inputBufferPtrTemp->ackWaitTimeCount;
                         }
                     }
-                    else if (!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBufferPtr))
+                    else if (!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBuffer))
                     {
                         if (inputBufferPtrTemp->waitTimeCount < waitTimeMs)
                         {
@@ -243,7 +243,7 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
                 //  - 
             default:
                 if ((error == ARNETWORK_OK) &&
-                    (!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBufferPtr)))
+                    (!ARNETWORK_RingBuffer_IsEmpty (inputBufferPtrTemp->dataDescriptorRBuffer)))
                 {
                     if (inputBufferPtrTemp->waitTimeCount < waitTimeMs)
                     {
@@ -389,7 +389,7 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
             }
         }
 
-        else if ((!ARNETWORK_RingBuffer_IsEmpty (buffer->dataDescriptorRBufferPtr)) && (buffer->waitTimeCount == 0))
+        else if ((!ARNETWORK_RingBuffer_IsEmpty (buffer->dataDescriptorRBuffer)) && (buffer->waitTimeCount == 0))
         {
             /** try to add the latest data of the input buffer in the sending buffer; callback with sent status */
             if (!ARNETWORK_Sender_AddToBuffer (senderPtr, buffer, 0))
@@ -536,7 +536,7 @@ eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, AR
     ARNETWORK_DataDescriptor_t dataDescriptor;
 
     /** pop data descriptor*/
-    error = ARNETWORK_RingBuffer_Front (inputBufferPtr->dataDescriptorRBufferPtr, (uint8_t*) &dataDescriptor);
+    error = ARNETWORK_RingBuffer_Front (inputBufferPtr->dataDescriptorRBuffer, (uint8_t*) &dataDescriptor);
 
     if (error == ARNETWORK_OK)
     {
@@ -572,7 +572,7 @@ eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_Sender_TimeOutCallback (ARNETWORK_S
     eARNETWORK_MANAGER_CALLBACK_RETURN callbackRetrun = ARNETWORK_MANAGER_CALLBACK_RETURN_DEFAULT;
 
     /** get dataDescriptor */
-    ARNETWORK_RingBuffer_Front (inputBufferPtr->dataDescriptorRBufferPtr, (uint8_t*) &dataDescriptor);
+    ARNETWORK_RingBuffer_Front (inputBufferPtr->dataDescriptorRBuffer, (uint8_t*) &dataDescriptor);
 
     /** callback with timeout status*/
     if (dataDescriptor.callback != NULL)

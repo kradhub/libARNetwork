@@ -46,18 +46,18 @@ static inline int ARNETWORK_Manager_IDAckToIDInput (ARNETWORKAL_Manager_t *alMan
 struct ARNETWORK_Manager_t
 {
     ARNETWORKAL_Manager_t *networkALManager; /**< Pointer on the OS specific manager */
-    ARNETWORK_Sender_t *senderPtr; /**< Pointer on the sender */
-    ARNETWORK_Receiver_t *receiverPtr; /**< Pointer on the receiver */
-    ARNETWORK_IOBuffer_t **inputBufferPtrArr; /**< Address of the array storing the input buffer */
-    ARNETWORK_IOBuffer_t **outputBufferPtrArr; /**< Address of the array storing the output buffer */
-    ARNETWORK_IOBuffer_t **internalInputBufferPtrArr; /**< Address of the array storing the internal input buffers */
+    ARNETWORK_Sender_t *sender; /**< The sender */
+    ARNETWORK_Receiver_t *receiver; /**< The receiver */
+    ARNETWORK_IOBuffer_t **inputBufferArray; /**< The array storing the input buffer */
+    ARNETWORK_IOBuffer_t **outputBufferArray; /**< The array storing the output buffer */
+    ARNETWORK_IOBuffer_t **internalInputBufferArray; /**< The array storing the internal input buffers */
     int numberOfInput; /**< Number of input buffer */
     int numberOfOutput; /**< Number of output buffer */
     int numberOfInputWithoutAck; /**< Number of input buffer without the  buffers of acknowledgement */
     int numberOfOutputWithoutAck; /**< Number of output buffer without the  buffers of acknowledgement */
     int numberOfInternalInputs; /**< Number of internal input buffers */
-    ARNETWORK_IOBuffer_t **inputBufferPtrMap; /**< array storing the inputBuffers by their identifier */
-    ARNETWORK_IOBuffer_t **outputBufferPtrMap; /**< array storing the outputBuffers by their identifier */
+    ARNETWORK_IOBuffer_t **inputBufferMap; /**< array storing the inputBuffers by their identifier */
+    ARNETWORK_IOBuffer_t **outputBufferMap; /**< array storing the outputBuffers by their identifier */
     ARNETWORK_Manager_OnDisconnect_t onDisconnect; /**< Manager specific on disconnect function */
     void *customData; /**< custom data sent to the callbacks */
 };

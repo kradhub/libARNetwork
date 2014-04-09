@@ -54,13 +54,13 @@
  * @brief create manager's IOBuffers.
  * @warning only call by ARNETWORK_Manager_New()
  * @pre managerPtr->outputBufferPtrArr and managerPtr->inputBufferPtrArr must be allocated and not set to NULL.
- * @param managerPtr pointer on the Manager
- * @param[in] inputParamArr array of the parameters of creation of the inputs. The array must contain as many parameters as the number of input buffer.
- * @param[in] outputParamArr array of the parameters of creation of the outputs. The array must contain as many parameters as the number of output buffer.
+ * @param manager The Manager
+ * @param[in] inputParamArray array of the parameters of creation of the inputs. The array must contain as many parameters as the number of input buffer.
+ * @param[in] outputParamArray array of the parameters of creation of the outputs. The array must contain as many parameters as the number of output buffer.
  * @return error equal to ARNETWORK_OK if the IOBuffer are correctly created otherwise see eARNETWORK_ERROR.
  * @see ARNETWORK_Manager_New()
  */
-eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerPtr, ARNETWORK_IOBufferParam_t *inputParamArr, ARNETWORK_IOBufferParam_t *outputParamArr);
+eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *manager, ARNETWORK_IOBufferParam_t *inputParamArray, ARNETWORK_IOBufferParam_t *outputParamArray);
 
 /**
  * @brief function called on disconnect
@@ -99,18 +99,18 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
         {
             /* Initialize to default values */
             manager->networkALManager = NULL;
-            manager->senderPtr = NULL;
-            manager->receiverPtr = NULL;
-            manager->inputBufferPtrArr = NULL;
-            manager->outputBufferPtrArr = NULL;
-            manager->internalInputBufferPtrArr = NULL;
+            manager->sender = NULL;
+            manager->receiver = NULL;
+            manager->inputBufferArray = NULL;
+            manager->outputBufferArray = NULL;
+            manager->internalInputBufferArray = NULL;
             manager->numberOfOutput = 0;
             manager->numberOfOutputWithoutAck = 0;
             manager->numberOfInput = 0;
             manager->numberOfInputWithoutAck = 0;
             manager->numberOfInternalInputs = 0;
-            manager->inputBufferPtrMap = NULL;
-            manager->outputBufferPtrMap = NULL;
+            manager->inputBufferMap = NULL;
+            manager->outputBufferMap = NULL;
             manager->onDisconnect = onDisconnectCallback;
             manager->customData = customData;
         }
@@ -165,8 +165,8 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
          */
         manager->numberOfOutputWithoutAck = numberOfOutput;
         manager->numberOfOutput = 2 * numberOfOutput;
-        manager->outputBufferPtrArr = calloc (manager->numberOfOutput, sizeof (ARNETWORK_IOBuffer_t*));
-        if (manager->outputBufferPtrArr == NULL)
+        manager->outputBufferArray = calloc (manager->numberOfOutput, sizeof (ARNETWORK_IOBuffer_t*));
+        if (manager->outputBufferArray == NULL)
         {
             localError = ARNETWORK_ERROR_ALLOC;
             manager->numberOfOutput = 0;
@@ -184,8 +184,8 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
          */
         manager->numberOfInputWithoutAck = numberOfInput;
         manager->numberOfInput = numberOfInput + numberOfOutput;
-        manager->inputBufferPtrArr = calloc (manager->numberOfInput, sizeof (ARNETWORK_IOBuffer_t*));
-        if (manager->inputBufferPtrArr == NULL)
+        manager->inputBufferArray = calloc (manager->numberOfInput, sizeof (ARNETWORK_IOBuffer_t*));
+        if (manager->inputBufferArray == NULL)
         {
             localError = ARNETWORK_ERROR_ALLOC;
             manager->numberOfInput = 0;
@@ -201,8 +201,8 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
          * Size is the number of internal buffers
          */
         manager->numberOfInternalInputs = ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX;
-        manager->internalInputBufferPtrArr = calloc (manager->numberOfInternalInputs, sizeof (ARNETWORK_IOBuffer_t*));
-        if (manager->internalInputBufferPtrArr == NULL)
+        manager->internalInputBufferArray = calloc (manager->numberOfInternalInputs, sizeof (ARNETWORK_IOBuffer_t*));
+        if (manager->internalInputBufferArray == NULL)
         {
             localError = ARNETWORK_ERROR_ALLOC;
             manager->numberOfInternalInputs = 0;
@@ -213,8 +213,8 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
     if (localError == ARNETWORK_OK)
     {
         /* Allocate the output buffer map  storing the IOBuffer by their identifier */
-        manager->outputBufferPtrMap = calloc (manager->networkALManager->maxIds, sizeof (ARNETWORK_IOBuffer_t*));
-        if (manager->outputBufferPtrMap == NULL)
+        manager->outputBufferMap = calloc (manager->networkALManager->maxIds, sizeof (ARNETWORK_IOBuffer_t*));
+        if (manager->outputBufferMap == NULL)
         {
             localError = ARNETWORK_ERROR_ALLOC;
         }
@@ -224,8 +224,8 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
     if (localError == ARNETWORK_OK)
     {
         /* Allocate the input buffer map  storing the IOBuffer by their identifier */
-        manager->inputBufferPtrMap = calloc (manager->networkALManager->maxIds, sizeof (ARNETWORK_IOBuffer_t*));
-        if (manager->inputBufferPtrMap == NULL)
+        manager->inputBufferMap = calloc (manager->networkALManager->maxIds, sizeof (ARNETWORK_IOBuffer_t*));
+        if (manager->inputBufferMap == NULL)
         {
             localError = ARNETWORK_ERROR_ALLOC;
         }
@@ -248,8 +248,8 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
     if (localError == ARNETWORK_OK)
     {
         /* Create the Sender */
-        manager->senderPtr = ARNETWORK_Sender_New (manager->networkALManager, manager->numberOfInput, manager->inputBufferPtrArr, manager->numberOfInternalInputs, manager->internalInputBufferPtrArr, manager->inputBufferPtrMap, pingDelayMs);
-        if (manager->senderPtr == NULL)
+        manager->sender = ARNETWORK_Sender_New (manager->networkALManager, manager->numberOfInput, manager->inputBufferArray, manager->numberOfInternalInputs, manager->internalInputBufferArray, manager->inputBufferMap, pingDelayMs);
+        if (manager->sender == NULL)
         {
             localError = ARNETWORK_ERROR_MANAGER_NEW_SENDER;
         }
@@ -259,10 +259,10 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
     if (localError == ARNETWORK_OK)
     {
         /* Create the Receiver */
-        manager->receiverPtr = ARNETWORK_Receiver_New (manager->networkALManager, manager->numberOfOutput, manager->outputBufferPtrArr, manager->outputBufferPtrMap);
-        if (manager->receiverPtr != NULL)
+        manager->receiver = ARNETWORK_Receiver_New (manager->networkALManager, manager->numberOfOutput, manager->outputBufferArray, manager->outputBufferMap);
+        if (manager->receiver != NULL)
         {
-            manager->receiverPtr->senderPtr = manager->senderPtr;
+            manager->receiver->senderPtr = manager->sender;
         }
         else
         {
@@ -289,65 +289,60 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
     return manager;
 }
 
-void ARNETWORK_Manager_Delete (ARNETWORK_Manager_t **managerPtrAddr)
+void ARNETWORK_Manager_Delete (ARNETWORK_Manager_t **manager)
 {
     /** -- Delete the Manager -- */
 
     /** local declarations */
-    ARNETWORK_Manager_t *managerPtr = NULL;
-    int ii = 0;
+    int bufferIndex = 0;
 
-    if (managerPtrAddr)
+    if (manager)
     {
-        managerPtr = *managerPtrAddr;
-
-        if (managerPtr)
+        if ((*manager))
         {
-            ARNETWORK_Sender_Delete (&(managerPtr->senderPtr));
-            ARNETWORK_Receiver_Delete (&(managerPtr->receiverPtr));
+            ARNETWORK_Sender_Delete (&((*manager)->sender));
+            ARNETWORK_Receiver_Delete (&((*manager)->receiver));
 
             /* Delete all internal buffers */
-            for (ii = 0; ii < managerPtr->numberOfInternalInputs; ++ii)
+            for (bufferIndex = 0; bufferIndex < (*manager)->numberOfInternalInputs; ++bufferIndex)
             {
-                ARNETWORK_IOBuffer_t **buffer = &(managerPtr->internalInputBufferPtrArr[ii]);
+                ARNETWORK_IOBuffer_t **buffer = &((*manager)->internalInputBufferArray[bufferIndex]);
                 if (*buffer != NULL)
                 {
                     ARNETWORK_IOBuffer_Delete (buffer);
                 }
-                managerPtr->internalInputBufferPtrArr[ii] = NULL;
+                (*manager)->internalInputBufferArray[bufferIndex] = NULL;
             }
-            free (managerPtr->internalInputBufferPtrArr);
-            managerPtr->internalInputBufferPtrArr = NULL;
+            free ((*manager)->internalInputBufferArray);
+            (*manager)->internalInputBufferArray = NULL;
 
             /** Delete all output buffers including the buffers of acknowledgement */
-            for (ii = 0; ii< managerPtr->numberOfOutput ; ++ii)
+            for (bufferIndex = 0; bufferIndex< (*manager)->numberOfOutput ; ++bufferIndex)
             {
-                ARNETWORK_IOBuffer_Delete (&(managerPtr->outputBufferPtrArr[ii]));
+                ARNETWORK_IOBuffer_Delete (&((*manager)->outputBufferArray[bufferIndex]));
             }
-            free (managerPtr->outputBufferPtrArr);
-            managerPtr->outputBufferPtrArr = NULL;
+            free ((*manager)->outputBufferArray);
+            (*manager)->outputBufferArray = NULL;
 
             /** Delete the input buffers but not the buffers of acknowledgement already deleted */
-            for (ii = 0; ii< managerPtr->numberOfInputWithoutAck ; ++ii)
+            for (bufferIndex = 0; bufferIndex< (*manager)->numberOfInputWithoutAck ; ++bufferIndex)
             {
-                ARNETWORK_IOBuffer_Delete (&(managerPtr->inputBufferPtrArr[ii]));
+                ARNETWORK_IOBuffer_Delete (&((*manager)->inputBufferArray[bufferIndex]));
             }
-            free (managerPtr->inputBufferPtrArr);
-            managerPtr->inputBufferPtrArr = NULL;
+            free ((*manager)->inputBufferArray);
+            (*manager)->inputBufferArray = NULL;
 
-            free (managerPtr->inputBufferPtrMap);
-            managerPtr->inputBufferPtrMap = NULL;
+            free ((*manager)->inputBufferMap);
+            (*manager)->inputBufferMap = NULL;
 
-            free (managerPtr->outputBufferPtrMap);
-            managerPtr->outputBufferPtrMap = NULL;
+            free ((*manager)->outputBufferMap);
+            (*manager)->outputBufferMap = NULL;
 
-            managerPtr->networkALManager = NULL;
+            (*manager)->networkALManager = NULL;
 
-            free (managerPtr);
-            managerPtr = NULL;
+            free ((*manager));
+            (*manager) = NULL;
         }
-
-        *managerPtrAddr = NULL;
     }
 }
 
@@ -356,13 +351,13 @@ void* ARNETWORK_Manager_SendingThreadRun (void *data)
     /** -- Manage the sending of the data -- */
 
     /** local declarations */
-    ARNETWORK_Manager_t *managerPtr = data;
+    ARNETWORK_Manager_t *manager = data;
     void *ret = NULL;
 
     /** check paratemters */
-    if (managerPtr != NULL)
+    if (manager != NULL)
     {
-        ret = ARNETWORK_Sender_ThreadRun (managerPtr->senderPtr);
+        ret = ARNETWORK_Sender_ThreadRun (manager->sender);
     }
     else
     {
@@ -377,13 +372,13 @@ void* ARNETWORK_Manager_ReceivingThreadRun (void *data)
     /** -- Manage the reception of the data -- */
 
     /** local declarations */
-    ARNETWORK_Manager_t *managerPtr = data;
+    ARNETWORK_Manager_t *manager = data;
     void *ret = NULL;
 
     /** check paratemters */
-    if (managerPtr != NULL)
+    if (manager != NULL)
     {
-        ret = ARNETWORK_Receiver_ThreadRun (managerPtr->receiverPtr);
+        ret = ARNETWORK_Receiver_ThreadRun (manager->receiver);
     }
     else
     {
@@ -393,54 +388,54 @@ void* ARNETWORK_Manager_ReceivingThreadRun (void *data)
     return ret;
 }
 
-void ARNETWORK_Manager_Stop (ARNETWORK_Manager_t *managerPtr)
+void ARNETWORK_Manager_Stop (ARNETWORK_Manager_t *manager)
 {
     /** -- stop the threads of sending and reception -- */
     
     /** check paratemters */
-    if (managerPtr != NULL)
+    if (manager != NULL)
     {
-        ARNETWORK_Sender_Stop (managerPtr->senderPtr);
-        ARNETWORK_Receiver_Stop (managerPtr->receiverPtr);
+        ARNETWORK_Sender_Stop (manager->sender);
+        ARNETWORK_Receiver_Stop (manager->receiver);
         
         /* unlock all functions of the networkAL to permit to join the threads */
-        if (managerPtr->networkALManager->unlock != NULL)
+        if (manager->networkALManager->unlock != NULL)
         {
-            managerPtr->networkALManager->unlock (managerPtr->networkALManager);
+            manager->networkALManager->unlock (manager->networkALManager);
         }
     }
 }
 
-eARNETWORK_ERROR ARNETWORK_Manager_Flush (ARNETWORK_Manager_t *managerPtr)
+eARNETWORK_ERROR ARNETWORK_Manager_Flush (ARNETWORK_Manager_t *manager)
 {
     /** -- Flush all buffers of the network manager -- */
 
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    int ii = 0;
+    int bufferIndex = 0;
 
     /** Flush all output buffers including the buffers of acknowledgement */
-    for (ii = 0; ii< managerPtr->numberOfOutput && error == ARNETWORK_OK; ++ii)
+    for (bufferIndex = 0 ; ((bufferIndex< manager->numberOfOutput) && (error == ARNETWORK_OK)) ; ++bufferIndex)
     {
-        ARNETWORK_Manager_FlushOutputBuffer (managerPtr, ii);
+        ARNETWORK_Manager_FlushOutputBuffer (manager, bufferIndex);
     }
 
     /** Flush the input buffers but not the buffers of acknowledgement already flushed */
-    for (ii = 0; ii< managerPtr->numberOfInputWithoutAck && error == ARNETWORK_OK; ++ii)
+    for (bufferIndex = 0 ; ((bufferIndex< manager->numberOfInputWithoutAck) && (error == ARNETWORK_OK)) ; ++bufferIndex)
     {
-        ARNETWORK_Manager_FlushInputBuffer (managerPtr, ii);
+        ARNETWORK_Manager_FlushInputBuffer (manager, bufferIndex);
     }
 
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_Manager_SendData (ARNETWORK_Manager_t *managerPtr, int inputBufferID, uint8_t *dataPtr, int dataSize, void *customData, ARNETWORK_Manager_Callback_t callback, int doDataCopy)
+eARNETWORK_ERROR ARNETWORK_Manager_SendData (ARNETWORK_Manager_t *manager, int inputBufferID, uint8_t *data, int dataSize, void *customData, ARNETWORK_Manager_Callback_t callback, int doDataCopy)
 {
     /** -- Add data to send in a IOBuffer using fixed size data -- */
 
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    ARNETWORK_IOBuffer_t *inputBufferPtr = NULL;
+    ARNETWORK_IOBuffer_t *inputBuffer = NULL;
     int bufferWasEmpty = 0;
 
     /** check paratemters:
@@ -448,12 +443,12 @@ eARNETWORK_ERROR ARNETWORK_Manager_SendData (ARNETWORK_Manager_t *managerPtr, in
      *  -   the data pointer is not NULL
      *  -   the callback is not NULL
      */
-    if ((managerPtr != NULL) && (dataPtr != NULL) && (callback != NULL))
+    if ((manager != NULL) && (data != NULL) && (callback != NULL))
     {
         /** get the address of the inputBuffer */
-        inputBufferPtr = managerPtr->inputBufferPtrMap[inputBufferID];
+        inputBuffer = manager->inputBufferMap[inputBufferID];
 
-        if (inputBufferPtr == NULL)
+        if (inputBuffer == NULL)
         {
             error = ARNETWORK_ERROR_ID_UNKNOWN;
         }
@@ -466,50 +461,50 @@ eARNETWORK_ERROR ARNETWORK_Manager_SendData (ARNETWORK_Manager_t *managerPtr, in
     if (error == ARNETWORK_OK)
     {
         /** lock the IOBuffer */
-        error = ARNETWORK_IOBuffer_Lock(inputBufferPtr);
+        error = ARNETWORK_IOBuffer_Lock(inputBuffer);
     }
 
     if(error == ARNETWORK_OK)
     {
-        bufferWasEmpty = ARNETWORK_RingBuffer_IsEmpty(inputBufferPtr->dataDescriptorRBufferPtr);
+        bufferWasEmpty = ARNETWORK_RingBuffer_IsEmpty(inputBuffer->dataDescriptorRBuffer);
     }
 
     if(error == ARNETWORK_OK)
     {
         /** add the data in the inputBuffer */
-        error = ARNETWORK_IOBuffer_AddData (inputBufferPtr, dataPtr, dataSize, customData, callback, doDataCopy);
-        ARNETWORK_IOBuffer_Unlock(inputBufferPtr);
+        error = ARNETWORK_IOBuffer_AddData (inputBuffer, data, dataSize, customData, callback, doDataCopy);
+        ARNETWORK_IOBuffer_Unlock(inputBuffer);
     }
 
     if (error == ARNETWORK_OK)
     {
-        if ((inputBufferPtr->dataType == ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY) ||
+        if ((inputBuffer->dataType == ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY) ||
             (bufferWasEmpty > 0))
         {
-            ARNETWORK_Sender_SignalNewData (managerPtr->senderPtr);
+            ARNETWORK_Sender_SignalNewData (manager->sender);
         }
     }
 
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_Manager_ReadData (ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr)
+eARNETWORK_ERROR ARNETWORK_Manager_ReadData (ARNETWORK_Manager_t *manager, int outputBufferID, uint8_t *data, int dataLimitSize, int *readSize)
 {
     /** -- Read data received in a IOBuffer using variable size data (blocking function) -- */
 
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    ARNETWORK_IOBuffer_t *outputBufferPtr = NULL;
+    ARNETWORK_IOBuffer_t *outputBuffer = NULL;
     int semError = 0;
 
     /** check paratemters */
-    if (managerPtr != NULL)
+    if (manager != NULL)
     {
         /** get the address of the outputBuffer */
-        outputBufferPtr = managerPtr->outputBufferPtrMap[outputBufferID];
+        outputBuffer = manager->outputBufferMap[outputBufferID];
 
-        /** check outputBufferPtr */
-        if (outputBufferPtr == NULL)
+        /** check outputBuffer */
+        if (outputBuffer == NULL)
         {
             error = ARNETWORK_ERROR_ID_UNKNOWN;
         }
@@ -522,7 +517,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_ReadData (ARNETWORK_Manager_t *managerPtr, in
     if (error == ARNETWORK_OK)
     {
         /** try to take the semaphore */
-        semError = ARSAL_Sem_Wait (&(outputBufferPtr->outputSem));
+        semError = ARSAL_Sem_Wait (&(outputBuffer->outputSem));
 
         if (semError)
         {
@@ -544,37 +539,37 @@ eARNETWORK_ERROR ARNETWORK_Manager_ReadData (ARNETWORK_Manager_t *managerPtr, in
     if (error == ARNETWORK_OK)
     {
         /** lock the IOBuffer */
-        error = ARNETWORK_IOBuffer_Lock (outputBufferPtr);
+        error = ARNETWORK_IOBuffer_Lock (outputBuffer);
     }
 
     if (error == ARNETWORK_OK)
     {
-        error = ARNETWORK_IOBuffer_ReadData (outputBufferPtr, dataPtr, dataLimitSize, readSizePtr);
+        error = ARNETWORK_IOBuffer_ReadData (outputBuffer, data, dataLimitSize, readSize);
 
         /** unlock the IOBuffer */
-        ARNETWORK_IOBuffer_Unlock (outputBufferPtr);
+        ARNETWORK_IOBuffer_Unlock (outputBuffer);
     }
 
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_Manager_TryReadData (ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr)
+eARNETWORK_ERROR ARNETWORK_Manager_TryReadData (ARNETWORK_Manager_t *manager, int outputBufferID, uint8_t *data, int dataLimitSize, int *readSize)
 {
     /** -- try to read data received in a IOBuffer using variable size data (non-blocking function) -- */
 
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    ARNETWORK_IOBuffer_t *outputBufferPtr = NULL;
+    ARNETWORK_IOBuffer_t *outputBuffer = NULL;
     int semError = 0;
 
     /** check paratemters */
-    if (managerPtr != NULL)
+    if (manager != NULL)
     {
         /** get the address of the outputBuffer */
-        outputBufferPtr = managerPtr->outputBufferPtrMap[outputBufferID];
+        outputBuffer = manager->outputBufferMap[outputBufferID];
 
-        /** check outputBufferPtr */
-        if (outputBufferPtr == NULL)
+        /** check outputBuffer */
+        if (outputBuffer == NULL)
         {
             error = ARNETWORK_ERROR_ID_UNKNOWN;
         }
@@ -587,7 +582,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_TryReadData (ARNETWORK_Manager_t *managerPtr,
     if (error == ARNETWORK_OK)
     {
         /** try to take the semaphore */
-        semError = ARSAL_Sem_Trywait (&(outputBufferPtr->outputSem));
+        semError = ARSAL_Sem_Trywait (&(outputBuffer->outputSem));
 
         if (semError)
         {
@@ -609,37 +604,37 @@ eARNETWORK_ERROR ARNETWORK_Manager_TryReadData (ARNETWORK_Manager_t *managerPtr,
     if (error == ARNETWORK_OK)
     {
         /** lock the IOBuffer */
-        error = ARNETWORK_IOBuffer_Lock (outputBufferPtr);
+        error = ARNETWORK_IOBuffer_Lock (outputBuffer);
     }
 
     if (error == ARNETWORK_OK)
     {
-        error = ARNETWORK_IOBuffer_ReadData (outputBufferPtr, dataPtr, dataLimitSize, readSizePtr);
+        error = ARNETWORK_IOBuffer_ReadData (outputBuffer, data, dataLimitSize, readSize);
 
         /** unlock the IOBuffer */
-        ARNETWORK_IOBuffer_Unlock (outputBufferPtr);
+        ARNETWORK_IOBuffer_Unlock (outputBuffer);
     }
 
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_Manager_ReadDataWithTimeout (ARNETWORK_Manager_t *managerPtr, int outputBufferID, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr, int timeoutMs)
+eARNETWORK_ERROR ARNETWORK_Manager_ReadDataWithTimeout (ARNETWORK_Manager_t *manager, int outputBufferID, uint8_t *data, int dataLimitSize, int *readSize, int timeoutMs)
 {
     /** -- Read, with timeout, a data received in IOBuffer using variable size data -- */
 
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    ARNETWORK_IOBuffer_t *outputBufferPtr = NULL;
+    ARNETWORK_IOBuffer_t *outputBuffer = NULL;
     int semError = 0;
     struct timespec semTimeout;
 
     /** check paratemters */
-    if (managerPtr != NULL)
+    if (manager != NULL)
     {
-        outputBufferPtr = managerPtr->outputBufferPtrMap[outputBufferID];
+        outputBuffer = manager->outputBufferMap[outputBufferID];
 
         /** check pOutputBuffer */
-        if (outputBufferPtr == NULL)
+        if (outputBuffer == NULL)
         {
             error = ARNETWORK_ERROR_ID_UNKNOWN;
         }
@@ -656,7 +651,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_ReadDataWithTimeout (ARNETWORK_Manager_t *man
         semTimeout.tv_nsec = (timeoutMs % 1000) * 1000000;
 
         /** try to take the semaphore with timeout*/
-        semError = ARSAL_Sem_Timedwait (&(outputBufferPtr->outputSem), &semTimeout);
+        semError = ARSAL_Sem_Timedwait (&(outputBuffer->outputSem), &semTimeout);
 
         if (semError)
         {
@@ -678,15 +673,15 @@ eARNETWORK_ERROR ARNETWORK_Manager_ReadDataWithTimeout (ARNETWORK_Manager_t *man
     if (error == ARNETWORK_OK)
     {
         /** lock the IOBuffer */
-        error = ARNETWORK_IOBuffer_Lock (outputBufferPtr);
+        error = ARNETWORK_IOBuffer_Lock (outputBuffer);
     }
 
     if (error == ARNETWORK_OK)
     {
-        error = ARNETWORK_IOBuffer_ReadData (outputBufferPtr, dataPtr, dataLimitSize, readSizePtr);
+        error = ARNETWORK_IOBuffer_ReadData (outputBuffer, data, dataLimitSize, readSize);
 
         /** unlock the IOBuffer */
-        ARNETWORK_IOBuffer_Unlock (outputBufferPtr);
+        ARNETWORK_IOBuffer_Unlock (outputBuffer);
     }
 
     return error;
@@ -698,7 +693,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_ReadDataWithTimeout (ARNETWORK_Manager_t *man
  *
  *****************************************/
 
-eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerPtr, ARNETWORK_IOBufferParam_t *inputParamArr, ARNETWORK_IOBufferParam_t *outputParamArr)
+eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *manager, ARNETWORK_IOBufferParam_t *inputParamArray, ARNETWORK_IOBufferParam_t *outputParamArray)
 {
     /** -- Create manager's IoBuffers --*/
 
@@ -742,24 +737,24 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
     if (error == ARNETWORK_OK)
     {
         paramPingBuffer.ID = ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PING;
-        managerPtr->internalInputBufferPtrArr[inputIndex] = ARNETWORK_IOBuffer_New (&paramPingBuffer, 1);
-        if (managerPtr->internalInputBufferPtrArr[inputIndex] == NULL)
+        manager->internalInputBufferArray[inputIndex] = ARNETWORK_IOBuffer_New (&paramPingBuffer, 1);
+        if (manager->internalInputBufferArray[inputIndex] == NULL)
         {
             error = ARNETWORK_ERROR_MANAGER_NEW_IOBUFFER;
         }
-        managerPtr->inputBufferPtrMap [ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PING] = managerPtr->internalInputBufferPtrArr [inputIndex];
+        manager->inputBufferMap [ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PING] = manager->internalInputBufferArray [inputIndex];
         inputIndex++;
     }
     //  - ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PONG
     if (error == ARNETWORK_OK)
     {
         paramPingBuffer.ID = ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PONG;
-        managerPtr->internalInputBufferPtrArr[inputIndex] = ARNETWORK_IOBuffer_New (&paramPingBuffer, 1);
-        if (managerPtr->internalInputBufferPtrArr[inputIndex] == NULL)
+        manager->internalInputBufferArray[inputIndex] = ARNETWORK_IOBuffer_New (&paramPingBuffer, 1);
+        if (manager->internalInputBufferArray[inputIndex] == NULL)
         {
             error = ARNETWORK_ERROR_MANAGER_NEW_IOBUFFER;
         }
-        managerPtr->inputBufferPtrMap [ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PONG] = managerPtr->internalInputBufferPtrArr [inputIndex];
+        manager->inputBufferMap [ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PONG] = manager->internalInputBufferArray [inputIndex];
         inputIndex++;
     }
 
@@ -771,25 +766,25 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
     /* END OF INTERNAL BUFFERS CREATION */
 
     /** Create the output buffers and the buffers of acknowledgement */
-    for (outputIndex = 0; outputIndex < managerPtr->numberOfOutputWithoutAck && error == ARNETWORK_OK ; ++outputIndex)
+    for (outputIndex = 0; outputIndex < manager->numberOfOutputWithoutAck && error == ARNETWORK_OK ; ++outputIndex)
     {
         /** check parameters */
         /** -   all output buffer must have the ability to copy */
         /** -   id must be within range [ackIdOffset;ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX] */
-        if ((outputParamArr[outputIndex].ID >= (managerPtr->networkALManager->maxIds / 2)) ||
-            (outputParamArr[outputIndex].ID <  ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX) ||
-            (outputParamArr[outputIndex].dataCopyMaxSize == 0))
+        if ((outputParamArray[outputIndex].ID >= (manager->networkALManager->maxIds / 2)) ||
+            (outputParamArray[outputIndex].ID <  ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX) ||
+            (outputParamArray[outputIndex].dataCopyMaxSize == 0))
         {
             error = ARNETWORK_ERROR_BAD_PARAMETER;
         }
 
         /** Check for special (negative) values for dataCopyMaxSize. */
-        if (outputParamArr[outputIndex].dataCopyMaxSize < 0)
+        if (outputParamArray[outputIndex].dataCopyMaxSize < 0)
         {
-            if (outputParamArr[outputIndex].dataCopyMaxSize == ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX)
+            if (outputParamArray[outputIndex].dataCopyMaxSize == ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX)
             {
                 /* Set dataCopyMaxSize to the maximum value allowed by ARNetworkAL. */
-                outputParamArr[outputIndex].dataCopyMaxSize = managerPtr->networkALManager->maxBufferSize;
+                outputParamArray[outputIndex].dataCopyMaxSize = manager->networkALManager->maxBufferSize;
             }
             else
             {
@@ -800,8 +795,8 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
         if (error == ARNETWORK_OK)
         {
             /** Create the output buffer */
-            managerPtr->outputBufferPtrArr[outputIndex] = ARNETWORK_IOBuffer_New (&(outputParamArr[outputIndex]), 0);
-            if (managerPtr->outputBufferPtrArr[outputIndex] == NULL)
+            manager->outputBufferArray[outputIndex] = ARNETWORK_IOBuffer_New (&(outputParamArray[outputIndex]), 0);
+            if (manager->outputBufferArray[outputIndex] == NULL)
             {
                 error = ARNETWORK_ERROR_MANAGER_NEW_IOBUFFER;
             }
@@ -811,11 +806,11 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
         {
             /** Create the buffer of acknowledgement associated with the output buffer */
 
-            paramNewACK.ID = ARNETWORK_Manager_IDOutputToIDAck (managerPtr->networkALManager, outputParamArr[outputIndex].ID);
-            indexAckOutput = managerPtr->numberOfOutputWithoutAck + outputIndex;
+            paramNewACK.ID = ARNETWORK_Manager_IDOutputToIDAck (manager->networkALManager, outputParamArray[outputIndex].ID);
+            indexAckOutput = manager->numberOfOutputWithoutAck + outputIndex;
 
-            managerPtr->outputBufferPtrArr[indexAckOutput] = ARNETWORK_IOBuffer_New (&paramNewACK, 1);
-            if (managerPtr->outputBufferPtrArr[indexAckOutput] == NULL)
+            manager->outputBufferArray[indexAckOutput] = ARNETWORK_IOBuffer_New (&paramNewACK, 1);
+            if (manager->outputBufferArray[indexAckOutput] == NULL)
             {
                 error = ARNETWORK_ERROR_MANAGER_NEW_IOBUFFER;
             }
@@ -824,34 +819,34 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
         if (error == ARNETWORK_OK)
         {
             /** store buffer of acknowledgement at the end of the output and input buffer lists. */
-            managerPtr->inputBufferPtrArr[managerPtr->numberOfInputWithoutAck + outputIndex] = managerPtr->outputBufferPtrArr[indexAckOutput];
+            manager->inputBufferArray[manager->numberOfInputWithoutAck + outputIndex] = manager->outputBufferArray[indexAckOutput];
 
             /** store the outputBuffer and the buffer of acknowledgement in the IOBuffer Maps*/
-            managerPtr->outputBufferPtrMap[managerPtr->outputBufferPtrArr[outputIndex]->ID] = managerPtr->outputBufferPtrArr[outputIndex];
-            managerPtr->outputBufferPtrMap[managerPtr->outputBufferPtrArr[indexAckOutput]->ID] = managerPtr->outputBufferPtrArr[indexAckOutput];
-            managerPtr->inputBufferPtrMap[managerPtr->outputBufferPtrArr[indexAckOutput]->ID] = managerPtr->outputBufferPtrArr[indexAckOutput];
+            manager->outputBufferMap[manager->outputBufferArray[outputIndex]->ID] = manager->outputBufferArray[outputIndex];
+            manager->outputBufferMap[manager->outputBufferArray[indexAckOutput]->ID] = manager->outputBufferArray[indexAckOutput];
+            manager->inputBufferMap[manager->outputBufferArray[indexAckOutput]->ID] = manager->outputBufferArray[indexAckOutput];
         }
     }
 
     /** Create the input buffers */
-    for (inputIndex = 0; inputIndex< managerPtr->numberOfInputWithoutAck && error == ARNETWORK_OK ; ++inputIndex)
+    for (inputIndex = 0; inputIndex< manager->numberOfInputWithoutAck && error == ARNETWORK_OK ; ++inputIndex)
     {
         /** check parameters: */
         /** -   id is smaller than the id acknowledge offset */
         /** -   dataCopyMaxSize isn't too big */
-        if ((inputParamArr[inputIndex].ID >= (managerPtr->networkALManager->maxIds / 2)) ||
-            (inputParamArr[inputIndex].ID <  ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX))
+        if ((inputParamArray[inputIndex].ID >= (manager->networkALManager->maxIds / 2)) ||
+            (inputParamArray[inputIndex].ID <  ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_MAX))
         {
             error = ARNETWORK_ERROR_BAD_PARAMETER;
         }
 
         /** Check for special (negative) values for dataCopyMaxSize. */
-        if (inputParamArr[inputIndex].dataCopyMaxSize < 0)
+        if (inputParamArray[inputIndex].dataCopyMaxSize < 0)
         {
-            if (inputParamArr[inputIndex].dataCopyMaxSize == ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX)
+            if (inputParamArray[inputIndex].dataCopyMaxSize == ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX)
             {
                 /* Set dataCopyMaxSize to the maximum value allowed by ARNetworkAL (minus the size of the header). */
-                inputParamArr[inputIndex].dataCopyMaxSize = managerPtr->networkALManager->maxBufferSize;
+                inputParamArray[inputIndex].dataCopyMaxSize = manager->networkALManager->maxBufferSize;
             }
             else
             {
@@ -861,17 +856,17 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
         }
 
         /* Check final buffer size. */
-        if (inputParamArr[inputIndex].dataCopyMaxSize > managerPtr->networkALManager->maxBufferSize)
+        if (inputParamArray[inputIndex].dataCopyMaxSize > manager->networkALManager->maxBufferSize)
         {
-            ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_MANAGER_TAG, "Final dataCopyMaxSize is higher than tha maximum allowed data size (%d).", managerPtr->networkALManager->maxBufferSize);
+            ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_MANAGER_TAG, "Final dataCopyMaxSize is higher than tha maximum allowed data size (%d).", manager->networkALManager->maxBufferSize);
             error = ARNETWORK_ERROR_BAD_PARAMETER;
         }
 
         if (error == ARNETWORK_OK)
         {
             /** Create the intput buffer */
-            managerPtr->inputBufferPtrArr[inputIndex] = ARNETWORK_IOBuffer_New (&(inputParamArr[inputIndex]), 0);
-            if (managerPtr->inputBufferPtrArr[inputIndex] == NULL)
+            manager->inputBufferArray[inputIndex] = ARNETWORK_IOBuffer_New (&(inputParamArray[inputIndex]), 0);
+            if (manager->inputBufferArray[inputIndex] == NULL)
             {
                 error = ARNETWORK_ERROR_MANAGER_NEW_IOBUFFER;
             }
@@ -880,23 +875,23 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *managerP
         if (error == ARNETWORK_OK)
         {
             /** store the inputBuffer in the ioBuffer Map */
-            managerPtr->inputBufferPtrMap[managerPtr->inputBufferPtrArr[inputIndex]->ID] = managerPtr->inputBufferPtrArr[inputIndex];
+            manager->inputBufferMap[manager->inputBufferArray[inputIndex]->ID] = manager->inputBufferArray[inputIndex];
         }
     }
 
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_Manager_FlushInputBuffer (ARNETWORK_Manager_t *managerPtr, int inBufferID)
+eARNETWORK_ERROR ARNETWORK_Manager_FlushInputBuffer (ARNETWORK_Manager_t *manager, int inBufferID)
 {
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    if (managerPtr == NULL)
+    if (manager == NULL)
     {
         error = ARNETWORK_ERROR_BAD_PARAMETER;
     }
     else
     {
-        ARNETWORK_IOBuffer_t *buffer = managerPtr->inputBufferPtrMap[inBufferID];
+        ARNETWORK_IOBuffer_t *buffer = manager->inputBufferMap[inBufferID];
         if (buffer != NULL)
         {
             /** lock the IOBuffer */
@@ -919,16 +914,16 @@ eARNETWORK_ERROR ARNETWORK_Manager_FlushInputBuffer (ARNETWORK_Manager_t *manage
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_Manager_FlushOutputBuffer (ARNETWORK_Manager_t *managerPtr, int outBufferID)
+eARNETWORK_ERROR ARNETWORK_Manager_FlushOutputBuffer (ARNETWORK_Manager_t *manager, int outBufferID)
 {
     eARNETWORK_ERROR error = ARNETWORK_OK;
-    if (managerPtr == NULL)
+    if (manager == NULL)
     {
         error = ARNETWORK_ERROR_BAD_PARAMETER;
     }
     else
     {
-        ARNETWORK_IOBuffer_t *buffer = managerPtr->outputBufferPtrMap[outBufferID];
+        ARNETWORK_IOBuffer_t *buffer = manager->outputBufferMap[outBufferID];
 
         if (buffer != NULL)
         {
@@ -952,27 +947,27 @@ eARNETWORK_ERROR ARNETWORK_Manager_FlushOutputBuffer (ARNETWORK_Manager_t *manag
     return error;
 }
 
-int ARNETWORK_Manager_GetEstimatedLatency (ARNETWORK_Manager_t *managerPtr)
+int ARNETWORK_Manager_GetEstimatedLatency (ARNETWORK_Manager_t *manager)
 {
     int result = -1;
-    if (managerPtr != NULL)
+    if (manager != NULL)
     {
-        result = ARNETWORK_Sender_GetPing (managerPtr->senderPtr);
+        result = ARNETWORK_Sender_GetPing (manager->sender);
     }
     return result;
 }
 
-int ARNETWORK_Manager_GetEstimatedMissPercentage (ARNETWORK_Manager_t *managerPtr, int outBufferID)
+int ARNETWORK_Manager_GetEstimatedMissPercentage (ARNETWORK_Manager_t *manager, int outBufferID)
 {
     eARNETWORK_ERROR error = ARNETWORK_OK;
     int result = 0;
-    if (managerPtr == NULL)
+    if (manager == NULL)
     {
         error = ARNETWORK_ERROR_BAD_PARAMETER;
     }
     else
     {
-        ARNETWORK_IOBuffer_t *buffer = managerPtr->outputBufferPtrMap[outBufferID];
+        ARNETWORK_IOBuffer_t *buffer = manager->outputBufferMap[outBufferID];
 
         if (buffer != NULL)
         {
@@ -1008,14 +1003,14 @@ int ARNETWORK_Manager_GetEstimatedMissPercentage (ARNETWORK_Manager_t *managerPt
     }
 }
 
-eARNETWORK_ERROR ARNETWORK_Manager_SetMinimumTimeBetweenSends (ARNETWORK_Manager_t *managerPtr, int minimumTimeMs)
+eARNETWORK_ERROR ARNETWORK_Manager_SetMinimumTimeBetweenSends (ARNETWORK_Manager_t *manager, int minimumTimeMs)
 {
-    if ((managerPtr == NULL) ||
-        (managerPtr->senderPtr == NULL))
+    if ((manager == NULL) ||
+        (manager->sender == NULL))
     {
         return ARNETWORK_ERROR_BAD_PARAMETER;
     }
-    managerPtr->senderPtr->minimumTimeBetweenSendsMs = minimumTimeMs;
+    manager->sender->minimumTimeBetweenSendsMs = minimumTimeMs;
     return ARNETWORK_OK;
 }
 

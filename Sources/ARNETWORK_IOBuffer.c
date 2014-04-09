@@ -38,38 +38,38 @@
 
 /**
  * @brief free the data pointed by the data descriptor
- * @param IOBufferPtr Pointer on the IOBuffer
- * @param dataDescriptorPtr Pointer on the data descriptor of the data to free
+ * @param IOBuffer The IOBuffer
+ * @param dataDescriptor The data descriptor of the data to free
  * @return error equal to ARNETWORK_OK if the data are correctly deleted otherwise see eARNETWORK_ERROR
  **/
-static inline eARNETWORK_ERROR ARNETWORK_IOBuffer_FreeData(ARNETWORK_IOBuffer_t *IOBufferPtr, ARNETWORK_DataDescriptor_t *dataDescriptorPtr)
+static inline eARNETWORK_ERROR ARNETWORK_IOBuffer_FreeData(ARNETWORK_IOBuffer_t *IOBuffer, ARNETWORK_DataDescriptor_t *dataDescriptor)
 {
     /** -- free the last data of the IOBuffer -- */
 
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
 
-    if(dataDescriptorPtr->isUsingDataCopy)
+    if(dataDescriptor->isUsingDataCopy)
     {
         /** if the data has been copied in the dataCopyRBuffer */
         /** pop data copy*/
-        error = ARNETWORK_RingBuffer_PopFrontWithSize(IOBufferPtr->dataCopyRBufferPtr, NULL, dataDescriptorPtr->dataSize);
+        error = ARNETWORK_RingBuffer_PopFrontWithSize(IOBuffer->dataCopyRBuffer, NULL, dataDescriptor->dataSize);
     }
     else
     {
         /** if the data is store out of the ARNetwork */
         /** callback with free status */
-        if(dataDescriptorPtr->callback != NULL)
+        if(dataDescriptor->callback != NULL)
         {
-            dataDescriptorPtr->callback(IOBufferPtr->ID, dataDescriptorPtr->data, dataDescriptorPtr->customData, ARNETWORK_MANAGER_CALLBACK_STATUS_FREE);
+            dataDescriptor->callback(IOBuffer->ID, dataDescriptor->data, dataDescriptor->customData, ARNETWORK_MANAGER_CALLBACK_STATUS_FREE);
         }
     }
     
     /** callback with done status */
     /** the date will not more used */
-    if(dataDescriptorPtr->callback != NULL)
+    if(dataDescriptor->callback != NULL)
     {
-        dataDescriptorPtr->callback(IOBufferPtr->ID, NULL, dataDescriptorPtr->customData, ARNETWORK_MANAGER_CALLBACK_STATUS_DONE);
+        dataDescriptor->callback(IOBuffer->ID, NULL, dataDescriptor->customData, ARNETWORK_MANAGER_CALLBACK_STATUS_DONE);
     }
     
     return error;
@@ -81,65 +81,65 @@ static inline eARNETWORK_ERROR ARNETWORK_IOBuffer_FreeData(ARNETWORK_IOBuffer_t 
  *
  ******************************************/
 
-ARNETWORK_IOBuffer_t* ARNETWORK_IOBuffer_New(const ARNETWORK_IOBufferParam_t *paramPtr, int isInternal)
+ARNETWORK_IOBuffer_t* ARNETWORK_IOBuffer_New(const ARNETWORK_IOBufferParam_t *param, int isInternal)
 {
     /** -- Create a new input or output buffer -- */
 
     /** local declarations */
-    ARNETWORK_IOBuffer_t *IOBufferPtr = NULL;
+    ARNETWORK_IOBuffer_t *IOBuffer = NULL;
     eARNETWORK_ERROR error = ARNETWORK_OK;
 
     /** Create the input or output buffer in accordance with parameters set in the ARNETWORK_IOBufferParam_t */
-    IOBufferPtr = malloc( sizeof(ARNETWORK_IOBuffer_t) );
+    IOBuffer = malloc( sizeof(ARNETWORK_IOBuffer_t) );
 
-    if(IOBufferPtr != NULL)
+    if(IOBuffer != NULL)
     {
         /** Initialize to default values */
-        IOBufferPtr->dataDescriptorRBufferPtr = NULL;
-        IOBufferPtr->dataCopyRBufferPtr = NULL;
-        ARSAL_Mutex_Init(&(IOBufferPtr->mutex));
-        ARSAL_Sem_Init(&(IOBufferPtr->outputSem), 0, 0);
+        IOBuffer->dataDescriptorRBuffer = NULL;
+        IOBuffer->dataCopyRBuffer = NULL;
+        ARSAL_Mutex_Init(&(IOBuffer->mutex));
+        ARSAL_Sem_Init(&(IOBuffer->outputSem), 0, 0);
 
         if((isInternal == 1) ||
-           (ARNETWORK_IOBufferParam_Check(paramPtr)))
+           (ARNETWORK_IOBufferParam_Check(param)))
         {
-            IOBufferPtr->ID = paramPtr->ID;
-            IOBufferPtr->dataType = paramPtr->dataType;
-            IOBufferPtr->sendingWaitTimeMs = paramPtr->sendingWaitTimeMs;
-            IOBufferPtr->ackTimeoutMs = paramPtr->ackTimeoutMs;
+            IOBuffer->ID = param->ID;
+            IOBuffer->dataType = param->dataType;
+            IOBuffer->sendingWaitTimeMs = param->sendingWaitTimeMs;
+            IOBuffer->ackTimeoutMs = param->ackTimeoutMs;
 
-            if(paramPtr->numberOfRetry >= 0)
+            if(param->numberOfRetry >= 0)
             {
-                IOBufferPtr->numberOfRetry = paramPtr->numberOfRetry;
+                IOBuffer->numberOfRetry = param->numberOfRetry;
             }
             else
             {
                 /** if numberOfRetry equal 0 disable the retry function with -1 value */
-                IOBufferPtr->numberOfRetry = -1;
+                IOBuffer->numberOfRetry = -1;
             }
 
-            IOBufferPtr->isWaitAck = 0;
-            IOBufferPtr->seq = 0;
-            IOBufferPtr->alreadyHadData = 0;
-            IOBufferPtr->nbPackets = 0;
-            IOBufferPtr->nbNetwork = 0;
-            IOBufferPtr->waitTimeCount = paramPtr->sendingWaitTimeMs;
-            IOBufferPtr->ackWaitTimeCount = paramPtr->ackTimeoutMs;
-            IOBufferPtr->retryCount = 0;
+            IOBuffer->isWaitAck = 0;
+            IOBuffer->seq = 0;
+            IOBuffer->alreadyHadData = 0;
+            IOBuffer->nbPackets = 0;
+            IOBuffer->nbNetwork = 0;
+            IOBuffer->waitTimeCount = param->sendingWaitTimeMs;
+            IOBuffer->ackWaitTimeCount = param->ackTimeoutMs;
+            IOBuffer->retryCount = 0;
 
             /** Create the RingBuffer for the information of the data*/
-            IOBufferPtr->dataDescriptorRBufferPtr = ARNETWORK_RingBuffer_NewWithOverwriting(paramPtr->numberOfCell, sizeof(ARNETWORK_DataDescriptor_t), paramPtr->isOverwriting);
-            if(IOBufferPtr->dataDescriptorRBufferPtr == NULL)
+            IOBuffer->dataDescriptorRBuffer = ARNETWORK_RingBuffer_NewWithOverwriting(param->numberOfCell, sizeof(ARNETWORK_DataDescriptor_t), param->isOverwriting);
+            if(IOBuffer->dataDescriptorRBuffer == NULL)
             {
                 error = ARNETWORK_ERROR_NEW_RINGBUFFER;
             }
 
             /** if the parameters have a size of data copy */
-            if( (error == ARNETWORK_OK) && (paramPtr->dataCopyMaxSize > 0) )
+            if( (error == ARNETWORK_OK) && (param->dataCopyMaxSize > 0) )
             {
                 /** Create the RingBuffer for the copy of the data*/
-                IOBufferPtr->dataCopyRBufferPtr = ARNETWORK_RingBuffer_NewWithOverwriting(paramPtr->numberOfCell, paramPtr->dataCopyMaxSize, paramPtr->isOverwriting);
-                if(IOBufferPtr->dataCopyRBufferPtr == NULL)
+                IOBuffer->dataCopyRBuffer = ARNETWORK_RingBuffer_NewWithOverwriting(param->numberOfCell, param->dataCopyMaxSize, param->isOverwriting);
+                if(IOBuffer->dataCopyRBuffer == NULL)
                 {
                     error = ARNETWORK_ERROR_NEW_BUFFER;
                 }
@@ -154,42 +154,38 @@ ARNETWORK_IOBuffer_t* ARNETWORK_IOBuffer_New(const ARNETWORK_IOBufferParam_t *pa
         {
             /** delete the inOutput buffer if an error occurred */
             ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_IOBUFFER_TAG,"error: %s", ARNETWORK_Error_ToString (error));
-            ARNETWORK_IOBuffer_Delete(&IOBufferPtr);
+            ARNETWORK_IOBuffer_Delete(&IOBuffer);
         }
     }
 
-    return IOBufferPtr;
+    return IOBuffer;
 }
 
-void ARNETWORK_IOBuffer_Delete(ARNETWORK_IOBuffer_t **IOBufferPtrAddr)
+void ARNETWORK_IOBuffer_Delete(ARNETWORK_IOBuffer_t **IOBuffer)
 {
     /** -- Delete the input or output buffer -- */
 
     /** local declarations */
-    ARNETWORK_IOBuffer_t *IOBufferPtr = NULL;
 
-    if(IOBufferPtrAddr != NULL)
+    if(IOBuffer != NULL)
     {
-        IOBufferPtr = *IOBufferPtrAddr;
-
-        if(IOBufferPtr != NULL)
+        if((*IOBuffer) != NULL)
         {
-            ARSAL_Mutex_Destroy(&(IOBufferPtr->mutex));
-            ARSAL_Sem_Destroy(&(IOBufferPtr->outputSem));
+            ARSAL_Mutex_Destroy(&((*IOBuffer)->mutex));
+            ARSAL_Sem_Destroy(&((*IOBuffer)->outputSem));
 
-            ARNETWORK_IOBuffer_CancelAllData(IOBufferPtr);
+            ARNETWORK_IOBuffer_CancelAllData((*IOBuffer));
 
-            ARNETWORK_RingBuffer_Delete(&(IOBufferPtr->dataDescriptorRBufferPtr));
-            ARNETWORK_RingBuffer_Delete(&(IOBufferPtr->dataCopyRBufferPtr));
+            ARNETWORK_RingBuffer_Delete(&((*IOBuffer)->dataDescriptorRBuffer));
+            ARNETWORK_RingBuffer_Delete(&((*IOBuffer)->dataCopyRBuffer));
 
-            free(IOBufferPtr);
-            IOBufferPtr = NULL;
+            free((*IOBuffer));
+            (*IOBuffer) = NULL;
         }
-        *IOBufferPtrAddr = NULL;
     }
 }
 
-eARNETWORK_ERROR ARNETWORK_IOBuffer_AckReceived(ARNETWORK_IOBuffer_t *IOBufferPtr, uint8_t seqNumber)
+eARNETWORK_ERROR ARNETWORK_IOBuffer_AckReceived(ARNETWORK_IOBuffer_t *IOBuffer, uint8_t seqNumber)
 {
     /** -- Receive an acknowledgement to a IOBuffer -- */
 
@@ -197,10 +193,10 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AckReceived(ARNETWORK_IOBuffer_t *IOBufferPt
     eARNETWORK_ERROR error = ARNETWORK_OK;
 
     /** delete the data if the sequence number received is same as the sequence number expected */
-    if(IOBufferPtr->isWaitAck && IOBufferPtr->seq == seqNumber)
+    if(IOBuffer->isWaitAck && IOBuffer->seq == seqNumber)
     {
-        IOBufferPtr->isWaitAck = 0;
-        error = ARNETWORK_IOBuffer_PopDataWithCallBack(IOBufferPtr, ARNETWORK_MANAGER_CALLBACK_STATUS_ACK_RECEIVED);
+        IOBuffer->isWaitAck = 0;
+        error = ARNETWORK_IOBuffer_PopDataWithCallBack(IOBuffer, ARNETWORK_MANAGER_CALLBACK_STATUS_ACK_RECEIVED);
     }
     else
     {
@@ -210,19 +206,19 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AckReceived(ARNETWORK_IOBuffer_t *IOBufferPt
     return error;
 }
 
-int ARNETWORK_IOBuffer_IsWaitAck(ARNETWORK_IOBuffer_t *IOBufferPtr)
+int ARNETWORK_IOBuffer_IsWaitAck(ARNETWORK_IOBuffer_t *IOBuffer)
 {
     /** -- Get if the IOBuffer is waiting an acknowledgement -- */
 
     /** local declarations */
     int isWaitAckCpy = 0;
 
-    isWaitAckCpy = IOBufferPtr->isWaitAck;
+    isWaitAckCpy = IOBuffer->isWaitAck;
 
     return isWaitAckCpy;
 }
 
-eARNETWORK_ERROR ARNETWORK_IOBuffer_Lock( ARNETWORK_IOBuffer_t *IOBufferPtr)
+eARNETWORK_ERROR ARNETWORK_IOBuffer_Lock( ARNETWORK_IOBuffer_t *IOBuffer)
 {
     /** -- Lock the IOBuffer's mutex -- **/
 
@@ -231,7 +227,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_Lock( ARNETWORK_IOBuffer_t *IOBufferPtr)
     int lockingReturn = 0;
 
     /** lock the IOBuffer */
-    lockingReturn = ARSAL_Mutex_Lock(&(IOBufferPtr->mutex));
+    lockingReturn = ARSAL_Mutex_Lock(&(IOBuffer->mutex));
 
     if(lockingReturn != 0)
     {
@@ -251,7 +247,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_Lock( ARNETWORK_IOBuffer_t *IOBufferPtr)
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_IOBuffer_Unlock( ARNETWORK_IOBuffer_t *IOBufferPtr)
+eARNETWORK_ERROR ARNETWORK_IOBuffer_Unlock( ARNETWORK_IOBuffer_t *IOBuffer)
 {
     /** -- Unlock the IOBuffer's mutex -- **/
 
@@ -260,7 +256,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_Unlock( ARNETWORK_IOBuffer_t *IOBufferPtr)
     int unlockingReturn = 0;
 
     /** unlock the IOBuffer if there is not correctly unlocked */
-    unlockingReturn = ARSAL_Mutex_Unlock(&(IOBufferPtr->mutex));
+    unlockingReturn = ARSAL_Mutex_Unlock(&(IOBuffer->mutex));
 
     if(unlockingReturn != 0)
     {
@@ -280,7 +276,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_Unlock( ARNETWORK_IOBuffer_t *IOBufferPtr)
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_IOBuffer_CancelAllData(ARNETWORK_IOBuffer_t *IOBufferPtr)
+eARNETWORK_ERROR ARNETWORK_IOBuffer_CancelAllData(ARNETWORK_IOBuffer_t *IOBuffer)
 {
     /** -- cancel all remaining data -- */
 
@@ -291,7 +287,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_CancelAllData(ARNETWORK_IOBuffer_t *IOBuffer
     /** pop all data with the ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL status */
     while(deleteError == ARNETWORK_OK)
     {
-        deleteError = ARNETWORK_IOBuffer_PopDataWithCallBack(IOBufferPtr, ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL);
+        deleteError = ARNETWORK_IOBuffer_PopDataWithCallBack(IOBuffer, ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL);
     }
 
     if(deleteError != ARNETWORK_ERROR_BUFFER_EMPTY)
@@ -302,7 +298,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_CancelAllData(ARNETWORK_IOBuffer_t *IOBuffer
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_IOBuffer_PopData(ARNETWORK_IOBuffer_t *IOBufferPtr)
+eARNETWORK_ERROR ARNETWORK_IOBuffer_PopData(ARNETWORK_IOBuffer_t *IOBuffer)
 {
     /** -- Pop the later data of the IOBuffer and free it -- */
 
@@ -311,17 +307,17 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_PopData(ARNETWORK_IOBuffer_t *IOBufferPtr)
     ARNETWORK_DataDescriptor_t dataDescriptor;
 
     /** pop and get the data descriptor */
-    error = ARNETWORK_RingBuffer_PopFront(IOBufferPtr->dataDescriptorRBufferPtr, (uint8_t*) &dataDescriptor);
+    error = ARNETWORK_RingBuffer_PopFront(IOBuffer->dataDescriptorRBuffer, (uint8_t*) &dataDescriptor);
     if(error == ARNETWORK_OK)
     {
         /** free data */
-        error = ARNETWORK_IOBuffer_FreeData(IOBufferPtr, &dataDescriptor);
+        error = ARNETWORK_IOBuffer_FreeData(IOBuffer, &dataDescriptor);
     }
 
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_IOBuffer_PopDataWithCallBack(ARNETWORK_IOBuffer_t *IOBufferPtr, eARNETWORK_MANAGER_CALLBACK_STATUS callbackStatus)
+eARNETWORK_ERROR ARNETWORK_IOBuffer_PopDataWithCallBack(ARNETWORK_IOBuffer_t *IOBuffer, eARNETWORK_MANAGER_CALLBACK_STATUS callbackStatus)
 {
     /** -- Pop the later data of the IOBuffer with callback calling and free it -- */
 
@@ -330,23 +326,23 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_PopDataWithCallBack(ARNETWORK_IOBuffer_t *IO
     ARNETWORK_DataDescriptor_t dataDescriptor;
 
     /** pop and get the data descriptor */
-    error = ARNETWORK_RingBuffer_PopFront(IOBufferPtr->dataDescriptorRBufferPtr, (uint8_t*) &dataDescriptor);
+    error = ARNETWORK_RingBuffer_PopFront(IOBuffer->dataDescriptorRBuffer, (uint8_t*) &dataDescriptor);
     if(error == ARNETWORK_OK)
     {
         /** callback with the reason of the data popping */
         if(dataDescriptor.callback != NULL)
         {
-            dataDescriptor.callback(IOBufferPtr->ID, dataDescriptor.data, dataDescriptor.customData, callbackStatus);
+            dataDescriptor.callback(IOBuffer->ID, dataDescriptor.data, dataDescriptor.customData, callbackStatus);
         }
 
         /** free data */
-        error = ARNETWORK_IOBuffer_FreeData(IOBufferPtr, &dataDescriptor);
+        error = ARNETWORK_IOBuffer_FreeData(IOBuffer, &dataDescriptor);
     }
 
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_IOBuffer_Flush(ARNETWORK_IOBuffer_t *IOBufferPtr)
+eARNETWORK_ERROR ARNETWORK_IOBuffer_Flush(ARNETWORK_IOBuffer_t *IOBuffer)
 {
     /** -- Flush the IoBuffer -- */
 
@@ -356,7 +352,7 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_Flush(ARNETWORK_IOBuffer_t *IOBufferPtr)
     /**  delete all data */
     while(error == ARNETWORK_OK)
     {
-        error = ARNETWORK_IOBuffer_PopDataWithCallBack(IOBufferPtr, ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL);
+        error = ARNETWORK_IOBuffer_PopDataWithCallBack(IOBuffer, ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL);
     }
 
     /** if the error occurred is "buffer empty" there is no error */
@@ -366,20 +362,20 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_Flush(ARNETWORK_IOBuffer_t *IOBufferPtr)
     }
 
     /** state reset */
-    IOBufferPtr->isWaitAck = 0;
-    IOBufferPtr->alreadyHadData = 0;
-    IOBufferPtr->waitTimeCount = IOBufferPtr->sendingWaitTimeMs;
-    IOBufferPtr->ackWaitTimeCount = IOBufferPtr->ackTimeoutMs;
-    IOBufferPtr->retryCount = 0;
+    IOBuffer->isWaitAck = 0;
+    IOBuffer->alreadyHadData = 0;
+    IOBuffer->waitTimeCount = IOBuffer->sendingWaitTimeMs;
+    IOBuffer->ackWaitTimeCount = IOBuffer->ackTimeoutMs;
+    IOBuffer->retryCount = 0;
 
     /** reset semaphore */
-    ARSAL_Sem_Destroy(&(IOBufferPtr->outputSem));
-    ARSAL_Sem_Init(&(IOBufferPtr->outputSem), 0, 0);
+    ARSAL_Sem_Destroy(&(IOBuffer->outputSem));
+    ARSAL_Sem_Init(&(IOBuffer->outputSem), 0, 0);
 
     return error;
 }
 
-eARNETWORK_ERROR ARNETWORK_IOBuffer_AddData(ARNETWORK_IOBuffer_t *IOBufferPtr, uint8_t *dataPtr, int dataSize, void *customData, ARNETWORK_Manager_Callback_t callback, int doDataCopy)
+eARNETWORK_ERROR ARNETWORK_IOBuffer_AddData(ARNETWORK_IOBuffer_t *IOBuffer, uint8_t *data, int dataSize, void *customData, ARNETWORK_Manager_Callback_t callback, int doDataCopy)
 {
     /** -- Add data in a IOBuffer -- */
 
@@ -389,34 +385,34 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AddData(ARNETWORK_IOBuffer_t *IOBufferPtr, u
     int numberOfFreeCell = 0;
 
     /** initialize dataDescriptor */
-    dataDescriptor.data = dataPtr;
+    dataDescriptor.data = data;
     dataDescriptor.dataSize = dataSize;
     dataDescriptor.customData = customData;
     dataDescriptor.callback = callback;
     dataDescriptor.isUsingDataCopy = 0;
 
     /** get the number of free cell */
-    numberOfFreeCell = ARNETWORK_RingBuffer_GetFreeCellNumber(IOBufferPtr->dataDescriptorRBufferPtr);
+    numberOfFreeCell = ARNETWORK_RingBuffer_GetFreeCellNumber(IOBuffer->dataDescriptorRBuffer);
 
     /** if the buffer is not full or it is overwriting */
-    if( (IOBufferPtr->dataDescriptorRBufferPtr->isOverwriting == 1) || (numberOfFreeCell > 0) )
+    if( (IOBuffer->dataDescriptorRBuffer->isOverwriting == 1) || (numberOfFreeCell > 0) )
     {
         /** if there is overwriting */
         if(numberOfFreeCell == 0)
         {
             /** if the buffer is full, cancel the data lost by the overwriting */
             /** Delete the data Overwritten */
-            error = ARNETWORK_IOBuffer_PopDataWithCallBack(IOBufferPtr, ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL);
+            error = ARNETWORK_IOBuffer_PopDataWithCallBack(IOBuffer, ARNETWORK_MANAGER_CALLBACK_STATUS_CANCEL);
         }
 
         /** if data copy is asked */
         if( (error == ARNETWORK_OK) && (doDataCopy) )
         {
             /** check if the IOBuffer can copy and if the size of the copy buffer is large enough */
-            if( (ARNETWORK_IOBuffer_CanCopyData(IOBufferPtr)) && (dataSize <= IOBufferPtr->dataCopyRBufferPtr->cellSize) )
+            if( (ARNETWORK_IOBuffer_CanCopyData(IOBuffer)) && (dataSize <= IOBuffer->dataCopyRBuffer->cellSize) )
             {
-                /** copy data in the dataCopyRBufferPtr and get the address of the data copy in descDataPtr */
-                error =  ARNETWORK_RingBuffer_PushBackWithSize(IOBufferPtr->dataCopyRBufferPtr, dataPtr, dataSize, &(dataDescriptor.data));
+                /** copy data in the dataCopyRBuffer and get the address of the data copy in descData */
+                error =  ARNETWORK_RingBuffer_PushBackWithSize(IOBuffer->dataCopyRBuffer, data, dataSize, &(dataDescriptor.data));
 
                 /** set the flag to indicate the copy of the data */
                 dataDescriptor.isUsingDataCopy = 1;
@@ -429,9 +425,9 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AddData(ARNETWORK_IOBuffer_t *IOBufferPtr, u
 
         if(error == ARNETWORK_OK)
         {
-            /** push dataDescriptor in the IOBufferPtr */
-            error = ARNETWORK_RingBuffer_PushBack(IOBufferPtr->dataDescriptorRBufferPtr, (uint8_t*) &dataDescriptor);
-            IOBufferPtr->alreadyHadData = 1;
+            /** push dataDescriptor in the IOBuffer */
+            error = ARNETWORK_RingBuffer_PushBack(IOBuffer->dataDescriptorRBuffer, (uint8_t*) &dataDescriptor);
+            IOBuffer->alreadyHadData = 1;
         }
     }
     else
@@ -442,21 +438,21 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_AddData(ARNETWORK_IOBuffer_t *IOBufferPtr, u
     return error;
 }
 
-int ARNETWORK_IOBuffer_ShouldAcceptData (ARNETWORK_IOBuffer_t *IOBufferPtr, uint8_t seqnum)
+int ARNETWORK_IOBuffer_ShouldAcceptData (ARNETWORK_IOBuffer_t *IOBuffer, uint8_t seqnum)
 {
     int retVal = -1;
     int maxDelta = ARNETWORK_IOBUFFER_DELTASEQ;
-    if (IOBufferPtr == NULL)
+    if (IOBuffer == NULL)
     {
         return retVal;
     }
 
-    if (IOBufferPtr->alreadyHadData == 0)
+    if (IOBuffer->alreadyHadData == 0)
     {
         return 1; // Accept any data, regardless of its sequence number
     }
 
-    retVal = seqnum - IOBufferPtr->seq;
+    retVal = seqnum - IOBuffer->seq;
     if (retVal < maxDelta)// If the packet is more than 10 seq old, it might be a loopback
     {
         retVal += ARNETWORK_IOBUFFER_MAXSEQVALUE;
@@ -465,17 +461,17 @@ int ARNETWORK_IOBuffer_ShouldAcceptData (ARNETWORK_IOBuffer_t *IOBufferPtr, uint
     return retVal;
 }
 
-eARNETWORK_ERROR ARNETWORK_IOBuffer_ReadData(ARNETWORK_IOBuffer_t *IOBufferPtr, uint8_t *dataPtr, int dataLimitSize, int *readSizePtr)
+eARNETWORK_ERROR ARNETWORK_IOBuffer_ReadData(ARNETWORK_IOBuffer_t *IOBuffer, uint8_t *data, int dataLimitSize, int *readSize)
 {
     /** -- read data received in a IOBuffer -- */
 
     /** local declarations */
     eARNETWORK_ERROR error = ARNETWORK_OK;
     ARNETWORK_DataDescriptor_t dataDescriptor;
-    int readSize = 0;
+    int localReadSize = 0;
 
     /** get data descriptor*/
-    error = ARNETWORK_RingBuffer_Front(IOBufferPtr->dataDescriptorRBufferPtr, (uint8_t*) &dataDescriptor);
+    error = ARNETWORK_RingBuffer_Front(IOBuffer->dataDescriptorRBuffer, (uint8_t*) &dataDescriptor);
 
     if( error == ARNETWORK_OK )
     {
@@ -483,13 +479,13 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_ReadData(ARNETWORK_IOBuffer_t *IOBufferPtr, 
         if(dataDescriptor.dataSize <= dataLimitSize)
         {
             /** data copy */
-            memcpy(dataPtr, dataDescriptor.data, dataDescriptor.dataSize);
+            memcpy(data, dataDescriptor.data, dataDescriptor.dataSize);
 
             /** set size of data read */
-            readSize = dataDescriptor.dataSize;
+            localReadSize = dataDescriptor.dataSize;
 
             /** pop the data */
-            ARNETWORK_IOBuffer_PopData(IOBufferPtr);
+            ARNETWORK_IOBuffer_PopData(IOBuffer);
         }
         else
         {
@@ -498,23 +494,23 @@ eARNETWORK_ERROR ARNETWORK_IOBuffer_ReadData(ARNETWORK_IOBuffer_t *IOBufferPtr, 
     }
 
     /** return the size of the data read */
-    if(readSizePtr != NULL)
+    if(readSize != NULL)
     {
-        *readSizePtr = readSize;
+        *readSize = localReadSize;
     }
 
     return error;
 }
 
-int ARNETWORK_IOBuffer_GetEstimatedMissPercentage (ARNETWORK_IOBuffer_t *IOBufferPtr)
+int ARNETWORK_IOBuffer_GetEstimatedMissPercentage (ARNETWORK_IOBuffer_t *IOBuffer)
 {
-    if (IOBufferPtr == NULL)
+    if (IOBuffer == NULL)
     {
         return ARNETWORK_ERROR_BAD_PARAMETER;
     }
     /* Get the number of missed packets */
-    int nbMissed = IOBufferPtr->nbNetwork - IOBufferPtr->nbPackets;
+    int nbMissed = IOBuffer->nbNetwork - IOBuffer->nbPackets;
     /* Convert it to percentage missed */
-    if (IOBufferPtr->nbNetwork == 0) { return 0; } // Avoid divide by zero
-    return (100 * nbMissed) / IOBufferPtr->nbNetwork;
+    if (IOBuffer->nbNetwork == 0) { return 0; } // Avoid divide by zero
+    return (100 * nbMissed) / IOBuffer->nbNetwork;
 }
