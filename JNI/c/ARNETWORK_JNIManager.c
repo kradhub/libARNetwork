@@ -376,6 +376,10 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkManager_nativeSendData(JNIEnv *env, job
     {
         /** send the data */
         error = ARNETWORK_Manager_SendData( managerPtr, inputBufferID, dataPtr, dataSize, callbackDataPtr, &(ARNETWORK_JNIManager_Callback), doDataCopy);
+        if (error != ARNETWORK_OK)
+        {
+            ARNETWORK_JNIManager_FreeCallbackData(env, &callbackDataPtr);
+        }
     }
 
     return error;
