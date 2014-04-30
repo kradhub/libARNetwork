@@ -6,7 +6,7 @@ import com.parrot.arsdk.arsal.ARSALPrint;
 /**
  * Used to set the parameters of a new ioBuffer
  */
-public class ARNetworkIOBufferParam
+public class ARNetworkIOBufferParam implements Cloneable
 {
     private static final String TAG = ARNetworkIOBufferParam.class.getSimpleName ();
 
@@ -153,4 +153,8 @@ public class ARNetworkIOBufferParam
         return this.isOverwriting;
     }
     
+    public ARNetworkIOBufferParam clone()
+    {
+        return new ARNetworkIOBufferParam(this.id, this.dataType, this.timeBetweenSend, this.ackTimeoutMs, this.numberOfRetry, this.numberOfCell, this.copyMaxSize, this.isOverwriting);
+    }
 }
