@@ -22,7 +22,7 @@ public class ARNetworkIOBufferParam implements Cloneable
 
     private native static int nativeStaticGetInfiniteNumber();
     private native static int nativeStaticGetDataCopyMaxSizeUseMax();
-    
+
     private native long nativeNew();
     private native void nativeDelete(long jIOBufferParamPtr);
     private native void nativeSetId(long jIOBufferParamPtr, int ID);
@@ -33,9 +33,17 @@ public class ARNetworkIOBufferParam implements Cloneable
     private native void nativeSetNumberOfCell(long jIOBufferParamPtr, int nb);
     private native void nativeSetDataCopyMaxSize(long jIOBufferParamPtr, int size);
     private native void nativeSetIsOverwriting(long jIOBufferParamPtr, boolean over);
+    private native int nativeGetId(long jIOBufferParamPtr);
+    private native int nativeGetDataType(long jIOBufferParamPtr);
+    private native int nativeGetTimeBetweenSend(long jIOBufferParamPtr);
+    private native int nativeGetAckTimeoutMs(long jIOBufferParamPtr);
+    private native int nativeGetNumberOfRetry(long jIOBufferParamPtr);
+    private native int nativeGetNumberOfCell(long jIOBufferParamPtr);
+    private native int nativeGetDataCopyMaxSize(long jIOBufferParamPtr);
+    private native boolean nativeGetIsOverwriting(long jIOBufferParamPtr);
 
     private long cIOBufferParam;
-    
+
     private int id;
     private ARNETWORKAL_FRAME_TYPE_ENUM dataType;
     private int timeBetweenSend;
@@ -44,13 +52,13 @@ public class ARNetworkIOBufferParam implements Cloneable
     private int numberOfCell;
     private int copyMaxSize;
     private boolean isOverwriting;
-    
+
     static
     {
         ARNETWORK_IOBUFFERPARAM_INFINITE_NUMBER = nativeStaticGetInfiniteNumber ();
         ARNETWORK_IOBUFFERPARAM_DATACOPYMAXSIZE_USE_MAX = nativeStaticGetDataCopyMaxSizeUseMax ();
     }
-    
+
     /**
      * Constructor
      * @param id Identifier of the buffer
@@ -74,15 +82,30 @@ public class ARNetworkIOBufferParam implements Cloneable
         nativeSetNumberOfCell (cIOBufferParam, numberOfCell);
         nativeSetDataCopyMaxSize (cIOBufferParam, dataCopyMaxSize);
         nativeSetIsOverwriting (cIOBufferParam, isOverwriting);
-        
+
         this.id = id;
         this.dataType = dataType;
         this.timeBetweenSend = timeBetweenSend;
         this.ackTimeoutMs = ackTimeoutMs;
         this.numberOfRetry = numberOfRetry;
         this.numberOfCell = numberOfCell;
-        this.copyMaxSize = copyMaxSize;
+        this.copyMaxSize = dataCopyMaxSize;
         this.isOverwriting = isOverwriting;
+    }
+
+    /**
+     * Update the java information from native part
+     */
+    public void updateFromNative()
+    {
+        this.id = nativeGetId(cIOBufferParam);
+        this.dataType = ARNETWORKAL_FRAME_TYPE_ENUM.getFromValue(nativeGetDataType(cIOBufferParam));
+        this.timeBetweenSend = nativeGetTimeBetweenSend(cIOBufferParam);
+        this.ackTimeoutMs = nativeGetAckTimeoutMs(cIOBufferParam);
+        this.numberOfRetry = nativeGetNumberOfRetry(cIOBufferParam);
+        this.numberOfCell = nativeGetNumberOfCell(cIOBufferParam);
+        this.copyMaxSize = nativeGetDataCopyMaxSize(cIOBufferParam);
+        this.isOverwriting = nativeGetIsOverwriting(cIOBufferParam);
     }
 
     /**
@@ -109,50 +132,64 @@ public class ARNetworkIOBufferParam implements Cloneable
         }
     }
 
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("< id = " + id);
+        sb.append(" | dataType = " + dataType);
+        sb.append(" | timeBetweenSend = " + timeBetweenSend);
+        sb.append(" | ackTimeoutMs = " + ackTimeoutMs);
+        sb.append(" | numberOfRetry = " + numberOfRetry);
+        sb.append(" | numberOfCell = " + numberOfCell);
+        sb.append(" | copyMaxSize = " + copyMaxSize);
+        sb.append(" | isOverwriting = " + isOverwriting + " >");
+        return sb.toString();
+    }
+
     public long getNativePointer () {
         return cIOBufferParam;
     }
-    
+
     public int getId ()
     {
         return this.id;
     }
-    
+
     public ARNETWORKAL_FRAME_TYPE_ENUM getDataType ()
     {
         return this.dataType;
     }
-    
+
     public int getTimeBetweenSend ()
     {
         return this.timeBetweenSend;
     }
-    
+
     public int getAckTimeoutMs ()
     {
         return this.ackTimeoutMs;
     }
-    
+
     public int getNumberOfRetry ()
     {
         return this.numberOfRetry;
     }
-    
+
     public int getNumberOfCell ()
     {
         return this.numberOfCell;
     }
-    
+
     public int getCopyMaxSize ()
     {
         return this.copyMaxSize;
     }
-    
+
     public boolean getIsOverwriting ()
     {
         return this.isOverwriting;
     }
-    
+
     public ARNetworkIOBufferParam clone()
     {
         return new ARNetworkIOBufferParam(this.id, this.dataType, this.timeBetweenSend, this.ackTimeoutMs, this.numberOfRetry, this.numberOfCell, this.copyMaxSize, this.isOverwriting);

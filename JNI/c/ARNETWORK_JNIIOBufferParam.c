@@ -123,3 +123,99 @@ Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeSetIsOverwriting(JN
         param->isOverwriting = (over == JNI_TRUE) ? 1 : 0;
     }
 }
+
+JNIEXPORT jint JNICALL
+Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeGetId(JNIEnv *env, jobject thizz, jlong jIOBufferParamPtr)
+{
+    jint retVal = -1;
+    if (jIOBufferParamPtr != 0)
+    {
+        ARNETWORK_IOBufferParam_t *param = (ARNETWORK_IOBufferParam_t *) (intptr_t) jIOBufferParamPtr;
+        retVal = param->ID;
+    }
+    return retVal;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeGetDataType(JNIEnv *env, jobject thizz, jlong jIOBufferParamPtr)
+{
+    jint retVal = -1;
+    if (jIOBufferParamPtr != 0)
+    {
+        ARNETWORK_IOBufferParam_t *param = (ARNETWORK_IOBufferParam_t *) (intptr_t) jIOBufferParamPtr;
+        retVal = param->dataType;
+    }
+    return retVal;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeGetTimeBetweenSend(JNIEnv *env, jobject thizz, jlong jIOBufferParamPtr)
+{
+    jint retVal = -1;
+    if (jIOBufferParamPtr != 0)
+    {
+        ARNETWORK_IOBufferParam_t *param = (ARNETWORK_IOBufferParam_t *) (intptr_t) jIOBufferParamPtr;
+        retVal = param->sendingWaitTimeMs;
+    }
+    return retVal;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeGetAckTimeoutMs(JNIEnv *env, jobject thizz, jlong jIOBufferParamPtr)
+{
+    jint retVal = -1;
+    if (jIOBufferParamPtr != 0)
+    {
+        ARNETWORK_IOBufferParam_t *param = (ARNETWORK_IOBufferParam_t *) (intptr_t) jIOBufferParamPtr;
+        retVal = param->ackTimeoutMs;
+    }
+    return retVal;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeGetNumberOfRetry(JNIEnv *env, jobject thizz, jlong jIOBufferParamPtr)
+{
+    jint retVal = -1;
+    if (jIOBufferParamPtr != 0)
+    {
+        ARNETWORK_IOBufferParam_t *param = (ARNETWORK_IOBufferParam_t *) (intptr_t) jIOBufferParamPtr;
+        retVal = param->numberOfRetry;
+    }
+    return retVal;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeGetNumberOfCell(JNIEnv *env, jobject thizz, jlong jIOBufferParamPtr)
+{
+    jint retVal = -1;
+    if (jIOBufferParamPtr != 0)
+    {
+        ARNETWORK_IOBufferParam_t *param = (ARNETWORK_IOBufferParam_t *) (intptr_t) jIOBufferParamPtr;
+        retVal = param->numberOfCell;
+    }
+    return retVal;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeGetDataCopyMaxSize(JNIEnv *env, jobject thizz, jlong jIOBufferParamPtr)
+{
+    jint retVal = -1;
+    if (jIOBufferParamPtr != 0)
+    {
+        ARNETWORK_IOBufferParam_t *param = (ARNETWORK_IOBufferParam_t *) (intptr_t) jIOBufferParamPtr;
+        retVal = param->dataCopyMaxSize;
+    }
+    return retVal;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_parrot_arsdk_arnetwork_ARNetworkIOBufferParam_nativeGetIsOverwriting(JNIEnv *env, jobject thizz, jlong jIOBufferParamPtr, jboolean over)
+{
+    jboolean retVal = JNI_FALSE;
+    if (jIOBufferParamPtr != 0)
+    {
+        ARNETWORK_IOBufferParam_t *param = (ARNETWORK_IOBufferParam_t *) (intptr_t) jIOBufferParamPtr;
+        retVal = (param->isOverwriting == 1) ? JNI_TRUE : JNI_FALSE;
+    }
+    return retVal;
+}
