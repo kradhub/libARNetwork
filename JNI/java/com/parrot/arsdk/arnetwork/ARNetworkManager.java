@@ -15,17 +15,17 @@ public abstract class ARNetworkManager
 
     private native long nativeNew(long jOSSpecificManagerPtr, int numberOfInput, Object[] inputParamArray, int numberOfOutput, Object[] outputParamArray, int timeBetweenPingsMs, int jerror );
 
-    private native int nativeDelete( long jManagerPtr);
+    private native int nativeDelete( long nativeManager);
 
-    private native void nativeStop(long jManagerPtr);
-    private native int nativeFlush(long jManagerPtr);
+    private native void nativeStop(long nativeManager);
+    private native int nativeFlush(long nativeManager);
 
-    private native int nativeSendData( long jManagerPtr,int inputBufferID, ARNativeData ARData, long dataPtr, int dataSize, Object customData, int doDataCopy);
-    private native int nativeReadData( long jManagerPtr, int outputBufferID, long dataPointer, int capacity, ARNativeData data);
-    private native int nativeTryReadData( long jManagerPtr, int outputBufferID, long dataPointer, int capacity, ARNativeData data);
-    private native int nativeReadDataWithTimeout( long jManagerPtr, int outputBufferID, long dataPointer, int capacity, ARNativeData data, int timeoutMs);
+    private native int nativeSendData( long nativeManager,int inputBufferID, ARNativeData ARData, long dataPtr, int dataSize, Object customData, int doDataCopy);
+    private native int nativeReadData( long nativeManager, int outputBufferID, long dataPointer, int capacity, ARNativeData data);
+    private native int nativeTryReadData( long nativeManager, int outputBufferID, long dataPointer, int capacity, ARNativeData data);
+    private native int nativeReadDataWithTimeout( long nativeManager, int outputBufferID, long dataPointer, int capacity, ARNativeData data, int timeoutMs);
 
-    private long m_managerPtr;
+    private long nativeManager;
 
     private boolean m_initOk;
     private ARNetworkALManager alManager;
@@ -48,17 +48,17 @@ public abstract class ARNetworkManager
      */
     public ARNetworkManager(ARNetworkALManager osSpecificManager, ARNetworkIOBufferParam inputParamArray[], ARNetworkIOBufferParam outputParamArray[], int timeBetweenPingsMs)
     {
-        int error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK.ordinal();
+        int error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK.getValue();
         m_initOk = false;
-        m_managerPtr = nativeNew(osSpecificManager.getManager(), inputParamArray.length, inputParamArray, outputParamArray.length, outputParamArray, timeBetweenPingsMs, error);
+        nativeManager = nativeNew(osSpecificManager.getManager(), inputParamArray.length, inputParamArray, outputParamArray.length, outputParamArray, timeBetweenPingsMs, error);
 
         ARSALPrint.d (TAG, "Error:" + error );
 
-        if( m_managerPtr != 0 )
+        if( nativeManager != 0 )
         {
             m_initOk = true;
-            m_sendingRunnable = new SendingRunnable(m_managerPtr);
-            m_receivingRunnable = new ReceivingRunnable(m_managerPtr);
+            m_sendingRunnable = new SendingRunnable(nativeManager);
+            m_receivingRunnable = new ReceivingRunnable(nativeManager);
             alManager = osSpecificManager;
         }
     }
@@ -70,8 +70,8 @@ public abstract class ARNetworkManager
     {
         if(m_initOk == true)
         {
-            nativeDelete(m_managerPtr);
-            m_managerPtr = 0;
+            nativeDelete(nativeManager);
+            nativeManager = 0;
             m_initOk = false;
         }
     }
@@ -81,9 +81,12 @@ public abstract class ARNetworkManager
      */
     public void finalize () throws Throwable
     {
-        try {
+        try
+        {
             dispose ();
-        } finally {
+        }
+        finally
+        {
             super.finalize ();
         }
     }
@@ -96,7 +99,7 @@ public abstract class ARNetworkManager
     {
         if(m_initOk == true)
         {
-            nativeStop(m_managerPtr);
+            nativeStop(nativeManager);
         }
     }
 
@@ -109,7 +112,7 @@ public abstract class ARNetworkManager
         ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
         if(m_initOk == true)
         {
-            int intError = nativeFlush( m_managerPtr );
+            int intError = nativeFlush( nativeManager );
             error = ARNETWORK_ERROR_ENUM.getFromValue(intError);
         }
         else
@@ -137,7 +140,7 @@ public abstract class ARNetworkManager
         {
             long dataPtr =  arData.getData();
             int dataSize =  arData.getDataSize();
-            int intError = nativeSendData (m_managerPtr, inputBufferID, arData, dataPtr, dataSize, customData, doDataCopyInt );
+            int intError = nativeSendData (nativeManager, inputBufferID, arData, dataPtr, dataSize, customData, doDataCopyInt );
             error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
         }
         else
@@ -160,7 +163,7 @@ public abstract class ARNetworkManager
         ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
         if(m_initOk == true)
         {
-            int intError = nativeReadData( m_managerPtr, outputBufferID, data.getData (), data.getCapacity (), data);
+            int intError = nativeReadData( nativeManager, outputBufferID, data.getData (), data.getCapacity (), data);
             error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
         }
         else
@@ -182,7 +185,7 @@ public abstract class ARNetworkManager
         ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
         if(m_initOk == true)
         {
-            int intError = nativeTryReadData( m_managerPtr, outputBufferID, data.getData (), data.getCapacity (), data);
+            int intError = nativeTryReadData( nativeManager, outputBufferID, data.getData (), data.getCapacity (), data);
             error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
         }
         else
@@ -205,7 +208,7 @@ public abstract class ARNetworkManager
         ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
         if(m_initOk == true)
         {
-            int intError = nativeReadDataWithTimeout( m_managerPtr, outputBufferID, data.getData (), data.getCapacity (), data, timeoutMs);
+            int intError = nativeReadDataWithTimeout( nativeManager, outputBufferID, data.getData (), data.getCapacity (), data, timeoutMs);
             error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
         }
         else
@@ -222,7 +225,7 @@ public abstract class ARNetworkManager
      */
     public long getManager ()
     {
-        return m_managerPtr;
+        return nativeManager;
     }
 
     /**
@@ -281,9 +284,9 @@ public abstract class ARNetworkManager
  */
 class SendingRunnable implements Runnable
 {
-    private static native int nativeSendingThreadRun( long jManagerPtr);
+    private static native int nativeSendingThreadRun( long nativeManager);
 
-    long m_managerPtr;
+    long nativeManager;
 
     /**
      * Constructor
@@ -291,7 +294,7 @@ class SendingRunnable implements Runnable
      */
     SendingRunnable(long managerPtr)
     {
-        m_managerPtr = managerPtr;
+        nativeManager = managerPtr;
     }
 
     /**
@@ -299,7 +302,7 @@ class SendingRunnable implements Runnable
      */
     public void run()
     {
-        nativeSendingThreadRun(m_managerPtr);
+        nativeSendingThreadRun(nativeManager);
     }
 }
 
@@ -308,9 +311,9 @@ class SendingRunnable implements Runnable
  */
 class ReceivingRunnable implements Runnable
 {
-    private static native int nativeReceivingThreadRun(long jManagerPtr);
+    private static native int nativeReceivingThreadRun(long nativeManager);
 
-    long m_managerPtr;
+    long nativeManager;
 
     /**
      * Constructor
@@ -318,7 +321,7 @@ class ReceivingRunnable implements Runnable
      */
     ReceivingRunnable(long managerPtr)
     {
-        m_managerPtr = managerPtr;
+        nativeManager = managerPtr;
     }
 
     /**
@@ -326,6 +329,6 @@ class ReceivingRunnable implements Runnable
      */
     public void run()
     {
-        nativeReceivingThreadRun(m_managerPtr);
+        nativeReceivingThreadRun(nativeManager);
     }
 }
