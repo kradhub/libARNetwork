@@ -142,7 +142,7 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
     eARNETWORK_ERROR error = ARNETWORK_OK;
     eARNETWORKAL_MANAGER_RETURN result = ARNETWORKAL_MANAGER_RETURN_DEFAULT;
     uint8_t ackSeqNumData = 0;
-    struct timeval now;
+    struct timespec now;
 
     while (receiverPtr->isAlive)
     {
@@ -161,17 +161,17 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                     case ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PING:
                         /* Ping, send the corresponding pong */
                     {
-                        struct timeval dataTime;
-                        memcpy (&dataTime, frame.dataPtr, sizeof (struct timeval));
+                        struct timespec dataTime;
+                        memcpy (&dataTime, frame.dataPtr, sizeof (struct timespec));
                         ARNETWORK_Sender_SendPong (receiverPtr->senderPtr, &dataTime);
                     }
                     break;
                     case ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PONG:
                         /* Pong, tells the sender that we got a response */
                     {
-                        struct timeval dataTime;
-                        memcpy (&dataTime, frame.dataPtr, sizeof (struct timeval));
-                        gettimeofday (&now, NULL);
+                        struct timespec dataTime;
+                        memcpy (&dataTime, frame.dataPtr, sizeof (struct timespec));
+                        ARSAL_Time_GetTime(&now);
                         ARNETWORK_Sender_GotPingAck (receiverPtr->senderPtr, &dataTime, &now);
                     }
                     break;

@@ -128,7 +128,7 @@ ARNETWORK_Sender_t* ARNETWORK_Sender_New (ARNETWORKAL_Manager_t *networkALManage
             {
                 senderPtr->minTimeBetweenPings = pingDelayMs;
             }
-            gettimeofday (&(senderPtr->pingStartTime), NULL);
+            ARSAL_Time_GetTime(&(senderPtr->pingStartTime));
         }
 
         /* Create the mutex/condition */
@@ -195,8 +195,8 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
     ARNETWORK_IOBuffer_t *inputBufferPtrTemp = NULL; /**< pointer of the input buffer in processing */
     eARNETWORK_ERROR error = ARNETWORK_OK;
     int waitTimeMs = 0;
-    struct timeval now;
-    struct timeval sleepStart;
+    struct timespec now;
+    struct timespec sleepStart;
     int sleepDurationMs = 0;
     int timeDiffMs;
 
@@ -254,7 +254,7 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
             }
             ARNETWORK_IOBuffer_Unlock(inputBufferPtrTemp);
         }
-        gettimeofday(&sleepStart, NULL);
+        ARSAL_Time_GetTime(&sleepStart);
         if (waitTimeMs > 0)
         {
             if (waitTimeMs < senderPtr->minimumTimeBetweenSendsMs)
@@ -267,10 +267,10 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
         }
 
         /** Process internal input buffers */
-        gettimeofday (&now, NULL);
-        sleepDurationMs = ARSAL_Time_ComputeMsTimeDiff (&sleepStart, &now);
+        ARSAL_Time_GetTime(&now);
+        sleepDurationMs = ARSAL_Time_ComputeTimespecMsTimeDiff (&sleepStart, &now);
         ARSAL_Mutex_Lock (&(senderPtr->pingMutex));
-        timeDiffMs = ARSAL_Time_ComputeMsTimeDiff (&(senderPtr->pingStartTime), &now);
+        timeDiffMs = ARSAL_Time_ComputeTimespecMsTimeDiff (&(senderPtr->pingStartTime), &now);
         /* Send only new pings if ping function is active (min time > 0) */
         if (senderPtr->minTimeBetweenPings > 0)
         {
@@ -297,7 +297,7 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
                 ARNETWORK_IOBuffer_AddData (inputBufferPtrTemp, (uint8_t *)&now, sizeof (now), NULL, NULL, 1);
                 ARNETWORK_IOBuffer_Unlock (inputBufferPtrTemp);
                 senderPtr->pingStartTime.tv_sec = now.tv_sec;
-                senderPtr->pingStartTime.tv_usec = now.tv_usec;
+                senderPtr->pingStartTime.tv_nsec = now.tv_nsec;
                 senderPtr->isPingRunning = 1;
             }
         }
@@ -622,9 +622,9 @@ int ARNETWORK_Sender_GetPing (ARNETWORK_Sender_t *senderPtr)
     ARSAL_Mutex_Lock (&(senderPtr->pingMutex));
     if (senderPtr->isPingRunning == 1)
     {
-        struct timeval now;
-        gettimeofday (&now, NULL);
-        retVal = ARSAL_Time_ComputeMsTimeDiff (&(senderPtr->pingStartTime), &now);
+        struct timespec now;
+        ARSAL_Time_GetTime(&now);
+        retVal = ARSAL_Time_ComputeTimespecMsTimeDiff (&(senderPtr->pingStartTime), &now);
     }
     if ((senderPtr->lastPingValue > retVal) ||
         (senderPtr->lastPingValue == -1))
@@ -636,19 +636,19 @@ int ARNETWORK_Sender_GetPing (ARNETWORK_Sender_t *senderPtr)
 }
 
 
-void ARNETWORK_Sender_GotPingAck (ARNETWORK_Sender_t *senderPtr, struct timeval *startTime, struct timeval *endTime)
+void ARNETWORK_Sender_GotPingAck (ARNETWORK_Sender_t *senderPtr, struct timespec *startTime, struct timespec *endTime)
 {
     ARSAL_Mutex_Lock (&(senderPtr->pingMutex));
     if ((senderPtr->isPingRunning == 1) &&
-        (ARSAL_Time_TimevalEquals (startTime, &(senderPtr->pingStartTime))))
+        (ARSAL_Time_TimespecEquals (startTime, &(senderPtr->pingStartTime))))
     {
-        senderPtr->lastPingValue = ARSAL_Time_ComputeMsTimeDiff (startTime, endTime);
+        senderPtr->lastPingValue = ARSAL_Time_ComputeTimespecMsTimeDiff (startTime, endTime);
         senderPtr->isPingRunning = 0;
     }
     ARSAL_Mutex_Unlock (&(senderPtr->pingMutex));
 }
 
-void ARNETWORK_Sender_SendPong (ARNETWORK_Sender_t *senderPtr, struct timeval *data)
+void ARNETWORK_Sender_SendPong (ARNETWORK_Sender_t *senderPtr, struct timespec *data)
 {
     ARNETWORK_IOBuffer_t *inputBufferPtrTemp;
     inputBufferPtrTemp = senderPtr->inputBufferPtrMap[ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PONG];

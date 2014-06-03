@@ -716,7 +716,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_CreateIOBuffer (ARNETWORK_Manager_t *manager,
     ARNETWORK_IOBufferParam_DefaultInit (&paramPingBuffer);
     paramPingBuffer.dataType = ARNETWORKAL_FRAME_TYPE_DATA;
     paramPingBuffer.numberOfCell = 1;
-    paramPingBuffer.dataCopyMaxSize = sizeof (struct timeval);
+    paramPingBuffer.dataCopyMaxSize = sizeof (struct timespec);
     paramPingBuffer.isOverwriting = 1;
 
     /**
