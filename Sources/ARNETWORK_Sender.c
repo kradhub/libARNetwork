@@ -472,6 +472,9 @@ eARNETWORK_ERROR ARNETWORK_Sender_AckReceived (ARNETWORK_Sender_t *senderPtr, in
 
             /** unlock the IOBuffer */
             ARNETWORK_IOBuffer_Unlock (inputBufferPtr);
+
+            /* Wake up the send thread to update the wait time of buffers */
+            ARNETWORK_Sender_SignalNewData (senderPtr);
         }
     }
     else
