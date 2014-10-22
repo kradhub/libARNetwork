@@ -18,7 +18,7 @@
  * Default minimum time between two ping requests
  * This avoid using too much bandwidth on fast networks
  */
-#define ARNETWORK_SENDER_MINIMUM_TIME_BETWEEN_PINGS_MS (10)
+#define ARNETWORK_SENDER_MINIMUM_TIME_BETWEEN_PINGS_MS (500)
 
 /**
  * Ping timeout
