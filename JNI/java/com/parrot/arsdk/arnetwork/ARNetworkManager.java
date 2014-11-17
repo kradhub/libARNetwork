@@ -257,7 +257,7 @@ public abstract class ARNetworkManager
      */
     private int callback (int IoBufferId, ARNativeData data, int status, Object customData)
     {
-        ARNETWORK_MANAGER_CALLBACK_STATUS_ENUM jStatus = ARNETWORK_MANAGER_CALLBACK_STATUS_ENUM.values()[status];
+        ARNETWORK_MANAGER_CALLBACK_STATUS_ENUM jStatus = ARNETWORK_MANAGER_CALLBACK_STATUS_ENUM.getFromValue(status);
         
         ARNETWORK_MANAGER_CALLBACK_RETURN_ENUM retVal = onCallback (IoBufferId, data, jStatus, customData);
         
