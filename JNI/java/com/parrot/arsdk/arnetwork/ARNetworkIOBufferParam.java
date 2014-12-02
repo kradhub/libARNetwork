@@ -105,7 +105,7 @@ public class ARNetworkIOBufferParam implements Cloneable
         cIOBufferParam = nativeNew();
 
         nativeSetId (cIOBufferParam, id);
-        nativeSetDataType (cIOBufferParam, dataType.ordinal ());
+        nativeSetDataType (cIOBufferParam, dataType.getValue ());
         nativeSetTimeBetweenSend (cIOBufferParam, timeBetweenSendMs);
         nativeSetAckTimeoutMs (cIOBufferParam, ackTimeoutMs);
         nativeSetNumberOfRetry (cIOBufferParam, numberOfRetry);
