@@ -334,8 +334,13 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
 
                             /** sending ack even if the seq is not correct */
                             error = ARNETWORK_Receiver_ReturnACK(receiverPtr, frame.id, frame.seq);
-                            if( error != ARNETWORK_OK)
+                            if(error != ARNETWORK_OK)
                             {
+                                int level = ARSAL_PRINT_ERROR;
+                                if (error == ARNETWORK_ERROR_BUFFER_SIZE)
+                                {
+                                    level = ARSAL_PRINT_WARNING;
+                                }
                                 ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "ReturnACK, error: %s", ARNETWORK_Error_ToString(error));
                             }
                         }
