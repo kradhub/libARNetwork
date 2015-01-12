@@ -341,7 +341,7 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                                 {
                                     level = ARSAL_PRINT_WARNING;
                                 }
-                                ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "ReturnACK, error: %s", ARNETWORK_Error_ToString(error));
+                                ARSAL_PRINT(level, ARNETWORK_RECEIVER_TAG, "ReturnACK, error: %s", ARNETWORK_Error_ToString(error));
                             }
                         }
                     }
