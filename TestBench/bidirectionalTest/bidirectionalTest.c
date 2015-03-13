@@ -323,11 +323,11 @@ int main(int argc, char *argv[])
     switch(netType)
     {
     case 1 :
-        pManager1 = ARNETWORK_Manager_New(pOSSecificManager1, NB_OF_INPUT_L1, paramNetworkL1, NB_OF_INPUT_L2,paramNetworkL2, BIDIR_PING_DELAY, &error);
+        pManager1 = ARNETWORK_Manager_New(pOSSecificManager1, NB_OF_INPUT_L1, paramNetworkL1, NB_OF_INPUT_L2,paramNetworkL2, BIDIR_PING_DELAY, NULL, NULL, &error);
         break;
 
     case 2 :
-        pManager1 = ARNETWORK_Manager_New(pOSSecificManager1, NB_OF_INPUT_L2, paramNetworkL2, NB_OF_INPUT_L1 ,paramNetworkL1, BIDIR_PING_DELAY, &error);
+        pManager1 = ARNETWORK_Manager_New(pOSSecificManager1, NB_OF_INPUT_L2, paramNetworkL2, NB_OF_INPUT_L1 ,paramNetworkL1, BIDIR_PING_DELAY, NULL, NULL, &error);
         break;
 
     default:

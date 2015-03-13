@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
 
     if(specificError == ARNETWORKAL_OK)
     {
-        managerPtr = ARNETWORK_Manager_New(networkALManagerPtr, 0, NULL, 0, NULL, TEST_PING_DELAY, &error);
+        managerPtr = ARNETWORK_Manager_New(networkALManagerPtr, 0, NULL, 0, NULL, TEST_PING_DELAY, NULL, NULL, &error);
     }
     else
     {
