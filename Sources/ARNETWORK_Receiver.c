@@ -191,9 +191,7 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                     case ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PING:
                         /* Ping, send the corresponding pong */
                     {
-                        struct timespec dataTime;
-                        memcpy (&dataTime, frame.dataPtr, sizeof (struct timespec));
-                        ARNETWORK_Sender_SendPong (receiverPtr->senderPtr, &dataTime);
+                        ARNETWORK_Sender_SendPong (receiverPtr->senderPtr, frame.dataPtr, frame.size);
                     }
                     break;
                     case ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PONG:

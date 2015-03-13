@@ -681,11 +681,11 @@ void ARNETWORK_Sender_GotPingAck (ARNETWORK_Sender_t *senderPtr, struct timespec
     ARSAL_Mutex_Unlock (&(senderPtr->pingMutex));
 }
 
-void ARNETWORK_Sender_SendPong (ARNETWORK_Sender_t *senderPtr, struct timespec *data)
+void ARNETWORK_Sender_SendPong (ARNETWORK_Sender_t *senderPtr, uint8_t *data, int dataSize)
 {
     ARNETWORK_IOBuffer_t *inputBufferPtrTemp;
     inputBufferPtrTemp = senderPtr->inputBufferPtrMap[ARNETWORK_MANAGER_INTERNAL_BUFFER_ID_PONG];
     ARNETWORK_IOBuffer_Lock (inputBufferPtrTemp);
-    ARNETWORK_IOBuffer_AddData (inputBufferPtrTemp, (uint8_t *)data, sizeof (*data), NULL, NULL, 1);
+    ARNETWORK_IOBuffer_AddData (inputBufferPtrTemp, data, dataSize, NULL, NULL, 1);
     ARNETWORK_IOBuffer_Unlock (inputBufferPtrTemp);
 }

@@ -191,7 +191,8 @@ void ARNETWORK_Sender_GotPingAck (ARNETWORK_Sender_t *senderPtr, struct timespec
  * @brief Send a ping reply (a pong)
  *
  * @param data The timestamp that was included in the ping request
+ * @param dataSize The size of the timestamp
  */
-void ARNETWORK_Sender_SendPong (ARNETWORK_Sender_t *senderPtr, struct timespec *data);
+void ARNETWORK_Sender_SendPong (ARNETWORK_Sender_t *senderPtr, uint8_t *data, int dataSize);
 
 #endif /** _ARNETWORK_SENDER_PRIVATE_H_ */
