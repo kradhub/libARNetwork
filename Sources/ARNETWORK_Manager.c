@@ -444,6 +444,12 @@ eARNETWORK_ERROR ARNETWORK_Manager_Flush (ARNETWORK_Manager_t *manager)
     eARNETWORK_ERROR error = ARNETWORK_OK;
     int bufferIndex = 0;
 
+#ifdef ENABLE_INPUT_DATA_EVENTFD
+    /* read from eventfd before flushing input buffers */
+    uint64_t unused;
+    error = ARNETWORK_Receiver_ReadEventFd(manager->receiver, &unused);
+#endif
+
     /** Flush all output buffers including the buffers of acknowledgement */
     for (bufferIndex = 0 ; ((bufferIndex< manager->numberOfOutput) && (error == ARNETWORK_OK)) ; ++bufferIndex)
     {
@@ -457,6 +463,11 @@ eARNETWORK_ERROR ARNETWORK_Manager_Flush (ARNETWORK_Manager_t *manager)
     }
 
     return error;
+}
+
+eARNETWORK_ERROR ARNETWORK_Manager_GetInputDataEventFd (ARNETWORK_Manager_t *managerPtr, int *fd)
+{
+    return managerPtr ? ARNETWORK_Receiver_GetEventFd(managerPtr->receiver, fd) : ARNETWORK_ERROR_BAD_PARAMETER;
 }
 
 eARNETWORK_ERROR ARNETWORK_Manager_SendData (ARNETWORK_Manager_t *manager, int inputBufferID, uint8_t *data, int dataSize, void *customData, ARNETWORK_Manager_Callback_t callback, int doDataCopy)

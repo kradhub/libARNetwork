@@ -60,6 +60,9 @@ typedef struct
     uint8_t* readingPointer; /** head of reading on the RecvBuffer */
 
     int isAlive; /**< Indicator of aliving used for kill the thread calling the ARNETWORK_Receiver_ThreadRun function (1 = alive | 0 = dead). Must be accessed through ARNETWORK_Receiver_Stop()*/
+#ifdef ENABLE_MONITOR_INCOMING_DATA
+    int inputEventFd;	/**< event fd readable when inputBuffer is not empty */
+#endif
 
 }ARNETWORK_Receiver_t;
 
@@ -113,5 +116,29 @@ void ARNETWORK_Receiver_Stop(ARNETWORK_Receiver_t *receiverPtr);
  * @see ARNETWORK_Receiver_New()
  */
 eARNETWORK_ERROR ARNETWORK_Receiver_ReturnACK(ARNETWORK_Receiver_t *receiverPtr, int identifer, uint8_t seq);
+
+/**
+ * @brief return receiver fd used for monitoring incoming data (linux only)
+ * @param receiverPtr the pointer on the Receiver
+ * @param [out] fd eventfd file descriptor pointer
+ * @return eARNETWORK_ERROR
+ */
+eARNETWORK_ERROR ARNETWORK_Receiver_GetEventFd(ARNETWORK_Receiver_t *receiverPtr, int *fd);
+
+/**
+ * @brief write value to receiver eventfd (linux only)
+ * @param receiverPtr the pointer on the Receiver
+ * @param [in] value value written in eventf (0 cause read block, 1 for read ok)
+ * @return eARNETWORK_ERROR
+ */
+eARNETWORK_ERROR ARNETWORK_Receiver_WriteEventFd(ARNETWORK_Receiver_t *receiverPtr, uint64_t value);
+
+/**
+ * @brief read value from receiver eventfd (linux only)
+ * @param receiverPtr the pointer on the Receiver
+ * @param [in] value value written in eventf (0 cause read block, 1 for read ok)
+ * @return eARNETWORK_ERROR
+ */
+eARNETWORK_ERROR ARNETWORK_Receiver_ReadEventFd(ARNETWORK_Receiver_t *receiverPtr, uint64_t *value);
 
 #endif /** _ARNETWORK_RECEIVER_PRIVATE_H_ */

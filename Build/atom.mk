@@ -12,6 +12,9 @@ LOCAL_DESCRIPTION := ARSDK Network Control Library
 LOCAL_LIBRARIES := libARSAL libARNetworkAL
 LOCAL_EXPORT_LDLIBS := -larnetwork
 
+LOCAL_CONFIG_FILES := Config.in
+$(call load-config)
+
 #Autotools variables
 LOCAL_AUTOTOOLS_CONFIGURE_ARGS := --with-libARSALInstallDir="" --with-libARNetworkALInstallDir=""
 

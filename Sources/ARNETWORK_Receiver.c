@@ -49,6 +49,10 @@
 
 #include <string.h>
 
+#ifdef ENABLE_MONITOR_INCOMING_DATA
+#include <sys/eventfd.h>
+#endif
+
 #include <libARSAL/ARSAL_Print.h>
 #include <libARSAL/ARSAL_Mutex.h>
 #include <libARSAL/ARSAL_Sem.h>
@@ -128,6 +132,9 @@ ARNETWORK_Receiver_t* ARNETWORK_Receiver_New (ARNETWORKAL_Manager_t *networkALMa
             receiverPtr->outputBufferPtrArr = outputBufferPtrArr;
 
             receiverPtr->outputBufferPtrMap = outputBufferPtrMap;
+#ifdef ENABLE_MONITOR_INCOMING_DATA
+            receiverPtr->inputEventFd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+#endif
         }
 
         /** delete the receiver if an error occurred */
@@ -154,6 +161,10 @@ void ARNETWORK_Receiver_Delete (ARNETWORK_Receiver_t **receiverPtrAddr)
 
         if (receiverPtr)
         {
+#ifdef ENABLE_MONITOR_INCOMING_DATA
+            close(receiverPtr->inputEventFd);
+            receiverPtr->inputEventFd = -1;
+#endif
             free (receiverPtr);
             receiverPtr = NULL;
         }
@@ -389,11 +400,67 @@ eARNETWORK_ERROR ARNETWORK_Receiver_ReturnACK (ARNETWORK_Receiver_t *receiverPtr
     return error;
 }
 
+eARNETWORK_ERROR ARNETWORK_Receiver_GetEventFd(ARNETWORK_Receiver_t *receiverPtr, int *fd)
+{
+	eARNETWORK_ERROR err = ARNETWORK_OK;
+
+#ifdef ENABLE_MONITOR_INCOMING_DATA
+	if (receiverPtr && fd)
+		*fd = receiverPtr->inputEventFd;
+	else
+		err = ARNETWORK_ERROR_BAD_PARAMETER;
+#else
+	err = ARNETWORK_ERROR_RECEIVER;
+#endif
+	return err;
+}
+
+eARNETWORK_ERROR ARNETWORK_Receiver_WriteEventFd(ARNETWORK_Receiver_t *receiverPtr, uint64_t value)
+{
+	eARNETWORK_ERROR err = ARNETWORK_OK;
+
+#ifdef ENABLE_MONITOR_INCOMING_DATA
+	int ret;
+	do {
+		ret = write(receiverPtr->inputEventFd, &value, sizeof(value));
+	} while (ret < 0 & errno == EINTR);
+	if (ret < 0) {
+		ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "Error: can't write to eventfd %m");
+		err = ARNETWORK_ERROR_RECEIVER;
+	}
+#else
+	err = ARNETWORK_ERROR_RECEIVER;
+#endif
+
+	return err;
+}
+
+eARNETWORK_ERROR ARNETWORK_Receiver_ReadEventFd(ARNETWORK_Receiver_t *receiverPtr, uint64_t *value)
+{
+	eARNETWORK_ERROR err = ARNETWORK_OK;
+
+#ifdef ENABLE_MONITOR_INCOMING_DATA
+	int ret;
+	do {
+		ret = read(receiverPtr->inputEventFd, value, sizeof(*value));
+	} while (ret < 0 & errno == EINTR);
+	if (ret < 0) {
+		ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "Error: can't read from eventfd %m");
+		err = ARNETWORK_ERROR_RECEIVER;
+	}
+#else
+	err = ARNETWORK_ERROR_RECEIVER;
+#endif
+
+	return err;
+}
+
 /*****************************************
  *
  *             private implementation:
  *
  *****************************************/
+
 eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv (ARNETWORK_Receiver_t *receiverPtr, ARNETWORK_IOBuffer_t *outputBufferPtr, ARNETWORKAL_Frame_t *framePtr)
 {
     /** -- copy the data received to the output buffer -- */
@@ -433,6 +500,11 @@ eARNETWORK_ERROR ARNETWORK_Receiver_CopyDataRecv (ARNETWORK_Receiver_t *receiver
         {
             error = ARNETWORK_ERROR_SEMAPHORE;
         }
+
+#ifdef ENABLE_MONITOR_INCOMING_DATA
+        /* write 1 in eventfd to wake up consumer */
+        error = ARNETWORK_Receiver_WriteEventFd(receiverPtr, 1);
+#endif
     }
 
     return error;

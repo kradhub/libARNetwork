@@ -251,4 +251,15 @@ int ARNETWORK_Manager_GetEstimatedMissPercentage (ARNETWORK_Manager_t *managerPt
  */
 eARNETWORK_ERROR ARNETWORK_Manager_SetMinimumTimeBetweenSends (ARNETWORK_Manager_t *managerPtr, int minimumTimeMs);
 
+/**
+ * @brief Get eventfd associated to incoming data. (Linux platform only)
+ * This fd shall be used to monitor incoming packets.
+ * This fd is readable when incoming data are received and need to be processed.
+ * @param managerPtr Pointer to the ARNETWORK_Manager_t
+ * @param [out] File descriptor pointer filled by function on success.
+ * @return error eARNETWORK_ERROR type
+ */
+eARNETWORK_ERROR ARNETWORK_Manager_GetInputDataEventFd (ARNETWORK_Manager_t *managerPtr, int *fd);
+
+
 #endif /* _ARNETWORK_MANAGER_H_ */
