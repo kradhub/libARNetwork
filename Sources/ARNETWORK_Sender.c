@@ -150,6 +150,7 @@ ARNETWORK_Sender_t* ARNETWORK_Sender_New (ARNETWORKAL_Manager_t *networkALManage
             senderPtr->internalInputBufferPtrArr = internalInputBufferPtrArr;
             senderPtr->inputBufferPtrMap = inputBufferPtrMap;
             senderPtr->minimumTimeBetweenSendsMs = ARNETWORK_SENDER_MILLISECOND;
+            senderPtr->isPingRunning = 0;
             if (pingDelayMs == 0)
             {
                 senderPtr->minTimeBetweenPings = ARNETWORK_SENDER_MINIMUM_TIME_BETWEEN_PINGS_MS;
