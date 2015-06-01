@@ -323,23 +323,27 @@ void* ARNETWORK_Receiver_ThreadRun (void *data)
                                 ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_RECEIVER_TAG, "Received an old frame for buffer %d", outBufferPtrTemp->ID);
                             }
 
-                            if(error != ARNETWORK_OK)
-                            {
-                                ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "data acknowledged received, error: %s", ARNETWORK_Error_ToString (error));
-                            }
                             /** unlock the IOBuffer */
                             ARNETWORK_IOBuffer_Unlock(outBufferPtrTemp);
 
-                            /** sending ack even if the seq is not correct */
-                            error = ARNETWORK_Receiver_ReturnACK(receiverPtr, frame.id, frame.seq);
-                            if(error != ARNETWORK_OK)
+                            // data are copied to the IOBuffer, send ACK
+                            if (error == ARNETWORK_OK)
                             {
-                                int level = ARSAL_PRINT_ERROR;
-                                if (error == ARNETWORK_ERROR_BUFFER_SIZE)
-                                {
-                                    level = ARSAL_PRINT_DEBUG;
-                                }
-                                ARSAL_PRINT(level, ARNETWORK_RECEIVER_TAG, "ReturnACK, error: %s", ARNETWORK_Error_ToString(error));
+                                 /** sending ack even if the seq is not correct */
+                                 error = ARNETWORK_Receiver_ReturnACK(receiverPtr, frame.id, frame.seq);
+                                 if(error != ARNETWORK_OK)
+                                 {
+                                     int level = ARSAL_PRINT_ERROR;
+                                     if (error == ARNETWORK_ERROR_BUFFER_SIZE)
+                                     {
+                                         level = ARSAL_PRINT_DEBUG;
+                                     }
+                                     ARSAL_PRINT(level, ARNETWORK_RECEIVER_TAG, "ReturnACK, error: %s", ARNETWORK_Error_ToString(error));
+                                 }
+                            }
+                            else
+                            {
+                                ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_RECEIVER_TAG, "data with ack received, error: %s", ARNETWORK_Error_ToString (error));
                             }
                         }
                     }
