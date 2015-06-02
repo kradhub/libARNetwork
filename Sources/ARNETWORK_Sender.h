@@ -58,6 +58,12 @@
 #define ARNETWORK_SENDER_PING_TIMEOUT_MS (1000)
 
 /**
+ * Minimum wait time after an overflow before the next send.
+ * Applied even if low latency data are available
+ */
+#define ARNETWORK_SENDER_WAIT_TIME_ON_ARNETWORKAL_OVERFLOW_MS (10)
+
+/**
  * @brief sending manager
  * @warning before to be used the sender must be created through ARNETWORK_Sender_New()
  * @post after its using the sender must be deleted through ARNETWORK_Sender_Delete()
@@ -84,6 +90,7 @@ typedef struct
     int minTimeBetweenPings; /**< Minimum time to wait between pings. Negative value mean no ping */
 
     int minimumTimeBetweenSendsMs; /**< Minimum time to wait between network sends */
+    int hadARNetworkALOverflowOnPreviousRun; /**< 1 if the previous run was not able to send all the data due to an overflow of the ARNetworkAL Buffer */
 
 }ARNETWORK_Sender_t;
 

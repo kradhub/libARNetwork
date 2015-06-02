@@ -151,6 +151,7 @@ ARNETWORK_Sender_t* ARNETWORK_Sender_New (ARNETWORKAL_Manager_t *networkALManage
             senderPtr->inputBufferPtrMap = inputBufferPtrMap;
             senderPtr->minimumTimeBetweenSendsMs = ARNETWORK_SENDER_MILLISECOND;
             senderPtr->isPingRunning = 0;
+            senderPtr->hadARNetworkALOverflowOnPreviousRun = 0;
             if (pingDelayMs == 0)
             {
                 senderPtr->minTimeBetweenPings = ARNETWORK_SENDER_MINIMUM_TIME_BETWEEN_PINGS_MS;
@@ -285,6 +286,14 @@ void* ARNETWORK_Sender_ThreadRun (void* data)
             }
             ARNETWORK_IOBuffer_Unlock(inputBufferPtrTemp);
         }
+        // Force a minimum wait time after an ARNetworkAL Overflow
+        if ((senderPtr->hadARNetworkALOverflowOnPreviousRun > 0) &&
+            (waitTimeMs < ARNETWORK_SENDER_WAIT_TIME_ON_ARNETWORKAL_OVERFLOW_MS))
+        {
+            waitTimeMs = ARNETWORK_SENDER_WAIT_TIME_ON_ARNETWORKAL_OVERFLOW_MS;
+        }
+        senderPtr->hadARNetworkALOverflowOnPreviousRun = 0;
+
         ARSAL_Time_GetTime(&sleepStart);
         if (waitTimeMs > 0)
         {
@@ -423,7 +432,7 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
         else if ((!ARNETWORK_RingBuffer_IsEmpty (buffer->dataDescriptorRBuffer)) && (buffer->waitTimeCount == 0))
         {
             /** try to add the latest data of the input buffer in the sending buffer; callback with sent status */
-            if (!ARNETWORK_Sender_AddToBuffer (senderPtr, buffer, 0))
+            if (ARNETWORK_Sender_AddToBuffer (senderPtr, buffer, 0) == ARNETWORK_OK)
             {
                 buffer->waitTimeCount = buffer->sendingWaitTimeMs;
 
@@ -584,13 +593,37 @@ eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, AR
         frame.seq = inputBufferPtr->seq;
         frame.size = offsetof (ARNETWORKAL_Frame_t, dataPtr) + dataDescriptor.dataSize;
         frame.dataPtr = dataDescriptor.data;
-        if(senderPtr->networkALManager->pushFrame(senderPtr->networkALManager, &frame) == ARNETWORKAL_MANAGER_RETURN_DEFAULT)
+        eARNETWORKAL_MANAGER_RETURN alStatus = senderPtr->networkALManager->pushFrame(senderPtr->networkALManager, &frame);
+        switch(alStatus)
         {
+        case ARNETWORKAL_MANAGER_RETURN_DEFAULT:
             /** callback with sent status */
             if (dataDescriptor.callback != NULL)
             {
                 dataDescriptor.callback (inputBufferPtr->ID, dataDescriptor.data, dataDescriptor.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_SENT);
             }
+            break;
+        case ARNETWORKAL_MANAGER_RETURN_BUFFER_FULL:
+            senderPtr->hadARNetworkALOverflowOnPreviousRun = 1;
+            ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_SENDER_TAG, "Not enough space to send a packet of type %d, size %d, for buffer %d", frame.type, frame.size, frame.id);
+            switch (inputBufferPtr->dataType)
+            {
+            case ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK:
+            case ARNETWORKAL_FRAME_TYPE_ACK:
+                // Keep acks and ack data, report an error
+                error = ARNETWORK_ERROR_BUFFER_SIZE;
+                break;
+            case ARNETWORKAL_FRAME_TYPE_DATA:
+            case ARNETWORKAL_FRAME_TYPE_DATA_LOW_LATENCY:
+            default:
+                // Discard non ack data and low latency data, report "ok"
+                error = ARNETWORK_OK;
+                break;
+            }
+            break;
+        default:
+            error = ARNETWORK_ERROR;
+            break;
         }
     }
 
