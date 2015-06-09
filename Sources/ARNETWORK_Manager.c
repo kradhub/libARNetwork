@@ -444,7 +444,7 @@ eARNETWORK_ERROR ARNETWORK_Manager_Flush (ARNETWORK_Manager_t *manager)
     eARNETWORK_ERROR error = ARNETWORK_OK;
     int bufferIndex = 0;
 
-#ifdef ENABLE_INPUT_DATA_EVENTFD
+#ifdef ENABLE_MONITOR_INCOMING_DATA
     /* read from eventfd before flushing input buffers */
     uint64_t unused;
     error = ARNETWORK_Receiver_ReadEventFd(manager->receiver, &unused);
