@@ -1,32 +1,32 @@
 /*
-    Copyright (C) 2014 Parrot SA
+  Copyright (C) 2014 Parrot SA
 
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions
-    are met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in
-      the documentation and/or other materials provided with the 
-      distribution.
-    * Neither the name of Parrot nor the names
-      of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written
-      permission.
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
+  * Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+  * Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in
+  the documentation and/or other materials provided with the
+  distribution.
+  * Neither the name of Parrot nor the names
+  of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written
+  permission.
 
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-    FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-    COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-    BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
-    OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
-    AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
-    OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-    SUCH DAMAGE.
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+  OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+  AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+  OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  SUCH DAMAGE.
 */
 /**
  * @file ARNETWORK_Manager.c
@@ -113,14 +113,14 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
     ARNETWORK_Manager_t *manager = NULL;
     eARNETWORK_ERROR localError = ARNETWORK_OK;
     eARNETWORKAL_ERROR errorAL = ARNETWORKAL_OK;
-    
+
     /* check parameters */
     if (networkALManager == NULL)
     {
         localError = ARNETWORK_ERROR_BAD_PARAMETER;
     }
     /* No Else: the checking parameters sets localError to ARNETWORK_ERROR_BAD_PARAMETER and stop the processing */
-    
+
     if (localError == ARNETWORK_OK)
     {
         /* Create the Manager */
@@ -149,38 +149,38 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
             localError = ARNETWORK_ERROR_ALLOC;
         }
     }
-    /* No else: skipped by an error */ 
+    /* No else: skipped by an error */
 
     if (localError == ARNETWORK_OK)
     {
         manager->networkALManager = networkALManager;
-        
+
         /* set the onDisconnect callback */
         errorAL = ARNETWORKAL_Manager_SetOnDisconnectCallback (networkALManager, &ARNETWORK_Manager_OnDisconnect, (void *) manager);
-        
+
         /* Manage the networkAL error */
         switch (errorAL)
         {
-            case ARNETWORKAL_OK:
-                /* Do nothing : no error */
-                break;
-                
-            case ARNETWORKAL_ERROR_MANAGER_OPERATION_NOT_SUPPORTED:
-                /* setOnDisconnectCallback not supported by this networkALManager */
-                ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_MANAGER_TAG, "setOnDisconnectCallback not supported by this networkALManager");
-                break;
-            
-            case ARNETWORKAL_ERROR_BAD_PARAMETER:
-                /* bad parameter */
-                localError = ARNETWORK_ERROR_BAD_PARAMETER;
-                break;
-                
-            default:
-                ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_MANAGER_TAG, "error %d returned by setOnDisconnectCallback unexpected.", errorAL);
-                break;
+        case ARNETWORKAL_OK:
+            /* Do nothing : no error */
+            break;
+
+        case ARNETWORKAL_ERROR_MANAGER_OPERATION_NOT_SUPPORTED:
+            /* setOnDisconnectCallback not supported by this networkALManager */
+            ARSAL_PRINT (ARSAL_PRINT_DEBUG, ARNETWORK_MANAGER_TAG, "setOnDisconnectCallback not supported by this networkALManager");
+            break;
+
+        case ARNETWORKAL_ERROR_BAD_PARAMETER:
+            /* bad parameter */
+            localError = ARNETWORK_ERROR_BAD_PARAMETER;
+            break;
+
+        default:
+            ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_MANAGER_TAG, "error %d returned by setOnDisconnectCallback unexpected.", errorAL);
+            break;
         }
     }
-    /* No else: skipped by an error */ 
+    /* No else: skipped by an error */
 
     /*
      * For each output buffer a buffer of acknowledgement is add and referenced
@@ -203,7 +203,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
             manager->numberOfOutputWithoutAck = 0;
         }
     }
-    /* No else: skipped by an error */ 
+    /* No else: skipped by an error */
 
     if (localError == ARNETWORK_OK)
     {
@@ -222,7 +222,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
             manager->numberOfInputWithoutAck = numberOfOutput;
         }
     }
-    /* No else: skipped by an error */ 
+    /* No else: skipped by an error */
 
     if (localError == ARNETWORK_OK)
     {
@@ -238,7 +238,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
             manager->numberOfInternalInputs = 0;
         }
     }
-    /* No else: skipped by an error */ 
+    /* No else: skipped by an error */
 
     if (localError == ARNETWORK_OK)
     {
@@ -249,7 +249,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
             localError = ARNETWORK_ERROR_ALLOC;
         }
     }
-    /* No else: skipped by an error */ 
+    /* No else: skipped by an error */
 
     if (localError == ARNETWORK_OK)
     {
@@ -260,7 +260,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
             localError = ARNETWORK_ERROR_ALLOC;
         }
     }
-    /* No else: skipped by an error */ 
+    /* No else: skipped by an error */
 
     if ((localError == ARNETWORK_OK) && (networkALManager->maxBufferSize == 0))
     {
@@ -273,7 +273,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
         /* Create manager's IOBuffers and stor it in the inputMap and outputMap*/
         localError = ARNETWORK_Manager_CreateIOBuffer (manager, inputParamArr, outputParamArr);
     }
-    /* No else: skipped by an error */ 
+    /* No else: skipped by an error */
 
     if (localError == ARNETWORK_OK)
     {
@@ -284,7 +284,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
             localError = ARNETWORK_ERROR_MANAGER_NEW_SENDER;
         }
     }
-    /* No else: skipped by an error */ 
+    /* No else: skipped by an error */
 
     if (localError == ARNETWORK_OK)
     {
@@ -299,7 +299,7 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
             localError = ARNETWORK_ERROR_MANAGER_NEW_RECEIVER;
         }
     }
-    /* No else: skipped by an error */ 
+    /* No else: skipped by an error */
 
     /* delete the Manager if an error occurred */
     if (localError != ARNETWORK_OK)
@@ -307,14 +307,14 @@ ARNETWORK_Manager_t* ARNETWORK_Manager_New (ARNETWORKAL_Manager_t *networkALMana
         ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_MANAGER_TAG, "error: %s", ARNETWORK_Error_ToString (localError));
         ARNETWORK_Manager_Delete (&manager);
     }
-    /* No else: skipped by an error */ 
+    /* No else: skipped by an error */
 
     /* return the error */
     if (error != NULL)
     {
         *error = localError;
     }
-    /* No else: error is nor returned */ 
+    /* No else: error is nor returned */
 
     return manager;
 }
@@ -421,13 +421,13 @@ void* ARNETWORK_Manager_ReceivingThreadRun (void *data)
 void ARNETWORK_Manager_Stop (ARNETWORK_Manager_t *manager)
 {
     /** -- stop the threads of sending and reception -- */
-    
+
     /** check paratemters */
     if (manager != NULL)
     {
         ARNETWORK_Sender_Stop (manager->sender);
         ARNETWORK_Receiver_Stop (manager->receiver);
-        
+
         /* unlock all functions of the networkAL to permit to join the threads */
         if (manager->networkALManager->unlock != NULL)
         {
@@ -1058,9 +1058,9 @@ eARNETWORK_ERROR ARNETWORK_Manager_SetMinimumTimeBetweenSends (ARNETWORK_Manager
 void ARNETWORK_Manager_OnDisconnect (ARNETWORKAL_Manager_t *alManager, void *customData)
 {
     /* -- function called on disconnect -- */
-    
+
     ARNETWORK_Manager_t *manager = (ARNETWORK_Manager_t *)customData;
-    
+
     if ((manager != NULL) && (alManager != NULL) && (manager->onDisconnect != NULL))
     {
         manager->onDisconnect (manager, alManager, manager->customData);
