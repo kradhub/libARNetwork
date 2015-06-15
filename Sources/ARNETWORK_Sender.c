@@ -398,6 +398,7 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
 
             if (buffer->ackWaitTimeCount == 0)
             {
+                ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_SENDER_TAG, "[%p] Timeout waiting for ack in buffer %d", senderPtr, buffer->ID);
                 if (buffer->retryCount == 0)
                 {
                     /** if there are timeout and too sending retry ... */
@@ -413,6 +414,7 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
                 {
                     /** if there is a timeout, retry to send the data */
 
+                    ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_SENDER_TAG, "[%p] Will retry sending data of buffer %d", senderPtr, buffer->ID);
                     error = ARNETWORK_Sender_AddToBuffer (senderPtr, buffer, 1);
                     if (error == ARNETWORK_OK)
                     {
@@ -465,7 +467,7 @@ void ARNETWORK_Sender_ProcessBufferToSend (ARNETWORK_Sender_t *senderPtr, ARNETW
                     break;
 
                 default:
-                    ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_SENDER_TAG, "dataType: %d unknow \n", buffer->dataType);
+                    ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_SENDER_TAG, "[%p] dataType: %d unknow \n", senderPtr, buffer->dataType);
                     break;
                 }
             }
@@ -600,12 +602,16 @@ eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, AR
             /** callback with sent status */
             if (dataDescriptor.callback != NULL)
             {
+                if (frame.type == ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK)
+                {
+                    ARSAL_PRINT(ARSAL_PRINT_DEBUG, ARNETWORK_SENDER_TAG, "[%p] Will send ack command : project = %X | class = %X | command = %X - %X", senderPtr, frame.dataPtr[0], frame.dataPtr[1], frame.dataPtr[2], frame.dataPtr[3]);
+                }
                 dataDescriptor.callback (inputBufferPtr->ID, dataDescriptor.data, dataDescriptor.customData, ARNETWORK_MANAGER_CALLBACK_STATUS_SENT);
             }
             break;
         case ARNETWORKAL_MANAGER_RETURN_BUFFER_FULL:
             senderPtr->hadARNetworkALOverflowOnPreviousRun = 1;
-            ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_SENDER_TAG, "Not enough space to send a packet of type %d, size %d, for buffer %d", frame.type, frame.size, frame.id);
+            ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_SENDER_TAG, "[%p] Not enough space to send a packet of type %d, size %d, for buffer %d", senderPtr, frame.type, frame.size, frame.id);
             switch (inputBufferPtr->dataType)
             {
             case ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK:
@@ -622,7 +628,8 @@ eARNETWORK_ERROR ARNETWORK_Sender_AddToBuffer (ARNETWORK_Sender_t *senderPtr, AR
             }
             break;
         default:
-            error = ARNETWORK_ERROR;
+                ARSAL_PRINT(ARSAL_PRINT_ERROR, ARNETWORK_SENDER_TAG, "[%p] pushFrame returned an unexpected status : %d", senderPtr, alStatus);
+                error = ARNETWORK_ERROR;
             break;
         }
     }
@@ -641,6 +648,8 @@ eARNETWORK_MANAGER_CALLBACK_RETURN ARNETWORK_Sender_TimeOutCallback (ARNETWORK_S
     /** get dataDescriptor */
     ARNETWORK_RingBuffer_Front (inputBufferPtr->dataDescriptorRBuffer, (uint8_t*) &dataDescriptor);
 
+    ARSAL_PRINT(ARSAL_PRINT_WARNING, ARNETWORK_SENDER_TAG, "[%p] Did timeout sending command : project = %X | class = %X | command = %X - %X", senderPtr, dataDescriptor.data[0], dataDescriptor.data[1], dataDescriptor.data[2], dataDescriptor.data[3]);
+    
     /** callback with timeout status*/
     if (dataDescriptor.callback != NULL)
     {
@@ -678,7 +687,7 @@ void ARNETWORK_Sender_ManageTimeOut (ARNETWORK_Sender_t *senderPtr, ARNETWORK_IO
         break;
 
     default:
-        ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_SENDER_TAG, "Bad CallBack return :%d", callbackReturn);
+        ARSAL_PRINT (ARSAL_PRINT_ERROR, ARNETWORK_SENDER_TAG, "[%p] Bad CallBack return :%d", senderPtr, callbackReturn);
         break;
     }
 }

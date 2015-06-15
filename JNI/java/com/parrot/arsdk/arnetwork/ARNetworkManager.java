@@ -307,6 +307,11 @@ public abstract class ARNetworkManager
     {
         onDisconnect (alManager);
     }
+    
+    public String getCId()
+    {
+        return String.format("0x%x", nativeManager);
+    }
 }
 
 /**
