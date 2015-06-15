@@ -310,7 +310,7 @@ public abstract class ARNetworkManager
     
     public String getCId()
     {
-        return String.format("0x%x", nativeManager);
+        return String.format("0x%08x", nativeManager);
     }
 }
 
