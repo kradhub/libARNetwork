@@ -160,18 +160,35 @@ public abstract class ARNetworkManager
      * @param doDataCopy indocator to copy the data in the ARNETWORK_Manager
      * @return error ARNETWORK_ERROR_ENUM
      */
-    public ARNETWORK_ERROR_ENUM sendData(int inputBufferID, ARNativeData arData, Object customData,boolean doDataCopy)
+    public ARNETWORK_ERROR_ENUM sendData(int inputBufferID, ARNativeData arData, Object customData, boolean doDataCopy)
     {
         ARNETWORK_ERROR_ENUM error = ARNETWORK_ERROR_ENUM.ARNETWORK_OK;
 
         int doDataCopyInt = (doDataCopy) ? 1 : 0;
 
-        if(m_initOk == true)
+        if((m_initOk == true) && (arData != null))
         {
-            long dataPtr =  arData.getData();
-            int dataSize =  arData.getDataSize();
-            int intError = nativeSendData (nativeManager, inputBufferID, arData, dataPtr, dataSize, customData, doDataCopyInt );
+            long dataPtr = arData.getData();
+            int dataSize = arData.getDataSize();
+            ARNativeData jData;
+            
+            if (doDataCopy)
+            {
+                jData = new ARNativeData (arData);
+                jData.setUsedSize(arData.getDataSize());
+            }
+            else
+            {
+                jData = arData;
+            }
+            
+            int intError = nativeSendData (nativeManager, inputBufferID, jData, dataPtr, dataSize, customData, doDataCopyInt);
             error =  ARNETWORK_ERROR_ENUM.getFromValue(intError);
+            
+            if ((error != ARNETWORK_ERROR_ENUM.ARNETWORK_OK) && doDataCopy)
+            {
+                jData.dispose();
+            }
         }
         else
         {
@@ -290,6 +307,11 @@ public abstract class ARNetworkManager
         ARNETWORK_MANAGER_CALLBACK_STATUS_ENUM jStatus = ARNETWORK_MANAGER_CALLBACK_STATUS_ENUM.getFromValue(status);
         
         ARNETWORK_MANAGER_CALLBACK_RETURN_ENUM retVal = onCallback (IoBufferId, data, jStatus, customData);
+        
+        if (jStatus == ARNETWORK_MANAGER_CALLBACK_STATUS_ENUM.ARNETWORK_MANAGER_CALLBACK_STATUS_DONE)
+        {
+            data.dispose();
+        }
         
         return retVal.getValue();
     }
